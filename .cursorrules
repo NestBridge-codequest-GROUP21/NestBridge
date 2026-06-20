@@ -1,0 +1,21 @@
+# NestBridge Project Rules (CodeQuest 2026)
+
+## Core Technical Constraints
+- You are building visual screen components for an Expo / React Native project using TypeScript/JavaScript.
+- ALWAYS use `StyleSheet.create()` for styling.
+- STRICTOR RULE: Do NOT import or use external UI component libraries (e.g., NativeBase, Tamagui, React Native Paper, Tailwind/NativeWind). Build raw, visual layouts.
+
+## Shared Design System (Enforce Globally)
+- ALWAYS import and strictly utilize style variables from `src/constants/theme.js` for colors, fonts, and spacing.
+- Never hardcode custom hex codes, random font sizes, or inline padding values unless they are explicitly derived from `theme.js`.
+- Color Reference Mapping:
+  * Brand Identity: primary ('#0B6E5E'), primaryLight ('#E7EFEC'), secondary ('#115C61')
+  * Neutrals & Text: background ('#F6F8F7'), surface ('#DAEBE8'), textPrimary ('#0C1A3A'), textSecondary ('#4E5971')
+
+## Component Architecture Rule
+- EVERY screen component must be built as a pure, presentational default export function component.
+- ALL data displayed on the screen MUST be received dynamically via PROPS rather than being hardcoded or generated internally.
+- Use the provided sample datasets exclusively as testing mock data to verify rendering layout accuracy.
+
+## Multimodal Instructions
+- If the user attaches an image/screenshot of a screen from the netlify prototype (mellow-blini-a42359.netlify.app), give absolute priority to matching that layout visual structure cleanly while strictly maintaining theme tokens.
