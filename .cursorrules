@@ -1,21 +1,79 @@
 # NestBridge Project Rules (CodeQuest 2026)
 
+## What This Project Is
+NestBridge is a culturally intelligent pairing platform connecting international
+students, host families, local guides, and tourists. Group 21 — CodeQuest 2026.
+Prototype reference: mellow-blini-a42359.netlify.app (29 screens total).
+
+## Sprint Scope (Read Before Every Task)
+- Bless may build, fix, or review ANY of the 29 screens — assignment lists show
+  who builds first, not what is out of scope.
+- Four high-priority demo screens: Search Hosts/Match Results, Host Profile &
+  Pricing, Student Home Dashboard, SOS/Emergency Help.
+- Matching algorithm, backend endpoints, Firebase wiring, and final navigation
+  integration are Bless's responsibility regardless of who built individual screens.
+
 ## Core Technical Constraints
-- You are building visual screen components for an Expo / React Native project using TypeScript/JavaScript.
+- Expo / React Native mobile app. Use TypeScript only (.ts / .tsx). No plain .js
+  for new source files.
 - ALWAYS use `StyleSheet.create()` for styling.
-- STRICTOR RULE: Do NOT import or use external UI component libraries (e.g., NativeBase, Tamagui, React Native Paper, Tailwind/NativeWind). Build raw, visual layouts.
+- STRICT RULE: Do NOT import or use external UI component libraries (e.g.,
+  NativeBase, Tamagui, React Native Paper, Tailwind/NativeWind). Build raw layouts.
+- Minimum touch target: 44×44pt for all interactive elements.
 
-## Shared Design System (Enforce Globally)
-- ALWAYS import and strictly utilize style variables from `src/constants/theme.js` for colors, fonts, and spacing.
-- Never hardcode custom hex codes, random font sizes, or inline padding values unless they are explicitly derived from `theme.js`.
-- Color Reference Mapping:
-  * Brand Identity: primary ('#0B6E5E'), primaryLight ('#E7EFEC'), secondary ('#115C61')
-  * Neutrals & Text: background ('#F6F8F7'), surface ('#DAEBE8'), textPrimary ('#0C1A3A'), textSecondary ('#4E5971')
+## Design System — Single Source of Truth
+- ALL colors, fonts, spacing, and radii MUST come from `src/constants/theme.ts`.
+- Import like: `import { colors, fontSizes, fontWeights, spacing, borderRadius, gradients } from '../constants/theme';`
+- Never hardcode hex codes, arbitrary font sizes, or inline padding/margin values.
+- Never duplicate brand colors in comments, rules, or components — if a token is
+  missing, add it to `theme.ts` first, then use it.
+- Semantic usage (enforced):
+  * Header / splash gradients → gradients.header (navy → teal stops from theme)
+  * CTAs / active states → colors.teal or colors.tealBright
+  * Screen backgrounds → colors.background; warm panels → colors.warmCream
+  * Cards / borders → colors.white with colors.border
+  * Body text → colors.textPrimary; secondary → colors.textSecondary; muted → colors.textTertiary
+  * SOS and errors → colors.danger; pending / stars → colors.warning (verify gold vs prototype)
+  * Confirmed / paid → colors.success; highlight accents → colors.gold or colors.terracotta (verify first)
 
-## Component Architecture Rule
-- EVERY screen component must be built as a pure, presentational default export function component.
-- ALL data displayed on the screen MUST be received dynamically via PROPS rather than being hardcoded or generated internally.
-- Use the provided sample datasets exclusively as testing mock data to verify rendering layout accuracy.
+## Component Architecture
+- EVERY screen is a pure, presentational default-export function component.
+- ALL displayed data MUST arrive via props — never hardcode or generate content
+  inside the screen component.
+- Typed props: define a `Props` interface (or type) for every screen.
 
-## Multimodal Instructions
-- If the user attaches an image/screenshot of a screen from the netlify prototype (mellow-blini-a42359.netlify.app), give absolute priority to matching that layout visual structure cleanly while strictly maintaining theme tokens.
+## Data — Two Phases (Both Valid)
+**Phase 1 — Presentational screens (current sprint default)**
+- Screen receives data only through props.
+- Parent files, Storybook-style previews, or test harnesses pass sample/mock
+  datasets to verify layout. Mock data lives OUTSIDE the screen file.
+- This is how parallel teammates build isolated screens before integration.
+
+**Phase 2 — Integrated app (Bless's wiring pass)**
+- Screens fetch via `src/services/api.js` (Axios). No inline fetch(), no second
+  HTTP client.
+- Do not mock API calls in production navigation paths — hit the real backend.
+- If the backend is unreachable, show a clear error state, not silent placeholder data.
+- Loading: ActivityIndicator while fetching. Never show a blank screen.
+
+## Product UX Rules (Non-Negotiable)
+- SOS floating button must never be hidden, covered, or removed on any screen.
+- Match results must show: compatibility %, trust badge, and ≥2 plain-English
+  match reasons.
+- Booking screen must show: nightly rate + platform fee + total + cancellation
+  policy before the pay CTA.
+- Onboarding: one primary decision per screen. KYC and photo upload always offer
+  a soft skip ("Verify later" / "Skip for now").
+- Pre-fill search from onboarding context (destination, dates) when available.
+
+## Multimodal / Prototype Matching
+- If the user attaches a screenshot from the Netlify prototype, match that layout
+  structure cleanly while strictly using `theme.ts` tokens — never approximate colors
+  from the screenshot.
+
+## Project Layout
+- `src/screens/` — one file per screen (auth, onboarding, student, host, guide,
+  tourist, shared)
+- `src/constants/theme.ts` — design tokens (do not create colors.js)
+- `frontend/` — Expo app entry (migrate to TypeScript as integration proceeds)
+- `docs/AGENTS.md` — full architecture reference (navigation, Firebase, API)

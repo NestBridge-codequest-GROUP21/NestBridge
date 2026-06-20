@@ -9,7 +9,7 @@ Group 21 — CodeQuest 2026.
 
 ## Tech stack
 - React Native + Expo (SDK 51+)
-- JavaScript (not TypeScript)
+- TypeScript (.ts / .tsx)
 - React Navigation v6 (stack + bottom tabs)
 - Firebase Realtime Database (chat/messaging only)
 - Expo SecureStore (JWT storage)
@@ -91,7 +91,7 @@ BookingContext.js
 
 constants/
 
-colors.js       # Brand palette
+theme.ts        # Brand palette, fonts, spacing (single source of truth)
 
 api.js          # BASE_URL and endpoint paths
 
@@ -201,7 +201,7 @@ If the backend is unreachable, show a clear error state, not placeholder data.
 
 ## Styling
 - No third-party UI library. Use StyleSheet.create() for all styles.
-- Brand colours are defined in `src/constants/colors.js`. Import from there.
+- Brand colours, fonts, and spacing are defined in `src/constants/theme.ts`. Import from there.
 - Do not hardcode hex values inline in component files.
 - Font: System default (San Francisco on iOS, Roboto on Android). Do not load
   custom fonts for the MVP.
