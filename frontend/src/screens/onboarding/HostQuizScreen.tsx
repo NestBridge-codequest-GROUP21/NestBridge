@@ -5,6 +5,8 @@ import {
   LANGUAGE_OPTIONS,
   QUIET_SOCIAL_LABELS,
   QuizPageDefinition,
+  RELIGION_OPTIONS,
+  createReligiousAccommodationsFollowUp,
 } from './quizConstants';
 import { useQuizNavigation } from './useQuizNavigation';
 
@@ -36,12 +38,13 @@ const HOST_PAGES: QuizPageDefinition[] = [
   ],
   [
     {
-      id: 'religionFriendly',
-      question: 'Is your household religion-friendly in any way?',
-      type: 'text',
-      placeholder: 'e.g. prayer space, halal kitchen, respectful of fasting',
+      id: 'religion',
+      question: 'Which religious tradition does your household observe or welcome?',
+      type: 'single-select',
+      options: RELIGION_OPTIONS,
       required: true,
     },
+    createReligiousAccommodationsFollowUp(),
   ],
   [
     {
@@ -82,6 +85,20 @@ const HOST_PAGES: QuizPageDefinition[] = [
       question: 'What is your price per night?',
       type: 'number',
       placeholder: 'Amount in GHS',
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'preferredStayLength',
+      question: 'What length of stay do you prefer hosting?',
+      type: 'single-select',
+      options: [
+        'Short stays only — under 2 weeks',
+        'Medium stays — 2 weeks to 2 months',
+        'Long stays — a full semester or longer',
+        'Flexible — any length works',
+      ],
       required: true,
     },
   ],

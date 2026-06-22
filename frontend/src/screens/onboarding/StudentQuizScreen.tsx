@@ -5,6 +5,8 @@ import {
   LANGUAGE_OPTIONS,
   QUIET_SOCIAL_LABELS,
   QuizPageDefinition,
+  RELIGION_OPTIONS,
+  createReligiousAccommodationsFollowUp,
 } from './quizConstants';
 import { useQuizNavigation } from './useQuizNavigation';
 import type { QuizAnswers } from './QuizPage';
@@ -33,9 +35,10 @@ const STUDENT_PAGES: QuizPageDefinition[] = [
       id: 'religion',
       question: "Do you practice a religion you'd like your host to be aware of?",
       type: 'single-select',
-      options: ['Islam', 'Christianity', 'Other', 'Prefer not to say'],
+      options: RELIGION_OPTIONS,
       required: true,
     },
+    createReligiousAccommodationsFollowUp(),
   ],
   [
     {
