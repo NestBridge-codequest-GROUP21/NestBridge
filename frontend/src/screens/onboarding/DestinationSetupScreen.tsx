@@ -6,6 +6,7 @@ import OnboardingProgress from '../../components/OnboardingProgress';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import { isLikelyValidText } from '../../utils/textValidation';
 
 export interface DestinationSetupScreenProps {
   currentStep: number;
@@ -41,22 +42,34 @@ export default function DestinationSetupScreen({
   onBack,
 }: DestinationSetupScreenProps) {
   const insets = useSafeAreaInsets();
-  const [destinationError, setDestinationError] = useState(false);
+  const [destinationError, setDestinationError] = useState<'required' | 'gibberish' | null>(
+    null,
+  );
 
   const handleContinue = () => {
     if (city.trim().length === 0) {
-      setDestinationError(true);
+      setDestinationError('required');
       return;
     }
 
-    setDestinationError(false);
+    if (!isLikelyValidText(city)) {
+      setDestinationError('gibberish');
+      return;
+    }
+
+    setDestinationError(null);
     onContinue?.();
   };
 
   const handleCityChange = (value: string) => {
     onCityChange?.(value);
-    if (value.trim().length > 0) {
-      setDestinationError(false);
+    if (destinationError) {
+      if (value.trim().length === 0) {
+        return;
+      }
+      if (isLikelyValidText(value)) {
+        setDestinationError(null);
+      }
     }
   };
 
@@ -94,8 +107,13 @@ export default function DestinationSetupScreen({
             placeholder="e.g. Accra, Ghana"
             onChangeText={handleCityChange}
           />
-          {destinationError && (
+          {destinationError === 'required' && (
             <Text style={styles.fieldError}>This field is required</Text>
+          )}
+          {destinationError === 'gibberish' && (
+            <Text style={styles.fieldError}>
+              This doesn&apos;t look like a valid answer — please check and try again
+            </Text>
           )}
           <FormTextField
             label="University or area"

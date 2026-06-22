@@ -1,7 +1,7 @@
 import React from 'react';
 import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
-import { DIETARY_OPTIONS, LANGUAGE_OPTIONS, QuizPageDefinition } from './quizConstants';
+import { DIETARY_OPTIONS, LANGUAGE_OPTIONS, QuizPageDefinition, RELIGION_OPTIONS, createReligiousAccommodationsFollowUp } from './quizConstants';
 import { useQuizNavigation } from './useQuizNavigation';
 
 const GUIDE_PAGES: QuizPageDefinition[] = [
@@ -16,19 +16,13 @@ const GUIDE_PAGES: QuizPageDefinition[] = [
   ],
   [
     {
-      id: 'religiousComfort',
-      question: 'Are you comfortable guiding visitors with religious accommodation needs?',
+      id: 'religion',
+      question: 'Do you practice a religion that guides how you accommodate visitors?',
       type: 'single-select',
-      options: ['Yes', 'Somewhat', 'No'],
+      options: RELIGION_OPTIONS,
       required: true,
     },
-    {
-      id: 'religiousAccommodations',
-      question: 'Please specify accommodations you can offer',
-      type: 'text',
-      placeholder: 'e.g. prayer breaks, halal dining stops, modest dress guidance',
-      required: true,
-    },
+    createReligiousAccommodationsFollowUp(),
   ],
   [
     {
@@ -88,17 +82,19 @@ const GUIDE_PAGES: QuizPageDefinition[] = [
   ],
   [
     {
-      id: 'tourDietary',
-      question: 'Can you accommodate specific dietary needs during tours?',
-      type: 'multi-select',
-      options: DIETARY_OPTIONS,
-      required: false,
-    },
-    {
       id: 'smokingDrinking',
       question: 'Are you comfortable with guests who smoke or drink during sessions?',
       type: 'single-select',
       options: ['Comfortable with both', 'Prefer neither', 'No preference'],
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'tourDietary',
+      question: 'Can you accommodate specific dietary needs during tours?',
+      type: 'multi-select',
+      options: DIETARY_OPTIONS,
       required: false,
     },
     {
