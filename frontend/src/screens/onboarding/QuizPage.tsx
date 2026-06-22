@@ -14,8 +14,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import { isLikelyValidText } from '../../utils/textValidation';
 
 export type QuestionType = 'multi-select' | 'single-select' | 'slider' | 'text' | 'number';
+
+export interface QuizQuestionShowWhen {
+  fieldId: string;
+  notEquals?: string;
+  hideWhenEmpty?: boolean;
+}
 
 export interface QuizQuestion {
   id: string;
@@ -26,6 +33,7 @@ export interface QuizQuestion {
   sliderLabels?: { min: string; max: string };
   placeholder?: string;
   defaultValue?: string | number | string[];
+  showWhen?: QuizQuestionShowWhen;
 }
 
 export type QuizAnswers = Record<string, string | number | string[] | null>;
@@ -79,6 +87,73 @@ function isAnswerEmpty(answer: string | number | string[] | null | undefined): b
     return answer.length === 0;
   }
   return false;
+}
+
+function isQuestionVisible(question: QuizQuestion, answers: QuizAnswers): boolean {
+  const condition = question.showWhen;
+  if (!condition) {
+    return true;
+  }
+
+  const dependentValue = answers[condition.fieldId];
+  if (condition.hideWhenEmpty && isAnswerEmpty(dependentValue)) {
+    return false;
+  }
+  if (condition.notEquals !== undefined && dependentValue === condition.notEquals) {
+    return false;
+  }
+
+  return true;
+}
+
+function getVisibleQuestions(questions: QuizQuestion[], answers: QuizAnswers): QuizQuestion[] {
+  return questions.filter((question) => isQuestionVisible(question, answers));
+}
+
+function clearHiddenDependentAnswers(
+  questions: QuizQuestion[],
+  answers: QuizAnswers,
+  changedFieldId: string,
+): QuizAnswers {
+  let next = answers;
+
+  questions.forEach((question) => {
+    if (question.showWhen?.fieldId !== changedFieldId) {
+      return;
+    }
+    if (!isQuestionVisible(question, next)) {
+      if (next === answers) {
+        next = { ...answers };
+      }
+      next[question.id] = getDefaultAnswer(question);
+    }
+  });
+
+  return next;
+}
+
+type FieldErrorKind = 'required' | 'gibberish';
+
+function getFieldValidationError(
+  question: QuizQuestion,
+  answer: string | number | string[] | null | undefined,
+  hasInteracted: boolean,
+): FieldErrorKind | null {
+  if (isRequiredAnswerMissing(question, answer, hasInteracted)) {
+    return 'required';
+  }
+
+  if (
+    question.type === 'text' &&
+    question.required &&
+    typeof answer === 'string' &&
+    answer.trim().length > 0 &&
+    !isLikelyValidText(answer)
+  ) {
+    return 'gibberish';
+  }
+
+  return null;
 }
 
 function isRequiredAnswerMissing(
@@ -200,11 +275,13 @@ export default function QuizPage({
   const [interactedFields, setInteractedFields] = useState<Record<string, boolean>>(() =>
     buildInteractedFields(questions, savedAnswers),
   );
-  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, FieldErrorKind>>({});
 
-  const allSkippable = questions.every((q) => !q.required);
-  const showSingleSkip = questions.length === 1 && !questions[0].required;
-  const showBundleSkip = questions.length > 1 && allSkippable;
+  const visibleQuestions = getVisibleQuestions(questions, answers);
+
+  const allSkippable = visibleQuestions.every((q) => !q.required);
+  const showSingleSkip = visibleQuestions.length === 1 && !visibleQuestions[0].required;
+  const showBundleSkip = visibleQuestions.length > 1 && allSkippable;
 
   const markInteracted = (id: string) => {
     setInteractedFields((prev) => ({ ...prev, [id]: true }));
@@ -215,7 +292,7 @@ export default function QuizPage({
       if (!prev[question.id]) {
         return prev;
       }
-      if (!isRequiredAnswerMissing(question, value, true)) {
+      if (getFieldValidationError(question, value, true) === null) {
         const next = { ...prev };
         delete next[question.id];
         return next;
@@ -225,7 +302,23 @@ export default function QuizPage({
   };
 
   const setAnswer = (id: string, value: string | number | string[] | null) => {
-    setAnswers((prev) => ({ ...prev, [id]: value }));
+    setAnswers((prev) => {
+      const next = clearHiddenDependentAnswers(questions, { ...prev, [id]: value }, id);
+      const hiddenIds = questions
+        .filter((q) => q.showWhen?.fieldId === id && !isQuestionVisible(q, next))
+        .map((q) => q.id);
+      if (hiddenIds.length > 0) {
+        setFieldErrors((prevErrors) => {
+          if (!hiddenIds.some((hiddenId) => prevErrors[hiddenId])) {
+            return prevErrors;
+          }
+          const cleared = { ...prevErrors };
+          hiddenIds.forEach((hiddenId) => delete cleared[hiddenId]);
+          return cleared;
+        });
+      }
+      return next;
+    });
     markInteracted(id);
     const question = questions.find((q) => q.id === id);
     if (question) {
@@ -243,9 +336,14 @@ export default function QuizPage({
 
   const handleSkip = () => {
     const skipped: QuizAnswers = {};
-    questions.forEach((q) => {
+    visibleQuestions.forEach((q) => {
       if (!q.required) {
         skipped[q.id] = isAnswerEmpty(answers[q.id]) ? null : answers[q.id];
+      }
+    });
+    questions.forEach((q) => {
+      if (!isQuestionVisible(q, answers)) {
+        skipped[q.id] = null;
       }
     });
     setFieldErrors({});
@@ -253,11 +351,12 @@ export default function QuizPage({
   };
 
   const handleContinuePress = () => {
-    const errors: Record<string, boolean> = {};
+    const errors: Record<string, FieldErrorKind> = {};
 
-    questions.forEach((q) => {
-      if (isRequiredAnswerMissing(q, answers[q.id], !!interactedFields[q.id])) {
-        errors[q.id] = true;
+    visibleQuestions.forEach((q) => {
+      const error = getFieldValidationError(q, answers[q.id], !!interactedFields[q.id]);
+      if (error) {
+        errors[q.id] = error;
       }
     });
 
@@ -267,7 +366,13 @@ export default function QuizPage({
     }
 
     setFieldErrors({});
-    onContinue(answers);
+    const outputAnswers: QuizAnswers = { ...answers };
+    questions.forEach((q) => {
+      if (!isQuestionVisible(q, answers)) {
+        outputAnswers[q.id] = null;
+      }
+    });
+    onContinue(outputAnswers);
   };
 
   const renderQuestionInput = (question: QuizQuestion) => {
@@ -393,15 +498,20 @@ export default function QuizPage({
           </View>
         </View>
 
-        {questions.map((question, index) => (
+        {visibleQuestions.map((question, index) => (
           <View key={question.id} style={index > 0 ? styles.questionSpacing : undefined}>
             <Text style={styles.question}>
               {question.question}
               {question.required && <Text style={styles.requiredMark}> *</Text>}
             </Text>
             {renderQuestionInput(question)}
-            {fieldErrors[question.id] && (
+            {fieldErrors[question.id] === 'required' && (
               <Text style={styles.fieldError}>This question is required</Text>
+            )}
+            {fieldErrors[question.id] === 'gibberish' && (
+              <Text style={styles.fieldError}>
+                This doesn&apos;t look like a valid answer — please check and try again
+              </Text>
             )}
           </View>
         ))}
