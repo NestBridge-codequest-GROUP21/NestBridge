@@ -1,0 +1,162 @@
+import React from 'react';
+import QuizPage from './QuizPage';
+import type { QuizAnswers } from './QuizPage';
+import {
+  LANGUAGE_OPTIONS,
+  QUIET_SOCIAL_LABELS,
+  QuizPageDefinition,
+} from './quizConstants';
+import { useQuizNavigation } from './useQuizNavigation';
+
+const HOST_PAGES: QuizPageDefinition[] = [
+  [
+    {
+      id: 'householdLanguages',
+      question: 'Which languages are spoken in your household?',
+      type: 'multi-select',
+      options: LANGUAGE_OPTIONS,
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'dietaryAccommodations',
+      question: 'What dietary accommodations can you offer?',
+      type: 'multi-select',
+      options: [
+        'Halal',
+        'Vegan',
+        'Vegetarian',
+        'Kosher',
+        'Standard',
+        'Can accommodate allergies',
+      ],
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'religionFriendly',
+      question: 'Is your household religion-friendly in any way?',
+      type: 'text',
+      placeholder: 'e.g. prayer space, halal kitchen, respectful of fasting',
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'householdRhythm',
+      question: "How would you describe your household's daily rhythm?",
+      type: 'single-select',
+      options: ['Early riser household', 'Night owl friendly', 'Flexible'],
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'householdSocial',
+      question: 'How social is your household day to day?',
+      type: 'slider',
+      sliderLabels: QUIET_SOCIAL_LABELS,
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'houseRules',
+      question: 'What are your house rules?',
+      type: 'multi-select',
+      options: [
+        'No smoking',
+        'No alcohol',
+        'Guests allowed with notice',
+        'No overnight guests',
+        'Curfew applies',
+      ],
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'pricePerNight',
+      question: 'What is your price per night?',
+      type: 'number',
+      placeholder: 'Amount in GHS',
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'address',
+      question: "What's your address and city?",
+      type: 'text',
+      placeholder: 'Street, neighborhood, and city',
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'householdBackground',
+      question: "What is your household's cultural or national background?",
+      type: 'text',
+      placeholder: 'Share your household background',
+      required: true,
+    },
+  ],
+  [
+    {
+      id: 'genderPreference',
+      question: 'Do you have a gender preference for guests?',
+      type: 'single-select',
+      options: ['No preference', 'Male guests only', 'Female guests only'],
+      defaultValue: 'No preference',
+      required: false,
+    },
+    {
+      id: 'studentBackground',
+      question: 'Do you welcome students from a particular background?',
+      type: 'single-select',
+      options: ['Open to all', 'Prefer similar background', 'No preference'],
+      defaultValue: 'No preference',
+      required: false,
+    },
+    {
+      id: 'additionalHostNotes',
+      question: 'Anything else students should know about your home?',
+      type: 'text',
+      placeholder: 'House quirks, routines, or welcome tips',
+      required: false,
+    },
+  ],
+];
+
+export interface HostQuizScreenProps {
+  onFinish?: (answers: QuizAnswers) => void;
+}
+
+export default function HostQuizScreen({ onFinish }: HostQuizScreenProps = {}) {
+  const {
+    pageIndex,
+    currentPage,
+    totalPages,
+    isLastPage,
+    allAnswers,
+    handleContinue,
+    handleBack,
+  } = useQuizNavigation(HOST_PAGES, 'Host quiz answers', onFinish);
+
+  return (
+    <QuizPage
+      key={pageIndex}
+      questions={currentPage}
+      pageNumber={pageIndex + 1}
+      totalPages={totalPages}
+      isLastPage={isLastPage}
+      savedAnswers={allAnswers}
+      showBack={pageIndex > 0}
+      onContinue={handleContinue}
+      onBack={handleBack}
+      stepLabel="Host preferences"
+    />
+  );
+}
