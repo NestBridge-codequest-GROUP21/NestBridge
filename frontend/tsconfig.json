@@ -3,13 +3,13 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@nestbridge/*": ["../src/*"]
+      "@nestbridge/*": ["./src/*"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "../src/**/*.ts",
-    "../src/**/*.tsx"
+    "./src/**/*.ts",
+    "./src/**/*.tsx"
   ]
 }
