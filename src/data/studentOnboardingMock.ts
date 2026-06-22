@@ -1,5 +1,4 @@
 import type { RoleOption } from '../screens/auth/WelcomeScreen';
-import type { DestinationSuggestion } from '../screens/onboarding/DestinationSetupScreen';
 import type { QuizOption } from '../screens/onboarding/CulturalQuizScreen';
 
 export const splashMock = {
@@ -45,13 +44,6 @@ export const registerMock = {
   title: 'Create your account',
   subtitle: 'One quick signup — then we personalize your matching profile.',
 };
-
-export const destinationSuggestions: DestinationSuggestion[] = [
-  { id: 'accra', city: 'Accra', country: 'Ghana', flag: '🇬🇭' },
-  { id: 'kumasi', city: 'Kumasi', country: 'Ghana', flag: '🇬🇭' },
-  { id: 'lagos', city: 'Lagos', country: 'Nigeria', flag: '🇳🇬' },
-  { id: 'nairobi', city: 'Nairobi', country: 'Kenya', flag: '🇰🇪' },
-];
 
 export const destinationMock = {
   title: 'Where are you headed?',
