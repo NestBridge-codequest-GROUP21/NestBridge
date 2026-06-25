@@ -1,62 +1,78 @@
-import type { RoleOption } from '../screens/auth/WelcomeScreen';
 import type { QuizOption } from '../screens/onboarding/CulturalQuizScreen';
+import { buildMatchHint, splashCopy, welcomeCopy, intentSelectCopy } from './appCopy';
+
+export interface RoleOption {
+  id: string;
+  label: string;
+  description: string;
+}
 
 export const splashMock = {
   appName: 'NestBridge',
-  tagline: 'Bridging Places · Building Homes',
-  subtitle: 'Group 21 · CodeQuest 2026',
+  subtitle: splashCopy.tagline,
 };
 
 export const welcomeMock = {
   appName: 'NestBridge',
-  headline: 'Connect with host families, cultural guides & explore Africa',
-  subheadline: 'Find your home away from home with culturally intelligent matching.',
+  headline: welcomeCopy.headline,
+  subheadline: welcomeCopy.subheadline,
+  valuePills: welcomeCopy.valuePills,
+  tagline: splashCopy.tagline,
+};
+
+export const intentSelectMock = {
+  title: 'What brings you here?',
+  subtitle: 'Pick what matters most right now — your home screen will reflect it.',
+  noteTitle: intentSelectCopy.noteTitle,
+  noteBody: intentSelectCopy.noteBody,
 };
 
 export const roleOptions: RoleOption[] = [
   {
     id: 'student',
     label: 'Student / Traveler',
-    description: 'Find host families, book stays & message hosts',
-    icon: '🎓',
+    description: 'Find a host family, book stays, and message hosts',
   },
   {
     id: 'host',
     label: 'Host Family',
     description: 'Open your home to international students',
-    icon: '🏠',
   },
   {
     id: 'guide',
     label: 'Cultural Guide',
-    description: 'Offer tours, heritage walks & local experiences',
-    icon: '🗺️',
+    description: 'Offer tours, heritage walks, and local experiences',
   },
   {
     id: 'tourist',
     label: 'Tourist',
-    description: 'Explore sites, book guides & find lodging',
-    icon: '✈️',
+    description: 'Explore sites, book guides, and find lodging',
   },
 ];
 
 export const registerMock = {
   title: 'Create your account',
-  subtitle: 'One quick signup — then we personalize your matching profile.',
+  subtitle: 'One sign-up — book stays, guides, and lodging whenever you need.',
+};
+
+export const loginMock = {
+  title: 'Welcome back',
+  subtitle: 'Sign in to pick up where you left off.',
 };
 
 export const destinationMock = {
   title: 'Where are you headed?',
-  subtitle: "We'll use this to surface host families near your campus or study area.",
+  subtitle: 'We use this to show hosts and guides near your campus or city.',
+  cityPlaceholder: 'e.g. Accra, Kumasi, Wa, Ho',
 };
 
 export const profileSetupMock = {
   title: 'Introduce yourself',
-  subtitle: 'A friendly profile helps hosts feel confident welcoming you.',
+  subtitle: 'A short bio helps hosts and guides recognize you when you arrive.',
 };
 
 export const onboardingReadyMock = {
-  matchHint: 'Your first matches are being prepared based on your cultural preferences quiz.',
+  matchHint: buildMatchHint('University of Ghana', 'Accra'),
 };
 
 export interface QuizQuestion {
@@ -72,54 +88,54 @@ export const culturalQuizQuestions: QuizQuestion[] = [
     question: 'Do you have any dietary preferences?',
     helperText: 'Hosts can filter for halal, vegetarian, and other needs.',
     options: [
-      { id: 'none', label: 'No restrictions', icon: '🍽️' },
-      { id: 'halal', label: 'Halal', icon: '🥘' },
-      { id: 'vegetarian', label: 'Vegetarian', icon: '🥗' },
-      { id: 'vegan', label: 'Vegan', icon: '🌱' },
+      { id: 'none', label: 'No restrictions' },
+      { id: 'halal', label: 'Halal' },
+      { id: 'vegetarian', label: 'Vegetarian' },
+      { id: 'vegan', label: 'Vegan' },
     ],
   },
   {
     id: 'study',
     question: 'What matters most in your living space?',
-    helperText: "We'll prioritize hosts whose home fits your daily rhythm.",
+    helperText: 'We prioritize homes that fit your daily rhythm.',
     options: [
-      { id: 'quiet', label: 'Quiet study environment', icon: '📚' },
-      { id: 'social', label: 'Social, family atmosphere', icon: '👨‍👩‍👧' },
-      { id: 'independent', label: 'Private room & independence', icon: '🚪' },
-      { id: 'flexible', label: 'Flexible — open to either', icon: '✨' },
+      { id: 'quiet', label: 'Quiet study environment' },
+      { id: 'social', label: 'Social, family atmosphere' },
+      { id: 'independent', label: 'Private room and independence' },
+      { id: 'flexible', label: 'Flexible — open to either' },
     ],
   },
   {
     id: 'language',
     question: 'Which languages do you speak comfortably?',
-    helperText: 'Helps us match you with hosts who can communicate easily.',
+    helperText: 'Helps us match you with people you can talk to easily.',
     options: [
-      { id: 'english', label: 'English only', icon: '🇬🇧' },
-      { id: 'english-french', label: 'English & French', icon: '🇫🇷' },
-      { id: 'english-local', label: 'English + local language learner', icon: '🌍' },
-      { id: 'multilingual', label: 'Multilingual', icon: '💬' },
+      { id: 'english', label: 'English only' },
+      { id: 'english-french', label: 'English and French' },
+      { id: 'english-local', label: 'English plus local language learner' },
+      { id: 'multilingual', label: 'Multilingual' },
     ],
   },
   {
     id: 'curfew',
     question: 'How do you feel about house rules?',
-    helperText: 'Honest answers lead to better long-term stays.',
+    helperText: 'Honest answers lead to better stays.',
     options: [
-      { id: 'strict', label: 'I prefer clear rules & curfews', icon: '🕙' },
-      { id: 'moderate', label: 'Moderate rules are fine', icon: '⚖️' },
-      { id: 'relaxed', label: 'Relaxed, independent schedule', icon: '🌙' },
-      { id: 'discuss', label: 'Happy to discuss with host', icon: '🤝' },
+      { id: 'strict', label: 'Clear rules and curfews' },
+      { id: 'moderate', label: 'Moderate rules are fine' },
+      { id: 'relaxed', label: 'Relaxed, independent schedule' },
+      { id: 'discuss', label: 'Happy to discuss with host' },
     ],
   },
   {
     id: 'duration',
     question: 'How long is your stay?',
-    helperText: 'Some hosts specialize in short visits, others prefer semester stays.',
+    helperText: 'Some hosts prefer short visits; others prefer a full term.',
     options: [
-      { id: 'short', label: 'Under 2 weeks', icon: '📅' },
-      { id: 'month', label: 'About a month', icon: '🗓️' },
-      { id: 'semester', label: 'Full semester', icon: '🎓' },
-      { id: 'year', label: 'Academic year or longer', icon: '🏡' },
+      { id: 'short', label: 'Under 2 weeks' },
+      { id: 'month', label: 'About a month' },
+      { id: 'semester', label: 'Full semester' },
+      { id: 'year', label: 'Academic year or longer' },
     ],
   },
 ];

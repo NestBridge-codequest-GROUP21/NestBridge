@@ -6,7 +6,8 @@ import OnboardingProgress from '../../components/OnboardingProgress';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
-import { isLikelyValidText } from '../../utils/textValidation';
+import { isLikelyValidPlaceName } from '../../utils/textValidation';
+import { validationCopy } from '../../data/appCopy';
 
 export interface DestinationSetupScreenProps {
   currentStep: number;
@@ -52,7 +53,7 @@ export default function DestinationSetupScreen({
       return;
     }
 
-    if (!isLikelyValidText(city)) {
+    if (!isLikelyValidPlaceName(city)) {
       setDestinationError('gibberish');
       return;
     }
@@ -67,7 +68,7 @@ export default function DestinationSetupScreen({
       if (value.trim().length === 0) {
         return;
       }
-      if (isLikelyValidText(value)) {
+      if (isLikelyValidPlaceName(value)) {
         setDestinationError(null);
       }
     }
@@ -104,16 +105,14 @@ export default function DestinationSetupScreen({
           <FormTextField
             label="Destination"
             value={city}
-            placeholder="e.g. Accra, Ghana"
+            placeholder="e.g. Accra, Kumasi, Wa, Ho"
             onChangeText={handleCityChange}
           />
           {destinationError === 'required' && (
             <Text style={styles.fieldError}>This field is required</Text>
           )}
           {destinationError === 'gibberish' && (
-            <Text style={styles.fieldError}>
-              This doesn&apos;t look like a valid answer — please check and try again
-            </Text>
+            <Text style={styles.fieldError}>{validationCopy.placeInvalid}</Text>
           )}
           <FormTextField
             label="University or area"
@@ -141,7 +140,7 @@ export default function DestinationSetupScreen({
           </View>
         </View>
 
-        <PrimaryButton label="Continue →" onPress={handleContinue} />
+        <PrimaryButton label="Continue" onPress={handleContinue} />
       </ScrollView>
     </View>
   );

@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OnboardingProgress from '../../components/OnboardingProgress';
 import PrimaryButton from '../../components/PrimaryButton';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import { colors, fontFamilies, fontSizes, fontWeights, spacing, borderRadius, lineHeights, layout } from '../../constants/theme';
 
 export interface QuizOption {
   id: string;
@@ -94,7 +94,7 @@ export default function CulturalQuizScreen({
 
         <View style={styles.footer}>
           <PrimaryButton
-            label={questionNumber === questionTotal ? 'Finish quiz →' : 'Next →'}
+            label={questionNumber === questionTotal ? 'Finish quiz' : 'Next'}
             onPress={onContinue}
             disabled={!selectedOptionId}
           />
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
   backBtn: {
     minHeight: 44,

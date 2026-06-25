@@ -1,7 +1,7 @@
 import React from 'react';
 import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
-import { DIETARY_OPTIONS, LANGUAGE_OPTIONS, QuizPageDefinition, RELIGION_OPTIONS, createReligiousAccommodationsFollowUp } from './quizConstants';
+import { DIETARY_OPTIONS, LANGUAGE_OPTIONS, QuizPageDefinition, RELIGION_OPTIONS, createReligiousAccommodationsFollowUp, createReligionOtherFollowUp } from './quizConstants';
 import { useQuizNavigation } from './useQuizNavigation';
 
 const GUIDE_PAGES: QuizPageDefinition[] = [
@@ -22,6 +22,7 @@ const GUIDE_PAGES: QuizPageDefinition[] = [
       options: RELIGION_OPTIONS,
       required: true,
     },
+    createReligionOtherFollowUp(),
     createReligiousAccommodationsFollowUp(),
   ],
   [

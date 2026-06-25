@@ -14,12 +14,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
-import { isLikelyValidText } from '../../utils/textValidation';
+import { isLikelyValidPlaceName, isLikelyValidText } from '../../utils/textValidation';
+import {
+  isOtherOption,
+  otherSpecifyKey,
+} from './quizConstants';
+import { validationCopy } from '../../data/appCopy';
 
 export type QuestionType = 'multi-select' | 'single-select' | 'slider' | 'text' | 'number';
 
 export interface QuizQuestionShowWhen {
   fieldId: string;
+  equals?: string;
   notEquals?: string;
   hideWhenEmpty?: boolean;
 }
@@ -33,6 +39,7 @@ export interface QuizQuestion {
   sliderLabels?: { min: string; max: string };
   placeholder?: string;
   defaultValue?: string | number | string[];
+  textValidation?: 'place' | 'text';
   showWhen?: QuizQuestionShowWhen;
 }
 
@@ -99,6 +106,9 @@ function isQuestionVisible(question: QuizQuestion, answers: QuizAnswers): boolea
   if (condition.hideWhenEmpty && isAnswerEmpty(dependentValue)) {
     return false;
   }
+  if (condition.equals !== undefined && dependentValue !== condition.equals) {
+    return false;
+  }
   if (condition.notEquals !== undefined && dependentValue === condition.notEquals) {
     return false;
   }
@@ -132,25 +142,62 @@ function clearHiddenDependentAnswers(
   return next;
 }
 
-type FieldErrorKind = 'required' | 'gibberish';
+type FieldErrorKind = 'required' | 'gibberish' | 'other';
+
+function questionHasOtherSelected(
+  question: QuizQuestion,
+  answer: string | number | string[] | null | undefined,
+): boolean {
+  if (question.type === 'single-select' && typeof answer === 'string') {
+    return isOtherOption(answer);
+  }
+  if (question.type === 'multi-select' && Array.isArray(answer)) {
+    return answer.some((item) => isOtherOption(item));
+  }
+  return false;
+}
+
+function getOtherSpecifyQuestion(question: QuizQuestion): QuizQuestion {
+  return {
+    id: otherSpecifyKey(question.id),
+    question: 'Tell us which one',
+    type: 'text',
+    placeholder: 'A few words is enough',
+    required: true,
+  };
+}
 
 function getFieldValidationError(
   question: QuizQuestion,
   answer: string | number | string[] | null | undefined,
   hasInteracted: boolean,
+  allAnswers?: QuizAnswers,
 ): FieldErrorKind | null {
   if (isRequiredAnswerMissing(question, answer, hasInteracted)) {
     return 'required';
+  }
+
+  if (questionHasOtherSelected(question, answer)) {
+    const specifyQuestion = getOtherSpecifyQuestion(question);
+    const specifyAnswer = allAnswers?.[otherSpecifyKey(question.id)];
+    if (isRequiredAnswerMissing(specifyQuestion, specifyAnswer, true)) {
+      return 'other';
+    }
   }
 
   if (
     question.type === 'text' &&
     question.required &&
     typeof answer === 'string' &&
-    answer.trim().length > 0 &&
-    !isLikelyValidText(answer)
+    answer.trim().length > 0
   ) {
-    return 'gibberish';
+    const valid =
+      question.textValidation === 'place'
+        ? isLikelyValidPlaceName(answer)
+        : isLikelyValidText(answer);
+    if (!valid) {
+      return 'gibberish';
+    }
   }
 
   return null;
@@ -292,7 +339,7 @@ export default function QuizPage({
       if (!prev[question.id]) {
         return prev;
       }
-      if (getFieldValidationError(question, value, true) === null) {
+      if (getFieldValidationError(question, value, true, answers) === null) {
         const next = { ...prev };
         delete next[question.id];
         return next;
@@ -354,7 +401,12 @@ export default function QuizPage({
     const errors: Record<string, FieldErrorKind> = {};
 
     visibleQuestions.forEach((q) => {
-      const error = getFieldValidationError(q, answers[q.id], !!interactedFields[q.id]);
+      const error = getFieldValidationError(
+        q,
+        answers[q.id],
+        !!interactedFields[q.id],
+        answers,
+      );
       if (error) {
         errors[q.id] = error;
       }
@@ -375,33 +427,58 @@ export default function QuizPage({
     onContinue(outputAnswers);
   };
 
+  const renderOtherSpecifyInput = (question: QuizQuestion) => {
+    if (!questionHasOtherSelected(question, answers[question.id])) {
+      return null;
+    }
+    const specifyId = otherSpecifyKey(question.id);
+    const specifyQuestion = getOtherSpecifyQuestion(question);
+    return (
+      <View style={styles.otherSpecifyWrap}>
+        <TextInput
+          style={styles.textInput}
+          value={String(answers[specifyId] ?? '')}
+          placeholder={specifyQuestion.placeholder}
+          placeholderTextColor={colors.textTertiary}
+          onChangeText={(text) => setAnswer(specifyId, text)}
+        />
+        {fieldErrors[question.id] === 'other' && (
+          <Text style={styles.fieldError}>{validationCopy.otherRequired}</Text>
+        )}
+      </View>
+    );
+  };
+
   const renderQuestionInput = (question: QuizQuestion) => {
     const value = answers[question.id];
 
     switch (question.type) {
       case 'multi-select':
         return (
-          <View style={styles.chipRow}>
-            {(question.options ?? []).map((option) => {
-              const selected = ((value as string[]) ?? []).includes(option);
-              return (
-                <Pressable
-                  key={option}
-                  style={({ pressed }) => [
-                    styles.chip,
-                    selected && styles.chipSelected,
-                    pressed && styles.chipPressed,
-                  ]}
-                  onPress={() => toggleMultiSelect(question.id, option)}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: selected }}
-                >
-                  <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>
-                    {option}
-                  </Text>
-                </Pressable>
-              );
-            })}
+          <View>
+            <View style={styles.chipRow}>
+              {(question.options ?? []).map((option) => {
+                const selected = ((value as string[]) ?? []).includes(option);
+                return (
+                  <Pressable
+                    key={option}
+                    style={({ pressed }) => [
+                      styles.chip,
+                      selected && styles.chipSelected,
+                      pressed && styles.chipPressed,
+                    ]}
+                    onPress={() => toggleMultiSelect(question.id, option)}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: selected }}
+                  >
+                    <Text style={[styles.chipLabel, selected && styles.chipLabelSelected]}>
+                      {option}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {renderOtherSpecifyInput(question)}
           </View>
         );
 
@@ -428,6 +505,7 @@ export default function QuizPage({
                 </Pressable>
               );
             })}
+            {renderOtherSpecifyInput(question)}
           </View>
         );
 
@@ -510,7 +588,9 @@ export default function QuizPage({
             )}
             {fieldErrors[question.id] === 'gibberish' && (
               <Text style={styles.fieldError}>
-                This doesn&apos;t look like a valid answer — please check and try again
+                {question.textValidation === 'place'
+                  ? validationCopy.placeInvalid
+                  : "This doesn't look like a valid answer — please check and try again"}
               </Text>
             )}
           </View>
@@ -637,6 +717,9 @@ const styles = StyleSheet.create({
   },
   chipLabelSelected: {
     color: colors.tealDeep,
+  },
+  otherSpecifyWrap: {
+    marginTop: spacing.md,
   },
   optionCard: {
     backgroundColor: colors.white,

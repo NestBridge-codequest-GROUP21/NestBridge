@@ -21,6 +21,7 @@ export interface RegisterScreenProps {
   email: string;
   password: string;
   keepSignedIn: boolean;
+  errorMessage?: string;
   onFullNameChange?: (value: string) => void;
   onEmailChange?: (value: string) => void;
   onPasswordChange?: (value: string) => void;
@@ -37,6 +38,7 @@ export default function RegisterScreen({
   email,
   password,
   keepSignedIn,
+  errorMessage,
   onFullNameChange,
   onEmailChange,
   onPasswordChange,
@@ -108,7 +110,9 @@ export default function RegisterScreen({
           </Pressable>
         </View>
 
-        <PrimaryButton label="Create Account →" onPress={onSubmit} />
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+        <PrimaryButton label="Create Account" onPress={onSubmit} />
 
         <Pressable onPress={onSignInPress} style={styles.footerLink}>
           <Text style={styles.footerText}>
@@ -189,6 +193,11 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
+  },
+  errorText: {
+    fontSize: fontSizes.body,
+    color: colors.danger,
+    marginBottom: spacing.md,
   },
   footerLink: {
     alignItems: 'center',

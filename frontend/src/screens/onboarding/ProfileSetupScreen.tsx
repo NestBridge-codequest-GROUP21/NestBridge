@@ -92,7 +92,7 @@ export default function ProfileSetupScreen({
           />
         </View>
 
-        <PrimaryButton label="Continue →" onPress={onContinue} />
+        <PrimaryButton label="Continue" onPress={onContinue} />
         <View style={styles.skipSpacer} />
         <SecondaryButton label="Skip for now" onPress={onSkip} />
       </ScrollView>

@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../constants/theme';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import { colors, fontSizes, fontWeights, spacing, borderRadius, motion } from '../constants/theme';
 
 export interface OnboardingProgressProps {
   currentStep: number;
@@ -14,6 +14,21 @@ export default function OnboardingProgress({
   stepLabel,
 }: OnboardingProgressProps) {
   const progress = currentStep / totalSteps;
+  const widthAnim = useRef(new Animated.Value(progress)).current;
+
+  useEffect(() => {
+    Animated.timing(widthAnim, {
+      toValue: progress,
+      duration: motion.durationNormal,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [progress, widthAnim]);
+
+  const fillWidth = widthAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
 
   return (
     <View style={styles.wrap}>
@@ -24,7 +39,7 @@ export default function OnboardingProgress({
         </Text>
       </View>
       <View style={styles.track}>
-        <View style={[styles.fill, { width: `${progress * 100}%` }]} />
+        <Animated.View style={[styles.fill, { width: fillWidth }]} />
       </View>
     </View>
   );
