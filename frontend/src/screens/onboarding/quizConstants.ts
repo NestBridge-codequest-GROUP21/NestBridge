@@ -25,6 +25,16 @@ export const RELIGION_OPTIONS = ['Islam', 'Christianity', 'Other', 'Prefer not t
 
 export const PREFER_NOT_TO_SAY = 'Prefer not to say';
 
+export const OTHER_OPTION_LABELS = ['Other', 'Other (specify)'] as const;
+
+export function isOtherOption(label: string): boolean {
+  return (OTHER_OPTION_LABELS as readonly string[]).includes(label);
+}
+
+export function otherSpecifyKey(questionId: string): string {
+  return `${questionId}Other`;
+}
+
 export const RELIGION_ACCOMMODATION_OPTIONS = [
   'Halal food only',
   'Quiet/prayer time respected',
@@ -44,6 +54,20 @@ export function createReligiousAccommodationsFollowUp(): QuizQuestion {
       fieldId: 'religion',
       notEquals: PREFER_NOT_TO_SAY,
       hideWhenEmpty: true,
+    },
+  };
+}
+
+export function createReligionOtherFollowUp(fieldId = 'religion'): QuizQuestion {
+  return {
+    id: 'religionOther',
+    question: 'Which religion or tradition?',
+    type: 'text',
+    placeholder: 'Tell us which tradition',
+    required: true,
+    showWhen: {
+      fieldId,
+      equals: 'Other',
     },
   };
 }

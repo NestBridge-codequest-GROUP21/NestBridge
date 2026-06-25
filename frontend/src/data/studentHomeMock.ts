@@ -1,18 +1,19 @@
 import type { StudentHomeDashboardProps } from '../screens/student/StudentHomeDashboard';
+import type { TabBarItem } from '../components/AppTabBar';
 
 export const studentHomeMockData: StudentHomeDashboardProps = {
-  greeting: 'Good morning 👋',
+  greeting: 'Good morning',
   userName: 'Akosua Darko',
   userInitials: 'AD',
-  searchPlaceholder: 'Search city, university area...',
+  searchPlaceholder: 'Search city or university area',
   matchAlert: {
     count: 3,
-    subtitle: 'Based on your preferences',
+    subtitle: 'Based on your profile',
   },
   quickActions: [
-    { id: 'find-hosts', label: 'Find Hosts', icon: '🔍' },
+    { id: 'find-hosts', label: 'Find hosts', icon: '🏠' },
     { id: 'guides', label: 'Guides', icon: '🗺️' },
-    { id: 'bookings', label: 'Bookings', icon: '📋' },
+    { id: 'bookings', label: 'Bookings', icon: '📅' },
     { id: 'messages', label: 'Messages', icon: '💬' },
   ],
   suggestedHosts: [
@@ -22,7 +23,6 @@ export const studentHomeMockData: StudentHomeDashboardProps = {
       matchPercentage: 96,
       location: 'East Legon, Accra',
       pricePerNight: 'GHS 180/night',
-      icon: '🏡',
     },
     {
       id: 'host-2',
@@ -30,15 +30,14 @@ export const studentHomeMockData: StudentHomeDashboardProps = {
       matchPercentage: 91,
       location: 'Cantonments, Accra',
       pricePerNight: 'GHS 220/night',
-      icon: '🏡',
     },
   ],
   tabBarItems: [
-    { id: 'home', label: 'Home', icon: '🏠' },
-    { id: 'search', label: 'Search', icon: '🔍' },
-    { id: 'bookings', label: 'Bookings', icon: '📋' },
-    { id: 'messages', label: 'Messages', icon: '💬' },
-    { id: 'profile', label: 'Profile', icon: '👤' },
-  ],
+    { id: 'home', label: 'Home' },
+    { id: 'search', label: 'Search' },
+    { id: 'bookings', label: 'Bookings' },
+    { id: 'messages', label: 'Messages' },
+    { id: 'profile', label: 'Profile' },
+  ] as TabBarItem[],
   activeTabId: 'home',
 };

@@ -8,6 +8,7 @@ import {
   QuizPageDefinition,
   RELIGION_OPTIONS,
   createReligiousAccommodationsFollowUp,
+  createReligionOtherFollowUp,
 } from './quizConstants';
 import { useQuizNavigation } from './useQuizNavigation';
 
@@ -74,6 +75,7 @@ const TOURIST_PAGES: QuizPageDefinition[] = [
       question: 'Which city are you visiting and for how long?',
       type: 'text',
       placeholder: 'e.g. Kumasi, 10 days (Mar 12–22)',
+      textValidation: 'place',
       required: true,
     },
   ],
@@ -85,6 +87,7 @@ const TOURIST_PAGES: QuizPageDefinition[] = [
       options: RELIGION_OPTIONS,
       required: true,
     },
+    createReligionOtherFollowUp(),
     createReligiousAccommodationsFollowUp(),
   ],
   [

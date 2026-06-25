@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet, ViewStyle } from 'react-native';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../constants/theme';
+import { colors, fontFamilies, fontSizes, fontWeights, spacing, borderRadius } from '../constants/theme';
 
 export interface PrimaryButtonProps {
   label: string;
@@ -52,8 +52,9 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.99 }],
   },
   label: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
   },
   labelDisabled: {

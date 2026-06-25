@@ -9,19 +9,22 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
+  layout,
 } from '../../constants/theme';
 
 export interface QuickActionItem {
   id: string;
   label: string;
-  icon: string;
+  icon?: string;
 }
 
 export interface SuggestedHostItem {
@@ -38,11 +41,7 @@ export interface MatchAlertData {
   subtitle: string;
 }
 
-export interface TabBarItem {
-  id: string;
-  label: string;
-  icon: string;
-}
+export type { TabBarItem } from '../../components/AppTabBar';
 
 export interface StudentHomeDashboardProps {
   greeting: string;
@@ -54,6 +53,8 @@ export interface StudentHomeDashboardProps {
   suggestedHosts: SuggestedHostItem[];
   tabBarItems: TabBarItem[];
   activeTabId: string;
+  showMatchScores?: boolean;
+  hostsSectionTitle?: string;
   onSearchPress?: () => void;
   onMatchAlertPress?: () => void;
   onSeeAllHostsPress?: () => void;
@@ -72,6 +73,8 @@ export default function StudentHomeDashboard({
   suggestedHosts,
   tabBarItems,
   activeTabId,
+  showMatchScores = false,
+  hostsSectionTitle = 'Suggested hosts',
   onSearchPress,
   onMatchAlertPress,
   onSeeAllHostsPress,
@@ -107,7 +110,7 @@ export default function StudentHomeDashboard({
           accessibilityRole="search"
           accessibilityLabel={searchPlaceholder}
         >
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Text style={styles.searchLabel}>Search</Text>
           <Text style={styles.searchPlaceholder}>{searchPlaceholder}</Text>
         </Pressable>
       </LinearGradient>
@@ -116,10 +119,11 @@ export default function StudentHomeDashboard({
         style={styles.scroll}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: insets.bottom + spacing.xl + 72 },
+          { paddingBottom: insets.bottom + layout.scrollBottomInset },
         ]}
         showsVerticalScrollIndicator={false}
       >
+        {showMatchScores && matchAlert.count > 0 ? (
         <Pressable
           style={({ pressed }) => [styles.matchCard, pressed && styles.cardPressed]}
           onPress={onMatchAlertPress}
@@ -129,15 +133,15 @@ export default function StudentHomeDashboard({
           <View style={styles.matchAccent} />
           <View style={styles.matchBody}>
             <View style={styles.matchTextBlock}>
-              <Text style={styles.matchCount}>{matchAlert.count} new matches!</Text>
+              <Text style={styles.matchCount}>{matchAlert.count} new matches</Text>
               <Text style={styles.matchSubtitle}>{matchAlert.subtitle}</Text>
             </View>
             <View style={styles.matchCta}>
               <Text style={styles.matchCtaText}>View</Text>
-              <Text style={styles.matchCtaArrow}>→</Text>
             </View>
           </View>
         </Pressable>
+        ) : null}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -154,7 +158,9 @@ export default function StudentHomeDashboard({
                 accessibilityLabel={action.label}
               >
                 <View style={styles.quickActionIconWrap}>
-                  <Text style={styles.quickActionIcon}>{action.icon}</Text>
+                  <Text style={styles.quickActionInitial}>
+                    {action.icon ?? action.label.charAt(0)}
+                  </Text>
                 </View>
                 <Text style={styles.quickActionLabel}>{action.label}</Text>
               </Pressable>
@@ -164,7 +170,7 @@ export default function StudentHomeDashboard({
 
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitleInline}>Suggested Hosts</Text>
+            <Text style={styles.sectionTitleInline}>{hostsSectionTitle}</Text>
             <Pressable
               onPress={onSeeAllHostsPress}
               hitSlop={12}
@@ -188,7 +194,9 @@ export default function StudentHomeDashboard({
               accessibilityLabel={`${host.name}, ${host.matchPercentage} percent match, ${host.location}, ${host.pricePerNight}`}
             >
               <View style={styles.hostIconWrap}>
-                <Text style={styles.hostIcon}>{host.icon ?? '🏡'}</Text>
+                <Text style={styles.hostIconInitial}>
+                  {host.name.slice(0, 2).toUpperCase()}
+                </Text>
               </View>
 
               <View style={styles.hostDetails}>
@@ -196,12 +204,14 @@ export default function StudentHomeDashboard({
                   <Text style={styles.hostName} numberOfLines={1}>
                     {host.name}
                   </Text>
+                  {showMatchScores ? (
                   <View style={styles.matchBadge}>
                     <Text style={styles.matchBadgeText}>{host.matchPercentage}%</Text>
                   </View>
+                  ) : null}
                 </View>
                 <Text style={styles.hostLocation} numberOfLines={1}>
-                  📍 {host.location}
+                  {host.location}
                 </Text>
                 <Text style={styles.hostPrice}>{host.pricePerNight}</Text>
               </View>
@@ -210,33 +220,7 @@ export default function StudentHomeDashboard({
         </View>
       </ScrollView>
 
-      <View
-        style={[
-          styles.tabBar,
-          { paddingBottom: Math.max(insets.bottom, spacing.sm) },
-        ]}
-      >
-        {tabBarItems.map((tab) => {
-          const isActive = tab.id === activeTabId;
-          return (
-            <Pressable
-              key={tab.id}
-              style={styles.tabItem}
-              onPress={() => onTabPress?.(tab.id)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: isActive }}
-              accessibilityLabel={tab.label}
-            >
-              <Text style={[styles.tabIcon, isActive && styles.tabIconActive]}>
-                {tab.icon}
-              </Text>
-              <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-                {tab.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <AppTabBar items={tabBarItems} activeTabId={activeTabId} onTabPress={onTabPress} />
     </View>
   );
 }
@@ -247,7 +231,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   headerGradient: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingBottom: spacing.lg + spacing.sm,
   },
   headerRow: {
@@ -261,6 +245,7 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
   },
   greeting: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.white,
@@ -268,6 +253,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   userName: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
@@ -305,8 +291,11 @@ const styles = StyleSheet.create({
   searchBarPressed: {
     opacity: 0.92,
   },
-  searchIcon: {
-    fontSize: fontSizes.subheading,
+  searchLabel: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    color: colors.teal,
     marginRight: spacing.sm,
   },
   searchPlaceholder: {
@@ -317,11 +306,10 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    marginTop: -spacing.md,
   },
   scrollContent: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
+    paddingHorizontal: layout.screenPaddingHorizontal,
+    paddingTop: spacing.lg,
   },
   matchCard: {
     flexDirection: 'row',
@@ -440,8 +428,10 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  quickActionIcon: {
-    fontSize: 22,
+  quickActionInitial: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.subheading,
+    color: colors.tealDeep,
   },
   quickActionLabel: {
     fontSize: fontSizes.caption,
@@ -475,8 +465,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: spacing.md,
   },
-  hostIcon: {
-    fontSize: 24,
+  hostIconInitial: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    color: colors.tealDeep,
   },
   hostDetails: {
     flex: 1,
@@ -534,10 +526,30 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingVertical: spacing.xs,
   },
+  tabIconWrap: {
+    position: 'relative',
+    marginBottom: spacing.xs,
+  },
   tabIcon: {
     fontSize: 18,
-    marginBottom: spacing.xs,
     opacity: 0.55,
+  },
+  tabBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -10,
+    minWidth: 18,
+    height: 18,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xs,
+  },
+  tabBadgeText: {
+    fontSize: 10,
+    fontWeight: fontWeights.bold,
+    color: colors.white,
   },
   tabIconActive: {
     opacity: 1,

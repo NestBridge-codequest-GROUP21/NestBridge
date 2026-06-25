@@ -2,36 +2,27 @@
  * NestBridge design tokens — single source of truth for all visual styling.
  *
  * Usage:
- *   import { colors, fontSizes, spacing, borderRadius, gradients } from '../constants/theme';
+ *   import { colors, fontSizes, fontFamilies, lineHeights, spacing, borderRadius, gradients, layout } from '../constants/theme';
  *
  * Do NOT hardcode hex values, font sizes, or spacing in components.
  * If a token is missing, add it here first.
- *
- * Note: gold and terracotta are marked for prototype verification before treating as final.
  */
 
 export const colors = {
-  // Brand gradient (header, splash)
   navy: '#0C1735',
   navyMid: '#142247',
   tealDeep: '#135062',
   teal: '#0F7871',
   tealBright: '#1AA68C',
-
-  // Accent — VERIFY against live prototype before treating as final
   gold: '#D4A017',
   terracotta: '#D85A30',
   warmCream: '#FBF8F2',
-
-  // Neutrals
   white: '#FFFFFF',
   background: '#EFF5F3',
   textPrimary: '#21273D',
   textSecondary: '#6B7280',
   textTertiary: '#9CA3AF',
   border: '#D8DEDC',
-
-  // Semantic
   success: '#2C8A7C',
   warning: '#D4A017',
   danger: '#C0392B',
@@ -39,15 +30,33 @@ export const colors = {
 
 export type ColorToken = keyof typeof colors;
 
+export const fontFamilies = {
+  regular: 'Inter_400Regular',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+} as const;
+
+export type FontFamilyToken = keyof typeof fontFamilies;
+
 export const fontSizes = {
-  display: 28,
-  heading: 20,
-  subheading: 16,
-  body: 14,
-  caption: 12,
+  display: 32,
+  heading: 22,
+  subheading: 17,
+  body: 16,
+  caption: 13,
 } as const;
 
 export type FontSizeToken = keyof typeof fontSizes;
+
+export const lineHeights = {
+  display: 38,
+  heading: 28,
+  subheading: 24,
+  body: 24,
+  caption: 18,
+} as const;
+
+export type LineHeightToken = keyof typeof lineHeights;
 
 export const fontWeights = {
   regular: '400',
@@ -76,20 +85,38 @@ export const borderRadius = {
 
 export type BorderRadiusToken = keyof typeof borderRadius;
 
-/** Gradient color stops for expo-linear-gradient (header, splash, hero panels). */
+export const layout = {
+  screenPaddingHorizontal: spacing.lg,
+  tabBarHeight: 56,
+  tabBarBottomInset: spacing.sm,
+  sectionGap: spacing.lg,
+  scrollBottomInset: 72,
+  listingCardWidth: 272,
+  carouselMinHeight: 168,
+} as const;
+
 export const gradients = {
   header: [colors.navy, colors.navyMid, colors.tealDeep, colors.teal] as const,
   headerCompact: [colors.navy, colors.tealDeep] as const,
   accent: [colors.teal, colors.tealBright] as const,
 } as const;
 
+export const motion = {
+  durationFast: 200,
+  durationNormal: 400,
+} as const;
+
 const theme = {
   colors,
+  fontFamilies,
   fontSizes,
+  lineHeights,
   fontWeights,
   spacing,
   borderRadius,
+  layout,
   gradients,
+  motion,
 };
 
 export default theme;

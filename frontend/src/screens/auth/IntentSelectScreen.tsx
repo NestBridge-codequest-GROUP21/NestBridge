@@ -1,0 +1,254 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import PrimaryButton from '../../components/PrimaryButton';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  gradients,
+  lineHeights,
+  layout,
+} from '../../constants/theme';
+import type { PrimaryIntent } from '../../types/accountProfile';
+import {
+  PRIMARY_INTENT_DESCRIPTIONS,
+  PRIMARY_INTENT_ICONS,
+  PRIMARY_INTENT_LABELS,
+} from '../../types/accountProfile';
+
+export interface IntentOption {
+  id: PrimaryIntent;
+  label: string;
+  description: string;
+  icon: string;
+}
+
+export interface IntentSelectScreenProps {
+  title: string;
+  subtitle: string;
+  noteTitle?: string;
+  noteBody?: string;
+  options: IntentOption[];
+  selectedIntent?: PrimaryIntent | null;
+  onSelect?: (intent: PrimaryIntent) => void;
+  onContinue?: () => void;
+  onBack?: () => void;
+}
+
+export default function IntentSelectScreen({
+  title,
+  subtitle,
+  noteTitle = 'You can do it all here',
+  noteBody = 'Pick what matters most right now. You can still book guides and find stays anytime.',
+  options,
+  selectedIntent,
+  onSelect,
+  onContinue,
+  onBack,
+}: IntentSelectScreenProps) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={styles.root}>
+      <StatusBar style="light" />
+
+      <LinearGradient
+        colors={[...gradients.headerCompact]}
+        style={[styles.header, { paddingTop: insets.top + spacing.md }]}
+      >
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Text style={styles.backIcon}>←</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.backPlaceholder} />
+        )}
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
+      </LinearGradient>
+
+      <ScrollView
+        style={styles.body}
+        contentContainerStyle={[
+          styles.bodyContent,
+          { paddingBottom: insets.bottom + spacing.xl },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {options.map((option) => {
+          const selected = selectedIntent === option.id;
+          return (
+            <Pressable
+              key={option.id}
+              style={({ pressed }) => [
+                styles.optionCard,
+                selected && styles.optionCardSelected,
+                pressed && styles.optionPressed,
+                pressed && styles.optionPressedScale,
+              ]}
+              onPress={() => onSelect?.(option.id)}
+              accessibilityRole="button"
+              accessibilityLabel={option.label}
+              accessibilityState={{ selected }}
+            >
+              <Text style={styles.optionIcon}>{option.icon}</Text>
+              <View style={styles.optionText}>
+                <Text style={styles.optionLabel}>{option.label}</Text>
+                <Text style={styles.optionDescription}>{option.description}</Text>
+              </View>
+            </Pressable>
+          );
+        })}
+
+        <View style={styles.noteCard}>
+          <Text style={styles.noteTitle}>{noteTitle}</Text>
+          <Text style={styles.noteBody}>{noteBody}</Text>
+        </View>
+
+        <PrimaryButton
+          label="Continue"
+          onPress={onContinue}
+          disabled={!selectedIntent}
+        />
+      </ScrollView>
+    </View>
+  );
+}
+
+export function intentOptionsFromPrimary(): IntentOption[] {
+  const intents: PrimaryIntent[] = ['STUDENT', 'TOURIST', 'HOST', 'GUIDE'];
+  return intents.map((id) => ({
+    id,
+    label: PRIMARY_INTENT_LABELS[id],
+    description: PRIMARY_INTENT_DESCRIPTIONS[id],
+    icon: PRIMARY_INTENT_ICONS[id],
+  }));
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    paddingHorizontal: layout.screenPaddingHorizontal,
+    paddingBottom: spacing.lg,
+    borderBottomLeftRadius: borderRadius.lg,
+    borderBottomRightRadius: borderRadius.lg,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  backIcon: {
+    fontSize: 24,
+    color: colors.white,
+  },
+  backPlaceholder: {
+    height: spacing.sm,
+  },
+  title: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.bold,
+    color: colors.white,
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    color: colors.white,
+    opacity: 0.88,
+    lineHeight: lineHeights.body,
+  },
+  body: {
+    flex: 1,
+    marginTop: -spacing.sm,
+  },
+  bodyContent: {
+    paddingHorizontal: layout.screenPaddingHorizontal,
+    paddingTop: spacing.lg,
+  },
+  optionCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  optionCardSelected: {
+    borderColor: colors.teal,
+    backgroundColor: colors.warmCream,
+  },
+  optionPressed: {
+    opacity: 0.95,
+  },
+  optionPressedScale: {
+    transform: [{ scale: 0.98 }],
+  },
+  optionIcon: {
+    fontSize: fontSizes.heading,
+    marginRight: spacing.md,
+  },
+  optionText: {
+    flex: 1,
+  },
+  optionLabel: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  optionDescription: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.body,
+  },
+  noteCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  noteTitle: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  noteBody: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.body,
+  },
+});
