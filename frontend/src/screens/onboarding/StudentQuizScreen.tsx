@@ -7,6 +7,7 @@ import {
   QuizPageDefinition,
   RELIGION_OPTIONS,
   createReligiousAccommodationsFollowUp,
+  createReligionOtherFollowUp,
 } from './quizConstants';
 import { useQuizNavigation } from './useQuizNavigation';
 import type { QuizAnswers } from './QuizPage';
@@ -38,6 +39,7 @@ const STUDENT_PAGES: QuizPageDefinition[] = [
       options: RELIGION_OPTIONS,
       required: true,
     },
+    createReligionOtherFollowUp(),
     createReligiousAccommodationsFollowUp(),
   ],
   [
@@ -87,6 +89,7 @@ const STUDENT_PAGES: QuizPageDefinition[] = [
       question: 'Which city and university are you heading to?',
       type: 'text',
       placeholder: 'e.g. Accra, University of Ghana',
+      textValidation: 'place',
       required: true,
     },
   ],

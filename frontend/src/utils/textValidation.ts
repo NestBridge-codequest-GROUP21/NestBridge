@@ -1,3 +1,5 @@
+import { isKnownGhanaPlace } from '../data/ghanaPlaces';
+
 const VOWEL_PATTERN = /[aeiouAEIOU]/;
 const LONG_WORD_PATTERN = /\S{16,}/;
 const REPEATED_CHAR_PATTERN = /(.)\1{4,}/;
@@ -26,4 +28,29 @@ export function isLikelyValidText(text: string): boolean {
   }
 
   return true;
+}
+
+/**
+ * Place-name validation — allows short Ghana towns (Wa, Ho) via allowlist.
+ */
+export function isLikelyValidPlaceName(text: string): boolean {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) {
+    return false;
+  }
+
+  if (isKnownGhanaPlace(trimmed)) {
+    return true;
+  }
+
+  const cityPart = trimmed.split(',')[0]?.trim() ?? trimmed;
+  if (isKnownGhanaPlace(cityPart)) {
+    return true;
+  }
+
+  if (cityPart.length < 3) {
+    return false;
+  }
+
+  return isLikelyValidText(trimmed);
 }

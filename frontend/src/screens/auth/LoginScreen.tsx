@@ -1,0 +1,193 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import FormTextField from '../../components/FormTextField';
+import PrimaryButton from '../../components/PrimaryButton';
+import SecondaryButton from '../../components/SecondaryButton';
+import {
+  colors,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+} from '../../constants/theme';
+
+export interface LoginScreenProps {
+  title: string;
+  subtitle: string;
+  email: string;
+  password: string;
+  keepSignedIn: boolean;
+  errorMessage?: string;
+  onEmailChange?: (value: string) => void;
+  onPasswordChange?: (value: string) => void;
+  onToggleKeepSignedIn?: () => void;
+  onSubmit?: () => void;
+  onCreateAccountPress?: () => void;
+  onBack?: () => void;
+}
+
+export default function LoginScreen({
+  title,
+  subtitle,
+  email,
+  password,
+  keepSignedIn,
+  errorMessage,
+  onEmailChange,
+  onPasswordChange,
+  onToggleKeepSignedIn,
+  onSubmit,
+  onCreateAccountPress,
+  onBack,
+}: LoginScreenProps) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <StatusBar style="dark" />
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: insets.top + spacing.lg,
+            paddingBottom: insets.bottom + spacing.lg,
+          },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Text style={styles.backIcon}>←</Text>
+          </Pressable>
+        ) : null}
+
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
+
+        <FormTextField
+          label="Email"
+          value={email}
+          placeholder="Enter email address..."
+          onChangeText={onEmailChange}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <FormTextField
+          label="Password"
+          value={password}
+          placeholder="Enter your password..."
+          onChangeText={onPasswordChange}
+          secureTextEntry
+        />
+
+        <Pressable
+          onPress={onToggleKeepSignedIn}
+          style={styles.keepSignedInRow}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: keepSignedIn }}
+        >
+          <View style={[styles.checkbox, keepSignedIn && styles.checkboxChecked]}>
+            {keepSignedIn ? <Text style={styles.checkmark}>✓</Text> : null}
+          </View>
+          <Text style={styles.keepSignedInText}>Keep me signed in</Text>
+        </Pressable>
+
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+        <PrimaryButton label="Sign in" onPress={onSubmit} />
+        <View style={styles.spacer} />
+        <SecondaryButton label="Create an account" onPress={onCreateAccountPress} />
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    paddingHorizontal: spacing.lg,
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  backIcon: {
+    fontSize: 24,
+    color: colors.textPrimary,
+  },
+  title: {
+    fontSize: fontSizes.display,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: spacing.xl,
+  },
+  keepSignedInRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    minHeight: 44,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  checkboxChecked: {
+    backgroundColor: colors.teal,
+    borderColor: colors.teal,
+  },
+  checkmark: {
+    color: colors.white,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.bold,
+  },
+  keepSignedInText: {
+    fontSize: fontSizes.body,
+    color: colors.textPrimary,
+  },
+  errorText: {
+    fontSize: fontSizes.body,
+    color: colors.danger,
+    marginBottom: spacing.md,
+  },
+  spacer: {
+    height: spacing.sm,
+  },
+});

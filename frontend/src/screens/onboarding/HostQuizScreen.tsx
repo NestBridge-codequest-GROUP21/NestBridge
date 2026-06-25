@@ -7,6 +7,7 @@ import {
   QuizPageDefinition,
   RELIGION_OPTIONS,
   createReligiousAccommodationsFollowUp,
+  createReligionOtherFollowUp,
 } from './quizConstants';
 import { useQuizNavigation } from './useQuizNavigation';
 
@@ -44,6 +45,7 @@ const HOST_PAGES: QuizPageDefinition[] = [
       options: RELIGION_OPTIONS,
       required: true,
     },
+    createReligionOtherFollowUp(),
     createReligiousAccommodationsFollowUp(),
   ],
   [
@@ -108,6 +110,7 @@ const HOST_PAGES: QuizPageDefinition[] = [
       question: "What's your address and city?",
       type: 'text',
       placeholder: 'Street, neighborhood, and city',
+      textValidation: 'place',
       required: true,
     },
   ],

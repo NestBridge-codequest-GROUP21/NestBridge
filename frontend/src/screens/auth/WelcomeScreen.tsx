@@ -1,124 +1,191 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  Easing,
+  Dimensions,
+  ScrollView,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BrandLogoMark from '../../components/BrandLogoMark';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
+  lineHeights,
+  layout,
+  motion,
 } from '../../constants/theme';
 
-export interface RoleOption {
-  id: string;
-  label: string;
-  description: string;
+const WELCOME_LOGO_SIZE = spacing.xl * 3;
+
+export interface WelcomeValuePill {
   icon: string;
+  label: string;
 }
 
 export interface WelcomeScreenProps {
   appName: string;
   headline: string;
   subheadline: string;
-  roles: RoleOption[];
-  selectedRoleId: string;
-  onSelectRole?: (roleId: string) => void;
-  onGetStarted?: () => void;
+  tagline?: string;
+  valuePills?: WelcomeValuePill[];
+  onCreateAccount?: () => void;
   onSignIn?: () => void;
-  onContinueAsGuest?: () => void;
+}
+
+function DriftRing({ size, style }: { size: number; style: object }) {
+  const drift = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(drift, {
+          toValue: 1,
+          duration: 9000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(drift, {
+          toValue: 0,
+          duration: 9000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [drift]);
+
+  const translateX = drift.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, spacing.sm],
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.driftRing,
+        style,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          transform: [{ translateX }],
+        },
+      ]}
+    />
+  );
 }
 
 export default function WelcomeScreen({
-  appName,
   headline,
   subheadline,
-  roles,
-  selectedRoleId,
-  onSelectRole,
-  onGetStarted,
+  tagline,
+  valuePills = [],
+  onCreateAccount,
   onSignIn,
-  onContinueAsGuest,
 }: WelcomeScreenProps) {
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = Dimensions.get('window');
+  const entrance = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(entrance, {
+      toValue: 1,
+      duration: motion.durationNormal,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [entrance]);
+
+  const contentOpacity = entrance;
+  const contentTranslateY = entrance.interpolate({
+    inputRange: [0, 1],
+    outputRange: [spacing.lg, 0],
+  });
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.headerCompact]}
-        style={[styles.hero, { paddingTop: insets.top + spacing.lg }]}
-      >
-        <Text style={styles.appName}>{appName}</Text>
-        <Text style={styles.headline}>{headline}</Text>
-        <Text style={styles.subheadline}>{subheadline}</Text>
-      </LinearGradient>
-
       <ScrollView
-        style={styles.body}
-        contentContainerStyle={[
-          styles.bodyContent,
-          { paddingBottom: insets.bottom + spacing.lg },
-        ]}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.sectionLabel}>I am a...</Text>
-
-        {roles.map((role) => {
-          const selected = role.id === selectedRoleId;
-          return (
-            <Pressable
-              key={role.id}
-              style={({ pressed }) => [
-                styles.roleCard,
-                selected && styles.roleCardSelected,
-                pressed && styles.roleCardPressed,
-              ]}
-              onPress={() => onSelectRole?.(role.id)}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-              accessibilityLabel={role.label}
-            >
-              <View style={[styles.roleIconWrap, selected && styles.roleIconWrapSelected]}>
-                <Text style={styles.roleIcon}>{role.icon}</Text>
-              </View>
-              <View style={styles.roleText}>
-                <Text style={[styles.roleLabel, selected && styles.roleLabelSelected]}>
-                  {role.label}
-                </Text>
-                <Text style={styles.roleDescription}>{role.description}</Text>
-              </View>
-              <View style={[styles.radio, selected && styles.radioSelected]}>
-                {selected && <View style={styles.radioDot} />}
-              </View>
-            </Pressable>
-          );
-        })}
-
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <PrimaryButton label="Get Started →" onPress={onGetStarted} />
-        <View style={styles.signInSpacer} />
-        <SecondaryButton label="Sign In" onPress={onSignIn} />
-
-        <Pressable
-          onPress={onContinueAsGuest}
-          style={styles.guestLink}
-          accessibilityRole="link"
-          accessibilityLabel="Continue as guest"
+        <LinearGradient
+          colors={[...gradients.header]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.hero, { paddingTop: insets.top + spacing.lg }]}
         >
-          <Text style={styles.guestText}>Just exploring? Continue as guest</Text>
-        </Pressable>
+          <DriftRing
+            size={screenWidth * 0.55}
+            style={{ position: 'absolute', top: -spacing.xl, right: -spacing.lg }}
+          />
+
+          <BrandLogoMark size={WELCOME_LOGO_SIZE} />
+
+          {tagline ? <Text style={styles.tagline}>{tagline}</Text> : null}
+
+          <Animated.View
+            style={{
+              opacity: contentOpacity,
+              transform: [{ translateY: contentTranslateY }],
+              alignSelf: 'stretch',
+            }}
+          >
+            <Text style={styles.headline}>{headline}</Text>
+            <Text style={styles.subheadline}>{subheadline}</Text>
+          </Animated.View>
+        </LinearGradient>
+
+        <Animated.View
+          style={[
+            styles.pillsSection,
+            {
+              opacity: contentOpacity,
+              transform: [{ translateY: contentTranslateY }],
+            },
+          ]}
+        >
+          <View style={styles.pillsWrap}>
+            {valuePills.map((pill) => (
+              <View key={pill.label} style={styles.pill}>
+                <Text style={styles.pillIcon}>{pill.icon}</Text>
+                <Text style={styles.pillLabel}>{pill.label}</Text>
+              </View>
+            ))}
+          </View>
+        </Animated.View>
       </ScrollView>
+
+      <View
+        style={[
+          styles.footer,
+          {
+            paddingBottom: insets.bottom + spacing.lg,
+          },
+        ]}
+      >
+        <PrimaryButton label="Create account" onPress={onCreateAccount} />
+        <View style={styles.signInSpacer} />
+        <SecondaryButton label="Sign in" onPress={onSignIn} />
+      </View>
     </View>
   );
 }
@@ -128,146 +195,95 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   hero: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingBottom: spacing.xl,
     borderBottomLeftRadius: borderRadius.lg,
     borderBottomRightRadius: borderRadius.lg,
+    alignItems: 'center',
+    gap: spacing.md,
+    overflow: 'hidden',
   },
-  appName: {
+  driftRing: {
+    borderWidth: 1,
+    borderColor: colors.white,
+    opacity: 0.1,
+    backgroundColor: 'transparent',
+  },
+  tagline: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
-    color: colors.tealBright,
-    letterSpacing: 1,
+    color: colors.gold,
+    letterSpacing: spacing.xs,
     textTransform: 'uppercase',
-    marginBottom: spacing.sm,
+    textAlign: 'center',
   },
   headline: {
-    fontSize: fontSizes.display,
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.white,
-    lineHeight: 34,
+    lineHeight: lineHeights.heading,
+    marginTop: spacing.sm,
     marginBottom: spacing.sm,
+    textAlign: 'center',
   },
   subheadline: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.white,
     opacity: 0.88,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
+    textAlign: 'center',
   },
-  body: {
-    flex: 1,
-    marginTop: -spacing.md,
-  },
-  bodyContent: {
-    paddingHorizontal: spacing.lg,
+  pillsSection: {
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.background,
   },
-  sectionLabel: {
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
+  pillsWrap: {
+    gap: spacing.sm,
+    marginBottom: spacing.xl,
   },
-  roleCard: {
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.border,
+    gap: spacing.md,
+    minHeight: 44,
   },
-  roleCardSelected: {
-    borderColor: colors.teal,
-    backgroundColor: colors.warmCream,
-  },
-  roleCardPressed: {
-    opacity: 0.95,
-  },
-  roleIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  roleIconWrapSelected: {
-    backgroundColor: colors.white,
-  },
-  roleIcon: {
-    fontSize: 22,
-  },
-  roleText: {
-    flex: 1,
-    paddingRight: spacing.sm,
-  },
-  roleLabel: {
+  pillIcon: {
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
   },
-  roleLabelSelected: {
-    color: colors.tealDeep,
-  },
-  roleDescription: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    lineHeight: 16,
-  },
-  radio: {
-    width: 22,
-    height: 22,
-    borderRadius: borderRadius.pill,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioSelected: {
-    borderColor: colors.teal,
-  },
-  radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.teal,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing.lg,
-  },
-  dividerLine: {
+  pillLabel: {
     flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    fontSize: fontSizes.caption,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
-    color: colors.textTertiary,
-    marginHorizontal: spacing.md,
+    color: colors.textPrimary,
+    lineHeight: lineHeights.body,
+  },
+  footer: {
+    paddingHorizontal: layout.screenPaddingHorizontal,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.background,
   },
   signInSpacer: {
     height: spacing.sm,
-  },
-  guestLink: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  guestText: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    textDecorationLine: 'underline',
   },
 });

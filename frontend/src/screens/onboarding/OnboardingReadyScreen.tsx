@@ -1,59 +1,120 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
+  lineHeights,
+  layout,
+  motion,
 } from '../../constants/theme';
 
 export interface OnboardingReadyScreenProps {
   userName: string;
-  destination: string;
+  subtitle: string;
   matchHint: string;
+  ctaLabel: string;
+  roleLabel?: string;
   onEnterDashboard?: () => void;
 }
 
 export default function OnboardingReadyScreen({
   userName,
-  destination,
+  subtitle,
   matchHint,
+  ctaLabel,
+  roleLabel,
   onEnterDashboard,
 }: OnboardingReadyScreenProps) {
   const insets = useSafeAreaInsets();
+  const firstName = userName.split(' ')[0];
+  const entrance = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(entrance, {
+      toValue: 1,
+      duration: motion.durationNormal,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [entrance]);
+
+  const badgeScale = entrance.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.85, 1],
+  });
+  const contentOpacity = entrance;
+  const contentTranslateY = entrance.interpolate({
+    inputRange: [0, 1],
+    outputRange: [spacing.md, 0],
+  });
 
   return (
     <LinearGradient
       colors={[...gradients.header]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={[styles.root, { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.lg }]}
+      style={[
+        styles.root,
+        {
+          paddingTop: insets.top + spacing.xl,
+          paddingBottom: insets.bottom + spacing.lg,
+        },
+      ]}
     >
       <StatusBar style="light" />
 
       <View style={styles.content}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>✓ Profile complete</Text>
-        </View>
+        <Animated.View
+          style={[
+            styles.badgeRow,
+            {
+              opacity: contentOpacity,
+              transform: [{ scale: badgeScale }],
+            },
+          ]}
+        >
+          <View style={styles.badge}>
+            <Text style={styles.badgeCheck} accessibilityElementsHidden>
+              ✓
+            </Text>
+            <Text style={styles.badgeText}>Profile saved</Text>
+          </View>
+          {roleLabel ? (
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleBadgeText}>{roleLabel}</Text>
+            </View>
+          ) : null}
+        </Animated.View>
 
-        <Text style={styles.title}>You're all set,{'\n'}{userName.split(' ')[0]}!</Text>
-        <Text style={styles.subtitle}>
-          We're finding host families in {destination} that fit your preferences.
-        </Text>
+        <Animated.View
+          style={{
+            opacity: contentOpacity,
+            transform: [{ translateY: contentTranslateY }],
+          }}
+        >
+          <Text style={styles.title}>
+            You are all set,{'\n'}
+            <Text style={styles.titleAccent}>{firstName}</Text>
+          </Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
 
-        <View style={styles.hintCard}>
-          <Text style={styles.hintEmoji}>✨</Text>
-          <Text style={styles.hintText}>{matchHint}</Text>
-        </View>
+          <View style={styles.hintCard}>
+            <View style={styles.hintAccent} />
+            <Text style={styles.hintText}>{matchHint}</Text>
+          </View>
+        </Animated.View>
       </View>
 
-      <PrimaryButton label="Find my matches →" onPress={onEnterDashboard} />
+      <PrimaryButton label={ctaLabel} onPress={onEnterDashboard} />
     </LinearGradient>
   );
 }
@@ -61,64 +122,98 @@ export default function OnboardingReadyScreen({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     justifyContent: 'space-between',
   },
   content: {
     flex: 1,
     justifyContent: 'center',
   },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
   badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: colors.tealBright,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.pill,
+    gap: spacing.sm,
+  },
+  badgeCheck: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
+    color: colors.white,
+  },
+  badgeText: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
+    color: colors.white,
+    letterSpacing: 0.3,
+  },
+  roleBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.navyMid,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.tealBright,
   },
-  badgeText: {
+  roleBadgeText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   title: {
-    fontSize: fontSizes.display + 4,
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
-    lineHeight: 38,
+    lineHeight: lineHeights.display,
     marginBottom: spacing.md,
   },
+  titleAccent: {
+    color: colors.tealBright,
+  },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.regular,
     color: colors.white,
-    opacity: 0.9,
-    lineHeight: 24,
+    lineHeight: lineHeights.subheading,
     marginBottom: spacing.xl,
+    opacity: 0.92,
   },
   hintCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
+    alignItems: 'stretch',
+    backgroundColor: colors.warmCream,
     borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 4,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  hintEmoji: {
-    fontSize: 28,
-    marginRight: spacing.md,
+  hintAccent: {
+    width: spacing.sm,
+    backgroundColor: colors.teal,
   },
   hintText: {
     flex: 1,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
-    lineHeight: 20,
+    lineHeight: lineHeights.subheading,
+    padding: spacing.lg,
   },
 });
