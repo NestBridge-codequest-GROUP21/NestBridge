@@ -15,6 +15,10 @@ import GuideQuizScreen from '../screens/onboarding/GuideQuizScreen';
 import StudentHomeDashboard from '../screens/student/StudentHomeDashboard';
 import StudentBookingsScreen from '../screens/student/StudentBookingsScreen';
 import HostProfileScreen from '../screens/student/HostProfileScreen';
+import MatchSearchScreen, {
+  matchSearchDefaults,
+} from '../screens/student/MatchSearchScreen';
+import { sampleMatchResults } from '../screens/student/MatchResultsScreen';
 import BookingScreen from '../screens/student/BookingScreen';
 import BookingConfirmedScreen from '../screens/student/BookingConfirmedScreen';
 import IncomingRequestsScreen from '../screens/host/IncomingRequestsScreen';
@@ -384,6 +388,25 @@ export default function AppNavigator() {
   const matchSubtitle = formatMatchSubtitle(profileState.seekerSetup.data.quizAnswers);
   const personalizedGreeting = getPersonalizedGreeting(firstName);
 
+  const matchSearchProps = useMemo(
+    () => ({
+      defaults: {
+        ...matchSearchDefaults,
+        destinationCity: cityLabel.split(',')[0]?.trim() || cityLabel,
+        checkIn,
+        checkOut,
+      },
+      results: sampleMatchResults,
+    }),
+    [cityLabel, checkIn, checkOut],
+  );
+
+  const navigateToMatchSearch = (
+    navigation: NativeStackNavigationProp<AppStackParamList>,
+  ) => {
+    navigation.navigate('MatchSearch');
+  };
+
   const homeProps = useMemo(
     () => ({
       ...studentHomeMockData,
@@ -585,6 +608,10 @@ export default function AppNavigator() {
             onBack={() => navigation.goBack()}
             onCategoryPress={(categoryId) => {
               if (categoryId === 'homestays') {
+                if (primaryIntent === 'STUDENT') {
+                  navigateToMatchSearch(navigation);
+                  return;
+                }
                 navigation.navigate('HostProfile', { hostId: 'host-1' });
               }
               if (categoryId === 'guides') {
@@ -767,6 +794,9 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentHomeDashboard
             {...homeProps}
+            onSearchPress={() => navigateToMatchSearch(navigation)}
+            onMatchAlertPress={() => navigateToMatchSearch(navigation)}
+            onSeeAllHostsPress={() => navigateToMatchSearch(navigation)}
             onQuickActionPress={(actionId) => {
               if (actionId === 'bookings') {
                 navigation.navigate('StudentBookings');
@@ -775,7 +805,7 @@ export default function AppNavigator() {
                 navigation.navigate('GuideSearch');
               }
               if (actionId === 'find-hosts') {
-                navigation.navigate('HostProfile', { hostId: 'host-1' });
+                navigateToMatchSearch(navigation);
               }
             }}
             onHostPress={(hostId) => navigation.navigate('HostProfile', { hostId })}
@@ -889,6 +919,18 @@ export default function AppNavigator() {
             }
             onHostReviewPress={() => navigation.navigate('IncomingRequests')}
             onGuideReviewPress={() => navigation.navigate('IncomingSessionRequests')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="MatchSearch">
+        {({ navigation }) => (
+          <MatchSearchScreen
+            {...matchSearchProps}
+            onBack={() => navigation.goBack()}
+            onHostPress={(hostId) =>
+              navigation.navigate('HostProfile', { hostId })
+            }
           />
         )}
       </Stack.Screen>
