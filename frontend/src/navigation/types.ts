@@ -25,6 +25,7 @@ export type AppStackParamList = {
   ProfileSetup: { track: SetupTrack };
   OnboardingReady: { track: SetupTrack };
   StudentBookings: undefined;
+  MatchSearch: undefined;
   HostProfile: { hostId: string };
   Booking: { hostId: string; bookingContext?: import('../types/booking').BookingContext };
   BookingConfirmed: { bookingId: string };
