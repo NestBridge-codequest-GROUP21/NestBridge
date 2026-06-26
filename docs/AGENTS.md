@@ -21,7 +21,7 @@ src/
 
 screens/          # One file per screen
 
-auth/           # Splash, Welcome, RoleSelect, Register, Login
+auth/           # Splash, Welcome, IntentSelect, Register, Login
 
 onboarding/     # Destination, Quiz, ProfileSetup, Ready
 
@@ -124,48 +124,76 @@ instance with:
 Never call `fetch()` or create a second Axios instance elsewhere. All API
 functions live in `api.js` and are imported by screens.
 
-## Authentication flow
-1. On app launch, check SecureStore for a JWT.
-2. If present and valid, navigate to the role-appropriate home screen.
-3. If absent or expired, navigate to Welcome screen.
-4. After login/register, store JWT in SecureStore (never AsyncStorage).
-5. Role is stored alongside the JWT and used to determine which navigator to
-   mount.
+## Authentication flow (account-first)
+1. On app launch, restore session from SecureStore (`AuthContext`).
+2. If a valid JWT/session exists, mount `AppNavigator` directly (skip Welcome/Register).
+3. If absent, mount `AuthNavigator` (Welcome → Register or Login).
+4. **Register** collects identity only (name, email, password) — no role at signup.
+5. After login/register, store JWT in SecureStore (never AsyncStorage for tokens).
+6. Sign out clears session; user sees auth stack again only after explicit logout or 401.
 
-## Navigation structure
-- Unauthenticated: AuthNavigator (Splash → Welcome → RoleSelect → Register/Login)
-- Authenticated, role = STUDENT: StudentNavigator inside SharedTabNavigator
-- Authenticated, role = HOST: HostNavigator inside SharedTabNavigator
-- Authenticated, role = GUIDE: GuideNavigator inside SharedTabNavigator
-- Authenticated, role = TOURIST: TouristNavigator inside SharedTabNavigator
+Phase 1 mock: `frontend/src/context/AuthContext.tsx` + `expo-secure-store`.
 
-SharedTabNavigator tab bar items (all roles):
-- Home (role-specific dashboard)
-- Discover / Find
-- Messages (Chat list)
-- Welfare (check-ins + SOS shortcut)
-- Profile
+## Unified account model (one sign-in, all services)
+One person, one account. **Primary intent** personalizes the home screen only — it does not lock users out of other services.
+
+| Primary intent | Home emphasis | Always available (same account) | Hard exclusion |
+|---|---|---|---|
+| `STUDENT` | Book host families | Book guides, browse lodging | Cannot enable **host listing** |
+| `TOURIST` | Book guides + explore lodging | Book homestays | — |
+| `HOST` | Incoming homestay requests | Book guides / find stays when traveling | Cannot be **student** primary |
+| `GUIDE` | Incoming session requests | Book stays / guides when traveling | — |
+
+**Setup tracks** (optional add-ons, not separate accounts):
+- **Travel profile** (`seekerSetup`) — one shared profile for booking homestays and guide sessions
+- **Host listing** (`hostProvider`) — accept homestay requests
+- **Guide listing** (`guideProvider`) — accept session requests
+
+- Managed in `AccountProfileContext` (persisted per user in SecureStore via `accountProfileStorage.ts`).
+- **Browse/discover is always allowed** before setup is complete.
+- **Book, pay, accept** are gated until the relevant setup track is `COMPLETE`.
+- Profile → **Account setup** (`AccountSetupScreen`) — no “switch view” between roles.
+
+**Booking context** (`STUDENT` | `TOURIST` | `TRAVEL`) is derived at request time from primary intent and booking type — not from profile switching.
+
+## Navigation structure (Phase 1 implemented)
+- **RootNavigator**: session + profile load → `AuthNavigator` or `AppNavigator`
+- **AuthNavigator**: Splash (loading) → Welcome → Register / Login
+- **AppNavigator**: `IntentSelect` (first run) → intent-specific home + `AccountSetup` + `UnifiedSearch` + onboarding + booking flows
+
+| Primary intent | Home screen |
+|---|---|
+| `STUDENT` | `StudentHome` |
+| `TOURIST` | `ExploreHome` |
+| `HOST` | `HostHome` (incoming requests + travel quick actions) |
+| `GUIDE` | `GuideHome` (incoming sessions + travel quick actions) |
+| none | `IntentSelect` |
+
+Shared tab bar items (authenticated app):
+- Home (intent-specific)
+- Search (`UnifiedSearch` — homestays, guides, lodging)
+- Bookings (outgoing + host/guide review entry when listings are complete)
+- Messages
+- Profile (Account setup + sign out)
 
 SOS button: floating shield icon visible on every screen via a wrapper
 component in AppNavigator. Navigates to shared SOS screen. Never hidden.
 
-## Role-specific onboarding
-After RoleSelect + Register, route to the correct onboarding flow:
-- STUDENT: Destination → Quiz (5 screens, one question each) → ProfileSetup → Ready
-- HOST: HostWelcome → PropertyDetails → Amenities → PhotoUpload →
-  AvailabilityCalendar → KYCPrompt
-- GUIDE: GuideWelcome → ServicesProfile → GuideBio → WeeklySchedule →
-  SocialVerify (optional) → KYCPrompt
-- TOURIST: TripSetup → TouristProfile → ExploreHome
+## Account onboarding (after register)
+First authenticated launch → **IntentSelect** (“What brings you here?”). Then intent-specific onboarding:
 
-Onboarding state is held in component state or context and submitted as a
-single API call at the end of each flow. Do not call the API after each
-individual step.
+- **STUDENT / TOURIST**: Destination → Quiz → ProfileSetup → Ready (travel profile)
+- **HOST**: HostQuiz → ProfileSetup → Ready (host listing)
+- **GUIDE**: GuideQuiz → ProfileSetup → Ready (guide listing)
+
+Additional setup (travel profile, host listing, guide listing) can be started anytime from Profile → Account setup. Legacy `user_capabilities` rows migrate to this model on load.
+
+Backend Phase 2: `GET/PUT /api/users/me/profile` with `primary_intent`, `seeker_profile`, and provider profile payloads.
 
 ## Firebase chat
 - Firebase is used exclusively for real-time messaging. Nothing else.
-- On match acceptance, the backend provisions a conversation node and returns
-  the conversation ID.
+- When a student taps **Message host**, the backend provisions a conversation
+  node via `POST /api/conversations` and returns the conversation ID.
 - The frontend opens a Firebase listener on
   `/conversations/{conversationId}/messages`.
 - Messages are written directly to Firebase by the sender.
@@ -174,6 +202,23 @@ individual step.
 - Auto-translate: show a globe icon on messages where detected language differs
   from the user's preferred language. On tap, call the backend translation
   endpoint and replace the message text in local state.
+
+## Booking flow (student ↔ host ↔ guide ↔ tourist)
+
+**Homestays (`booking_type HOST`):** students and tourists → host families.
+**Guide sessions (`booking_type GUIDE`):** students and tourists → local guides.
+
+1. Discover hosts/guides → profile → **Message** (chat) → **Request to book / Book session**.
+2. Request created with status `PENDING_HOST`; seeker sees it on Bookings tab (chip: Homestay or Guide session).
+3. Host or guide reviews incoming queue; accepts or declines.
+4. Accept → `ACCEPTED`; seeker gets notification + **Pay now** CTA.
+5. Mock payment via `PUT /api/bookings/:id/confirm` → `CONFIRMED`.
+6. Host: max **2 overlapping stays**. Guide: max **2 overlapping session time blocks**.
+
+**Tourist external lodging (hybrid):** `LodgingDirectory` + `LodgingDetail` screens show curated hotels/partners with call, email, website deep link, and **Save to My contacts**. No in-app payment for external listings.
+
+Phase 1 mocks: `frontend/src/data/bookingMock.ts`, `guideSessionMock.ts`, `lodgingDirectoryMock.ts`.
+Phase 2 wires `BookingContext.js` and `services/api.js`.
 
 ## Screens — key UX rules
 These rules apply across all screens and must not be overridden:
