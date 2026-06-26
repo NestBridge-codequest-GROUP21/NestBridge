@@ -180,13 +180,13 @@ and is gitignored.
 These are the tables you must have. Column names match the entity fields exactly.
 
 ```sql
--- Users
+-- Users (identity at register; primary_intent set during onboarding)
 CREATE TABLE users (
   user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   full_name VARCHAR(100) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL,          -- STUDENT | HOST | GUIDE | TOURIST
+  primary_intent VARCHAR(30),        -- STUDENT | TOURIST | HOST | GUIDE (nullable until onboarding)
   nationality VARCHAR(100),
   languages TEXT[],
   profile_photo_url TEXT,
@@ -198,6 +198,25 @@ CREATE TABLE users (
   is_minor BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Seeker / travel profile (one per user — powers homestay + guide bookings)
+CREATE TABLE seeker_profiles (
+  user_id UUID PRIMARY KEY REFERENCES users(user_id),
+  status VARCHAR(20) NOT NULL DEFAULT 'NOT_STARTED',  -- NOT_STARTED | IN_PROGRESS | COMPLETE
+  profile_data JSONB DEFAULT '{}',   -- destination, quiz answers, bio, dates
+  completed_at TIMESTAMP
+);
+
+-- Business rule (application-enforced): users with primary_intent = STUDENT cannot have an
+-- active host_profiles row. Host primary users may still complete seeker_profiles for travel booking. (deprecated — migrate to seeker_profiles + host_profiles + guide_profiles)
+CREATE TABLE user_capabilities (
+  user_id UUID REFERENCES users(user_id),
+  capability VARCHAR(30) NOT NULL,   -- STUDENT_SEEKER | TOURIST_SEEKER | HOST | GUIDE
+  status VARCHAR(20) NOT NULL DEFAULT 'NOT_STARTED',
+  profile_data JSONB DEFAULT '{}',
+  completed_at TIMESTAMP,
+  PRIMARY KEY (user_id, capability)
 );
 
 -- Host profiles
@@ -272,6 +291,15 @@ CREATE TABLE bookings (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- BookingStatus values (status column on bookings):
+-- PENDING_HOST   student submitted; awaiting host review
+-- ACCEPTED       host accepted; student must pay (payment_status still PENDING)
+-- CONFIRMED      mock payment completed (payment_status CONFIRMED)
+-- DECLINED       host declined or auto-declined when host at capacity
+-- EXPIRED        student did not pay within acceptance window
+-- CANCELLED      cancelled by guest or host per policy
+-- CHECKED_IN     host confirmed guest arrival
+
 -- Welfare check-ins
 CREATE TABLE welfare_check_ins (
   checkin_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -302,9 +330,9 @@ CREATE TABLE sos_events (
 ## API endpoints — full list
 
 ### Auth — `/api/auth`
-POST /api/auth/register        — register new user, return JWT + role
+POST /api/auth/register        — register identity only (name, email, password); return JWT
 
-POST /api/auth/login           — authenticate, return JWT + role
+POST /api/auth/login           — authenticate, return JWT
 
 POST /api/auth/refresh-token   — exchange refresh token for new access token
 
@@ -317,6 +345,14 @@ GET  /api/users/:id            — get public profile
 
 PUT  /api/users/:id            — update own profile (auth required)
 
+GET  /api/users/me/profile     — primary_intent + seeker profile + provider setup status
+
+PUT  /api/users/me/profile     — update primary_intent, seeker profile, or provider setup progress
+
+GET  /api/users/me/capabilities — (deprecated) legacy capability rows; migrate clients to /me/profile
+
+PUT  /api/users/me/capabilities/:capability — (deprecated) legacy upsert
+
 POST /api/users/:id/photo      — upload profile photo URL
 
 GET  /api/users/:id/reviews    — get verified reviews
@@ -328,16 +364,32 @@ POST /api/matches/find                   — run algorithm, return ranked list
 
 GET  /api/matches/:matchId               — get match details
 
-POST /api/matches/:matchId/accept        — host/guide accepts match
+POST /api/matches/:matchId/accept        — optional: save/favourite a match (NOT required for chat)
 
-POST /api/matches/:matchId/decline       — host/guide declines match
+POST /api/matches/:matchId/decline       — host/guide declines match suggestion
+
+### Conversations — `/api/conversations`
+POST /api/conversations                  — open chat on "Message host" (body: hostId, matchId?)
+                                         — provisions Firebase node; returns conversationId
 
 ### Booking — `/api/bookings`
-POST /api/bookings                       — create booking request
+POST /api/bookings                       — create request (body: bookingType HOST|GUIDE,
+                                         matchId, checkIn, checkOut; for GUIDE also
+                                         sessionDate, sessionStartTime, durationHours)
+                                         — **403** if seeker lacks COMPLETE capability
+                                         (STUDENT_SEEKER or TOURIST_SEEKER)
+
+GET  /api/bookings/incoming              — provider queue (?status=PENDING_HOST&bookingType=GUIDE)
 
 GET  /api/bookings/:id                   — get booking details
 
-PUT  /api/bookings/:id/confirm           — confirm + mock payment
+PUT  /api/bookings/:id/accept            — provider accepts (host stay or guide session;
+                                         enforces max-2 overlap rule per bookingType)
+                                         — **403** if provider lacks COMPLETE HOST or GUIDE capability
+
+PUT  /api/bookings/:id/decline           — provider declines request
+
+PUT  /api/bookings/:id/confirm           — guest confirms + mock payment (status = CONFIRMED)
 
 PUT  /api/bookings/:id/cancel            — cancel (applies policy)
 
@@ -367,6 +419,48 @@ POST /api/guides/profile       — create guide profile
 PUT  /api/guides/profile       — update guide profile
 
 GET  /api/guides/:id           — get guide public profile
+
+## Booking lifecycle & host capacity rule
+
+Matching, messaging, and booking are **separate concerns**:
+
+1. **Discover** — `POST /api/matches/find` returns ranked hosts.
+2. **Discuss** — student taps "Message host" → `POST /api/conversations` opens Firebase chat (no booking yet).
+3. **Request** — student submits stay dates → `POST /api/bookings` (status `PENDING_HOST`).
+4. **Review** — host sees queue via `GET /api/bookings/incoming`.
+5. **Accept / decline** — `PUT /api/bookings/:id/accept` or `/decline`.
+6. **Pay** — only after accept → `PUT /api/bookings/:id/confirm` (mock payment).
+
+### Max-2 overlapping stays (server-enforced)
+
+A host may accept at most **2 bookings whose date ranges overlap**.
+
+Overlap test: `check_in_A < check_out_B AND check_in_B < check_out_A`
+
+Count only capacity-blocking statuses: `ACCEPTED`, `CONFIRMED`, `CHECKED_IN`.
+
+On accept:
+- If overlapping count ≥ 2 → return `409` ("You already have 2 guests for these dates").
+- If accept succeeds and this fills the 2nd overlapping slot → auto-decline other
+  `PENDING_HOST` requests for the same host with overlapping dates.
+
+Non-overlapping periods are independent (e.g. 2 guests Sep–Nov and 2 guests Jan–Mar).
+
+Implement in `BookingService.acceptBooking()`.
+
+### Max-2 overlapping guide sessions (server-enforced)
+
+When `booking_type = GUIDE`, count overlapping **session time blocks** (not date ranges).
+
+Overlap: `startA < endB AND startB < endA` where `end = start + duration_hours`.
+
+Enforce on `PUT /api/bookings/:id/accept`; auto-decline overlapping pending session requests when 2 slots filled.
+
+### Lodging directory (external — no NestBridge booking)
+
+`GET /api/lodging/partners?city=` — curated hotel/partner listings (admin seed).
+
+Returns contact info + `bookingUrl` for deep links. **Not** part of the booking state machine; no payment through NestBridge.
 
 ## Matching algorithm
 This is the most important logic in the backend. It lives in
@@ -479,7 +573,8 @@ the client.
 
 ## Firebase (messaging only)
 The backend uses Firebase Admin SDK for two things only:
-1. Provisioning a new conversation node when a match is accepted.
+1. Provisioning a new conversation node when a student opens chat via
+   `POST /api/conversations` (Message host — **not** gated on match accept).
 2. Persisting message records (for translation + audit) when a message is sent.
 
 The frontend writes messages directly to Firebase. The backend does not relay
