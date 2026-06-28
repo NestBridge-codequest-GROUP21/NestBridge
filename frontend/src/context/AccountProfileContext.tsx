@@ -24,14 +24,16 @@ import {
   canAcceptHostBookings,
   canBookGuideSession,
   canBookHomestay,
+  canEnableGuideProvider,
   canEnableHostProvider,
   createDefaultAccountProfileState,
   getBookingContext,
   getGuideNextStep,
   getHostNextStep,
-  getHostProviderBlockedReason,
+  getProviderBlockedReason,
   getSeekerNextStep,
   getStepsForTrack,
+  isActiveExchangeStudent,
   isGuideComplete,
   isHostComplete,
   isSeekerComplete,
@@ -42,7 +44,9 @@ interface AccountProfileContextValue {
   state: AccountProfileState;
   isLoading: boolean;
   primaryIntent: PrimaryIntent | null;
+  isActiveExchangeStudent: boolean;
   setPrimaryIntent: (intent: PrimaryIntent) => Promise<void>;
+  setIsActiveExchangeStudent: (active: boolean) => Promise<void>;
   completeStep: (
     track: SetupTrack,
     step: string,
@@ -55,6 +59,9 @@ interface AccountProfileContextValue {
   canAcceptHostBookings: boolean;
   canAcceptGuideSessions: boolean;
   canEnableHostProvider: boolean;
+  canEnableGuideProvider: boolean;
+  providerBlockedReason: string | null;
+  /** @deprecated Use providerBlockedReason */
   hostProviderBlockedReason: string | null;
   isSeekerComplete: boolean;
   isHostComplete: boolean;
@@ -62,6 +69,7 @@ interface AccountProfileContextValue {
   getNextStep: (track: SetupTrack) => string | null;
   getBookingContext: (bookingType: 'HOST' | 'GUIDE') => ReturnType<typeof getBookingContext>;
   resetAccountProfile: () => Promise<void>;
+  applyDevPreset: (preset: AccountProfileState) => Promise<void>;
 }
 
 const AccountProfileContext = createContext<AccountProfileContextValue | undefined>(
@@ -109,6 +117,19 @@ function updateTrackProgress(
   return { ...state, guideProvider: updater(state.guideProvider) };
 }
 
+function canStartProviderTrack(
+  state: AccountProfileState,
+  track: SetupTrack,
+): boolean {
+  if (track === 'HOST') {
+    return canEnableHostProvider(state);
+  }
+  if (track === 'GUIDE') {
+    return canEnableGuideProvider(state);
+  }
+  return true;
+}
+
 export function AccountProfileProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const [state, setState] = useState<AccountProfileState>(
@@ -149,14 +170,27 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
 
   const setPrimaryIntent = useCallback(
     async (intent: PrimaryIntent) => {
-      await persist({ ...state, primaryIntent: intent });
+      const next: AccountProfileState = {
+        ...state,
+        primaryIntent: intent,
+        isActiveExchangeStudent:
+          intent === 'STUDENT' ? (state.isActiveExchangeStudent ?? true) : state.isActiveExchangeStudent,
+      };
+      await persist(next);
+    },
+    [persist, state],
+  );
+
+  const setIsActiveExchangeStudentFlag = useCallback(
+    async (active: boolean) => {
+      await persist({ ...state, isActiveExchangeStudent: active });
     },
     [persist, state],
   );
 
   const startSetup = useCallback(
     async (track: SetupTrack) => {
-      if (track === 'HOST' && !canEnableHostProvider(state)) {
+      if (!canStartProviderTrack(state, track)) {
         return;
       }
       const steps = getStepsForTrack(track, state.primaryIntent);
@@ -180,7 +214,7 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
 
   const completeStep = useCallback(
     async (track: SetupTrack, step: string, data?: Partial<ProfileData>) => {
-      if (track === 'HOST' && !canEnableHostProvider(state)) {
+      if (!canStartProviderTrack(state, track)) {
         return;
       }
       const steps = getStepsForTrack(track, state.primaryIntent);
@@ -205,7 +239,7 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
 
   const markTrackComplete = useCallback(
     async (track: SetupTrack) => {
-      if (track === 'HOST' && !canEnableHostProvider(state)) {
+      if (!canStartProviderTrack(state, track)) {
         return;
       }
       const steps = getStepsForTrack(track, state.primaryIntent);
@@ -234,6 +268,13 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
     }
   }, [user]);
 
+  const applyDevPreset = useCallback(
+    async (preset: AccountProfileState) => {
+      await persist(preset);
+    },
+    [persist],
+  );
+
   const getNextStep = useCallback(
     (track: SetupTrack) => {
       if (track === 'SEEKER') {
@@ -247,12 +288,16 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
     [state],
   );
 
+  const blockedReason = getProviderBlockedReason(state);
+
   const value = useMemo(
     () => ({
       state,
       isLoading,
       primaryIntent: state.primaryIntent,
+      isActiveExchangeStudent: isActiveExchangeStudent(state),
       setPrimaryIntent,
+      setIsActiveExchangeStudent: setIsActiveExchangeStudentFlag,
       completeStep,
       markTrackComplete,
       startSetup,
@@ -261,7 +306,9 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
       canAcceptHostBookings: canAcceptHostBookings(state),
       canAcceptGuideSessions: canAcceptGuideSessions(state),
       canEnableHostProvider: canEnableHostProvider(state),
-      hostProviderBlockedReason: getHostProviderBlockedReason(state),
+      canEnableGuideProvider: canEnableGuideProvider(state),
+      providerBlockedReason: blockedReason,
+      hostProviderBlockedReason: blockedReason,
       isSeekerComplete: isSeekerComplete(state),
       isHostComplete: isHostComplete(state),
       isGuideComplete: isGuideComplete(state),
@@ -269,16 +316,20 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
       getBookingContext: (bookingType: 'HOST' | 'GUIDE') =>
         getBookingContext(state, bookingType),
       resetAccountProfile,
+      applyDevPreset,
     }),
     [
       state,
       isLoading,
       setPrimaryIntent,
+      setIsActiveExchangeStudentFlag,
       completeStep,
       markTrackComplete,
       startSetup,
       getNextStep,
       resetAccountProfile,
+      applyDevPreset,
+      blockedReason,
     ],
   );
 

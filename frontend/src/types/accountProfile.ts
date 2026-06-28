@@ -24,6 +24,8 @@ export interface ProfileProgress {
 
 export interface AccountProfileState {
   primaryIntent: PrimaryIntent | null;
+  /** Default true for Student-intent accounts; ignored for other intents. */
+  isActiveExchangeStudent?: boolean;
   seekerSetup: ProfileProgress;
   hostProvider: ProfileProgress;
   guideProvider: ProfileProgress;
@@ -72,5 +74,5 @@ export const SETUP_TRACK_ICONS: Record<SetupTrack, string> = {
   GUIDE: '🗺️',
 };
 
-export const HOST_PROVIDER_BLOCKED_MESSAGE =
-  'Host families cannot share an account with an active student homestay profile.';
+export const PROVIDER_BLOCKED_MESSAGE =
+  'Active exchange students can book stays and guides, but cannot list as a host or guide until they mark themselves as no longer on exchange.';

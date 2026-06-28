@@ -26,6 +26,7 @@ export interface ProfileScreenProps {
   onAccountSetupPress?: () => void;
   onSignOut?: () => void;
   onResetDemo?: () => void;
+  onDevTestingPress?: () => void;
   onTabPress?: (tabId: string) => void;
 }
 
@@ -39,6 +40,7 @@ export default function ProfileScreen({
   onAccountSetupPress,
   onSignOut,
   onResetDemo,
+  onDevTestingPress,
   onTabPress,
 }: ProfileScreenProps) {
   return (
@@ -79,12 +81,24 @@ export default function ProfileScreen({
             Reset demo to clear profile progress and test as a new user on this
             device.
           </Text>
+          <Pressable
+            style={({ pressed }) => [styles.devMenuButton, pressed && styles.pressed]}
+            onPress={onDevTestingPress}
+            accessibilityRole="button"
+            accessibilityLabel="Developer testing menu"
+          >
+            <Text style={styles.devMenuButtonText}>Developer testing menu</Text>
+          </Pressable>
         </View>
         ) : null}
 
         <SecondaryButton label="Sign out" onPress={onSignOut} />
-        <View style={styles.buttonSpacer} />
-        <SecondaryButton label="Reset demo" onPress={onResetDemo} />
+        {__DEV__ ? (
+          <>
+            <View style={styles.buttonSpacer} />
+            <SecondaryButton label="Reset demo" onPress={onResetDemo} />
+          </>
+        ) : null}
       </ScreenScroll>
 
       <AppTabBar items={tabBarItems} activeTabId={activeTabId} onTabPress={onTabPress} />
@@ -153,6 +167,24 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     lineHeight: 24,
+  },
+  devMenuButton: {
+    minHeight: 44,
+    justifyContent: 'center',
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.warmCream,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  devMenuButtonText: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.teal,
+    textAlign: 'center',
   },
   buttonSpacer: {
     height: spacing.sm,

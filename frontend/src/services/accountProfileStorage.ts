@@ -6,6 +6,13 @@ import { createDefaultAccountProfileState } from '../utils/accountProfile';
 const profileKey = (userId: string) => `nestbridge_account_profile_${userId}`;
 const legacyKey = (userId: string) => `nestbridge_capabilities_${userId}`;
 
+function normalizeProfileState(state: AccountProfileState): AccountProfileState {
+  if (state.primaryIntent === 'STUDENT' && state.isActiveExchangeStudent === undefined) {
+    return { ...state, isActiveExchangeStudent: true };
+  }
+  return state;
+}
+
 function mergeSeekerData(
   studentData: CapabilitiesState['capabilities']['STUDENT_SEEKER']['data'],
   touristData: CapabilitiesState['capabilities']['TOURIST_SEEKER']['data'],
@@ -65,8 +72,12 @@ function migrateFromLegacyCapabilities(
       ? 'IN_PROGRESS'
       : 'NOT_STARTED';
 
-  return {
+  return normalizeProfileState({
     primaryIntent: capabilityToIntent(legacy.activeCapability, legacy),
+    isActiveExchangeStudent:
+      capabilityToIntent(legacy.activeCapability, legacy) === 'STUDENT'
+        ? true
+        : undefined,
     seekerSetup: {
       status: seekerStatus as AccountProfileState['seekerSetup']['status'],
       stepsCompleted: seekerSteps,
@@ -82,7 +93,7 @@ function migrateFromLegacyCapabilities(
       stepsCompleted: guide.stepsCompleted,
       data: guide.data,
     },
-  };
+  });
 }
 
 export async function loadAccountProfile(
@@ -91,7 +102,7 @@ export async function loadAccountProfile(
   const raw = await SecureStore.getItemAsync(profileKey(userId));
   if (raw) {
     try {
-      return JSON.parse(raw) as AccountProfileState;
+      return normalizeProfileState(JSON.parse(raw) as AccountProfileState);
     } catch {
       return createDefaultAccountProfileState();
     }
