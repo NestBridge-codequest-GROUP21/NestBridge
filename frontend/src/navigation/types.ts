@@ -15,6 +15,7 @@ export type AppStackParamList = {
   HostHome: undefined;
   GuideHome: undefined;
   Profile: undefined;
+  DevTesting: undefined;
   AccountSetup: undefined;
   UnifiedSearch: undefined;
   Destination: { track: 'SEEKER' };

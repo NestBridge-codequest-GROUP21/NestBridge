@@ -31,6 +31,7 @@ import SessionBookingScreen from '../screens/shared/SessionBookingScreen';
 import BrowseHomeScreen from '../screens/shared/BrowseHomeScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
+import DevTestingScreen from '../screens/shared/DevTestingScreen';
 import UnifiedSearchScreen from '../screens/shared/UnifiedSearchScreen';
 import ExploreHomeScreen from '../screens/tourist/ExploreHomeScreen';
 import LodgingDirectoryScreen from '../screens/tourist/LodgingDirectoryScreen';
@@ -60,6 +61,8 @@ import {
   navigatePrimaryOnboarding,
 } from './onboardingNavigation';
 import type { AppStackParamList } from './types';
+import type { DevHomeRoute } from '../utils/devTestingPresets';
+import type { AccountProfileState } from '../types/accountProfile';
 
 import { studentHomeMockData } from '../data/studentHomeMock';
 import {
@@ -214,6 +217,43 @@ function homeRouteToScreenName(
   }
 }
 
+function devRouteToScreenName(
+  route: DevHomeRoute,
+): 'IntentSelect' | 'StudentHome' | 'ExploreHome' | 'HostHome' | 'GuideHome' {
+  return route;
+}
+
+function resetToDevRoute(
+  navigation: NativeStackNavigationProp<AppStackParamList>,
+  route: DevHomeRoute,
+) {
+  navigation.reset({
+    index: 0,
+    routes: [{ name: devRouteToScreenName(route) }],
+  });
+}
+
+function syncFieldsFromProfileState(
+  state: AccountProfileState,
+  fallbackName: string,
+  setters: {
+    setCity: (v: string) => void;
+    setUniversity: (v: string) => void;
+    setArrivalDate: (v: string) => void;
+    setDepartureDate: (v: string) => void;
+    setDisplayName: (v: string) => void;
+    setBio: (v: string) => void;
+  },
+) {
+  const data = state.seekerSetup.data;
+  setters.setCity(data.city ?? '');
+  setters.setUniversity(data.university ?? '');
+  setters.setArrivalDate(data.arrivalDate ?? '');
+  setters.setDepartureDate(data.departureDate ?? '');
+  setters.setDisplayName(data.displayName ?? fallbackName);
+  setters.setBio(data.bio ?? '');
+}
+
 const DEFAULT_SESSION_DATE = '2026-09-05';
 const DEFAULT_SESSION_TIME = '10:00';
 
@@ -243,7 +283,9 @@ export default function AppNavigator() {
   const {
     state: profileState,
     primaryIntent,
+    isActiveExchangeStudent,
     setPrimaryIntent,
+    setIsActiveExchangeStudent,
     completeStep,
     markTrackComplete,
     startSetup,
@@ -252,10 +294,12 @@ export default function AppNavigator() {
     canAcceptHostBookings,
     canAcceptGuideSessions,
     canEnableHostProvider,
-    hostProviderBlockedReason,
+    canEnableGuideProvider,
+    providerBlockedReason,
     getNextStep,
     getBookingContext,
     resetAccountProfile,
+    applyDevPreset,
   } = useAccountProfile();
 
   const [city, setCity] = useState('');
@@ -319,6 +363,9 @@ export default function AppNavigator() {
   };
 
   const continueGuideSetup = (navigation: NativeStackNavigationProp<AppStackParamList>) => {
+    if (!canEnableGuideProvider) {
+      return;
+    }
     navigateContinueSetup(
       navigation,
       'GUIDE',
@@ -326,6 +373,56 @@ export default function AppNavigator() {
       getNextStep,
       startSetup,
     );
+  };
+
+  const handleDevPreset = (
+    navigation: NativeStackNavigationProp<AppStackParamList>,
+    options: {
+      preset: AccountProfileState;
+      navigateTo: DevHomeRoute;
+      resumeTrack?: SetupTrack;
+    },
+  ) => {
+    void (async () => {
+      await applyDevPreset(options.preset);
+      syncFieldsFromProfileState(options.preset, user?.displayName ?? 'Guest', {
+        setCity,
+        setUniversity,
+        setArrivalDate,
+        setDepartureDate,
+        setDisplayName,
+        setBio,
+      });
+      if (options.resumeTrack) {
+        navigateContinueSetup(
+          navigation,
+          options.resumeTrack,
+          options.preset.primaryIntent,
+          (track) => {
+            if (track === 'SEEKER') {
+              const steps = getStepsForTrack('SEEKER', options.preset.primaryIntent);
+              return steps.find(
+                (step) =>
+                  !options.preset.seekerSetup.stepsCompleted.includes(step),
+              ) ?? null;
+            }
+            if (track === 'HOST') {
+              return getStepsForTrack('HOST', options.preset.primaryIntent).find(
+                (step) =>
+                  !options.preset.hostProvider.stepsCompleted.includes(step),
+              ) ?? null;
+            }
+            return getStepsForTrack('GUIDE', options.preset.primaryIntent).find(
+              (step) =>
+                !options.preset.guideProvider.stepsCompleted.includes(step),
+            ) ?? null;
+          },
+          startSetup,
+        );
+        return;
+      }
+      resetToDevRoute(navigation, options.navigateTo);
+    })();
   };
 
   const navigateHome = (navigation: NativeStackNavigationProp<AppStackParamList>) => {
@@ -362,25 +459,26 @@ export default function AppNavigator() {
 
   const setupTracks = useMemo(() => {
     const tracks: SetupTrack[] = ['SEEKER', 'HOST', 'GUIDE'];
-    return tracks
-      .filter((track) => track !== 'HOST' || primaryIntent !== 'STUDENT')
-      .map((track) => {
-        const progress = getProgressForTrack(profileState, track);
-        const steps = getStepsForTrack(track, primaryIntent);
-        const blocked = track === 'HOST' && !canEnableHostProvider;
-        return {
-          track,
-          status: progress.status,
-          progressPercent: getProgressPercent(progress, steps),
-          blocked,
-          blockedMessage: blocked ? hostProviderBlockedReason ?? undefined : undefined,
-        };
-      });
+    return tracks.map((track) => {
+      const progress = getProgressForTrack(profileState, track);
+      const steps = getStepsForTrack(track, primaryIntent);
+      const blocked =
+        (track === 'HOST' && !canEnableHostProvider) ||
+        (track === 'GUIDE' && !canEnableGuideProvider);
+      return {
+        track,
+        status: progress.status,
+        progressPercent: getProgressPercent(progress, steps),
+        blocked,
+        blockedMessage: blocked ? providerBlockedReason ?? undefined : undefined,
+      };
+    });
   }, [
     profileState,
     primaryIntent,
     canEnableHostProvider,
-    hostProviderBlockedReason,
+    canEnableGuideProvider,
+    providerBlockedReason,
   ]);
 
   const firstName = resolvedName.split(' ')[0] || resolvedName;
@@ -558,6 +656,7 @@ export default function AppNavigator() {
             onSignOut={() => {
               void signOut();
             }}
+            onDevTestingPress={() => navigation.navigate('DevTesting')}
             onResetDemo={() => {
               void (async () => {
                 await resetAccountProfile();
@@ -569,6 +668,27 @@ export default function AppNavigator() {
         )}
       </Stack.Screen>
 
+      {__DEV__ ? (
+        <Stack.Screen name="DevTesting">
+          {({ navigation }) => (
+            <DevTestingScreen
+              isActiveExchangeStudent={isActiveExchangeStudent}
+              onBack={() => navigation.goBack()}
+              onApplyPreset={(options) => handleDevPreset(navigation, options)}
+              onToggleExchangeStudent={(active) => {
+                void setIsActiveExchangeStudent(active);
+              }}
+              onResetDemo={() => {
+                void (async () => {
+                  await resetAccountProfile();
+                  await signOut();
+                })();
+              }}
+            />
+          )}
+        </Stack.Screen>
+      ) : null}
+
       <Stack.Screen name="AccountSetup">
         {({ navigation }) => (
           <AccountSetupScreen
@@ -576,12 +696,23 @@ export default function AppNavigator() {
             userInitials={resolvedInitials}
             primaryIntent={primaryIntent}
             setupTracks={setupTracks}
+            showExchangeStudentToggle={primaryIntent === 'STUDENT'}
+            isNoLongerExchangeStudent={!isActiveExchangeStudent}
+            onExchangeStudentToggle={() => {
+              void setIsActiveExchangeStudent(!isActiveExchangeStudent);
+            }}
             onBack={() => navigation.goBack()}
             onChangeIntent={() => navigation.navigate('IntentSelect')}
             onTrackPress={(track) => {
               syncOnboardingFields(track);
               const progress = getProgressForTrack(profileState, track);
               if (progress.status === 'COMPLETE') {
+                return;
+              }
+              if (track === 'HOST' && !canEnableHostProvider) {
+                return;
+              }
+              if (track === 'GUIDE' && !canEnableGuideProvider) {
                 return;
               }
               navigateContinueSetup(

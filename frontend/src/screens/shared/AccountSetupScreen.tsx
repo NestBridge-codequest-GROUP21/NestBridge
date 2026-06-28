@@ -45,6 +45,9 @@ export interface AccountSetupScreenProps {
   userInitials: string;
   primaryIntent: PrimaryIntent | null;
   setupTracks: SetupTrackCardData[];
+  showExchangeStudentToggle?: boolean;
+  isNoLongerExchangeStudent?: boolean;
+  onExchangeStudentToggle?: () => void;
   onBack?: () => void;
   onTrackPress?: (track: SetupTrackCardData['track']) => void;
   onChangeIntent?: () => void;
@@ -90,6 +93,9 @@ export default function AccountSetupScreen({
   userInitials,
   primaryIntent,
   setupTracks,
+  showExchangeStudentToggle = false,
+  isNoLongerExchangeStudent = false,
+  onExchangeStudentToggle,
   onBack,
   onTrackPress,
   onChangeIntent,
@@ -152,6 +158,35 @@ export default function AccountSetupScreen({
             accessibilityLabel="Change primary focus"
           >
             <Text style={styles.changeIntentText}>Change home focus</Text>
+          </Pressable>
+        ) : null}
+
+        {showExchangeStudentToggle ? (
+          <Pressable
+            style={styles.exchangeToggleRow}
+            onPress={onExchangeStudentToggle}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: isNoLongerExchangeStudent }}
+            accessibilityLabel={accountSetupCopy.exchangeStudentToggleLabel}
+          >
+            <View
+              style={[
+                styles.exchangeCheckbox,
+                isNoLongerExchangeStudent && styles.exchangeCheckboxChecked,
+              ]}
+            >
+              {isNoLongerExchangeStudent ? (
+                <Text style={styles.exchangeCheckmark}>✓</Text>
+              ) : null}
+            </View>
+            <View style={styles.exchangeToggleText}>
+              <Text style={styles.exchangeToggleLabel}>
+                {accountSetupCopy.exchangeStudentToggleLabel}
+              </Text>
+              <Text style={styles.exchangeToggleHint}>
+                {accountSetupCopy.exchangeStudentToggleHint}
+              </Text>
+            </View>
           </Pressable>
         ) : null}
 
@@ -318,6 +353,52 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
+  },
+  exchangeToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minHeight: 44,
+  },
+  exchangeCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: borderRadius.sm,
+    borderWidth: 2,
+    borderColor: colors.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+    marginTop: spacing.xs,
+  },
+  exchangeCheckboxChecked: {
+    backgroundColor: colors.teal,
+  },
+  exchangeCheckmark: {
+    color: colors.white,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.bold,
+  },
+  exchangeToggleText: {
+    flex: 1,
+  },
+  exchangeToggleLabel: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  exchangeToggleHint: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    lineHeight: 16,
   },
   card: {
     backgroundColor: colors.white,
