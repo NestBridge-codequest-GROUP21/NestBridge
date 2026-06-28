@@ -8,7 +8,7 @@ import type {
 import {
   GUIDE_PROVIDER_STEPS,
   HOST_PROVIDER_STEPS,
-  HOST_PROVIDER_BLOCKED_MESSAGE,
+  PROVIDER_BLOCKED_MESSAGE,
   SEEKER_STEPS,
 } from '../types/accountProfile';
 
@@ -58,20 +58,38 @@ export function canAcceptHostBookings(state: AccountProfileState): boolean {
 }
 
 export function canAcceptGuideSessions(state: AccountProfileState): boolean {
-  return isGuideComplete(state);
+  return isGuideComplete(state) && canEnableGuideProvider(state);
+}
+
+export function isActiveExchangeStudent(state: AccountProfileState): boolean {
+  return (
+    state.primaryIntent === 'STUDENT' &&
+    (state.isActiveExchangeStudent ?? true)
+  );
 }
 
 export function canEnableHostProvider(state: AccountProfileState): boolean {
-  return state.primaryIntent !== 'STUDENT';
+  return !isActiveExchangeStudent(state);
 }
 
-export function getHostProviderBlockedReason(
+export function canEnableGuideProvider(state: AccountProfileState): boolean {
+  return !isActiveExchangeStudent(state);
+}
+
+export function getProviderBlockedReason(
   state: AccountProfileState,
 ): string | null {
   if (canEnableHostProvider(state)) {
     return null;
   }
-  return HOST_PROVIDER_BLOCKED_MESSAGE;
+  return PROVIDER_BLOCKED_MESSAGE;
+}
+
+/** @deprecated Use getProviderBlockedReason */
+export function getHostProviderBlockedReason(
+  state: AccountProfileState,
+): string | null {
+  return getProviderBlockedReason(state);
 }
 
 export function getProgressPercent(
@@ -180,14 +198,16 @@ export function getAccountSetupSummary(state: AccountProfileState): string {
   parts.push(
     isSeekerComplete(state) ? 'Ready to book stays' : 'Add travel details to book',
   );
-  if (state.primaryIntent !== 'STUDENT') {
+  if (isActiveExchangeStudent(state)) {
+    parts.push('Host & guide listing locked');
+  } else {
     parts.push(
       isHostComplete(state) ? 'Host listing live' : 'Host listing not added',
     );
+    parts.push(
+      isGuideComplete(state) ? 'Guide listing live' : 'Guide listing not added',
+    );
   }
-  parts.push(
-    isGuideComplete(state) ? 'Guide listing live' : 'Guide listing not added',
-  );
   return parts.join(' · ');
 }
 

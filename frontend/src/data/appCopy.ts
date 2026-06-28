@@ -81,6 +81,21 @@ export const accountSetupCopy = {
   infoTitle: 'Book and offer from one place',
   infoBody:
     'Complete travel details to request stays. Add a host or guide listing when you are ready to welcome guests.',
+  exchangeStudentToggleLabel: 'I am no longer an active exchange student',
+  exchangeStudentToggleHint:
+    'Turn this on when your exchange program has ended. You can then list as a host or guide while still booking as a traveller.',
+};
+
+export const devTestingCopy = {
+  title: 'Developer testing',
+  subtitle: 'Jump into flows without completing real onboarding. Dev builds only.',
+  resetLabel: 'Reset to brand-new user',
+  resetHint: 'Clears profile progress and signs you out.',
+  homeDashboardsTitle: 'Jump to home dashboard',
+  partialOnboardingTitle: 'Simulate partial onboarding',
+  exchangeStudentTitle: 'Exchange student flag',
+  exchangeStudentActive: 'Active exchange student (provider listing blocked)',
+  exchangeStudentInactive: 'No longer on exchange (provider listing allowed)',
 };
 
 export const validationCopy = {
