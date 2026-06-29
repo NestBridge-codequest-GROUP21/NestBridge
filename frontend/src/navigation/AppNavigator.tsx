@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Linking } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -36,6 +37,8 @@ import UnifiedSearchScreen from '../screens/shared/UnifiedSearchScreen';
 import ExploreHomeScreen from '../screens/tourist/ExploreHomeScreen';
 import LodgingDirectoryScreen from '../screens/tourist/LodgingDirectoryScreen';
 import LodgingDetailScreen from '../screens/tourist/LodgingDetailScreen';
+import TouristSiteDetailScreen from '../screens/tourist/TouristSiteDetailScreen';
+import SOSScreen from '../screens/shared/SOSScreen';
 import type {
   BookingContext,
   BookingListItem,
@@ -90,6 +93,11 @@ import {
   listingFromId,
 } from '../data/lodgingDirectoryMock';
 import { exploreSectionsMock } from '../data/touristExploreMock';
+import {
+  emergencyContactsMock,
+  localEmergencyNumber,
+} from '../data/sosMock';
+import { touristSiteFromId } from '../data/touristSitesMock';
 import { getPersonalizedGreeting } from '../utils/greeting';
 import { formatMatchSubtitle } from '../utils/matchReasons';
 import {
@@ -100,6 +108,11 @@ import {
 } from '../data/appCopy';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
+
+function dialPhoneNumber(number: string) {
+  const sanitized = number.replace(/[^\d+]/g, '');
+  void Linking.openURL(`tel:${sanitized}`);
+}
 
 function getInitials(name: string): string {
   return name
@@ -635,6 +648,9 @@ export default function AppNavigator() {
               if (sectionId === 'lodging') {
                 navigation.navigate('LodgingDirectory');
               }
+              if (sectionId === 'sites') {
+                navigation.navigate('TouristSiteDetail', { siteId: 'site-1' });
+              }
             }}
             onGuidePress={(guideId) => navigation.navigate('GuideProfile', { guideId })}
             onHostPress={(hostId) => navigation.navigate('HostProfile', { hostId })}
@@ -938,6 +954,9 @@ export default function AppNavigator() {
               if (actionId === 'find-hosts') {
                 navigateToMatchSearch(navigation);
               }
+              if (actionId === 'sos') {
+                navigation.navigate('SOS');
+              }
             }}
             onHostPress={(hostId) => navigation.navigate('HostProfile', { hostId })}
             onTabPress={(tabId) => handleTabPress(navigation, tabId)}
@@ -958,6 +977,9 @@ export default function AppNavigator() {
               }
               if (sectionId === 'lodging') {
                 navigation.navigate('LodgingDirectory');
+              }
+              if (sectionId === 'sites') {
+                navigation.navigate('TouristSiteDetail', { siteId: 'site-1' });
               }
             }}
             onGuidePress={(guideId) =>
@@ -1295,6 +1317,25 @@ export default function AppNavigator() {
             />
           );
         }}
+      </Stack.Screen>
+
+      <Stack.Screen name="SOS">
+        {({ navigation }) => (
+          <SOSScreen
+            emergencyContacts={emergencyContactsMock}
+            onBack={() => navigation.goBack()}
+            onCallEmergencyServices={() => dialPhoneNumber(localEmergencyNumber)}
+            onContactCallPress={(contact) => dialPhoneNumber(contact.number)}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="TouristSiteDetail">
+        {({ navigation, route }) => (
+          <TouristSiteDetailScreen
+            site={touristSiteFromId(route.params.siteId)}
+          />
+        )}
       </Stack.Screen>
 
       <Stack.Screen name="IncomingRequests">

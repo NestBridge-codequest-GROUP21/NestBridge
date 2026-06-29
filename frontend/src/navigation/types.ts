@@ -39,6 +39,8 @@ export type AppStackParamList = {
   IncomingSessionRequests: undefined;
   MatchRequestReview: { requestId: string };
   SessionReview: { requestId: string };
+  SOS: undefined;
+  TouristSiteDetail: { siteId: string };
 };
 
 export type RootStackParamList = {
