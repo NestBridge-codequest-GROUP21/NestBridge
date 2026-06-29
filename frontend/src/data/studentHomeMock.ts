@@ -14,7 +14,7 @@ export const studentHomeMockData: StudentHomeDashboardProps = {
     { id: 'find-hosts', label: 'Find hosts', icon: '🏠' },
     { id: 'guides', label: 'Guides', icon: '🗺️' },
     { id: 'bookings', label: 'Bookings', icon: '📅' },
-    { id: 'messages', label: 'Messages', icon: '💬' },
+    { id: 'sos', label: 'SOS', icon: '🆘' },
   ],
   suggestedHosts: [
     {
