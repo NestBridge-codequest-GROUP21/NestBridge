@@ -19,4 +19,11 @@ export const exploreSectionsMock: ExploreSectionItem[] = [
     subtitle: 'Hotels and partners — book outside the app',
     icon: '🏨',
   },
+  {
+    id: 'sites',
+    title: 'Tourist sites',
+    subtitle: 'Landmarks, museums, and must-see places',
+    icon: '📍',
+    accent: 'gold',
+  },
 ];
