@@ -1,29 +1,31 @@
 import type { ExploreSectionItem } from '../screens/tourist/ExploreHomeScreen';
 
+/** Tourist home carousel — local sites only (guides/stays live in Search tab). */
 export const exploreSectionsMock: ExploreSectionItem[] = [
   {
-    id: 'guides',
-    title: 'Book a guide',
-    subtitle: 'Tours, orientation, and local experiences',
-    icon: '🗺️',
+    id: 'site-cape-coast',
+    title: 'Cape Coast Castle',
+    subtitle: 'UNESCO heritage site on the coast',
+    icon: '🏰',
+    accent: 'gold',
   },
   {
-    id: 'homestays',
-    title: 'NestBridge homestays',
-    subtitle: 'Stay with a verified host family',
-    icon: '🏡',
+    id: 'site-kakum',
+    title: 'Kakum National Park',
+    subtitle: 'Canopy walk and rainforest trails',
+    icon: '🌳',
   },
   {
-    id: 'lodging',
-    title: 'Find lodging',
-    subtitle: 'Hotels and partners — book outside the app',
-    icon: '🏨',
+    id: 'site-labadi',
+    title: 'Labadi Beach',
+    subtitle: 'Sun, sand, and local food stalls',
+    icon: '🏖️',
   },
   {
-    id: 'sites',
-    title: 'Tourist sites',
-    subtitle: 'Landmarks, museums, and must-see places',
-    icon: '📍',
+    id: 'site-food',
+    title: 'Local food tour',
+    subtitle: 'Jollof, kelewele, and market bites',
+    icon: '🍲',
     accent: 'gold',
   },
 ];
