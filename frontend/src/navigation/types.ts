@@ -40,6 +40,7 @@ export type AppStackParamList = {
   MatchRequestReview: { requestId: string };
   SessionReview: { requestId: string };
   SOS: undefined;
+  MessagesPlaceholder: undefined;
   TouristSiteDetail: { siteId: string };
 };
 
