@@ -30,6 +30,12 @@ const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
 
 const TOURIST_CULTURAL_ITEMS: ProfileHubItem[] = [
   {
+    id: 'sites-directory',
+    label: 'Sites & culture',
+    description: 'Heritage sites, markets, and landmarks',
+    icon: '🏛️',
+  },
+  {
     id: 'offline-map',
     label: 'Offline map',
     description: 'Download maps before you lose signal',

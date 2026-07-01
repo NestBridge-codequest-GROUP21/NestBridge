@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -16,6 +17,7 @@ import {
   spacing,
   borderRadius,
   gradients,
+  layout,
 } from '../../constants/theme';
 import type { LodgingListing, LodgingCategoryFilter } from '../../types/lodging';
 import { lodgingCategoryLabel } from '../../data/lodgingDirectoryMock';
@@ -25,6 +27,8 @@ export interface LodgingDirectoryScreenProps {
   listings: LodgingListing[];
   activeFilter: LodgingCategoryFilter;
   savedCount: number;
+  isLoading?: boolean;
+  errorMessage?: string | null;
   onFilterChange?: (filter: LodgingCategoryFilter) => void;
   onListingPress?: (listingId: string) => void;
   onBack?: () => void;
@@ -50,6 +54,8 @@ export default function LodgingDirectoryScreen({
   listings,
   activeFilter,
   savedCount,
+  isLoading = false,
+  errorMessage,
   onFilterChange,
   onListingPress,
   onBack,
@@ -114,6 +120,14 @@ export default function LodgingDirectoryScreen({
 
       {savedCount > 0 ? (
         <Text style={styles.savedHint}>{savedCount} saved to My contacts</Text>
+      ) : null}
+
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
+
+      {isLoading ? (
+        <ActivityIndicator color={colors.teal} style={styles.loader} />
       ) : null}
 
       <ScrollView
@@ -318,5 +332,14 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.heading,
     color: colors.teal,
     marginLeft: spacing.sm,
+  },
+  errorText: {
+    fontSize: fontSizes.body,
+    color: colors.danger,
+    paddingHorizontal: layout.screenPaddingHorizontal,
+    marginBottom: spacing.sm,
+  },
+  loader: {
+    marginVertical: spacing.md,
   },
 });
