@@ -28,16 +28,16 @@ export interface TouristSiteDetail {
 
 export interface TouristSiteDetailScreenProps {
   site: TouristSiteDetail;
+  onFindGuidePress?: () => void;
+  onBack?: () => void;
 }
 
 export default function TouristSiteDetailScreen({
   site,
+  onFindGuidePress,
+  onBack,
 }: TouristSiteDetailScreenProps) {
   const insets = useSafeAreaInsets();
-
-  const handleFindGuide = () => {
-    console.log('Find a guide for this site:', site.name);
-  };
 
   return (
     <View style={styles.root}>
@@ -82,7 +82,7 @@ export default function TouristSiteDetailScreen({
       >
         <PrimaryButton
           label="Find a guide for this site"
-          onPress={handleFindGuide}
+          onPress={onFindGuidePress}
         />
       </View>
     </View>

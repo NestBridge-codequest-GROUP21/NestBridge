@@ -28,6 +28,10 @@ export function handleProfileCulturalItem(
   }
   if (itemId === 'offline-map') {
     navigation.navigate('OfflineMap');
+    return;
+  }
+  if (itemId === 'sites-directory') {
+    navigation.navigate('SitesDirectory');
   }
 }
 
