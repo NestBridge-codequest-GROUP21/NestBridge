@@ -166,6 +166,14 @@ export default function BookingScreen({
         <View style={styles.policyCard}>
           <Text style={styles.policyText}>{host.cancellationPolicy}</Text>
         </View>
+
+        <View style={styles.escrowCard}>
+          <Text style={styles.escrowTitle}>Held in escrow</Text>
+          <Text style={styles.escrowText}>
+            Payment is held securely until 24 hours after check-in. You are only
+            charged after the host accepts your request.
+          </Text>
+        </View>
       </ScrollView>
 
       <View
@@ -384,6 +392,25 @@ const styles = StyleSheet.create({
   },
   policyText: {
     flex: 1,
+    fontSize: fontSizes.body,
+    color: colors.textSecondary,
+    lineHeight: 22,
+  },
+  escrowCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.lg,
+  },
+  escrowTitle: {
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  escrowText: {
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     lineHeight: 22,

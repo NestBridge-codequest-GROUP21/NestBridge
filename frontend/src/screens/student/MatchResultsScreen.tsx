@@ -23,6 +23,7 @@ import { formatCurrency } from '../../data/bookingMock';
 
 export interface MatchResultHost {
   id: string;
+  matchId?: string;
   hostName: string;
   initials: string;
   compatibilityScore: number;
@@ -88,8 +89,10 @@ export interface MatchResultsScreenProps {
   results: MatchResultHost[];
   destinationLabel?: string;
   resultsCountLabel?: string;
+  errorMessage?: string | null;
   onHostPress?: (hostId: string) => void;
   onBack?: () => void;
+  onRetry?: () => void;
 }
 
 type ViewMode = 'list' | 'map';
@@ -197,8 +200,10 @@ export default function MatchResultsScreen({
   results,
   destinationLabel = 'Your matches',
   resultsCountLabel,
+  errorMessage,
   onHostPress,
   onBack,
+  onRetry,
 }: MatchResultsScreenProps) {
   const insets = useSafeAreaInsets();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -207,9 +212,73 @@ export default function MatchResultsScreen({
     resultsCountLabel ?? `${results.length} host${results.length === 1 ? '' : 's'} matched to you`;
 
   const handleHostPress = (hostId: string) => {
-    console.log(hostId);
     onHostPress?.(hostId);
   };
+
+  if (errorMessage) {
+    return (
+      <View style={styles.root}>
+        <StatusBar style="light" />
+        <LinearGradient
+          colors={[...gradients.headerCompact]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
+        >
+          {onBack ? (
+            <Pressable onPress={onBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
+              <Text style={styles.backIcon}>←</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.backButtonSpacer} />
+          )}
+          <Text style={styles.headerTitle}>{destinationLabel}</Text>
+        </LinearGradient>
+        <View style={styles.errorWrap}>
+          <Text style={styles.errorTitle}>Could not load matches</Text>
+          <Text style={styles.errorBody}>{errorMessage}</Text>
+          {onRetry ? (
+            <Pressable onPress={onRetry} style={styles.retryButton} accessibilityRole="button" accessibilityLabel="Try again">
+              <Text style={styles.retryLabel}>Try again</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
+    );
+  }
+
+  if (results.length === 0) {
+    return (
+      <View style={styles.root}>
+        <StatusBar style="light" />
+        <LinearGradient
+          colors={[...gradients.headerCompact]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
+        >
+          {onBack ? (
+            <Pressable onPress={onBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
+              <Text style={styles.backIcon}>←</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.backButtonSpacer} />
+          )}
+          <Text style={styles.headerTitle}>{destinationLabel}</Text>
+          <Text style={styles.headerSubtitle}>No hosts matched your search yet</Text>
+        </LinearGradient>
+        <View style={styles.errorWrap}>
+          <Text style={styles.errorTitle}>No matches found</Text>
+          <Text style={styles.errorBody}>Try widening your budget or adjusting your dates, then search again.</Text>
+          {onBack ? (
+            <Pressable onPress={onBack} style={styles.retryButton} accessibilityRole="button" accessibilityLabel="Edit search">
+              <Text style={styles.retryLabel}>Edit search</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.root}>
@@ -596,5 +665,40 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     paddingHorizontal: spacing.lg,
+  },
+  errorWrap: {
+    flex: 1,
+    paddingHorizontal: layout.screenPaddingHorizontal,
+    paddingTop: spacing.xl,
+    alignItems: 'center',
+  },
+  errorTitle: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  errorBody: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  retryButton: {
+    minHeight: 44,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.tealBright,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  retryLabel: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    color: colors.white,
   },
 });
