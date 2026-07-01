@@ -2,8 +2,10 @@
  * Cross-screen copy — warm Ghana/Accra voice, single source for reusable phrases.
  */
 
-import type { PrimaryIntent } from '../types/accountProfile';
+import type { PrimaryIntent, SetupTrack } from '../types/accountProfile';
 import { PRIMARY_INTENT_LABELS } from '../types/accountProfile';
+import type { OnboardingNextStep } from '../components/OnboardingNextStepsCard';
+import type { FeatureHighlight } from '../components/FeatureHighlightRow';
 
 export const splashCopy = {
   tagline: 'From Arrival to Belonging.',
@@ -48,6 +50,31 @@ export const emptyStates = {
     title: 'No session requests yet',
     body: 'When a traveller books a tour with you, it will appear here.',
     tip: 'Tip: add a heritage walk or campus orientation to stand out.',
+  },
+  hostBookings: {
+    title: 'No confirmed stays yet',
+    body: 'When guests pay for an accepted request, their stay will appear here on your calendar.',
+    tip: 'Tip: respond quickly to pending requests to fill your calendar.',
+  },
+  guideBookings: {
+    title: 'No upcoming tours',
+    body: 'Confirmed and paid sessions will show here with date, time, and guest details.',
+    tip: 'Tip: keep your availability updated so travellers can book you.',
+  },
+  guideEarnings: {
+    title: 'No earnings yet',
+    body: 'Completed and confirmed tours will appear here with payout breakdown.',
+    tip: 'Tip: payouts reflect session rate minus the platform fee.',
+  },
+  hostEarnings: {
+    title: 'No payouts yet',
+    body: 'When guests pay for confirmed stays, escrow releases to this screen after check-in.',
+    tip: 'Tip: respond quickly to homestay requests to fill your calendar.',
+  },
+  messages: {
+    title: 'No messages yet',
+    body: 'When you message a host, guide, or guest, conversations will appear here.',
+    tip: 'Tip: open a host or guide profile and tap Message to start chatting.',
   },
   discoveryHosts: (city: string) => ({
     title: `No homestays in ${city} yet`,
@@ -104,15 +131,6 @@ export const validationCopy = {
   otherRequired: 'Tell us which one — a few words is enough.',
 };
 
-export function buildMatchHint(university?: string, city?: string): string {
-  const place = university?.trim() || city?.trim() || 'your area';
-  return `We will surface hosts near ${place} who match your diet and quiet-hours answers. Browse freely while we fine-tune suggestions.`;
-}
-
-export function buildOnboardingReadySubtitle(destination: string): string {
-  return `Your answers are in. We will suggest hosts and guides in ${destination}.`;
-}
-
 export interface OnboardingReadyCopyContext {
   destination?: string;
   university?: string;
@@ -120,10 +138,20 @@ export interface OnboardingReadyCopyContext {
 }
 
 export interface OnboardingReadyCopy {
+  roleHeadline: string;
   subtitle: string;
-  matchHint: string;
+  heroIcon: string;
+  nextSteps: OnboardingNextStep[];
+  featureHighlights: FeatureHighlight[];
   ctaLabel: string;
+  secondaryCtaLabel: string;
   roleLabel?: string;
+}
+
+export function trackToIntent(track: SetupTrack): PrimaryIntent {
+  if (track === 'HOST') return 'HOST';
+  if (track === 'GUIDE') return 'GUIDE';
+  return 'STUDENT';
 }
 
 export function onboardingReadyCopy(
@@ -134,28 +162,163 @@ export function onboardingReadyCopy(
 
   if (intent === 'HOST') {
     return {
-      subtitle: 'Your host listing is saved. Students can now discover your home.',
-      matchHint:
-        'Incoming homestay requests will appear on your dashboard. Keep your listing details up to date.',
-      ctaLabel: 'Go to your dashboard',
+      roleHeadline: 'Host',
+      subtitle:
+        'Your answers are in. We will connect you with students who are the right fit for your home.',
+      heroIcon: '🏠',
+      nextSteps: [
+        {
+          icon: '🤝',
+          title: 'We match you with students',
+          body: 'We recommend students who align with your home and preferences.',
+        },
+        {
+          icon: '💬',
+          title: 'Review and connect',
+          body: 'Chat with interested students before you accept a request.',
+        },
+        {
+          icon: '🛡️',
+          title: 'Safe and supported',
+          body: 'Every student is verified before they can request a stay.',
+        },
+      ],
+      featureHighlights: [
+        { icon: '🎯', label: 'Great matches' },
+        { icon: '😌', label: 'Peace of mind' },
+        { icon: '🤲', label: 'Support' },
+        { icon: '💛', label: 'Meaningful connections' },
+      ],
+      ctaLabel: 'View incoming requests',
+      secondaryCtaLabel: 'Save profile and explore later',
       roleLabel: PRIMARY_INTENT_LABELS.HOST,
     };
   }
 
   if (intent === 'GUIDE') {
     return {
-      subtitle: 'Your guide profile is saved. Travellers can book sessions with you.',
-      matchHint:
-        'Session requests will appear on your dashboard. Add tour types to stand out.',
-      ctaLabel: 'Go to your dashboard',
+      roleHeadline: 'Guide',
+      subtitle:
+        'Your answers are in. We will connect you with travellers looking for amazing tours.',
+      heroIcon: '🗺️',
+      nextSteps: [
+        {
+          icon: '📩',
+          title: 'We find tour opportunities',
+          body: 'See travellers looking for experiences you offer.',
+        },
+        {
+          icon: '📆',
+          title: 'Manage your tours',
+          body: 'Set availability, prices, and tour preferences.',
+        },
+        {
+          icon: '⭐',
+          title: 'Grow your reputation',
+          body: 'Collect reviews and build trust with every session.',
+        },
+      ],
+      featureHighlights: [
+        { icon: '📈', label: 'More bookings' },
+        { icon: '🕐', label: 'Flexible' },
+        { icon: '✅', label: 'Trusted platform' },
+        { icon: '🌍', label: 'Make an impact' },
+      ],
+      ctaLabel: 'Explore tour requests',
+      secondaryCtaLabel: 'Save profile and explore later',
       roleLabel: PRIMARY_INTENT_LABELS.GUIDE,
     };
   }
 
+  if (intent === 'TOURIST') {
+    return {
+      roleHeadline: 'Traveller',
+      subtitle:
+        'Your answers are in. We will suggest top-rated guides and experiences just for you.',
+      heroIcon: '📸',
+      nextSteps: [
+        {
+          icon: '🗺️',
+          title: 'We find the best guides',
+          body: 'Get recommendations for trusted local guides in your destination.',
+        },
+        {
+          icon: '✨',
+          title: 'Curated experiences',
+          body: 'Browse tours, food walks, and must-see places nearby.',
+        },
+        {
+          icon: '🛡️',
+          title: 'Safe and reliable',
+          body: 'All guides are verified and reviewed by other travellers.',
+        },
+      ],
+      featureHighlights: [
+        { icon: '⭐', label: 'Top rated' },
+        { icon: '💡', label: 'Local insights' },
+        { icon: '🔒', label: 'Secure and safe' },
+        { icon: '🎒', label: 'Adventure made easy' },
+      ],
+      ctaLabel: 'Explore experiences',
+      secondaryCtaLabel: 'Save profile and explore later',
+      roleLabel: PRIMARY_INTENT_LABELS.TOURIST,
+    };
+  }
+
   return {
-    subtitle: buildOnboardingReadySubtitle(destination),
-    matchHint: buildMatchHint(ctx.university, ctx.city),
-    ctaLabel: `Explore ${destination}`,
-    roleLabel: PRIMARY_INTENT_LABELS[intent],
+    roleHeadline: 'Student',
+    subtitle: `Your answers are in. We will suggest host families that match your lifestyle and study needs in ${destination}.`,
+    heroIcon: '🎓',
+    nextSteps: [
+      {
+        icon: '🏠',
+        title: 'We find your best matches',
+        body: 'Surface host families by your preferences and location.',
+      },
+      {
+        icon: '✨',
+        title: 'Personalised recommendations',
+        body: 'Matches improve as you explore and update your profile.',
+      },
+      {
+        icon: '🛡️',
+        title: 'Safe and verified homes',
+        body: 'All host families are verified before listing.',
+      },
+    ],
+    featureHighlights: [
+      { icon: '🤗', label: 'Welcoming' },
+      { icon: '🎯', label: 'Smart matches' },
+      { icon: '✅', label: 'Trusted' },
+      { icon: '🚀', label: 'Start your journey' },
+    ],
+    ctaLabel: 'Explore your matches',
+    secondaryCtaLabel: 'Save profile and explore later',
+    roleLabel: PRIMARY_INTENT_LABELS.STUDENT,
   };
+}
+
+export function onboardingReadyCopyByTrack(
+  track: SetupTrack,
+  primaryIntent: PrimaryIntent | null,
+  ctx: OnboardingReadyCopyContext = {},
+): OnboardingReadyCopy {
+  if (track === 'HOST') {
+    return onboardingReadyCopy('HOST', ctx);
+  }
+  if (track === 'GUIDE') {
+    return onboardingReadyCopy('GUIDE', ctx);
+  }
+  return onboardingReadyCopy(primaryIntent ?? 'STUDENT', ctx);
+}
+
+/** @deprecated Use onboardingReadyCopy nextSteps instead */
+export function buildMatchHint(university?: string, city?: string): string {
+  const place = university?.trim() || city?.trim() || 'your area';
+  return `We will surface hosts near ${place} who match your diet and quiet-hours answers. Browse freely while we fine-tune suggestions.`;
+}
+
+/** @deprecated Use onboardingReadyCopy subtitle instead */
+export function buildOnboardingReadySubtitle(destination: string): string {
+  return `Your answers are in. We will suggest hosts and guides in ${destination}.`;
 }

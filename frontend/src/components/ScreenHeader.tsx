@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import StatusPill from './StatusPill';
 import {
   colors,
   fontFamilies,
@@ -20,7 +21,12 @@ export interface ScreenHeaderProps {
   userName?: string;
   userInitials?: string;
   compact?: boolean;
+  statusIcon?: string;
+  statusLabel?: string;
+  notificationCount?: number;
   onBack?: () => void;
+  onHelpPress?: () => void;
+  onNotificationPress?: () => void;
 }
 
 export default function ScreenHeader({
@@ -30,10 +36,16 @@ export default function ScreenHeader({
   userName,
   userInitials,
   compact = false,
+  statusIcon,
+  statusLabel,
+  notificationCount = 0,
   onBack,
+  onHelpPress,
+  onNotificationPress,
 }: ScreenHeaderProps) {
   const insets = useSafeAreaInsets();
   const showUserRow = Boolean(greeting || userName);
+  const showTopActions = Boolean(onBack || onHelpPress);
 
   return (
     <LinearGradient
@@ -42,36 +54,84 @@ export default function ScreenHeader({
       end={{ x: 1, y: 1 }}
       style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
     >
-      {onBack ? (
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>Back</Text>
-        </Pressable>
+      {showTopActions ? (
+        <View style={styles.topActions}>
+          {onBack ? (
+            <Pressable
+              onPress={onBack}
+              style={styles.actionButton}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <Text style={styles.actionText}>←</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.actionSpacer} />
+          )}
+          {onHelpPress ? (
+            <Pressable
+              onPress={onHelpPress}
+              style={styles.actionButton}
+              accessibilityRole="button"
+              accessibilityLabel="Help"
+            >
+              <Text style={styles.actionText}>?</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.actionSpacer} />
+          )}
+        </View>
       ) : null}
 
       {showUserRow ? (
-        <View style={styles.userRow}>
-          <View style={styles.userText}>
-            {greeting ? <Text style={styles.greeting}>{greeting}</Text> : null}
-            {userName ? <Text style={styles.userName}>{userName}</Text> : null}
-            {subtitle ? <Text style={styles.subtitleInline}>{subtitle}</Text> : null}
-          </View>
-          {userInitials ? (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{userInitials}</Text>
+        <>
+          <View style={styles.userRow}>
+            <View style={styles.userText}>
+              {greeting ? <Text style={styles.greeting}>{greeting}</Text> : null}
+              {userName ? <Text style={styles.userName}>{userName}</Text> : null}
+              {subtitle && !statusLabel ? (
+                <Text style={styles.subtitleInline}>{subtitle}</Text>
+              ) : null}
             </View>
+            <View style={styles.headerActions}>
+              {onNotificationPress ? (
+                <Pressable
+                  onPress={onNotificationPress}
+                  style={styles.notificationButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    notificationCount > 0
+                      ? `${notificationCount} notifications`
+                      : 'Notifications'
+                  }
+                >
+                  <Text style={styles.notificationIcon}>🔔</Text>
+                  {notificationCount > 0 ? (
+                    <View style={styles.notificationBadge}>
+                      <Text style={styles.notificationBadgeText}>
+                        {notificationCount > 9 ? '9+' : notificationCount}
+                      </Text>
+                    </View>
+                  ) : null}
+                </Pressable>
+              ) : null}
+              {userInitials ? (
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{userInitials}</Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+          {statusLabel ? (
+            <StatusPill icon={statusIcon} label={statusLabel} />
           ) : null}
-        </View>
+        </>
       ) : (
         <>
           <View style={styles.titleRow}>
-            {onBack ? <View style={styles.backSpacer} /> : null}
+            {onBack ? <View style={styles.actionSpacer} /> : null}
             <Text style={styles.title}>{title}</Text>
-            <View style={styles.backSpacer} />
+            <View style={styles.actionSpacer} />
           </View>
           {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </>
@@ -87,24 +147,29 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: borderRadius.lg,
     borderBottomRightRadius: borderRadius.lg,
   },
-  backButton: {
-    minHeight: 44,
-    justifyContent: 'center',
-    alignSelf: 'flex-start',
+  topActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: spacing.sm,
   },
-  backIcon: {
+  actionButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionSpacer: {
+    width: 44,
+  },
+  actionText: {
     fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.heading,
     color: colors.white,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  backSpacer: {
-    width: 44,
   },
   title: {
     flex: 1,
@@ -125,7 +190,7 @@ const styles = StyleSheet.create({
   },
   userRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   userText: {
@@ -151,6 +216,38 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.tealBright,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  notificationButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  notificationIcon: {
+    fontSize: fontSizes.subheading,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: spacing.xs,
+    right: spacing.xs,
+    minWidth: 18,
+    height: 18,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xs,
+  },
+  notificationBadgeText: {
+    fontFamily: fontFamilies.bold,
+    fontSize: 10,
+    color: colors.white,
   },
   avatar: {
     width: 48,

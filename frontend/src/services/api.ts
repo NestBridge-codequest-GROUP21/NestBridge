@@ -1,0 +1,590 @@
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { API_BASE_URL } from '../config/env';
+import { loadSession, saveSession, clearSession } from './authStorage';
+import type { AccountProfileState, PrimaryIntent, ProfileProgress } from '../types/accountProfile';
+import type {
+  BookingListItem,
+  BookingStatus,
+  BookingType,
+  GuideProfileSummary,
+  HostProfileSummary,
+  IncomingBookingRequest,
+} from '../types/booking';
+import type { AuthSession, AuthUser } from '../types/auth';
+import type { LodgingCategory, LodgingListing } from '../types/lodging';
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  timestamp?: string;
+}
+
+export interface AuthTokenPayload {
+  accessToken: string;
+  refreshToken: string;
+  userId: string;
+  email: string;
+  displayName: string;
+}
+
+export interface MatchResult {
+  matchId: string;
+  targetId: string;
+  targetType: 'HOST' | 'GUIDE';
+  targetName: string;
+  targetPhotoUrl?: string;
+  compatibilityScore: number;
+  matchReasons: string[];
+  trustBadge?: string;
+  pricePerNight?: number;
+  distanceKm?: number;
+  location?: string;
+  initials?: string;
+}
+
+export interface MatchFindParams {
+  city?: string;
+  checkIn?: string;
+  checkOut?: string;
+  maxBudget?: number;
+  targetType?: 'HOST' | 'GUIDE';
+  universityLat?: number;
+  universityLng?: number;
+  preferredLanguages?: string[];
+  dietaryRequirements?: string[];
+  lifestylePreference?: string;
+}
+
+export interface IncomingBookingApi {
+  id: string;
+  bookingType: BookingType;
+  seekerRole?: string;
+  studentId: string;
+  studentName: string;
+  studentInitials: string;
+  studentOrigin?: string;
+  studentUniversity?: string;
+  compatibilityScore?: number;
+  checkIn?: string;
+  checkOut?: string;
+  sessionDate?: string;
+  sessionStartTime?: string;
+  sessionDurationHours?: number;
+  message?: string;
+  nightlyRate?: number;
+  totalPrice?: number;
+  platformFee?: number;
+  nights?: number;
+  cancellationPolicy?: string;
+  overlappingAccepted?: number;
+  maxAllowed?: number;
+  canAccept?: boolean;
+  declineReason?: string;
+}
+
+export interface BookingApi {
+  bookingId: string;
+  guestId: string;
+  hostOrGuideId: string;
+  bookingType: BookingType;
+  checkIn?: string;
+  checkOut?: string;
+  sessionDate?: string;
+  sessionStartTime?: string;
+  sessionDurationHours?: number;
+  guestMessage?: string;
+  totalPrice?: number;
+  platformFee?: number;
+  status: BookingStatus;
+  guestName?: string;
+  guestInitials?: string;
+  providerName?: string;
+}
+
+export interface ConversationApi {
+  conversationId: string;
+  participantA: string;
+  participantB: string;
+  firebasePath: string;
+}
+
+export interface LodgingPartnerApi {
+  partnerId: string;
+  name: string;
+  city: string;
+  category: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  websiteUrl?: string;
+  bookingUrl?: string;
+  priceFrom?: number;
+  currency?: string;
+  description?: string;
+}
+
+export interface WelfareCheckInApi {
+  checkinId?: string;
+  bookingId?: string;
+  scheduledAt?: string;
+  completedAt?: string;
+  flagged?: boolean;
+}
+
+export interface HostProfileApi {
+  hostId: string;
+  userId: string;
+  hostName: string;
+  initials?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  pricePerNight?: number;
+  cancellationPolicy?: string;
+  matchPercentage?: number;
+  matchReasons?: string[];
+  averageRating?: number;
+  reviewCount?: number;
+}
+
+export interface GuideProfileApi {
+  guideId: string;
+  userId: string;
+  name: string;
+  initials?: string;
+  city?: string;
+  country?: string;
+  pricePerSession?: number;
+  sessionDurationHours?: number;
+  serviceTypes?: string[];
+  languagesOffered?: string[];
+  matchPercentage?: number;
+  matchReasons?: string[];
+  averageRating?: number;
+  reviewCount?: number;
+}
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 8000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+let refreshPromise: Promise<AuthSession | null> | null = null;
+
+api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+  const session = await loadSession();
+  if (session?.token && config.headers) {
+    config.headers.Authorization = `Bearer ${session.token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    if (error.response?.status === 401 && original && !original._retry) {
+      original._retry = true;
+      if (!refreshPromise) {
+        refreshPromise = refreshAccessToken();
+      }
+      const session = await refreshPromise;
+      refreshPromise = null;
+      if (session?.token && original.headers) {
+        original.headers.Authorization = `Bearer ${session.token}`;
+        return api(original);
+      }
+      await clearSession();
+    }
+    return Promise.reject(error);
+  },
+);
+
+async function refreshAccessToken(): Promise<AuthSession | null> {
+  const session = await loadSession();
+  if (!session?.refreshToken) {
+    return null;
+  }
+  try {
+    const { data } = await axios.post<ApiResponse<AuthTokenPayload>>(
+      `${API_BASE_URL}/api/auth/refresh-token`,
+      { refreshToken: session.refreshToken },
+    );
+    const next: AuthSession = {
+      ...session,
+      token: data.data.accessToken,
+      refreshToken: data.data.refreshToken,
+      user: {
+        userId: data.data.userId,
+        email: data.data.email,
+        displayName: data.data.displayName,
+      },
+    };
+    await saveSession(next);
+    return next;
+  } catch {
+    return null;
+  }
+}
+
+function unwrap<T>(response: { data: ApiResponse<T> }): T {
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Request failed');
+  }
+  return response.data.data;
+}
+
+export function mapProfileFromApi(dto: {
+  primaryIntent?: PrimaryIntent | null;
+  isActiveExchangeStudent?: boolean;
+  seekerSetup?: ProfileProgress;
+  hostProvider?: ProfileProgress;
+  guideProvider?: ProfileProgress;
+}): AccountProfileState {
+  const emptyProgress = (): ProfileProgress => ({
+    status: 'NOT_STARTED',
+    stepsCompleted: [],
+    data: {},
+  });
+  return {
+    primaryIntent: dto.primaryIntent ?? null,
+    isActiveExchangeStudent: dto.isActiveExchangeStudent,
+    seekerSetup: dto.seekerSetup ?? emptyProgress(),
+    hostProvider: dto.hostProvider ?? emptyProgress(),
+    guideProvider: dto.guideProvider ?? emptyProgress(),
+  };
+}
+
+export function mapIncomingBooking(item: IncomingBookingApi): IncomingBookingRequest {
+  const nights = item.nights ?? 0;
+  const nightly = item.nightlyRate ?? 0;
+  const subtotal = nightly * nights;
+  const platformFee = item.platformFee ?? Math.round(subtotal * 0.05);
+  return {
+    id: item.id,
+    bookingType: item.bookingType,
+    seekerRole: (item.seekerRole as 'STUDENT' | 'TOURIST') ?? 'STUDENT',
+    studentId: item.studentId,
+    studentName: item.studentName,
+    studentInitials: item.studentInitials,
+    studentOrigin: item.studentOrigin ?? '',
+    studentUniversity: item.studentUniversity ?? '',
+    compatibilityScore: item.compatibilityScore ?? 0,
+    checkIn: item.checkIn ?? '',
+    checkOut: item.checkOut ?? '',
+    session:
+      item.sessionDate && item.sessionStartTime
+        ? {
+            sessionDate: item.sessionDate,
+            sessionStartTime: item.sessionStartTime,
+            durationHours: Number(item.sessionDurationHours ?? 0),
+          }
+        : undefined,
+    sessionPrice:
+      item.bookingType === 'GUIDE' && item.totalPrice != null
+        ? {
+            sessionRate: Number(item.totalPrice) - Number(item.platformFee ?? 0),
+            currency: 'GHS',
+            platformFee: Number(item.platformFee ?? 0),
+            total: Number(item.totalPrice),
+          }
+        : undefined,
+    message: item.message,
+    priceBreakdown: {
+      nightlyRate: nightly,
+      currency: 'GHS',
+      nights,
+      subtotal,
+      platformFee,
+      total: item.totalPrice ?? subtotal + platformFee,
+    },
+    cancellationPolicy: item.cancellationPolicy ?? 'FLEXIBLE',
+    capacity: {
+      overlappingAccepted: item.overlappingAccepted ?? 0,
+      maxAllowed: item.maxAllowed ?? 2,
+      periodLabel: item.checkIn && item.checkOut ? `${item.checkIn} – ${item.checkOut}` : '',
+      canAccept: item.canAccept ?? true,
+      declineReason: item.declineReason,
+    },
+  };
+}
+
+export function mapBookingListItem(item: BookingApi): BookingListItem {
+  return {
+    id: item.bookingId,
+    bookingType: item.bookingType,
+    hostId: item.hostOrGuideId,
+    hostName: item.providerName ?? item.guestName ?? 'Provider',
+    hostInitials: item.guestInitials ?? '??',
+    hostLocation: '',
+    checkIn: item.checkIn ?? '',
+    checkOut: item.checkOut ?? '',
+    status: item.status,
+    priceBreakdown: {
+      nightlyRate: 0,
+      currency: 'GHS',
+      nights: 0,
+      subtotal: Number(item.totalPrice ?? 0) - Number(item.platformFee ?? 0),
+      platformFee: Number(item.platformFee ?? 0),
+      total: Number(item.totalPrice ?? 0),
+    },
+    cancellationPolicy: 'FLEXIBLE',
+    createdAt: new Date().toISOString().slice(0, 10),
+  };
+}
+
+export async function register(
+  displayName: string,
+  email: string,
+  password: string,
+): Promise<AuthSession> {
+  const { data } = await api.post<ApiResponse<AuthTokenPayload>>('/api/auth/register', {
+    fullName: displayName,
+    email,
+    password,
+  });
+  const payload = unwrap({ data });
+  return {
+    token: payload.accessToken,
+    refreshToken: payload.refreshToken,
+    user: {
+      userId: payload.userId,
+      email: payload.email,
+      displayName: payload.displayName,
+    },
+    keepSignedIn: true,
+  };
+}
+
+export async function login(
+  email: string,
+  password: string,
+): Promise<AuthSession> {
+  const { data } = await api.post<ApiResponse<AuthTokenPayload>>('/api/auth/login', {
+    email,
+    password,
+  });
+  const payload = unwrap({ data });
+  return {
+    token: payload.accessToken,
+    refreshToken: payload.refreshToken,
+    user: {
+      userId: payload.userId,
+      email: payload.email,
+      displayName: payload.displayName,
+    },
+    keepSignedIn: true,
+  };
+}
+
+export async function logout(refreshToken?: string): Promise<void> {
+  try {
+    await api.post('/api/auth/logout', refreshToken ? { refreshToken } : {});
+  } catch {
+    // clear local session regardless
+  }
+}
+
+export async function getMyProfile(): Promise<AccountProfileState> {
+  const { data } = await api.get<ApiResponse<AccountProfileState>>('/api/users/me/profile');
+  return mapProfileFromApi(unwrap({ data }));
+}
+
+export async function updateMyProfile(
+  update: Partial<AccountProfileState>,
+): Promise<AccountProfileState> {
+  const { data } = await api.put<ApiResponse<AccountProfileState>>('/api/users/me/profile', update);
+  return mapProfileFromApi(unwrap({ data }));
+}
+
+export function mapHostProfileApi(dto: HostProfileApi): HostProfileSummary {
+  const location = [dto.address, dto.city].filter(Boolean).join(', ') || dto.city || 'Ghana';
+  return {
+    id: dto.hostId,
+    userId: dto.userId,
+    name: dto.hostName,
+    initials: dto.initials ?? dto.hostName.slice(0, 2).toUpperCase(),
+    location,
+    matchPercentage: dto.matchPercentage ?? 0,
+    pricePerNight: Number(dto.pricePerNight ?? 0),
+    currency: 'GHS',
+    cancellationPolicy: dto.cancellationPolicy ?? 'FLEXIBLE',
+    icon: '🏡',
+  };
+}
+
+export function mapGuideProfileApi(dto: GuideProfileApi): GuideProfileSummary {
+  const location = [dto.city, dto.country].filter(Boolean).join(', ') || 'Ghana';
+  return {
+    id: dto.guideId,
+    userId: dto.userId,
+    name: dto.name,
+    initials: dto.initials ?? dto.name.slice(0, 2).toUpperCase(),
+    location,
+    matchPercentage: dto.matchPercentage ?? 0,
+    pricePerSession: Number(dto.pricePerSession ?? 0),
+    sessionDurationHours: Number(dto.sessionDurationHours ?? 3),
+    currency: 'GHS',
+    serviceTypes: dto.serviceTypes ?? ['City tour'],
+    languages: dto.languagesOffered ?? ['English'],
+    cancellationPolicy: 'FLEXIBLE',
+    icon: '🗺️',
+  };
+}
+
+export async function getHostProfile(hostId: string): Promise<HostProfileSummary> {
+  const { data } = await api.get<ApiResponse<HostProfileApi>>(`/api/hosts/${hostId}`);
+  return mapHostProfileApi(unwrap({ data }));
+}
+
+export async function getGuideProfile(guideId: string): Promise<GuideProfileSummary> {
+  const { data } = await api.get<ApiResponse<GuideProfileApi>>(`/api/guides/${guideId}`);
+  return mapGuideProfileApi(unwrap({ data }));
+}
+
+export async function findMatches(params: MatchFindParams): Promise<MatchResult[]> {
+  const { data } = await api.post<ApiResponse<MatchResult[]>>('/api/matches/find', params);
+  return unwrap({ data });
+}
+
+export async function getIncomingBookings(
+  bookingType: BookingType = 'HOST',
+  status?: BookingStatus,
+): Promise<IncomingBookingRequest[]> {
+  const params: { bookingType: BookingType; status?: BookingStatus } = { bookingType };
+  if (status) {
+    params.status = status;
+  }
+  const { data } = await api.get<ApiResponse<IncomingBookingApi[]>>('/api/bookings/incoming', {
+    params,
+  });
+  return unwrap({ data }).map(mapIncomingBooking);
+}
+
+const PROVIDER_ACTIVE_STATUSES: BookingStatus[] = [
+  'ACCEPTED',
+  'CONFIRMED',
+  'CHECKED_IN',
+];
+
+export async function getProviderActiveBookings(
+  bookingType: BookingType,
+): Promise<IncomingBookingRequest[]> {
+  const batches = await Promise.all(
+    PROVIDER_ACTIVE_STATUSES.map((status) =>
+      getIncomingBookings(bookingType, status).catch(() => [] as IncomingBookingRequest[]),
+    ),
+  );
+  const seen = new Set<string>();
+  const merged: IncomingBookingRequest[] = [];
+  for (const batch of batches) {
+    for (const item of batch) {
+      if (!seen.has(item.id)) {
+        seen.add(item.id);
+        merged.push(item);
+      }
+    }
+  }
+  return merged;
+}
+
+export async function getUserBookings(userId: string): Promise<BookingListItem[]> {
+  const { data } = await api.get<ApiResponse<BookingApi[]>>(`/api/users/${userId}/bookings`);
+  return unwrap({ data }).map(mapBookingListItem);
+}
+
+export async function createBooking(body: Record<string, unknown>): Promise<BookingApi> {
+  const { data } = await api.post<ApiResponse<BookingApi>>('/api/bookings', body);
+  return unwrap({ data });
+}
+
+export async function acceptBooking(bookingId: string): Promise<BookingApi> {
+  const { data } = await api.put<ApiResponse<BookingApi>>(`/api/bookings/${bookingId}/accept`);
+  return unwrap({ data });
+}
+
+export async function declineBooking(bookingId: string): Promise<BookingApi> {
+  const { data } = await api.put<ApiResponse<BookingApi>>(`/api/bookings/${bookingId}/decline`);
+  return unwrap({ data });
+}
+
+export async function confirmBooking(bookingId: string): Promise<BookingApi> {
+  const { data } = await api.put<ApiResponse<BookingApi>>(`/api/bookings/${bookingId}/confirm`);
+  return unwrap({ data });
+}
+
+export async function cancelBooking(bookingId: string): Promise<BookingApi> {
+  const { data } = await api.put<ApiResponse<BookingApi>>(`/api/bookings/${bookingId}/cancel`);
+  return unwrap({ data });
+}
+
+export function mapLodgingPartner(dto: LodgingPartnerApi): LodgingListing {
+  const category = (['HOTEL', 'GUESTHOUSE', 'PARTNER'].includes(dto.category)
+    ? dto.category
+    : 'PARTNER') as LodgingCategory;
+  const priceHint =
+    dto.priceFrom != null
+      ? `From ${dto.currency ?? 'GHS'} ${Math.round(Number(dto.priceFrom))}/night`
+      : 'Price on request';
+
+  return {
+    id: dto.partnerId,
+    name: dto.name,
+    category,
+    city: dto.city,
+    area: dto.address?.split(',')[0]?.trim() || dto.city,
+    priceHint,
+    rating: 4.5,
+    phone: dto.phone,
+    email: dto.email,
+    bookingUrl: dto.bookingUrl ?? dto.websiteUrl,
+    description: dto.description ?? '',
+    icon: category === 'HOTEL' ? '🏨' : category === 'GUESTHOUSE' ? '🛏️' : '🤝',
+  };
+}
+
+export async function getLodgingPartners(city?: string): Promise<LodgingListing[]> {
+  const { data } = await api.get<ApiResponse<LodgingPartnerApi[]>>('/api/lodging/partners', {
+    params: city ? { city: city.split(',')[0]?.trim() || city } : undefined,
+  });
+  return unwrap({ data }).map(mapLodgingPartner);
+}
+
+export async function getWelfareCheckIns(bookingId: string): Promise<WelfareCheckInApi[]> {
+  const { data } = await api.get<ApiResponse<WelfareCheckInApi[]>>(
+    `/api/welfare/checkins/${bookingId}`,
+  );
+  return unwrap({ data });
+}
+
+export async function logSos(body: {
+  locationLat?: number;
+  locationLng?: number;
+  contactedEmergency?: boolean;
+  contactedSupport?: boolean;
+}): Promise<void> {
+  await api.post('/api/welfare/sos', body);
+}
+
+export async function createConversation(participantId: string): Promise<ConversationApi> {
+  const { data } = await api.post<ApiResponse<ConversationApi>>('/api/conversations', {
+    participantId,
+  });
+  return unwrap({ data });
+}
+
+export function getApiErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const msg = (error.response?.data as ApiResponse<unknown> | undefined)?.message;
+    if (msg) return msg;
+    if (error.code === 'ECONNABORTED') return 'Request timed out. Check your connection.';
+    if (!error.response) return 'Cannot reach the server. Start the backend and try again.';
+    return error.message;
+  }
+  if (error instanceof Error) return error.message;
+  return 'Something went wrong.';
+}
+
+export default api;

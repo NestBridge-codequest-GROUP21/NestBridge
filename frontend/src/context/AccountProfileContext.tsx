@@ -14,6 +14,7 @@ import type {
   ProfileProgress,
   SetupTrack,
 } from '../types/accountProfile';
+import * as api from '../services/api';
 import {
   clearAccountProfile,
   loadAccountProfile,
@@ -147,10 +148,21 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
         }
         return;
       }
-      const saved = await loadAccountProfile(user.userId);
-      if (mounted) {
-        setState(saved);
-        setIsLoading(false);
+      try {
+        const remote = await api.getMyProfile();
+        if (mounted) {
+          setState(remote);
+        }
+        await saveAccountProfile(user.userId, remote);
+      } catch {
+        const saved = await loadAccountProfile(user.userId);
+        if (mounted) {
+          setState(saved);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     })();
     return () => {
@@ -159,10 +171,17 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
   }, [user?.userId]);
 
   const persist = useCallback(
-    async (next: AccountProfileState) => {
+    async (next: AccountProfileState, syncRemote = true) => {
       setState(next);
       if (user) {
         await saveAccountProfile(user.userId, next);
+        if (syncRemote) {
+          try {
+            await api.updateMyProfile(next);
+          } catch {
+            // local cache remains; home screens surface API errors separately
+          }
+        }
       }
     },
     [user],
