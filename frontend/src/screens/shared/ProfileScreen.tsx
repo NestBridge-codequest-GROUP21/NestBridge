@@ -6,6 +6,7 @@ import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import SecondaryButton from '../../components/SecondaryButton';
 import { profileCopy } from '../../data/appCopy';
+import type { ProfileHubItem } from '../../data/profileHub';
 import {
   colors,
   fontFamilies,
@@ -21,9 +22,16 @@ export interface ProfileScreenProps {
   userInitials: string;
   email: string;
   setupSummary: string;
+  culturalGuidanceItems?: ProfileHubItem[];
+  showTravelBooking?: boolean;
   tabBarItems: TabBarItem[];
   activeTabId: string;
+  showSosDock?: boolean;
+  onSosPress?: () => void;
   onAccountSetupPress?: () => void;
+  onCulturalGuidanceItemPress?: (itemId: string) => void;
+  onCoreServicesPress?: () => void;
+  onTravelBookingPress?: () => void;
   onSignOut?: () => void;
   onResetDemo?: () => void;
   onDevTestingPress?: () => void;
@@ -35,9 +43,16 @@ export default function ProfileScreen({
   userInitials,
   email,
   setupSummary,
+  culturalGuidanceItems = [],
+  showTravelBooking = false,
   tabBarItems,
   activeTabId,
+  showSosDock = false,
+  onSosPress,
   onAccountSetupPress,
+  onCulturalGuidanceItemPress,
+  onCoreServicesPress,
+  onTravelBookingPress,
   onSignOut,
   onResetDemo,
   onDevTestingPress,
@@ -54,7 +69,7 @@ export default function ProfileScreen({
         subtitle={email}
       />
 
-      <ScreenScroll withTabBar>
+      <ScreenScroll withTabBar withSosDock={showSosDock}>
         <Pressable
           style={({ pressed }) => [styles.servicesCard, pressed && styles.pressed]}
           onPress={onAccountSetupPress}
@@ -67,6 +82,60 @@ export default function ProfileScreen({
           </View>
           <Text style={styles.servicesAction}>Manage</Text>
         </Pressable>
+
+        {culturalGuidanceItems.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Cultural guidance</Text>
+            {culturalGuidanceItems.map((item) => (
+              <Pressable
+                key={item.id}
+                style={({ pressed }) => [styles.hubRow, pressed && styles.pressed]}
+                onPress={() => onCulturalGuidanceItemPress?.(item.id)}
+                accessibilityRole="button"
+                accessibilityLabel={item.label}
+              >
+                <Text style={styles.hubIcon}>{item.icon}</Text>
+                <View style={styles.hubText}>
+                  <Text style={styles.hubLabel}>{item.label}</Text>
+                  <Text style={styles.hubDescription}>{item.description}</Text>
+                </View>
+                <Text style={styles.hubChevron}>›</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+
+        <Pressable
+          style={({ pressed }) => [styles.servicesCard, pressed && styles.pressed]}
+          onPress={onCoreServicesPress}
+          accessibilityRole="button"
+          accessibilityLabel="Core services"
+        >
+          <View style={styles.servicesText}>
+            <Text style={styles.servicesTitle}>Core services</Text>
+            <Text style={styles.servicesSubtitle}>
+              Homestays, guides, hotels, and lodging in one search hub
+            </Text>
+          </View>
+          <Text style={styles.servicesAction}>Search</Text>
+        </Pressable>
+
+        {showTravelBooking ? (
+          <Pressable
+            style={({ pressed }) => [styles.servicesCard, pressed && styles.pressed]}
+            onPress={onTravelBookingPress}
+            accessibilityRole="button"
+            accessibilityLabel="Book travel"
+          >
+            <View style={styles.servicesText}>
+              <Text style={styles.servicesTitle}>Book as a traveller</Text>
+              <Text style={styles.servicesSubtitle}>
+                Find homestays or guides for your own trips while you host or guide
+              </Text>
+            </View>
+            <Text style={styles.servicesAction}>Browse</Text>
+          </Pressable>
+        ) : null}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About your account</Text>
@@ -101,7 +170,13 @@ export default function ProfileScreen({
         ) : null}
       </ScreenScroll>
 
-      <AppTabBar items={tabBarItems} activeTabId={activeTabId} onTabPress={onTabPress} />
+      <AppTabBar
+        items={tabBarItems}
+        activeTabId={activeTabId}
+        showSosDock={showSosDock}
+        onSosPress={onSosPress}
+        onTabPress={onTabPress}
+      />
     </View>
   );
 }
@@ -146,6 +221,43 @@ const styles = StyleSheet.create({
     color: colors.teal,
     minWidth: 44,
     textAlign: 'right',
+  },
+  hubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minHeight: 44,
+  },
+  hubIcon: {
+    fontSize: 22,
+    marginRight: spacing.md,
+  },
+  hubText: {
+    flex: 1,
+    paddingRight: spacing.sm,
+  },
+  hubLabel: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  hubDescription: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  hubChevron: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.heading,
+    color: colors.textTertiary,
   },
   section: {
     backgroundColor: colors.white,

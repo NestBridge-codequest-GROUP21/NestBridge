@@ -1,6 +1,6 @@
 import type { ExploreSectionItem } from '../screens/tourist/ExploreHomeScreen';
 
-/** Tourist home carousel — local sites only (guides/stays live in Search tab). */
+/** Tourist home carousel — local sites (guides/stays use dedicated search flows). */
 export const exploreSectionsMock: ExploreSectionItem[] = [
   {
     id: 'site-cape-coast',
@@ -22,10 +22,9 @@ export const exploreSectionsMock: ExploreSectionItem[] = [
     icon: '🏖️',
   },
   {
-    id: 'site-food',
-    title: 'Local food tour',
-    subtitle: 'Jollof, kelewele, and market bites',
-    icon: '🍲',
-    accent: 'gold',
+    id: 'site-makola',
+    title: 'Makola Market',
+    subtitle: 'Fabrics, produce, and local shopping',
+    icon: '🛍️',
   },
 ];

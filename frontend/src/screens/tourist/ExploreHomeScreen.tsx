@@ -1,15 +1,26 @@
-import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
+import FeaturedHomeCard, {
+  type FeaturedHomeCardProps,
+} from '../../components/FeaturedHomeCard';
+import QuickActionsGrid, {
+  type QuickActionItem,
+} from '../../components/QuickActionsGrid';
 import ExploreSectionCarousel from '../../components/ExploreSectionCarousel';
-import DiscoveryListingSection from '../../components/DiscoveryListingSection';
-import { colors } from '../../constants/theme';
-import type { GuideProfileSummary } from '../../types/booking';
+import DiscoveryListingSection, {
+  type DiscoveryListingItem,
+} from '../../components/DiscoveryListingSection';
+import RecentActivityList, {
+  type RecentActivityItem,
+} from '../../components/RecentActivityList';
+import ReminderBanner from '../../components/ReminderBanner';
+import { colors, fontFamilies, fontSizes, fontWeights, spacing } from '../../constants/theme';
 import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
-import { formatCurrency } from '../../data/bookingMock';
 
 export interface ExploreSectionItem {
   id: string;
@@ -20,76 +31,73 @@ export interface ExploreSectionItem {
 }
 
 export interface ExploreHomeScreenProps {
+  variant?: 'explore' | 'browse';
   greeting: string;
   userName: string;
   userInitials: string;
   cityLabel: string;
+  statusIcon?: string;
+  statusLabel?: string;
+  notificationCount?: number;
+  featuredGuide?: Omit<FeaturedHomeCardProps, 'onPress'>;
+  quickActions: QuickActionItem[];
   sections: ExploreSectionItem[];
-  suggestedGuides: GuideProfileSummary[];
-  suggestedHosts: SuggestedHostItem[];
+  exploreSectionTitle?: string;
+  suggestedGuides?: DiscoveryListingItem[];
+  suggestedGuidesTitle?: string;
+  showMatchScores?: boolean;
+  recentActivity?: RecentActivityItem[];
+  reminder?: string;
   tabBarItems: TabBarItem[];
   activeTabId: string;
-  savedLodgingCount?: number;
-  showMatchScores?: boolean;
-  guidesEmptyState?: { title: string; body: string };
-  hostsEmptyState?: { title: string; body: string };
+  showSosDock?: boolean;
+  onSosPress?: () => void;
+  showSetupBanner?: boolean;
+  onSetupPress?: () => void;
+  onNotificationPress?: () => void;
+  onFeaturedGuidePress?: () => void;
+  onSuggestedGuidePress?: (guideId: string) => void;
   onSectionPress?: (sectionId: string) => void;
-  onGuidePress?: (guideId: string) => void;
-  onHostPress?: (hostId: string) => void;
+  onQuickActionPress?: (actionId: string) => void;
+  onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
 }
 
 export default function ExploreHomeScreen({
+  variant = 'explore',
   greeting,
   userName,
   userInitials,
   cityLabel,
+  statusIcon,
+  statusLabel,
+  notificationCount = 0,
+  featuredGuide,
+  quickActions,
   sections,
-  suggestedGuides,
-  suggestedHosts,
+  exploreSectionTitle = 'Explore Accra',
+  suggestedGuides = [],
+  suggestedGuidesTitle = 'Top guides near you',
+  showMatchScores = false,
+  recentActivity = [],
+  reminder,
   tabBarItems,
   activeTabId,
-  savedLodgingCount = 0,
-  showMatchScores = false,
-  guidesEmptyState,
-  hostsEmptyState,
+  showSosDock = false,
+  onSosPress,
+  showSetupBanner = false,
+  onSetupPress,
+  onNotificationPress,
+  onFeaturedGuidePress,
+  onSuggestedGuidePress,
   onSectionPress,
-  onGuidePress,
-  onHostPress,
+  onQuickActionPress,
+  onReminderPress,
   onTabPress,
 }: ExploreHomeScreenProps) {
-  const guidesHeading = showMatchScores
-    ? 'Suggested guides'
-    : `Popular guides in ${cityLabel}`;
-  const hostsHeading = showMatchScores
-    ? 'Suggested homestays'
-    : `Popular stays in ${cityLabel}`;
-
-  const guideItems = useMemo(
-    () =>
-      suggestedGuides.map((guide) => ({
-        id: guide.id,
-        name: guide.name,
-        subtitle: guide.location,
-        priceLabel: `${formatCurrency(guide.pricePerSession, guide.currency)}/session`,
-        initials: guide.initials,
-        matchPercentage: guide.matchPercentage,
-      })),
-    [suggestedGuides],
-  );
-
-  const hostItems = useMemo(
-    () =>
-      suggestedHosts.map((host) => ({
-        id: host.id,
-        name: host.name,
-        subtitle: host.location,
-        priceLabel: host.pricePerNight,
-        initials: host.name.slice(0, 2).toUpperCase(),
-        matchPercentage: host.matchPercentage,
-      })),
-    [suggestedHosts],
-  );
+  const resolvedStatus =
+    statusLabel ??
+    (variant === 'browse' ? `Discover ${cityLabel}` : `Exploring ${cityLabel}`);
 
   return (
     <View style={styles.root}>
@@ -99,41 +107,85 @@ export default function ExploreHomeScreen({
         greeting={greeting}
         userName={userName}
         userInitials={userInitials}
-        subtitle={`Exploring ${cityLabel}`}
+        statusIcon={statusIcon ?? (variant === 'browse' ? '🔍' : '📍')}
+        statusLabel={resolvedStatus}
+        notificationCount={notificationCount}
+        onNotificationPress={onNotificationPress}
       />
 
-      <ScreenScroll withTabBar>
-        <ExploreSectionCarousel
-          sections={sections}
-          savedLodgingCount={savedLodgingCount}
-          onSectionPress={onSectionPress}
+      <ScreenScroll withTabBar withSosDock={showSosDock}>
+        {showSetupBanner ? (
+          <ProfileIncompleteBanner
+            message="Add your travel details to unlock booking."
+            onContinueSetup={onSetupPress}
+          />
+        ) : null}
+
+        {featuredGuide ? (
+          <FeaturedHomeCard
+            {...featuredGuide}
+            onPress={onFeaturedGuidePress}
+          />
+        ) : null}
+
+        <QuickActionsGrid
+          actions={quickActions}
+          onActionPress={onQuickActionPress}
         />
 
-        <DiscoveryListingSection
-          title={guidesHeading}
-          items={guideItems}
-          showMatchScores={showMatchScores}
-          emptyState={guidesEmptyState}
-          onItemPress={onGuidePress}
-        />
+        {suggestedGuides.length > 0 ? (
+          <DiscoveryListingSection
+            title={suggestedGuidesTitle}
+            items={suggestedGuides}
+            showMatchScores={showMatchScores}
+            onItemPress={onSuggestedGuidePress}
+          />
+        ) : null}
 
-        <DiscoveryListingSection
-          title={hostsHeading}
-          items={hostItems}
-          showMatchScores={showMatchScores}
-          emptyState={hostsEmptyState}
-          onItemPress={onHostPress}
-        />
+        {sections.length > 0 ? (
+          <View style={styles.carouselWrap}>
+            <Text style={styles.sectionTitle}>{exploreSectionTitle}</Text>
+            <ExploreSectionCarousel
+              sections={sections}
+              onSectionPress={onSectionPress}
+            />
+          </View>
+        ) : null}
+
+        <RecentActivityList items={recentActivity} />
+
+        {reminder ? (
+          <ReminderBanner message={reminder} onPress={onReminderPress} />
+        ) : null}
       </ScreenScroll>
 
-      <AppTabBar items={tabBarItems} activeTabId={activeTabId} onTabPress={onTabPress} />
+      <AppTabBar
+        items={tabBarItems}
+        activeTabId={activeTabId}
+        showSosDock={showSosDock}
+        onSosPress={onSosPress}
+        onTabPress={onTabPress}
+      />
     </View>
   );
 }
+
+export type { SuggestedHostItem };
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  carouselWrap: {
+    marginBottom: spacing.lg,
+  },
+  sectionTitle: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
 });

@@ -1,100 +1,122 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ScreenHeader from '../../components/ScreenHeader';
+import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
-import IncomingRequestCard, {
-  IncomingRequestsEmptyBlock,
-} from '../../components/IncomingRequestCard';
+import FeaturedHomeCard, {
+  type FeaturedHomeCardProps,
+} from '../../components/FeaturedHomeCard';
+import QuickActionsGrid, {
+  type QuickActionItem,
+} from '../../components/QuickActionsGrid';
+import HomeStatsCarousel, {
+  type HomeStatItem,
+} from '../../components/HomeStatsCarousel';
+import ExploreSectionCarousel from '../../components/ExploreSectionCarousel';
+import RecentActivityList, {
+  type RecentActivityItem,
+} from '../../components/RecentActivityList';
+import ReminderBanner from '../../components/ReminderBanner';
+import IncomingRequestCard from '../../components/IncomingRequestCard';
+import { IncomingRequestsEmptyBlock } from '../../components/IncomingRequestCard';
 import type { IncomingRequestsEmptyState } from './IncomingRequestsScreen';
+import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 import {
   colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
-  gradients,
-  layout,
-  lineHeights,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
 
 export type { TabBarItem } from '../../components/AppTabBar';
 
 export interface ProviderHomeDashboardProps {
+  providerRole: 'host' | 'guide';
   greeting: string;
   userName: string;
   userInitials: string;
-  welcomeLine: string;
-  requestsTitle: string;
-  requestsSubtitle: string;
+  statusIcon?: string;
+  statusLabel?: string;
+  notificationCount?: number;
+  featuredCard?: Omit<FeaturedHomeCardProps, 'onPress'>;
+  quickActions: QuickActionItem[];
+  performanceStats?: HomeStatItem[];
+  performanceTitle?: string;
+  tourSuggestions?: ExploreSectionItem[];
+  tourSuggestionsTitle?: string;
   requests: IncomingBookingRequest[];
   emptyState?: IncomingRequestsEmptyState;
+  recentActivity?: RecentActivityItem[];
+  reminder?: string;
   tabBarItems: TabBarItem[];
   activeTabId: string;
+  showSosDock?: boolean;
+  onSosPress?: () => void;
+  onNotificationPress?: () => void;
+  onFeaturedPress?: () => void;
+  onQuickActionPress?: (actionId: string) => void;
   onRequestPress?: (requestId: string) => void;
+  onSeeAllRequestsPress?: () => void;
+  onTourSuggestionPress?: (sectionId: string) => void;
+  onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
 }
 
 export default function ProviderHomeDashboard({
+  providerRole,
   greeting,
   userName,
   userInitials,
-  welcomeLine,
-  requestsTitle,
-  requestsSubtitle,
+  statusIcon,
+  statusLabel,
+  notificationCount = 0,
+  featuredCard,
+  quickActions,
+  performanceStats = [],
+  performanceTitle = 'Your listing performance',
+  tourSuggestions = [],
+  tourSuggestionsTitle = 'Suggested tour requests',
   requests,
   emptyState,
+  recentActivity = [],
+  reminder,
   tabBarItems,
   activeTabId,
+  showSosDock = false,
+  onSosPress,
+  onNotificationPress,
+  onFeaturedPress,
+  onQuickActionPress,
   onRequestPress,
+  onSeeAllRequestsPress,
+  onTourSuggestionPress,
+  onReminderPress,
   onTabPress,
 }: ProviderHomeDashboardProps) {
-  const insets = useSafeAreaInsets();
+  const secondaryRequests = featuredCard ? requests.slice(1) : requests;
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.header]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.headerGradient, { paddingTop: insets.top + spacing.sm }]}
-      >
-        <View style={styles.headerRow}>
-          <View style={styles.headerTextBlock}>
-            <Text style={styles.greeting}>{greeting}</Text>
-            <Text style={styles.userName}>{userName}</Text>
-          </View>
-          <View style={styles.avatar} accessibilityLabel={`${userName} profile`}>
-            <Text style={styles.avatarText}>{userInitials}</Text>
-          </View>
-        </View>
+      <ScreenHeader
+        greeting={greeting}
+        userName={userName}
+        userInitials={userInitials}
+        statusIcon={statusIcon}
+        statusLabel={statusLabel}
+        notificationCount={notificationCount}
+        onNotificationPress={onNotificationPress}
+      />
 
-        <Text style={styles.welcomeLine}>{welcomeLine}</Text>
+      <ScreenScroll withTabBar withSosDock={showSosDock}>
+        {featuredCard ? (
+          <FeaturedHomeCard {...featuredCard} onPress={onFeaturedPress} />
+        ) : null}
 
-        <View style={styles.requestsHeader}>
-          <Text style={styles.requestsTitle}>{requestsTitle}</Text>
-          <Text style={styles.requestsSubtitle}>{requestsSubtitle}</Text>
-        </View>
-      </LinearGradient>
-
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + layout.scrollBottomInset },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
         {requests.length === 0 && emptyState ? (
           <IncomingRequestsEmptyBlock
             title={emptyState.title}
@@ -103,17 +125,63 @@ export default function ProviderHomeDashboard({
           />
         ) : null}
 
-        {requests.map((request, index) => (
-          <IncomingRequestCard
-            key={request.id}
-            request={request}
-            isLast={index === requests.length - 1}
-            onPress={onRequestPress}
-          />
-        ))}
-      </ScrollView>
+        <QuickActionsGrid
+          actions={quickActions}
+          onActionPress={onQuickActionPress}
+        />
 
-      <AppTabBar items={tabBarItems} activeTabId={activeTabId} onTabPress={onTabPress} />
+        {providerRole === 'host' && performanceStats.length > 0 ? (
+          <HomeStatsCarousel title={performanceTitle} items={performanceStats} />
+        ) : null}
+
+        {providerRole === 'guide' && tourSuggestions.length > 0 ? (
+          <View style={styles.carouselWrap}>
+            <Text style={styles.sectionTitle}>{tourSuggestionsTitle}</Text>
+            <ExploreSectionCarousel
+              sections={tourSuggestions}
+              onSectionPress={onTourSuggestionPress}
+            />
+          </View>
+        ) : null}
+
+        {secondaryRequests.length > 0 ? (
+          <View style={styles.requestsSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitleInline}>More requests</Text>
+              <Pressable
+                onPress={onSeeAllRequestsPress}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel="See all requests"
+              >
+                <Text style={styles.seeAll}>View all</Text>
+              </Pressable>
+            </View>
+            {secondaryRequests.map((request, index) => (
+              <IncomingRequestCard
+                key={request.id}
+                request={request}
+                isLast={index === secondaryRequests.length - 1}
+                onPress={onRequestPress}
+              />
+            ))}
+          </View>
+        ) : null}
+
+        <RecentActivityList items={recentActivity} />
+
+        {reminder ? (
+          <ReminderBanner message={reminder} onPress={onReminderPress} />
+        ) : null}
+      </ScreenScroll>
+
+      <AppTabBar
+        items={tabBarItems}
+        activeTabId={activeTabId}
+        showSosDock={showSosDock}
+        onSosPress={onSosPress}
+        onTabPress={onTabPress}
+      />
     </View>
   );
 }
@@ -123,84 +191,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  headerGradient: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingBottom: spacing.lg,
+  carouselWrap: {
+    marginBottom: spacing.lg,
   },
-  headerRow: {
+  sectionTitle: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  requestsSection: {
+    marginBottom: spacing.lg,
+  },
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.md,
   },
-  headerTextBlock: {
-    flex: 1,
-    paddingRight: spacing.md,
-  },
-  greeting: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.white,
-    opacity: 0.88,
-    marginBottom: spacing.xs,
-  },
-  userName: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    letterSpacing: -0.5,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.tealBright,
-    borderWidth: 2,
-    borderColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  welcomeLine: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.white,
-    opacity: 0.88,
-    lineHeight: lineHeights.body,
-    marginBottom: spacing.lg,
-  },
-  requestsHeader: {
-    borderTopWidth: 1,
-    borderTopColor: colors.white,
-    paddingTop: spacing.md,
-  },
-  requestsTitle: {
+  sectionTitleInline: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
-    marginBottom: spacing.xs,
+    color: colors.textPrimary,
   },
-  requestsSubtitle: {
-    fontFamily: fontFamilies.regular,
+  seeAll: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.white,
-    opacity: 0.88,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingTop: spacing.lg,
+    fontWeight: fontWeights.semibold,
+    color: colors.teal,
   },
 });
