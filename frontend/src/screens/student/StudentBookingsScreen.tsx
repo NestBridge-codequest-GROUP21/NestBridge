@@ -30,6 +30,8 @@ export interface StudentBookingsScreenProps {
   activeFilter: BookingTabFilter;
   tabBarItems: TabBarItem[];
   activeTabId: string;
+  showSosDock?: boolean;
+  onSosPress?: () => void;
   showHostReviewEntry?: boolean;
   showGuideReviewEntry?: boolean;
   onGuideReviewPress?: () => void;
@@ -126,6 +128,8 @@ export default function StudentBookingsScreen({
   activeFilter,
   tabBarItems,
   activeTabId,
+  showSosDock = false,
+  onSosPress,
   showHostReviewEntry = false,
   showGuideReviewEntry = false,
   onFilterChange,
@@ -350,7 +354,13 @@ export default function StudentBookingsScreen({
         )}
       </ScrollView>
 
-      <AppTabBar items={tabBarItems} activeTabId={activeTabId} onTabPress={onTabPress} />
+      <AppTabBar
+        items={tabBarItems}
+        activeTabId={activeTabId}
+        showSosDock={showSosDock}
+        onSosPress={onSosPress}
+        onTabPress={onTabPress}
+      />
     </View>
   );
 }

@@ -12,18 +12,21 @@ import {
 
 export interface ScreenScrollProps extends ScrollViewProps {
   withTabBar?: boolean;
+  withSosDock?: boolean;
   children: React.ReactNode;
 }
 
 export default function ScreenScroll({
   withTabBar = false,
+  withSosDock = false,
   children,
   contentContainerStyle,
   ...rest
 }: ScreenScrollProps) {
   const insets = useSafeAreaInsets();
   const bottomPad = withTabBar
-    ? insets.bottom + layout.scrollBottomInset
+    ? insets.bottom +
+      (withSosDock ? layout.scrollBottomInsetWithSos : layout.scrollBottomInset)
     : insets.bottom + spacing.lg;
 
   return (

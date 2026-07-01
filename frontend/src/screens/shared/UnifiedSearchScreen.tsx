@@ -33,6 +33,8 @@ export interface UnifiedSearchScreenProps {
   categories: SearchCategoryItem[];
   tabBarItems: TabBarItem[];
   activeTabId: string;
+  showSosDock?: boolean;
+  onSosPress?: () => void;
   onCategoryPress?: (categoryId: string) => void;
   onBack?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -45,6 +47,8 @@ export default function UnifiedSearchScreen({
   categories,
   tabBarItems,
   activeTabId,
+  showSosDock = false,
+  onSosPress,
   onCategoryPress,
   onBack,
   onTabPress,
@@ -89,7 +93,13 @@ export default function UnifiedSearchScreen({
         ))}
       </ScrollView>
 
-      <AppTabBar items={tabBarItems} activeTabId={activeTabId} onTabPress={onTabPress} />
+      <AppTabBar
+        items={tabBarItems}
+        activeTabId={activeTabId}
+        showSosDock={showSosDock}
+        onSosPress={onSosPress}
+        onTabPress={onTabPress}
+      />
     </View>
   );
 }

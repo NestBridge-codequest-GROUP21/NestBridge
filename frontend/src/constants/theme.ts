@@ -89,8 +89,10 @@ export const layout = {
   screenPaddingHorizontal: spacing.lg,
   tabBarHeight: 56,
   tabBarBottomInset: spacing.sm,
+  sosDockHeight: 52,
   sectionGap: spacing.lg,
   scrollBottomInset: 72,
+  scrollBottomInsetWithSos: 124,
   listingCardWidth: 272,
   carouselMinHeight: 168,
 } as const;
