@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Linking } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Linking, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -15,11 +15,10 @@ import TouristQuizScreen from '../screens/onboarding/TouristQuizScreen';
 import GuideQuizScreen from '../screens/onboarding/GuideQuizScreen';
 import StudentHomeDashboard from '../screens/student/StudentHomeDashboard';
 import StudentBookingsScreen from '../screens/student/StudentBookingsScreen';
-import HostProfileScreen from '../screens/student/HostProfileScreen';
 import MatchSearchScreen, {
   matchSearchDefaults,
 } from '../screens/student/MatchSearchScreen';
-import { sampleMatchResults } from '../screens/student/MatchResultsScreen';
+import type { MatchSearchDefaults } from '../screens/student/MatchSearchScreen';
 import BookingScreen from '../screens/student/BookingScreen';
 import BookingConfirmedScreen from '../screens/student/BookingConfirmedScreen';
 import IncomingRequestsScreen from '../screens/host/IncomingRequestsScreen';
@@ -27,9 +26,14 @@ import ProviderHomeDashboard from '../screens/host/ProviderHomeDashboard';
 import MatchRequestReviewScreen from '../screens/host/MatchRequestReviewScreen';
 import SessionReviewScreen from '../screens/guide/SessionReviewScreen';
 import GuideSearchScreen from '../screens/shared/GuideSearchScreen';
-import GuideProfileDetailScreen from '../screens/shared/GuideProfileDetailScreen';
 import SessionBookingScreen from '../screens/shared/SessionBookingScreen';
-import MessagesPlaceholderScreen from '../screens/shared/MessagesPlaceholderScreen';
+import MessagesTabScreen from '../screens/shared/MessagesTabScreen';
+import ChatScreen from '../screens/shared/ChatScreen';
+import HostRequestsTabScreen from '../screens/host/HostRequestsTabScreen';
+import HostBookingsTabScreen from '../screens/host/HostBookingsTabScreen';
+import HostEarningsTabScreen from '../screens/host/HostEarningsTabScreen';
+import GuideBookingsTabScreen from '../screens/guide/GuideBookingsTabScreen';
+import GuideEarningsTabScreen from '../screens/guide/GuideEarningsTabScreen';
 import BrowseHomeScreen from '../screens/shared/BrowseHomeScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
@@ -39,11 +43,26 @@ import ExploreHomeScreen from '../screens/tourist/ExploreHomeScreen';
 import LodgingDirectoryScreen from '../screens/tourist/LodgingDirectoryScreen';
 import LodgingDetailScreen from '../screens/tourist/LodgingDetailScreen';
 import TouristSiteDetailScreen from '../screens/tourist/TouristSiteDetailScreen';
+import PrepChecklistScreen from '../screens/student/PrepChecklistScreen';
+import LocalTipsScreen from '../screens/student/LocalTipsScreen';
+import TransportGuideScreen from '../screens/student/TransportGuideScreen';
+import ExploreStaysScreen from '../screens/tourist/ExploreStaysScreen';
+import SitesDirectoryScreen from '../screens/tourist/SitesDirectoryScreen';
+import WelfareCheckInScreen from '../screens/shared/WelfareCheckInScreen';
+import ReviewPromptScreen from '../screens/shared/ReviewPromptScreen';
+import { useLodgingPartners, lodgingListingFromId } from '../hooks/useLodgingPartners';
+import OfflineMapScreen from '../screens/tourist/OfflineMapScreen';
+import HostCalendarScreen from '../screens/host/HostCalendarScreen';
+import HostListingsScreen from '../screens/host/HostListingsScreen';
+import TourTypesSetupScreen from '../screens/guide/TourTypesSetupScreen';
+import GuideAvailabilityScreen from '../screens/guide/GuideAvailabilityScreen';
 import SOSScreen from '../screens/shared/SOSScreen';
+import { HostProfileRoute, GuideProfileRoute } from './profileRoutes';
 import type {
   BookingContext,
   BookingListItem,
   BookingTabFilter,
+  GuideProfileSummary,
   HostProfileSummary,
 } from '../types/booking';
 import type { PrimaryIntent, SetupTrack } from '../types/accountProfile';
@@ -60,15 +79,40 @@ import {
 } from '../utils/accountProfile';
 import type { HomeRoute } from '../utils/accountProfile';
 import {
-  bookingContextToSeekerRole,
   navigateContinueSetup,
   navigatePrimaryOnboarding,
 } from './onboardingNavigation';
 import type { AppStackParamList } from './types';
+import {
+  culturalGuidanceItemsForRole,
+  shouldShowTravelBookingEntry,
+} from '../data/profileHub';
+import {
+  guideTourSectionsFromTypes,
+  handleProfileCulturalItem,
+  mainTabSosProps,
+} from './mainTabSos';
 import type { DevHomeRoute } from '../utils/devTestingPresets';
 import type { AccountProfileState } from '../types/accountProfile';
 
-import { studentHomeMockData, suggestedHostsMock, tabBarWithBadgesForRole } from '../data/studentHomeMock';
+import { useHomeApiData } from '../hooks/useHomeApiData';
+import { useProviderTabData } from '../hooks/useProviderTabData';
+import { handleTabPress, navigateToHome } from './tabRouting';
+import { conversationFromId, messagesForConversation } from '../data/conversationsMock';
+import {
+  acceptBooking,
+  confirmBooking,
+  createBooking,
+  createConversation,
+  declineBooking,
+  findMatches,
+  getGuideProfile,
+  getHostProfile,
+  logSos,
+  getApiErrorMessage,
+} from '../services/api';
+import { colors, spacing } from '../constants/theme';
+import { studentHomeMockData, tabBarWithBadgesForRole } from '../data/studentHomeMock';
 import {
   getQuickActionsForRole,
   homeRoleFromIntent,
@@ -80,12 +124,10 @@ import {
   touristRecentActivityMock,
   hostFeaturedRequestMock,
   hostStatusMock,
-  hostPerformanceMock,
   hostReminderMock,
   hostRecentActivityMock,
   guideFeaturedTourMock,
   guideStatusMock,
-  guideTourSuggestionsMock,
   guideReminderMock,
   guideRecentActivityMock,
 } from '../data/homeContentMock';
@@ -96,21 +138,13 @@ import {
   ONBOARDING_TOTAL_STEPS,
 } from '../data/studentOnboardingMock';
 import {
-  studentBookingsMock,
-  incomingBookingRequestsMock,
-  hostProfileMock,
   computePriceBreakdown,
   getUnreadNotificationCount,
 } from '../data/bookingMock';
 import {
-  suggestedGuidesMock,
-  incomingSessionRequestsMock,
-  touristBookingsMock,
-  guideSummaryFromId,
   computeSessionPrice,
 } from '../data/guideSessionMock';
 import {
-  lodgingDirectoryMock,
   listingFromId,
 } from '../data/lodgingDirectoryMock';
 import { exploreSectionsMock } from '../data/touristExploreMock';
@@ -118,7 +152,28 @@ import {
   emergencyContactsMock,
   localEmergencyNumber,
 } from '../data/sosMock';
-import { touristSiteFromId } from '../data/touristSitesMock';
+import { touristSiteFromId, touristSiteIdFromCarouselSection, touristSitesMock } from '../data/touristSitesMock';
+import { welfareCheckInQuestions } from '../data/welfareMock';
+import {
+  buildSearchMatchParams,
+  hostMatchesToStayListings,
+  matchToGuideSummary,
+  matchToHostSummary,
+  matchToMatchResultHost,
+} from '../data/homeFeeds';
+import type { ConversationListItem } from '../types/messaging';
+import {
+  prepChecklistMock,
+  localTipsPhrasesMock,
+  localTipsTopicsMock,
+  transportTabsMock,
+  offlineMapLandmarksMock,
+  hostCalendarDaysMock,
+  hostActiveBookingMock,
+  hostListingsMock,
+  tourTypesMock,
+  guideCalendarDaysMock,
+} from '../data/featureScreensMock';
 import { getPersonalizedGreeting } from '../utils/greeting';
 import {
   onboardingReadyCopyByTrack,
@@ -143,37 +198,18 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
-function parsePricePerNight(priceLabel: string): number {
-  const match = priceLabel.match(/(\d+)/);
-  return match ? Number(match[1]) : hostProfileMock.pricePerNight;
-}
-
-function hostSummaryFromId(hostId: string): HostProfileSummary {
-  const suggested = suggestedHostsMock.find((h) => h.id === hostId);
-  if (!suggested) {
-    return hostProfileMock;
-  }
-  return {
-    id: suggested.id,
-    name: suggested.name,
-    initials: getInitials(suggested.name),
-    location: suggested.location,
-    matchPercentage: suggested.matchPercentage,
-    pricePerNight: parsePricePerNight(suggested.pricePerNight),
-    currency: 'GHS',
-    cancellationPolicy: hostProfileMock.cancellationPolicy,
-  };
-}
-
 function handleStudentQuickAction(
   navigation: NativeStackNavigationProp<AppStackParamList>,
   actionId: string,
 ) {
   if (actionId === 'checklist') {
-    navigation.navigate('Profile');
+    navigation.navigate('PrepChecklist');
   }
-  if (actionId === 'cultural-tips' || actionId === 'transport') {
-    navigation.navigate('UnifiedSearch');
+  if (actionId === 'cultural-tips') {
+    navigation.navigate('LocalTips');
+  }
+  if (actionId === 'transport') {
+    navigation.navigate('TransportGuide');
   }
   if (actionId === 'sos') {
     navigation.navigate('SOS');
@@ -188,10 +224,10 @@ function handleTouristQuickAction(
     navigation.navigate('GuideSearch');
   }
   if (actionId === 'explore-stays') {
-    navigation.navigate('MatchSearch');
+    navigation.navigate('ExploreStays');
   }
   if (actionId === 'offline-map') {
-    navigation.navigate('TouristSiteDetail', { siteId: 'site-1' });
+    navigation.navigate('OfflineMap');
   }
   if (actionId === 'sos') {
     navigation.navigate('SOS');
@@ -203,20 +239,28 @@ function handleProviderQuickAction(
   actionId: string,
   role: 'host' | 'guide',
 ) {
-  if (actionId === 'listings' || actionId === 'availability' || actionId === 'tour-types') {
-    navigation.navigate('Profile');
+  if (actionId === 'listings') {
+    navigation.navigate('HostListings');
+  }
+  if (actionId === 'availability' || actionId === 'calendar') {
+    if (role === 'guide') {
+      navigation.navigate('GuideAvailability');
+    } else {
+      navigation.navigate('HostCalendar');
+    }
+  }
+  if (actionId === 'tour-types') {
+    navigation.navigate('TourTypesSetup');
   }
   if (actionId === 'earnings') {
-    navigation.navigate('IncomingRequests');
-  }
-  if (actionId === 'calendar') {
-    navigation.navigate('StudentBookings');
+    if (role === 'guide') {
+      navigation.reset({ index: 0, routes: [{ name: 'GuideEarningsTab' }] });
+    } else {
+      navigation.reset({ index: 0, routes: [{ name: 'HostEarningsTab' }] });
+    }
   }
   if (actionId === 'sos') {
     navigation.navigate('SOS');
-  }
-  if (role === 'guide' && actionId === 'availability') {
-    navigation.navigate('Profile');
   }
 }
 
@@ -225,17 +269,34 @@ function handleExploreSectionPress(
   sectionId: string,
 ) {
   if (sectionId.startsWith('site-') || sectionId === 'sites') {
-    const siteId = sectionId === 'sites' ? 'site-1' : sectionId.replace('site-', 'site-');
+    if (sectionId === 'sites') {
+      navigation.navigate('SitesDirectory');
+      return;
+    }
     navigation.navigate('TouristSiteDetail', {
-      siteId: sectionId === 'site-cape-coast' ? 'site-1' : 'site-1',
+      siteId: touristSiteIdFromCarouselSection(sectionId),
     });
     return;
   }
-  if (sectionId === 'transport' || sectionId === 'greetings' || sectionId === 'packing' || sectionId === 'events') {
+  if (sectionId === 'transport') {
+    navigation.navigate('TransportGuide');
+    return;
+  }
+  if (sectionId === 'greetings') {
+    navigation.navigate('LocalTips');
+    return;
+  }
+  if (sectionId === 'packing') {
+    navigation.navigate('PrepChecklist');
+    return;
+  }
+  if (sectionId === 'events') {
     navigation.navigate('UnifiedSearch');
     return;
   }
-  navigation.navigate('TouristSiteDetail', { siteId: 'site-1' });
+  navigation.navigate('TouristSiteDetail', {
+    siteId: touristSiteIdFromCarouselSection(sectionId),
+  });
 }
 
 function defaultCheckIn(arrivalDate: string): string {
@@ -268,13 +329,6 @@ function handleBookingsBack(
     return;
   }
   navigateToHome(navigation, homeRoute);
-}
-
-function navigateToHome(
-  navigation: NativeStackNavigationProp<AppStackParamList>,
-  route: HomeRoute,
-) {
-  navigation.navigate(homeRouteToScreenName(route));
 }
 
 function getProfileFields(
@@ -404,11 +458,212 @@ export default function AppNavigator() {
   const [pendingIntent, setPendingIntent] = useState<PrimaryIntent | null>(null);
 
   const [bookings, setBookings] = useState<BookingListItem[]>([]);
-  const [hostIncoming, setHostIncoming] = useState(incomingBookingRequestsMock);
-  const [guideIncoming, setGuideIncoming] = useState(incomingSessionRequestsMock);
   const [bookingFilter, setBookingFilter] = useState<BookingTabFilter>('active');
   const [lodgingFilter, setLodgingFilter] = useState<LodgingCategoryFilter>('ALL');
   const [savedLodgingIds, setSavedLodgingIds] = useState<string[]>([]);
+  const [checklistTasks, setChecklistTasks] = useState(prepChecklistMock);
+  const [hostListings, setHostListings] = useState(hostListingsMock);
+  const [tourTypes, setTourTypes] = useState(tourTypesMock);
+  const [tourBaseRate, setTourBaseRate] = useState('45');
+  const [tourMaxGroupSize, setTourMaxGroupSize] = useState('8');
+  const [hostProfileCache, setHostProfileCache] = useState<Record<string, HostProfileSummary>>({});
+  const [guideProfileCache, setGuideProfileCache] = useState<Record<string, GuideProfileSummary>>({});
+  const [conversations, setConversations] = useState<ConversationListItem[]>([]);
+  const [completedWelfareCheckIns, setCompletedWelfareCheckIns] = useState<string[]>([]);
+
+  const homeApi = useHomeApiData(user?.userId, profileState, {
+    fetchMatches: primaryIntent === 'STUDENT' && !!user,
+    fetchGuideMatches: primaryIntent === 'TOURIST' && !!user,
+    fetchHostIncoming: canAcceptHostBookings && !!user,
+    fetchGuideIncoming: canAcceptGuideSessions && !!user,
+    fetchBookings: !!user && isSeekerComplete(profileState),
+  });
+
+  const providerTab = useProviderTabData(user?.userId, {
+    fetchHostPending: primaryIntent === 'HOST' && !!user,
+    fetchHostActive: primaryIntent === 'HOST' && !!user,
+    fetchGuidePending: primaryIntent === 'GUIDE' && !!user,
+    fetchGuideActive: primaryIntent === 'GUIDE' && !!user,
+  });
+
+  const sitesDirectoryItems = useMemo(
+    () =>
+      touristSitesMock.map((site) => ({
+        id: site.id,
+        name: site.name,
+        city: site.city,
+        description: site.description,
+        admission: site.admission,
+      })),
+    [],
+  );
+
+  const seekerSetupIncomplete = !!user && !isSeekerComplete(profileState);
+
+  const hostIncoming = homeApi.hostIncoming;
+  const guideIncoming = homeApi.guideIncoming;
+
+  useEffect(() => {
+    setBookings(homeApi.bookings);
+  }, [homeApi.bookings]);
+
+  useEffect(() => {
+    if (homeApi.hostMatches.length === 0) return;
+    setHostProfileCache((prev) => {
+      const next = { ...prev };
+      for (const match of homeApi.hostMatches) {
+        if (match.targetType === 'HOST') {
+          next[match.targetId] = matchToHostSummary(match);
+        }
+      }
+      return next;
+    });
+  }, [homeApi.hostMatches]);
+
+  useEffect(() => {
+    if (homeApi.guideMatches.length === 0) return;
+    setGuideProfileCache((prev) => {
+      const next = { ...prev };
+      for (const match of homeApi.guideMatches) {
+        if (match.targetType === 'GUIDE') {
+          next[match.targetId] = matchToGuideSummary(match);
+        }
+      }
+      return next;
+    });
+  }, [homeApi.guideMatches]);
+
+  const resolveHost = useCallback(
+    (hostId: string): HostProfileSummary | null => hostProfileCache[hostId] ?? null,
+    [hostProfileCache],
+  );
+
+  const resolveGuide = useCallback(
+    (guideId: string): GuideProfileSummary | null => guideProfileCache[guideId] ?? null,
+    [guideProfileCache],
+  );
+
+  const runMatchSearch = useCallback(
+    async (params: MatchSearchDefaults) => {
+      try {
+        const matches = await findMatches(
+          buildSearchMatchParams(profileState, {
+            destinationCity: params.destinationCity,
+            checkIn: params.checkIn,
+            checkOut: params.checkOut,
+            budgetMax: params.budgetMax,
+          }),
+        );
+        const hostMatches = matches.filter((m) => m.targetType === 'HOST');
+        const results = hostMatches.map(matchToMatchResultHost);
+        setHostProfileCache((prev) => {
+          const next = { ...prev };
+          for (const match of hostMatches) {
+            next[match.targetId] = matchToHostSummary(match);
+          }
+          return next;
+        });
+        return { results };
+      } catch (err) {
+        return { results: [], error: getApiErrorMessage(err) };
+      }
+    },
+    [profileState],
+  );
+
+  const openMessageWithParticipant = useCallback(
+    async (
+      navigation: NativeStackNavigationProp<AppStackParamList>,
+      participant: {
+        userId: string;
+        name: string;
+        initials: string;
+        role: ConversationListItem['participantRole'];
+      },
+    ) => {
+      const conv = await createConversation(participant.userId);
+      const listItem: ConversationListItem = {
+        id: conv.conversationId,
+        participantId: participant.userId,
+        participantName: participant.name,
+        participantInitials: participant.initials,
+        participantRole: participant.role,
+        lastMessage: 'Conversation started',
+        lastMessageAt: new Date().toISOString(),
+        unreadCount: 0,
+      };
+      setConversations((prev) => {
+        if (prev.some((item) => item.id === conv.conversationId)) {
+          return prev;
+        }
+        return [listItem, ...prev];
+      });
+      navigation.navigate('Chat', { conversationId: conv.conversationId });
+    },
+    [],
+  );
+
+  const messageHost = useCallback(
+    async (
+      navigation: NativeStackNavigationProp<AppStackParamList>,
+      host: HostProfileSummary,
+    ) => {
+      let profile = host;
+      if (!profile.userId) {
+        profile = await getHostProfile(host.id);
+        setHostProfileCache((prev) => ({ ...prev, [host.id]: profile }));
+      }
+      if (!profile.userId) return;
+      await openMessageWithParticipant(navigation, {
+        userId: profile.userId,
+        name: profile.name,
+        initials: profile.initials,
+        role: 'host',
+      });
+    },
+    [openMessageWithParticipant],
+  );
+
+  const messageGuide = useCallback(
+    async (
+      navigation: NativeStackNavigationProp<AppStackParamList>,
+      guide: GuideProfileSummary,
+    ) => {
+      let profile = guide;
+      if (!profile.userId) {
+        profile = await getGuideProfile(guide.id);
+        setGuideProfileCache((prev) => ({ ...prev, [guide.id]: profile }));
+      }
+      if (!profile.userId) return;
+      await openMessageWithParticipant(navigation, {
+        userId: profile.userId,
+        name: profile.name,
+        initials: profile.initials,
+        role: 'guide',
+      });
+    },
+    [openMessageWithParticipant],
+  );
+
+  const guideListForSearch = useMemo(
+    () => homeApi.guideMatches.map(matchToGuideSummary),
+    [homeApi.guideMatches],
+  );
+
+  const exploreStayListings = useMemo(
+    () => hostMatchesToStayListings(homeApi.hostMatches),
+    [homeApi.hostMatches],
+  );
+
+  const guideTourSections = useMemo(
+    () => guideTourSectionsFromTypes(tourTypes),
+    [tourTypes],
+  );
+
+  const profileCulturalItems = useMemo(
+    () => culturalGuidanceItemsForRole(homeRoleFromIntent(primaryIntent)),
+    [primaryIntent],
+  );
 
   const resolvedName =
     displayName.trim() || user?.displayName?.trim() || 'Guest';
@@ -416,6 +671,7 @@ export default function AppNavigator() {
   const homeRouteKey = getHomeRoute(profileState);
   const profileFields = getProfileFields(profileState);
   const cityLabel = profileFields.city || city || 'Accra';
+  const lodgingApi = useLodgingPartners(cityLabel, !!user);
   const checkIn = defaultCheckIn(arrivalDate || profileFields.arrivalDate);
   const checkOut = defaultCheckOut(departureDate || profileFields.departureDate);
   const sessionDate = arrivalDate || profileFields.arrivalDate || DEFAULT_SESSION_DATE;
@@ -533,37 +789,12 @@ export default function AppNavigator() {
     })();
   };
 
-  const handleTabPress = (
+  const routeTabPress = (
     navigation: NativeStackNavigationProp<AppStackParamList>,
     tabId: string,
     contextHomeRoute: HomeRoute = homeRouteKey,
   ) => {
-    if (tabId === 'home') {
-      navigateToHome(navigation, contextHomeRoute);
-    }
-    if (tabId === 'search') {
-      navigation.navigate('UnifiedSearch');
-    }
-    if (tabId === 'bookings') {
-      navigation.navigate('StudentBookings');
-    }
-    if (tabId === 'messages') {
-      navigation.navigate('MessagesPlaceholder');
-    }
-    if (tabId === 'requests') {
-      navigation.navigate('IncomingRequests');
-    }
-    if (tabId === 'earnings') {
-      const firstGuideRequest = guideIncoming[0];
-      if (firstGuideRequest) {
-        navigation.navigate('SessionReview', { requestId: firstGuideRequest.id });
-      } else {
-        navigation.navigate('IncomingRequests');
-      }
-    }
-    if (tabId === 'profile') {
-      navigation.navigate('Profile');
-    }
+    handleTabPress(navigation, tabId, homeRole, contextHomeRoute);
   };
 
   const syncOnboardingFields = (track: SetupTrack) => {
@@ -618,10 +849,16 @@ export default function AppNavigator() {
         checkIn,
         checkOut,
       },
-      results: sampleMatchResults,
+      onSearch: runMatchSearch,
     }),
-    [cityLabel, checkIn, checkOut],
+    [cityLabel, checkIn, checkOut, runMatchSearch],
   );
+
+  const homeDataError = homeApi.error;
+  const isHomeLoading = homeApi.isLoading;
+  const homeReminder = homeDataError
+    ? `Could not load live data: ${homeDataError}`
+    : studentHomeMockData.reminder;
 
   const homeProps = useMemo(
     () => ({
@@ -631,11 +868,33 @@ export default function AppNavigator() {
       userInitials: resolvedInitials,
       activeTabId: 'home',
       tabBarItems,
+      featuredMatch: homeApi.featuredMatch ?? undefined,
+      suggestedHosts: homeApi.suggestedHosts,
+      recommendedSectionTitle: 'Prep before you arrive',
+      showMatchScores,
+      isHomeLoading,
+      homeDataError,
       statusLabel: cityLabel
         ? `Heading to ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`
         : studentHomeMockData.statusLabel,
+      reminder: homeReminder,
+      showSetupBanner: seekerSetupIncomplete && primaryIntent === 'STUDENT',
     }),
-    [firstName, resolvedInitials, tabBarItems, cityLabel, personalizedGreeting],
+    [
+      firstName,
+      resolvedInitials,
+      tabBarItems,
+      cityLabel,
+      personalizedGreeting,
+      homeApi.featuredMatch,
+      homeApi.suggestedHosts,
+      showMatchScores,
+      isHomeLoading,
+      homeDataError,
+      homeReminder,
+      seekerSetupIncomplete,
+      primaryIntent,
+    ],
   );
 
   const bookingsTabProps = useMemo(
@@ -685,16 +944,35 @@ export default function AppNavigator() {
       cityLabel,
       statusIcon: touristStatusMock.icon,
       statusLabel: touristStatusMock.label,
-      featuredGuide: touristFeaturedGuideMock,
+      featuredGuide: homeApi.featuredGuide ?? undefined,
+      suggestedGuides: homeApi.suggestedGuides,
+      showMatchScores,
+      isHomeLoading,
+      homeDataError,
       quickActions: getQuickActionsForRole('TOURIST'),
       sections: exploreSectionsMock,
       exploreSectionTitle: `Explore ${cityLabel.split(',')[0]?.trim() || cityLabel}`,
       recentActivity: touristRecentActivityMock,
-      reminder: touristReminderMock,
+      reminder: homeDataError
+        ? `Could not load live data: ${homeDataError}`
+        : touristReminderMock,
       tabBarItems,
       activeTabId: 'home',
+      showSetupBanner: seekerSetupIncomplete && primaryIntent === 'TOURIST',
     }),
-    [firstName, resolvedInitials, cityLabel, tabBarItems],
+    [
+      firstName,
+      resolvedInitials,
+      cityLabel,
+      tabBarItems,
+      homeApi.featuredGuide,
+      homeApi.suggestedGuides,
+      showMatchScores,
+      isHomeLoading,
+      homeDataError,
+      seekerSetupIncomplete,
+      primaryIntent,
+    ],
   );
 
   const initialRoute = primaryIntent
@@ -734,20 +1012,139 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <BrowseHomeScreen
             {...browseHomeProps}
+            {...mainTabSosProps(navigation)}
             onSectionPress={(sectionId) => handleExploreSectionPress(navigation, sectionId)}
             onFeaturedGuidePress={() => navigation.navigate('GuideSearch')}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
-            onTabPress={(tabId) => handleTabPress(navigation, tabId, 'BrowseHome')}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'BrowseHome')}
           />
         )}
       </Stack.Screen>
 
-      <Stack.Screen name="MessagesPlaceholder">
+      <Stack.Screen name="MessagesTab">
         {({ navigation }) => (
-          <MessagesPlaceholderScreen
+          <MessagesTabScreen
+            userName={firstName}
+            userInitials={resolvedInitials}
+            conversations={conversations}
             tabBarItems={tabBarItems}
             activeTabId="messages"
-            onTabPress={(tabId) => handleTabPress(navigation, tabId)}
+            emptyState={emptyStates.messages}
+            {...mainTabSosProps(navigation)}
+            onConversationPress={(conversationId) =>
+              navigation.navigate('Chat', { conversationId })
+            }
+            onTabPress={(tabId) => routeTabPress(navigation, tabId)}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="Chat">
+        {({ navigation, route }) => {
+          const conversation =
+            conversations.find((item) => item.id === route.params.conversationId) ??
+            conversationFromId(route.params.conversationId);
+          return (
+            <ChatScreen
+              participantName={conversation.participantName}
+              participantInitials={conversation.participantInitials}
+              messages={messagesForConversation(conversation.id)}
+              onBack={() => navigation.goBack()}
+            />
+          );
+        }}
+      </Stack.Screen>
+
+      <Stack.Screen name="HostRequestsTab">
+        {({ navigation }) => (
+          <HostRequestsTabScreen
+            userName={firstName}
+            userInitials={resolvedInitials}
+            requests={providerTab.hostPending}
+            tabBarItems={hostTabBarItems}
+            activeTabId="requests"
+            isLoading={providerTab.isLoading}
+            errorMessage={providerTab.error}
+            emptyState={emptyStates.hostRequests}
+            {...mainTabSosProps(navigation)}
+            onRequestPress={(requestId) =>
+              navigation.navigate('MatchRequestReview', { requestId })
+            }
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="HostBookingsTab">
+        {({ navigation }) => (
+          <HostBookingsTabScreen
+            userName={firstName}
+            userInitials={resolvedInitials}
+            bookings={providerTab.hostActiveBookings}
+            tabBarItems={hostTabBarItems}
+            activeTabId="bookings"
+            isLoading={providerTab.isLoading}
+            errorMessage={providerTab.error}
+            emptyState={emptyStates.hostBookings}
+            onBookingPress={() => undefined}
+            {...mainTabSosProps(navigation)}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="HostEarningsTab">
+        {({ navigation }) => (
+          <HostEarningsTabScreen
+            userName={firstName}
+            userInitials={resolvedInitials}
+            summary={providerTab.hostEarningsSummary}
+            lineItems={providerTab.hostEarningsLineItems}
+            tabBarItems={hostTabBarItems}
+            activeTabId="earnings"
+            isLoading={providerTab.isLoading}
+            errorMessage={providerTab.error}
+            emptyState={emptyStates.hostEarnings}
+            {...mainTabSosProps(navigation)}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="GuideBookingsTab">
+        {({ navigation }) => (
+          <GuideBookingsTabScreen
+            userName={firstName}
+            userInitials={resolvedInitials}
+            bookings={providerTab.guideActiveBookings}
+            tabBarItems={guideTabBarItems}
+            activeTabId="bookings"
+            isLoading={providerTab.isLoading}
+            errorMessage={providerTab.error}
+            emptyState={emptyStates.guideBookings}
+            onBookingPress={(requestId) =>
+              navigation.navigate('SessionReview', { requestId })
+            }
+            {...mainTabSosProps(navigation)}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'GuideHome')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="GuideEarningsTab">
+        {({ navigation }) => (
+          <GuideEarningsTabScreen
+            userName={firstName}
+            userInitials={resolvedInitials}
+            summary={providerTab.earningsSummary}
+            lineItems={providerTab.earningsLineItems}
+            tabBarItems={guideTabBarItems}
+            activeTabId="earnings"
+            isLoading={providerTab.isLoading}
+            errorMessage={providerTab.error}
+            emptyState={emptyStates.guideEarnings}
+            {...mainTabSosProps(navigation)}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'GuideHome')}
           />
         )}
       </Stack.Screen>
@@ -759,9 +1156,17 @@ export default function AppNavigator() {
             userInitials={resolvedInitials}
             email={user?.email ?? ''}
             setupSummary={setupSummary}
+            culturalGuidanceItems={profileCulturalItems}
+            showTravelBooking={shouldShowTravelBookingEntry(homeRole)}
             tabBarItems={tabBarItems}
             activeTabId="profile"
+            {...mainTabSosProps(navigation)}
             onAccountSetupPress={() => navigation.navigate('AccountSetup')}
+            onCulturalGuidanceItemPress={(itemId) =>
+              handleProfileCulturalItem(navigation, itemId)
+            }
+            onCoreServicesPress={() => navigation.navigate('UnifiedSearch')}
+            onTravelBookingPress={() => navigation.navigate('UnifiedSearch')}
             onSignOut={() => {
               void signOut();
             }}
@@ -772,7 +1177,7 @@ export default function AppNavigator() {
                 await signOut();
               })();
             }}
-            onTabPress={(tabId) => handleTabPress(navigation, tabId)}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId)}
           />
         )}
       </Stack.Screen>
@@ -845,6 +1250,7 @@ export default function AppNavigator() {
             categories={SEARCH_CATEGORIES}
             tabBarItems={tabBarItems}
             activeTabId="search"
+            {...mainTabSosProps(navigation)}
             onBack={() => navigation.goBack()}
             onCategoryPress={(categoryId) => {
               if (categoryId === 'homestays') {
@@ -852,7 +1258,7 @@ export default function AppNavigator() {
                   navigateToMatchSearch(navigation);
                   return;
                 }
-                navigation.navigate('HostProfile', { hostId: 'host-1' });
+                navigation.navigate('ExploreStays');
               }
               if (categoryId === 'guides') {
                 navigation.navigate('GuideSearch');
@@ -861,7 +1267,7 @@ export default function AppNavigator() {
                 navigation.navigate('LodgingDirectory');
               }
             }}
-            onTabPress={(tabId) => handleTabPress(navigation, tabId)}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId)}
           />
         )}
       </Stack.Screen>
@@ -999,10 +1405,10 @@ export default function AppNavigator() {
             await completeStep(track, 'ready');
             await markTrackComplete(track);
             if (track === 'SEEKER' && primaryIntent === 'STUDENT') {
-              setBookings(studentBookingsMock);
+              homeApi.refresh();
             }
             if (track === 'SEEKER' && primaryIntent === 'TOURIST') {
-              setBookings(touristBookingsMock);
+              homeApi.refresh();
             }
             let nextHome: keyof AppStackParamList = 'BrowseHome';
             if (primaryIntent === 'STUDENT') {
@@ -1046,14 +1452,27 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentHomeDashboard
             {...homeProps}
-            onFeaturedMatchPress={() => navigation.navigate('HostProfile', { hostId: 'host-1' })}
+            {...mainTabSosProps(navigation)}
+            onSetupPress={() => continueSeekerSetup(navigation)}
+            onFeaturedMatchPress={() => {
+              if (homeApi.topMatchTargetId) {
+                navigation.navigate('HostProfile', {
+                  hostId: homeApi.topMatchTargetId,
+                });
+              } else {
+                navigation.navigate('MatchSearch');
+              }
+            }}
+            onSuggestedHostPress={(hostId) =>
+              navigation.navigate('HostProfile', { hostId })
+            }
             onRecommendedSectionPress={(sectionId) =>
               handleExploreSectionPress(navigation, sectionId)
             }
             onQuickActionPress={(actionId) =>
               handleStudentQuickAction(navigation, actionId)
             }
-            onTabPress={(tabId) => handleTabPress(navigation, tabId, 'StudentHome')}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'StudentHome')}
           />
         )}
       </Stack.Screen>
@@ -1062,10 +1481,23 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <ExploreHomeScreen
             {...exploreHomeProps}
+            {...mainTabSosProps(navigation)}
+            onSetupPress={() => continueSeekerSetup(navigation)}
+            onFeaturedGuidePress={() => {
+              if (homeApi.topGuideTargetId) {
+                navigation.navigate('GuideProfile', {
+                  guideId: homeApi.topGuideTargetId,
+                });
+              } else {
+                navigation.navigate('GuideSearch');
+              }
+            }}
+            onSuggestedGuidePress={(guideId) =>
+              navigation.navigate('GuideProfile', { guideId })
+            }
             onSectionPress={(sectionId) => handleExploreSectionPress(navigation, sectionId)}
-            onFeaturedGuidePress={() => navigation.navigate('GuideSearch')}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
-            onTabPress={(tabId) => handleTabPress(navigation, tabId, 'ExploreHome')}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'ExploreHome')}
           />
         )}
       </Stack.Screen>
@@ -1082,7 +1514,9 @@ export default function AppNavigator() {
                 ctaLabel: 'Review request →',
                 initials: firstRequest.studentInitials,
               }
-            : hostFeaturedRequestMock;
+            : homeDataError
+              ? undefined
+              : hostFeaturedRequestMock;
 
           return (
             <ProviderHomeDashboard
@@ -1098,20 +1532,24 @@ export default function AppNavigator() {
               }
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('HOST')}
-              performanceStats={hostPerformanceMock}
+              performanceStats={[]}
               requests={hostIncoming}
               emptyState={emptyStates.hostRequests}
               recentActivity={hostRecentActivityMock}
-              reminder={hostReminderMock}
+              reminder={homeDataError ? `Could not load live data: ${homeDataError}` : hostReminderMock}
               tabBarItems={hostTabBarItems}
               activeTabId="home"
+              {...mainTabSosProps(navigation)}
               onFeaturedPress={() => {
                 if (firstRequest) {
                   navigation.navigate('MatchRequestReview', {
                     requestId: firstRequest.id,
                   });
                 } else {
-                  navigation.navigate('IncomingRequests');
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'HostRequestsTab' }],
+                  });
                 }
               }}
               onQuickActionPress={(actionId) =>
@@ -1120,8 +1558,13 @@ export default function AppNavigator() {
               onRequestPress={(requestId) =>
                 navigation.navigate('MatchRequestReview', { requestId })
               }
-              onSeeAllRequestsPress={() => navigation.navigate('IncomingRequests')}
-              onTabPress={(tabId) => handleTabPress(navigation, tabId, 'HostHome')}
+              onSeeAllRequestsPress={() =>
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'HostRequestsTab' }],
+                })
+              }
+              onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
             />
           );
         }}
@@ -1142,7 +1585,7 @@ export default function AppNavigator() {
                 ctaLabel: 'View details →',
                 initials: firstRequest.studentInitials,
               }
-            : guideFeaturedTourMock;
+            : undefined;
 
           return (
             <ProviderHomeDashboard
@@ -1158,18 +1601,20 @@ export default function AppNavigator() {
               }
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('GUIDE')}
-              tourSuggestions={guideTourSuggestionsMock}
+              tourSuggestions={guideTourSections}
+              tourSuggestionsTitle="Your tour types"
               requests={guideIncoming}
               emptyState={emptyStates.guideRequests}
               recentActivity={guideRecentActivityMock}
               reminder={guideReminderMock}
               tabBarItems={guideTabBarItems}
               activeTabId="home"
+              {...mainTabSosProps(navigation)}
               onFeaturedPress={() => {
                 if (firstRequest) {
                   navigation.navigate('SessionReview', { requestId: firstRequest.id });
                 } else {
-                  navigation.navigate('IncomingRequests');
+                  navigation.navigate('TourTypesSetup');
                 }
               }}
               onQuickActionPress={(actionId) =>
@@ -1178,9 +1623,9 @@ export default function AppNavigator() {
               onRequestPress={(requestId) =>
                 navigation.navigate('SessionReview', { requestId })
               }
-              onSeeAllRequestsPress={() => navigation.navigate('IncomingRequests')}
-              onTourSuggestionPress={() => navigation.navigate('GuideSearch')}
-              onTabPress={(tabId) => handleTabPress(navigation, tabId, 'GuideHome')}
+              onSeeAllRequestsPress={() => navigation.navigate('IncomingSessionRequests')}
+              onTourSuggestionPress={() => navigation.navigate('TourTypesSetup')}
+              onTabPress={(tabId) => routeTabPress(navigation, tabId, 'GuideHome')}
             />
           );
         }}
@@ -1190,20 +1635,44 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentBookingsScreen
             {...bookingsTabProps}
+            {...mainTabSosProps(navigation)}
             onFilterChange={setBookingFilter}
+            onBookingPress={(bookingId) => {
+              const booking = bookings.find((entry) => entry.id === bookingId);
+              if (!booking) return;
+              if (
+                bookingFilter === 'active' &&
+                (booking.status === 'CONFIRMED' || booking.status === 'CHECKED_IN')
+              ) {
+                navigation.navigate('WelfareCheckIn', { bookingId });
+                return;
+              }
+              if (
+                bookingFilter === 'past' &&
+                (booking.status === 'CONFIRMED' || booking.status === 'CHECKED_IN')
+              ) {
+                navigation.navigate('ReviewPrompt', {
+                  bookingId,
+                  hostName: booking.hostName,
+                });
+              }
+            }}
             payBlocked={!canBookHomestay && !canBookGuideSession}
             payBlockedMessage="Complete your travel profile to pay for bookings."
             onContinueSetupPay={() => continueSeekerSetup(navigation)}
-            onPayPress={(bookingId) => {
+            onPayPress={async (bookingId) => {
               if (!canBookHomestay && !canBookGuideSession) {
                 return;
               }
-              const booking = bookings.find((b) => b.id === bookingId);
-              if (booking) {
-                navigation.navigate('BookingConfirmed', { bookingId: booking.id });
+              try {
+                await confirmBooking(bookingId);
+                homeApi.refresh();
+                navigation.navigate('BookingConfirmed', { bookingId });
+              } catch {
+                // Payment confirmation failed — user stays on bookings list
               }
             }}
-            onTabPress={(tabId) => handleTabPress(navigation, tabId)}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId)}
             onBack={
               navigation.canGoBack()
                 ? () => handleBookingsBack(navigation, homeRouteKey)
@@ -1219,7 +1688,15 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <MatchSearchScreen
             {...matchSearchProps}
-            onBack={() => navigation.goBack()}
+            tabBarItems={tabBarItems}
+            activeTabId="search"
+            {...mainTabSosProps(navigation)}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId)}
+            onBack={
+              primaryIntent === 'STUDENT'
+                ? undefined
+                : () => navigation.goBack()
+            }
             onHostPress={(hostId) =>
               navigation.navigate('HostProfile', { hostId })
             }
@@ -1228,31 +1705,37 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="HostProfile">
-        {({ navigation, route }) => {
-          const host = hostSummaryFromId(route.params.hostId);
-          return (
-            <HostProfileScreen
-              host={host}
-              showMatchScores={showMatchScores}
-              onBack={() => navigation.goBack()}
-              onBookPress={() => {
-                if (!canBookHomestay) {
-                  continueSeekerSetup(navigation);
-                  return;
-                }
-                navigation.navigate('Booking', {
-                  hostId: host.id,
-                  bookingContext: makeBookingContext('HOST'),
-                });
-              }}
-            />
-          );
-        }}
+        {({ navigation, route }) => (
+          <HostProfileRoute
+            hostId={route.params.hostId}
+            showMatchScores={showMatchScores}
+            resolveHost={resolveHost}
+            canBookHomestay={canBookHomestay}
+            onContinueSetup={() => continueSeekerSetup(navigation)}
+            onBack={() => navigation.goBack()}
+            onBookPress={(host) =>
+              navigation.navigate('Booking', {
+                hostId: host.id,
+                bookingContext: makeBookingContext('HOST'),
+              })
+            }
+            onMessagePress={(host) => {
+              void messageHost(navigation, host);
+            }}
+          />
+        )}
       </Stack.Screen>
 
       <Stack.Screen name="Booking">
         {({ navigation, route }) => {
-          const host = hostSummaryFromId(route.params.hostId);
+          const host = resolveHost(route.params.hostId);
+          if (!host) {
+            return (
+              <View style={routeLoaderStyle.loader}>
+                <ActivityIndicator size="large" color={colors.teal} />
+              </View>
+            );
+          }
           const bookingContext = makeBookingContext('HOST', route.params.bookingContext);
           const priceBreakdown = computePriceBreakdown(
             host.pricePerNight,
@@ -1271,27 +1754,23 @@ export default function AppNavigator() {
               requestBlockedMessage={bookingGateCopy.homestay}
               onContinueSetup={() => continueSeekerSetup(navigation)}
               onBack={() => navigation.goBack()}
-              onSendRequest={() => {
-                const newBooking: BookingListItem = {
-                  id: `booking-${Date.now()}`,
-                  bookingType: 'HOST',
-                  bookingContext,
-                  seekerRole: bookingContextToSeekerRole(bookingContext),
-                  hostId: host.id,
-                  hostName: host.name,
-                  hostInitials: host.initials,
-                  hostLocation: host.location,
-                  hostIcon: host.icon,
-                  checkIn,
-                  checkOut,
-                  status: 'PENDING_HOST',
-                  priceBreakdown,
-                  cancellationPolicy: host.cancellationPolicy,
-                  createdAt: new Date().toISOString().slice(0, 10),
-                };
-                setBookings((prev) => [newBooking, ...prev]);
-                setBookingFilter('pending');
-                navigation.navigate('StudentBookings');
+              onSendRequest={async () => {
+                try {
+                  await createBooking({
+                    bookingType: 'HOST',
+                    hostOrGuideId: host.id,
+                    matchId: host.matchId,
+                    checkIn,
+                    checkOut,
+                    nightlyRate: host.pricePerNight,
+                    guestMessage: 'Homestay request via NestBridge',
+                  });
+                  homeApi.refresh();
+                  setBookingFilter('pending');
+                  navigation.navigate('StudentBookings');
+                } catch {
+                  // Request failed — user stays on booking screen
+                }
               }}
             />
           );
@@ -1311,14 +1790,8 @@ export default function AppNavigator() {
               totalAmount={resolved.priceBreakdown.total}
               currency={resolved.priceBreakdown.currency}
               onViewBookings={() => {
-                setBookings((prev) =>
-                  prev.map((b) =>
-                    b.id === resolved.id
-                      ? { ...b, status: 'CONFIRMED' as const }
-                      : b,
-                  ),
-                );
                 setBookingFilter('active');
+                homeApi.refresh();
                 resetToBookingsTab(navigation, homeRouteKey);
               }}
             />
@@ -1332,7 +1805,7 @@ export default function AppNavigator() {
             title="Find a guide"
             subtitle="Tours, orientation, and cultural experiences"
             cityLabel={cityLabel}
-            guides={suggestedGuidesMock}
+            guides={guideListForSearch}
             showMatchScores={showMatchScores}
             onBack={() => navigation.goBack()}
             onGuidePress={(guideId) =>
@@ -1343,31 +1816,37 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="GuideProfile">
-        {({ navigation, route }) => {
-          const guide = guideSummaryFromId(route.params.guideId);
-          return (
-            <GuideProfileDetailScreen
-              guide={guide}
-              showMatchScores={showMatchScores}
-              onBack={() => navigation.goBack()}
-              onBookPress={() => {
-                if (!canBookGuideSession) {
-                  continueSeekerSetup(navigation);
-                  return;
-                }
-                navigation.navigate('SessionBooking', {
-                  guideId: guide.id,
-                  bookingContext: makeBookingContext('GUIDE'),
-                });
-              }}
-            />
-          );
-        }}
+        {({ navigation, route }) => (
+          <GuideProfileRoute
+            guideId={route.params.guideId}
+            showMatchScores={showMatchScores}
+            resolveGuide={resolveGuide}
+            canBookGuideSession={canBookGuideSession}
+            onContinueSetup={() => continueSeekerSetup(navigation)}
+            onBack={() => navigation.goBack()}
+            onBookPress={(guide) =>
+              navigation.navigate('SessionBooking', {
+                guideId: guide.id,
+                bookingContext: makeBookingContext('GUIDE'),
+              })
+            }
+            onMessagePress={(guide) => {
+              void messageGuide(navigation, guide);
+            }}
+          />
+        )}
       </Stack.Screen>
 
       <Stack.Screen name="SessionBooking">
         {({ navigation, route }) => {
-          const guide = guideSummaryFromId(route.params.guideId);
+          const guide = resolveGuide(route.params.guideId);
+          if (!guide) {
+            return (
+              <View style={routeLoaderStyle.loader}>
+                <ActivityIndicator size="large" color={colors.teal} />
+              </View>
+            );
+          }
           const bookingContext = makeBookingContext('GUIDE', route.params.bookingContext);
           const sessionPrice = computeSessionPrice(
             guide.pricePerSession,
@@ -1383,40 +1862,24 @@ export default function AppNavigator() {
               requestBlockedMessage={bookingGateCopy.guide}
               onContinueSetup={() => continueSeekerSetup(navigation)}
               onBack={() => navigation.goBack()}
-              onSendRequest={() => {
-                const newBooking: BookingListItem = {
-                  id: `booking-${Date.now()}`,
-                  bookingType: 'GUIDE',
-                  bookingContext,
-                  seekerRole: bookingContextToSeekerRole(bookingContext),
-                  hostId: guide.id,
-                  hostName: guide.name,
-                  hostInitials: guide.initials,
-                  hostLocation: guide.location,
-                  hostIcon: guide.icon,
-                  checkIn: sessionDate,
-                  checkOut: sessionDate,
-                  status: 'PENDING_HOST',
-                  session: {
+              onSendRequest={async () => {
+                try {
+                  await createBooking({
+                    bookingType: 'GUIDE',
+                    hostOrGuideId: guide.id,
+                    matchId: guide.matchId,
                     sessionDate,
                     sessionStartTime: DEFAULT_SESSION_TIME,
-                    durationHours: guide.sessionDurationHours,
-                  },
-                  priceBreakdown: {
-                    nightlyRate: 0,
-                    currency: guide.currency,
-                    nights: 0,
-                    subtotal: 0,
-                    platformFee: 0,
-                    total: 0,
-                  },
-                  sessionPrice,
-                  cancellationPolicy: guide.cancellationPolicy,
-                  createdAt: new Date().toISOString().slice(0, 10),
-                };
-                setBookings((prev) => [newBooking, ...prev]);
-                setBookingFilter('pending');
-                navigation.navigate('StudentBookings');
+                    sessionDurationHours: guide.sessionDurationHours,
+                    sessionRate: guide.pricePerSession,
+                    guestMessage: 'Guide session request via NestBridge',
+                  });
+                  homeApi.refresh();
+                  setBookingFilter('pending');
+                  navigation.navigate('StudentBookings');
+                } catch {
+                  // Request failed — user stays on session booking screen
+                }
               }}
             />
           );
@@ -1427,7 +1890,9 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <LodgingDirectoryScreen
             cityLabel={cityLabel}
-            listings={lodgingDirectoryMock}
+            listings={lodgingApi.listings}
+            isLoading={lodgingApi.isLoading}
+            errorMessage={lodgingApi.error}
             activeFilter={lodgingFilter}
             savedCount={savedLodgingIds.length}
             onFilterChange={setLodgingFilter}
@@ -1441,7 +1906,9 @@ export default function AppNavigator() {
 
       <Stack.Screen name="LodgingDetail">
         {({ navigation, route }) => {
-          const listing = listingFromId(route.params.listingId);
+          const listing =
+            lodgingListingFromId(route.params.listingId, lodgingApi.listings) ??
+            listingFromId(route.params.listingId);
           const isSaved = savedLodgingIds.includes(listing.id);
           return (
             <LodgingDetailScreen
@@ -1458,13 +1925,70 @@ export default function AppNavigator() {
         }}
       </Stack.Screen>
 
+      <Stack.Screen name="SitesDirectory">
+        {({ navigation }) => (
+          <SitesDirectoryScreen
+            cityLabel={cityLabel}
+            sites={sitesDirectoryItems}
+            onBack={() => navigation.goBack()}
+            onSitePress={(siteId) =>
+              navigation.navigate('TouristSiteDetail', { siteId })
+            }
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="WelfareCheckIn">
+        {({ navigation, route }) => {
+          const booking = bookings.find((entry) => entry.id === route.params.bookingId);
+          const bookingId = route.params.bookingId;
+          const alreadyCompleted =
+            completedWelfareCheckIns.includes(bookingId);
+
+          return (
+            <WelfareCheckInScreen
+              hostName={booking?.hostName ?? 'your host'}
+              checkIn={booking?.checkIn ?? checkIn}
+              checkOut={booking?.checkOut ?? checkOut}
+              questions={welfareCheckInQuestions}
+              alreadyCompleted={alreadyCompleted}
+              onBack={() => navigation.goBack()}
+              onSosPress={() => navigation.navigate('SOS')}
+              onSubmit={() => {
+                setCompletedWelfareCheckIns((prev) =>
+                  prev.includes(bookingId) ? prev : [...prev, bookingId],
+                );
+                navigation.goBack();
+              }}
+            />
+          );
+        }}
+      </Stack.Screen>
+
+      <Stack.Screen name="ReviewPrompt">
+        {({ navigation, route }) => (
+          <ReviewPromptScreen
+            hostName={route.params.hostName}
+            onBack={() => navigation.goBack()}
+            onSkip={() => navigation.goBack()}
+            onSubmit={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
       <Stack.Screen name="SOS">
         {({ navigation }) => (
           <SOSScreen
             emergencyContacts={emergencyContactsMock}
             onBack={() => navigation.goBack()}
-            onCallEmergencyServices={() => dialPhoneNumber(localEmergencyNumber)}
-            onContactCallPress={(contact) => dialPhoneNumber(contact.number)}
+            onCallEmergencyServices={() => {
+              void logSos({ contactedEmergency: true });
+              dialPhoneNumber(localEmergencyNumber);
+            }}
+            onContactCallPress={(contact) => {
+              void logSos({ contactedSupport: true });
+              dialPhoneNumber(contact.number);
+            }}
           />
         )}
       </Stack.Screen>
@@ -1473,6 +1997,192 @@ export default function AppNavigator() {
         {({ navigation, route }) => (
           <TouristSiteDetailScreen
             site={touristSiteFromId(route.params.siteId)}
+            onBack={() => navigation.goBack()}
+            onFindGuidePress={() => navigation.navigate('GuideSearch')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="PrepChecklist">
+        {({ navigation }) => (
+          <PrepChecklistScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            statusIcon={studentHomeMockData.statusIcon}
+            statusLabel={
+              cityLabel
+                ? `Heading to ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`
+                : studentHomeMockData.statusLabel
+            }
+            tasks={checklistTasks}
+            onToggleTask={(taskId) => {
+              setChecklistTasks((prev) =>
+                prev.map((task) =>
+                  task.id === taskId
+                    ? { ...task, completed: !task.completed }
+                    : task,
+                ),
+              );
+            }}
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="LocalTips">
+        {({ navigation }) => (
+          <LocalTipsScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            statusIcon={studentHomeMockData.statusIcon}
+            statusLabel={
+              cityLabel
+                ? `Heading to ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`
+                : studentHomeMockData.statusLabel
+            }
+            phrases={localTipsPhrasesMock}
+            topics={localTipsTopicsMock}
+            onPlayAudio={() => undefined}
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="TransportGuide">
+        {({ navigation }) => (
+          <TransportGuideScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            statusIcon={studentHomeMockData.statusIcon}
+            statusLabel={
+              cityLabel
+                ? `Heading to ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`
+                : studentHomeMockData.statusLabel
+            }
+            tabs={transportTabsMock}
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="ExploreStays">
+        {({ navigation }) => (
+          <ExploreStaysScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            statusIcon={touristStatusMock.icon}
+            statusLabel={`Exploring ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`}
+            listings={exploreStayListings}
+            onBookPress={(listingId) =>
+              navigation.navigate('HostProfile', { hostId: listingId })
+            }
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="OfflineMap">
+        {({ navigation }) => (
+          <OfflineMapScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            statusIcon={touristStatusMock.icon}
+            statusLabel={
+              cityLabel
+                ? `Heading to ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`
+                : touristStatusMock.label
+            }
+            regionLabel="Greater Accra Region"
+            downloadSize="1.2GB"
+            landmarks={offlineMapLandmarksMock}
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="HostCalendar">
+        {({ navigation }) => (
+          <HostCalendarScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            statusIcon={hostStatusMock.icon}
+            statusLabel="Host"
+            calendarTitle={`${firstName}'s Calendar`}
+            monthLabel="July 2026"
+            startWeekday={3}
+            days={hostCalendarDaysMock}
+            activeBooking={hostActiveBookingMock}
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="HostListings">
+        {({ navigation }) => (
+          <HostListingsScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            statusIcon={hostStatusMock.icon}
+            statusLabel="Host"
+            listings={hostListings}
+            onToggleOnline={(listingId, isOnline) => {
+              setHostListings((prev) =>
+                prev.map((listing) =>
+                  listing.id === listingId ? { ...listing, isOnline } : listing,
+                ),
+              );
+            }}
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="TourTypesSetup">
+        {({ navigation }) => (
+          <TourTypesSetupScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            statusIcon={guideStatusMock.icon}
+            statusLabel="Guide"
+            tourTypes={tourTypes}
+            baseRate={tourBaseRate}
+            maxGroupSize={tourMaxGroupSize}
+            onToggleTourType={(tourTypeId, enabled) => {
+              setTourTypes((prev) =>
+                prev.map((tour) =>
+                  tour.id === tourTypeId ? { ...tour, enabled } : tour,
+                ),
+              );
+            }}
+            onBaseRateChange={setTourBaseRate}
+            onMaxGroupSizeChange={setTourMaxGroupSize}
+            onSavePress={() => navigation.goBack()}
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="GuideAvailability">
+        {({ navigation }) => (
+          <GuideAvailabilityScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            statusIcon={guideStatusMock.icon}
+            statusLabel="Guide"
+            calendarTitle={`${firstName}'s Availability`}
+            monthLabel="July 2026"
+            startWeekday={3}
+            days={guideCalendarDaysMock}
+            onBack={() => navigation.goBack()}
           />
         )}
       </Stack.Screen>
@@ -1507,9 +2217,14 @@ export default function AppNavigator() {
 
       <Stack.Screen name="MatchRequestReview">
         {({ navigation, route }) => {
-          const request =
-            hostIncoming.find((r) => r.id === route.params.requestId) ??
-            incomingBookingRequestsMock[0];
+          const request = hostIncoming.find((r) => r.id === route.params.requestId);
+          if (!request) {
+            return (
+              <View style={routeLoaderStyle.loader}>
+                <ActivityIndicator size="large" color={colors.teal} />
+              </View>
+            );
+          }
           return (
             <MatchRequestReviewScreen
               request={request}
@@ -1518,11 +2233,11 @@ export default function AppNavigator() {
               onContinueSetup={() => continueHostSetup(navigation)}
               onBack={() => navigation.goBack()}
               onAccept={() => {
-                setHostIncoming((prev) => prev.filter((r) => r.id !== request.id));
+                void acceptBooking(request.id).then(() => homeApi.refresh());
                 navigation.navigate('IncomingRequests');
               }}
               onDecline={() => {
-                setHostIncoming((prev) => prev.filter((r) => r.id !== request.id));
+                void declineBooking(request.id).then(() => homeApi.refresh());
                 navigation.navigate('IncomingRequests');
               }}
             />
@@ -1532,9 +2247,14 @@ export default function AppNavigator() {
 
       <Stack.Screen name="SessionReview">
         {({ navigation, route }) => {
-          const request =
-            guideIncoming.find((r) => r.id === route.params.requestId) ??
-            incomingSessionRequestsMock[0];
+          const request = guideIncoming.find((r) => r.id === route.params.requestId);
+          if (!request) {
+            return (
+              <View style={routeLoaderStyle.loader}>
+                <ActivityIndicator size="large" color={colors.teal} />
+              </View>
+            );
+          }
           return (
             <SessionReviewScreen
               request={request}
@@ -1543,11 +2263,11 @@ export default function AppNavigator() {
               onContinueSetup={() => continueGuideSetup(navigation)}
               onBack={() => navigation.goBack()}
               onAccept={() => {
-                setGuideIncoming((prev) => prev.filter((r) => r.id !== request.id));
+                void acceptBooking(request.id).then(() => homeApi.refresh());
                 navigation.navigate('IncomingSessionRequests');
               }}
               onDecline={() => {
-                setGuideIncoming((prev) => prev.filter((r) => r.id !== request.id));
+                void declineBooking(request.id).then(() => homeApi.refresh());
                 navigation.navigate('IncomingSessionRequests');
               }}
             />
@@ -1557,3 +2277,13 @@ export default function AppNavigator() {
     </Stack.Navigator>
   );
 }
+
+const routeLoaderStyle = StyleSheet.create({
+  loader: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+    padding: spacing.lg,
+  },
+});

@@ -13,6 +13,7 @@ export interface StoredCredential {
 
 export interface AuthSession {
   token: string;
+  refreshToken?: string;
   user: AuthUser;
   keepSignedIn: boolean;
 }

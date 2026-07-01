@@ -27,6 +27,13 @@ export type AppStackParamList = {
   OnboardingReady: { track: SetupTrack };
   StudentBookings: undefined;
   MatchSearch: undefined;
+  HostRequestsTab: undefined;
+  HostBookingsTab: undefined;
+  HostEarningsTab: undefined;
+  GuideBookingsTab: undefined;
+  GuideEarningsTab: undefined;
+  MessagesTab: undefined;
+  Chat: { conversationId: string };
   HostProfile: { hostId: string };
   Booking: { hostId: string; bookingContext?: import('../types/booking').BookingContext };
   BookingConfirmed: { bookingId: string };
@@ -40,8 +47,19 @@ export type AppStackParamList = {
   MatchRequestReview: { requestId: string };
   SessionReview: { requestId: string };
   SOS: undefined;
-  MessagesPlaceholder: undefined;
   TouristSiteDetail: { siteId: string };
+  PrepChecklist: undefined;
+  LocalTips: undefined;
+  TransportGuide: undefined;
+  ExploreStays: undefined;
+  OfflineMap: undefined;
+  HostCalendar: undefined;
+  HostListings: undefined;
+  TourTypesSetup: undefined;
+  GuideAvailability: undefined;
+  SitesDirectory: undefined;
+  WelfareCheckIn: { bookingId: string };
+  ReviewPrompt: { bookingId: string; hostName: string };
 };
 
 export type RootStackParamList = {

@@ -9,15 +9,15 @@ import React, {
 import type { AuthSession, AuthUser } from '../types/auth';
 import {
   clearSession,
-  loadCredentials,
   loadSession,
-  saveCredentials,
   saveSession,
 } from '../services/authStorage';
+import * as api from '../services/api';
 
 interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
+  authError: string | null;
   register: (
     displayName: string,
     email: string,
@@ -34,13 +34,10 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function createMockToken(userId: string): string {
-  return `mock-jwt-${userId}-${Date.now()}`;
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -61,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const persistSession = useCallback(async (session: AuthSession) => {
     await saveSession(session);
     setUser(session.user);
+    setAuthError(null);
   }, []);
 
   const register = useCallback(
@@ -70,78 +68,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password: string,
       keepSignedIn: boolean,
     ) => {
-      const normalizedEmail = email.trim().toLowerCase();
-      const credentials = await loadCredentials();
-      const existing = credentials.find((entry) => entry.email === normalizedEmail);
-      if (existing) {
-        throw new Error('An account with this email already exists.');
+      try {
+        const session = await api.register(displayName, email, password);
+        await persistSession({ ...session, keepSignedIn });
+      } catch (error) {
+        const message = api.getApiErrorMessage(error);
+        setAuthError(message);
+        throw new Error(message);
       }
-
-      const userId = `user-${Date.now()}`;
-      const nextUser: AuthUser = {
-        userId,
-        email: normalizedEmail,
-        displayName: displayName.trim(),
-      };
-
-      await saveCredentials([
-        ...credentials,
-        {
-          userId,
-          email: normalizedEmail,
-          displayName: displayName.trim(),
-          password,
-        },
-      ]);
-
-      await persistSession({
-        token: createMockToken(userId),
-        user: nextUser,
-        keepSignedIn,
-      });
     },
     [persistSession],
   );
 
   const signIn = useCallback(
     async (email: string, password: string, keepSignedIn: boolean) => {
-      const normalizedEmail = email.trim().toLowerCase();
-      const credentials = await loadCredentials();
-      const match = credentials.find(
-        (entry) => entry.email === normalizedEmail && entry.password === password,
-      );
-      if (!match) {
+      try {
+        const session = await api.login(email, password);
+        await persistSession({ ...session, keepSignedIn });
+        return true;
+      } catch {
         return false;
       }
-
-      await persistSession({
-        token: createMockToken(match.userId),
-        user: {
-          userId: match.userId,
-          email: match.email,
-          displayName: match.displayName,
-        },
-        keepSignedIn,
-      });
-      return true;
     },
     [persistSession],
   );
 
   const signOut = useCallback(async () => {
+    const session = await loadSession();
+    await api.logout(session?.refreshToken);
     await clearSession();
     setUser(null);
+    setAuthError(null);
   }, []);
 
   const value = useMemo(
     () => ({
       user,
       isLoading,
+      authError,
       register,
       signIn,
       signOut,
     }),
-    [user, isLoading, register, signIn, signOut],
+    [user, isLoading, authError, register, signIn, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
