@@ -64,3 +64,68 @@ INSERT INTO lodging_partners (partner_id, name, city, category, address, phone, 
 VALUES
   ('55555555-5555-5555-5555-555555555501', 'Accra City Hotel', 'Accra', 'Hotel', 'Independence Ave, Accra', '+233 30 123 4567', 'https://example.com/accra-city', 350.00, 'GHS', 'Central hotel for short stays.', true),
   ('55555555-5555-5555-5555-555555555502', 'Kumasi Guest Lodge', 'Kumasi', 'Guesthouse', 'Adum, Kumasi', '+233 32 234 5678', 'https://example.com/kumasi-lodge', 200.00, 'GHS', 'Affordable guest lodge near cultural sites.', true);
+
+INSERT INTO users (user_id, full_name, email, password_hash, primary_role)
+VALUES (gen_random_uuid(), 'Kwame Asante-Boateng', 'kwame.asante@nestbridge.app', '$2a$10$N9qo8uLoickgx2ZMRZoMyeIjZAgcfL7p92LdGxad68LJZdL17LhWy', 'HOST');
+
+INSERT INTO host_profiles (
+  host_id, user_id, address, city, country, lat, lng, room_type, max_guests, price_per_night,
+  amenities, house_rules, diet_offered, religion_friendly, cancellation_policy, availability_calendar, photos, accepts_minors, is_active
+) VALUES (
+  gen_random_uuid(), (SELECT user_id FROM users WHERE email = 'kwame.asante@nestbridge.app'),
+  'Adum, Kumasi, Ghana', 'Kumasi', 'Ghana', 6.6885, -1.6244, 'PRIVATE_ROOM', 1, 120.00,
+  ARRAY['WiFi', 'Breakfast included', 'Fan'], 'No smoking. Quiet hours after 9pm.',
+  ARRAY['Standard', 'Vegetarian'], ARRAY['No specific accommodation'], 'FLEXIBLE', '{}'::jsonb, ARRAY[]::text[], false, true
+);
+
+INSERT INTO users (user_id, full_name, email, password_hash, primary_role)
+VALUES (gen_random_uuid(), 'Fatima Al-Hassan', 'fatima.alhassan@nestbridge.app', '$2a$10$N9qo8uLoickgx2ZMRZoMyeIjZAgcfL7p92LdGxad68LJZdL17LhWy', 'HOST');
+
+INSERT INTO host_profiles (
+  host_id, user_id, address, city, country, lat, lng, room_type, max_guests, price_per_night,
+  amenities, house_rules, diet_offered, religion_friendly, cancellation_policy, availability_calendar, photos, accepts_minors, is_active
+) VALUES (
+  gen_random_uuid(), (SELECT user_id FROM users WHERE email = 'fatima.alhassan@nestbridge.app'),
+  'Madina, Accra, Ghana', 'Accra', 'Ghana', 5.6800, -0.1667, 'PRIVATE_ROOM', 2, 200.00,
+  ARRAY['WiFi', 'Halal meals', 'AC', 'Prayer mat provided'], 'Halal household. No alcohol on premises.',
+  ARRAY['Halal'], ARRAY['Prayer space available', 'Halal kitchen'], 'FLEXIBLE', '{}'::jsonb, ARRAY[]::text[], false, true
+);
+
+INSERT INTO users (user_id, full_name, email, password_hash, primary_role)
+VALUES (gen_random_uuid(), 'Abena Mensah-Quaye', 'abena.mensah@nestbridge.app', '$2a$10$N9qo8uLoickgx2ZMRZoMyeIjZAgcfL7p92LdGxad68LJZdL17LhWy', 'HOST');
+
+INSERT INTO host_profiles (
+  host_id, user_id, address, city, country, lat, lng, room_type, max_guests, price_per_night,
+  amenities, house_rules, diet_offered, religion_friendly, cancellation_policy, availability_calendar, photos, accepts_minors, is_active
+) VALUES (
+  gen_random_uuid(), (SELECT user_id FROM users WHERE email = 'abena.mensah@nestbridge.app'),
+  'Pedu, Cape Coast, Ghana', 'Cape Coast', 'Ghana', 5.1053, -1.2466, 'SHARED_ROOM', 2, 95.00,
+  ARRAY['WiFi', 'Vegan meals', 'Garden', 'Bicycle rental'], 'Eco-friendly household. No single-use plastics.',
+  ARRAY['Vegan', 'Vegetarian', 'Gluten-free'], ARRAY['No specific accommodation'], 'FLEXIBLE', '{}'::jsonb, ARRAY[]::text[], true, true
+);
+
+INSERT INTO users (user_id, full_name, email, password_hash, primary_role)
+VALUES (gen_random_uuid(), 'Ibrahim Mahama', 'ibrahim.mahama@nestbridge.app', '$2a$10$N9qo8uLoickgx2ZMRZoMyeIjZAgcfL7p92LdGxad68LJZdL17LhWy', 'HOST');
+
+INSERT INTO host_profiles (
+  host_id, user_id, address, city, country, lat, lng, room_type, max_guests, price_per_night,
+  amenities, house_rules, diet_offered, religion_friendly, cancellation_policy, availability_calendar, photos, accepts_minors, is_active
+) VALUES (
+  gen_random_uuid(), (SELECT user_id FROM users WHERE email = 'ibrahim.mahama@nestbridge.app'),
+  'Kalpohin, Tamale, Ghana', 'Tamale', 'Ghana', 9.4008, -0.8393, 'PRIVATE_ROOM', 2, 85.00,
+  ARRAY['WiFi', 'Meals included', 'Motorbike rental'], 'Respectful household. Prayer times observed.',
+  ARRAY['Halal', 'Standard'], ARRAY['Prayer space available', 'Separate prayer room'], 'FLEXIBLE', '{}'::jsonb, ARRAY[]::text[], false, true
+);
+
+INSERT INTO users (user_id, full_name, email, password_hash, primary_role)
+VALUES (gen_random_uuid(), 'Celine Adjei-Mensah', 'celine.adjei@nestbridge.app', '$2a$10$N9qo8uLoickgx2ZMRZoMyeIjZAgcfL7p92LdGxad68LJZdL17LhWy', 'HOST');
+
+INSERT INTO host_profiles (
+  host_id, user_id, address, city, country, lat, lng, room_type, max_guests, price_per_night,
+  amenities, house_rules, diet_offered, religion_friendly, cancellation_policy, availability_calendar, photos, accepts_minors, is_active
+) VALUES (
+  gen_random_uuid(), (SELECT user_id FROM users WHERE email = 'celine.adjei@nestbridge.app'),
+  'Cantonments, Accra, Ghana', 'Accra', 'Ghana', 5.5913, -0.1886, 'PRIVATE_ROOM', 1, 280.00,
+  ARRAY['WiFi', 'AC', 'Private bathroom', 'Meals included', 'Laundry'], 'Quiet professional household. No smoking.',
+  ARRAY['Kosher', 'Standard', 'Vegetarian'], ARRAY['Kosher kitchen available'], 'FLEXIBLE', '{}'::jsonb, ARRAY[]::text[], false, true
+);
