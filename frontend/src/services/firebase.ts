@@ -1,34 +1,93 @@
-/**
- * Firebase Realtime Database chat helpers.
- * Requires backend POST /api/conversations to provision firebasePath.
- * Set EXPO_PUBLIC_FIREBASE_DATABASE_URL when wiring a real Firebase project.
- */
+import Constants from 'expo-constants';
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
+import {
+  getDatabase,
+  ref,
+  push,
+  onValue,
+  off,
+  type Database,
+} from 'firebase/database';
+import type { ChatMessage } from '../types/messaging';
 
-import { createConversation, type ConversationApi } from './api';
+function readExtra(key: string): string {
+  const extra = Constants.expoConfig?.extra as Record<string, string | undefined> | undefined;
+  return extra?.[key]?.trim() ?? '';
+}
 
-const FIREBASE_DATABASE_URL =
-  process.env.EXPO_PUBLIC_FIREBASE_DATABASE_URL ?? '';
+let app: FirebaseApp | null = null;
+let database: Database | null = null;
 
 export function isFirebaseConfigured(): boolean {
-  return FIREBASE_DATABASE_URL.length > 0;
+  return readExtra('firebaseDatabaseUrl').length > 0;
 }
 
-export async function openConversation(participantId: string): Promise<ConversationApi> {
-  return createConversation(participantId);
-}
-
-export function conversationMessagesUrl(firebasePath: string): string {
+function getFirebaseApp(): FirebaseApp | null {
   if (!isFirebaseConfigured()) {
-    return '';
+    return null;
   }
-  const base = FIREBASE_DATABASE_URL.replace(/\/$/, '');
-  return `${base}/${firebasePath}/messages.json`;
+  if (app) {
+    return app;
+  }
+  const config = {
+    apiKey: readExtra('firebaseApiKey'),
+    authDomain: readExtra('firebaseAuthDomain'),
+    databaseURL: readExtra('firebaseDatabaseUrl'),
+    projectId: readExtra('firebaseProjectId'),
+  };
+  app = getApps().length > 0 ? getApps()[0]! : initializeApp(config);
+  database = getDatabase(app);
+  return app;
 }
 
-/** Placeholder until Firebase SDK listener is added in a follow-up pass. */
 export function subscribeToMessages(
-  _firebasePath: string,
-  _onMessage: (payload: unknown) => void,
+  firebasePath: string,
+  currentUserId: string,
+  onMessages: (messages: ChatMessage[]) => void,
 ): () => void {
-  return () => undefined;
+  const fbApp = getFirebaseApp();
+  if (!fbApp || !firebasePath) {
+    return () => undefined;
+  }
+  const db = database ?? getDatabase(fbApp);
+  const messagesRef = ref(db, `${firebasePath}/messages`);
+  const handler = (snapshot: { val: () => Record<string, { senderId?: string; text?: string; sentAt?: string }> | null }) => {
+    const value = snapshot.val();
+    if (!value) {
+      onMessages([]);
+      return;
+    }
+    const parsed: ChatMessage[] = Object.entries(value)
+      .map(([id, payload]) => ({
+        id,
+        senderId: payload.senderId ?? '',
+        text: payload.text ?? '',
+        sentAt: payload.sentAt ?? new Date().toISOString(),
+        isOwn: payload.senderId === currentUserId,
+      }))
+      .sort((a, b) => a.sentAt.localeCompare(b.sentAt));
+    onMessages(parsed);
+  };
+  onValue(messagesRef, handler);
+  return () => {
+    off(messagesRef, 'value', handler as never);
+  };
+}
+
+export async function sendFirebaseMessage(
+  firebasePath: string,
+  senderId: string,
+  text: string,
+): Promise<void> {
+  const fbApp = getFirebaseApp();
+  if (!fbApp || !firebasePath) {
+    return;
+  }
+  const db = database ?? getDatabase(fbApp);
+  const messagesRef = ref(db, `${firebasePath}/messages`);
+  await push(messagesRef, {
+    senderId,
+    text,
+    sentAt: new Date().toISOString(),
+  });
 }

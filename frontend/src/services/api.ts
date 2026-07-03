@@ -109,6 +109,96 @@ export interface ConversationApi {
   firebasePath: string;
 }
 
+export interface ConversationListApi {
+  conversationId: string;
+  participantId: string;
+  participantName: string;
+  participantInitials: string;
+  participantRole: string;
+  firebasePath: string;
+  lastMessage: string;
+  lastMessageAt: string;
+  unreadCount: number;
+}
+
+export interface ChatMessageApi {
+  messageId: string;
+  senderId: string;
+  text: string;
+  sentAt: string;
+}
+
+export interface PhraseApi {
+  id: string;
+  emoji: string;
+  phrase: string;
+  translation: string;
+  hasAudio: boolean;
+  audioUrl?: string;
+}
+
+export interface TopicApi {
+  id: string;
+  emoji: string;
+  title: string;
+  description: string;
+}
+
+export interface TransportRouteApi {
+  id: string;
+  name: string;
+  description: string;
+  fareLabel: string;
+  estimatedPrice: string;
+}
+
+export interface TransportTabApi {
+  id: string;
+  label: string;
+  routes: TransportRouteApi[];
+}
+
+export interface TouristSiteApi {
+  id: string;
+  siteKey: string;
+  name: string;
+  city: string;
+  description: string;
+  openingHours?: string;
+  admission?: string;
+}
+
+export interface ChecklistItemApi {
+  id: string;
+  itemKey: string;
+  label: string;
+}
+
+export interface EmergencyContactApi {
+  label: string;
+  number: string;
+}
+
+export interface MapLandmarkApi {
+  id: string;
+  name: string;
+  topPercent: number;
+  leftPercent: number;
+  lat?: number;
+  lng?: number;
+}
+
+export interface VideoResourceApi {
+  id: string;
+  videoKey: string;
+  title: string;
+  description: string;
+  category: string;
+  youtubeId: string;
+  thumbnailUrl?: string;
+  city: string;
+}
+
 export interface LodgingPartnerApi {
   partnerId: string;
   name: string;
@@ -572,7 +662,81 @@ export async function createConversation(participantId: string): Promise<Convers
   const { data } = await api.post<ApiResponse<ConversationApi>>('/api/conversations', {
     participantId,
   });
+  const payload = unwrap({ data });
+  return {
+    ...payload,
+    conversationId: String(payload.conversationId),
+    participantA: String(payload.participantA),
+    participantB: String(payload.participantB),
+  };
+}
+
+export async function listConversations(): Promise<ConversationListApi[]> {
+  const { data } = await api.get<ApiResponse<ConversationListApi[]>>('/api/conversations');
   return unwrap({ data });
+}
+
+export async function getConversationMessages(conversationId: string): Promise<ChatMessageApi[]> {
+  const { data } = await api.get<ApiResponse<ChatMessageApi[]>>(
+    `/api/conversations/${conversationId}/messages`,
+  );
+  return unwrap({ data });
+}
+
+export async function sendConversationMessage(
+  conversationId: string,
+  text: string,
+): Promise<ChatMessageApi> {
+  const { data } = await api.post<ApiResponse<ChatMessageApi>>(
+    `/api/conversations/${conversationId}/messages`,
+    { text },
+  );
+  return unwrap({ data });
+}
+
+async function fetchContent<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
+  const { data } = await api.get<ApiResponse<T>>(path, { params });
+  return unwrap({ data });
+}
+
+export async function getPhrases(city?: string): Promise<PhraseApi[]> {
+  return fetchContent('/api/content/phrases', { city });
+}
+
+export async function getTopics(city?: string): Promise<TopicApi[]> {
+  return fetchContent('/api/content/topics', { city });
+}
+
+export async function getTransport(city?: string): Promise<TransportTabApi[]> {
+  return fetchContent('/api/content/transport', { city });
+}
+
+export async function getSites(city?: string): Promise<TouristSiteApi[]> {
+  return fetchContent('/api/content/sites', { city });
+}
+
+export async function getSite(siteKey: string): Promise<TouristSiteApi> {
+  return fetchContent(`/api/content/sites/${siteKey}`);
+}
+
+export async function getChecklist(city?: string): Promise<ChecklistItemApi[]> {
+  return fetchContent('/api/content/checklist', { city });
+}
+
+export async function getEmergencyContacts(): Promise<EmergencyContactApi[]> {
+  return fetchContent('/api/content/emergency-contacts');
+}
+
+export async function getMapLandmarks(city?: string): Promise<MapLandmarkApi[]> {
+  return fetchContent('/api/content/map-landmarks', { city });
+}
+
+export async function getVideos(city?: string, category?: string): Promise<VideoResourceApi[]> {
+  return fetchContent('/api/content/videos', { city, category });
+}
+
+export async function getVideo(videoKey: string): Promise<VideoResourceApi> {
+  return fetchContent(`/api/content/videos/${videoKey}`);
 }
 
 export function getApiErrorMessage(error: unknown): string {

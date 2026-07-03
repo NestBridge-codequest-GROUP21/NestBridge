@@ -28,6 +28,13 @@
     "plugins": [
       "expo-secure-store",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "apiBaseUrl": "http://localhost:8080",
+      "firebaseApiKey": "",
+      "firebaseAuthDomain": "",
+      "firebaseDatabaseUrl": "",
+      "firebaseProjectId": ""
+    }
   }
 }

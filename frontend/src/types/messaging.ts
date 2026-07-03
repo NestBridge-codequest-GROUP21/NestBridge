@@ -7,6 +7,7 @@ export interface ConversationListItem {
   lastMessage: string;
   lastMessageAt: string;
   unreadCount: number;
+  firebasePath?: string;
 }
 
 export interface ChatMessage {
