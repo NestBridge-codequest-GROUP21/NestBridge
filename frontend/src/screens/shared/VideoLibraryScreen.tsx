@@ -135,6 +135,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   filterChip: {
+    minHeight: 44,
+    justifyContent: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,

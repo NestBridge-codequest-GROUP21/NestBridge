@@ -1,6 +1,34 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AppStackParamList } from './types';
 
+/** Screens that already expose SOS via the tab bar or an in-screen control. */
+export const STACK_SOS_EXCLUDED = new Set<keyof AppStackParamList>([
+  'SOS',
+  'BrowseHome',
+  'StudentHome',
+  'ExploreHome',
+  'HostHome',
+  'GuideHome',
+  'Profile',
+  'MessagesTab',
+  'HostRequestsTab',
+  'HostBookingsTab',
+  'HostEarningsTab',
+  'GuideBookingsTab',
+  'GuideEarningsTab',
+  'UnifiedSearch',
+  'StudentBookings',
+  'MatchSearch',
+  'KYCPrompt',
+  'SponsorList',
+  'SponsorDetail',
+  'SponsorApplication',
+]);
+
+export function shouldWrapStackSos(routeName: keyof AppStackParamList): boolean {
+  return !STACK_SOS_EXCLUDED.has(routeName);
+}
+
 export function mainTabSosProps(
   navigation: NativeStackNavigationProp<AppStackParamList>,
 ) {
