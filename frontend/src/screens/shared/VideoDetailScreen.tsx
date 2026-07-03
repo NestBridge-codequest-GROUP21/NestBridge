@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Pressable } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -18,6 +18,7 @@ export interface VideoDetailScreenProps {
   isLoading?: boolean;
   errorMessage?: string | null;
   onBack?: () => void;
+  onRetry?: () => void;
 }
 
 export default function VideoDetailScreen({
@@ -25,11 +26,36 @@ export default function VideoDetailScreen({
   isLoading = false,
   errorMessage,
   onBack,
+  onRetry,
 }: VideoDetailScreenProps) {
-  if (isLoading || !video) {
+  if (isLoading) {
     return (
       <View style={styles.loader}>
         <ActivityIndicator size="large" color={colors.teal} />
+      </View>
+    );
+  }
+
+  if (errorMessage || !video) {
+    return (
+      <View style={styles.root}>
+        <StatusBar style="light" />
+        <ScreenHeader title="Video unavailable" compact onBack={onBack} />
+        <View style={styles.errorBody}>
+          <Text style={styles.errorMessage}>
+            {errorMessage ?? 'We could not load this video.'}
+          </Text>
+          {onRetry ? (
+            <Pressable
+              style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
+              onPress={onRetry}
+              accessibilityRole="button"
+              accessibilityLabel="Try again"
+            >
+              <Text style={styles.retryButtonText}>Try again</Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
     );
   }
@@ -40,11 +66,6 @@ export default function VideoDetailScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
       <ScreenHeader title={video.title} subtitle={video.category} compact onBack={onBack} />
-      {errorMessage ? (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{errorMessage}</Text>
-        </View>
-      ) : null}
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.playerWrap}>
           <WebView
@@ -98,13 +119,35 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontFamily: fontFamilies.regular,
   },
-  errorBanner: {
-    backgroundColor: colors.danger,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+  errorBody: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+    gap: spacing.md,
   },
-  errorText: {
+  errorMessage: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  retryButton: {
+    minHeight: 44,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  retryButtonText: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.bold,
     color: colors.white,
-    fontSize: fontSizes.caption,
+  },
+  pressed: {
+    opacity: 0.88,
   },
 });

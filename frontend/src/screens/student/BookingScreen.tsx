@@ -29,6 +29,7 @@ export interface BookingScreenProps {
   priceBreakdown: PriceBreakdown;
   requestBlocked?: boolean;
   requestBlockedMessage?: string;
+  submitErrorMessage?: string | null;
   onSendRequest?: () => void;
   onContinueSetup?: () => void;
   onBack?: () => void;
@@ -69,6 +70,7 @@ export default function BookingScreen({
   priceBreakdown,
   requestBlocked = false,
   requestBlockedMessage = 'Finish your Student or Tourist profile to book.',
+  submitErrorMessage,
   onSendRequest,
   onContinueSetup,
   onBack,
@@ -174,6 +176,10 @@ export default function BookingScreen({
             charged after the host accepts your request.
           </Text>
         </View>
+
+        {submitErrorMessage ? (
+          <Text style={styles.submitError}>{submitErrorMessage}</Text>
+        ) : null}
       </ScrollView>
 
       <View
@@ -437,5 +443,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.sm,
     lineHeight: 18,
+  },
+  submitError: {
+    fontSize: fontSizes.caption,
+    color: colors.danger,
+    textAlign: 'center',
+    marginTop: spacing.md,
   },
 });

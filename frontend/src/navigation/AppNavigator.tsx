@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, Alert, Linking, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -19,20 +19,20 @@ import MatchSearchScreen, {
   matchSearchDefaults,
 } from '../screens/student/MatchSearchScreen';
 import type { MatchSearchDefaults } from '../screens/student/MatchSearchScreen';
-import BookingScreen from '../screens/student/BookingScreen';
 import BookingConfirmedScreen from '../screens/student/BookingConfirmedScreen';
 import IncomingRequestsScreen from '../screens/host/IncomingRequestsScreen';
 import ProviderHomeDashboard from '../screens/host/ProviderHomeDashboard';
 import MatchRequestReviewScreen from '../screens/host/MatchRequestReviewScreen';
 import SessionReviewScreen from '../screens/guide/SessionReviewScreen';
 import GuideSearchScreen from '../screens/shared/GuideSearchScreen';
-import SessionBookingScreen from '../screens/shared/SessionBookingScreen';
 import MessagesTabScreen from '../screens/shared/MessagesTabScreen';
 import ChatRoute from './ChatRoute';
 import SiteDetailRoute from './SiteDetailRoute';
 import VideoDetailRoute from './VideoDetailRoute';
 import VideoLibraryScreen from '../screens/shared/VideoLibraryScreen';
-import VideoDetailScreen from '../screens/shared/VideoDetailScreen';
+import RouteErrorState from '../components/RouteErrorState';
+import StackSosLayout from '../components/StackSosLayout';
+import { BookingHostRoute, SessionBookingGuideRoute } from './bookingRoutes';
 import SponsorListScreen from '../screens/Sponsor/SponsorListScreen';
 import SponsorDetailScreen from '../screens/Sponsor/SponsorDetailScreen';
 import SponsorApplicationScreen from '../screens/Sponsor/SponsorApplicationScreen';
@@ -100,6 +100,7 @@ import {
   guideTourSectionsFromTypes,
   handleProfileCulturalItem,
   mainTabSosProps,
+  shouldWrapStackSos,
 } from './mainTabSos';
 import type { DevHomeRoute } from '../utils/devTestingPresets';
 import type { AccountProfileState } from '../types/accountProfile';
@@ -147,12 +148,8 @@ import {
   ONBOARDING_TOTAL_STEPS,
 } from '../data/studentOnboardingMock';
 import {
-  computePriceBreakdown,
   getUnreadNotificationCount,
 } from '../data/bookingMock';
-import {
-  computeSessionPrice,
-} from '../data/guideSessionMock';
 import {
   listingFromId,
 } from '../data/lodgingDirectoryMock';
@@ -1031,6 +1028,16 @@ export default function AppNavigator() {
     <Stack.Navigator
       initialRouteName={initialRoute}
       screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
+      screenLayout={({ children, navigation, route }) => {
+        if (!shouldWrapStackSos(route.name)) {
+          return children;
+        }
+        return (
+          <StackSosLayout onSosPress={() => navigation.navigate('SOS')}>
+            {children}
+          </StackSosLayout>
+        );
+      }}
     >
       <Stack.Screen name="IntentSelect">
         {({ navigation }) => (
@@ -1091,9 +1098,11 @@ export default function AppNavigator() {
           );
           if (!conversation || !user) {
             return (
-              <View style={routeLoaderStyle.loader}>
-                <ActivityIndicator size="large" color={colors.teal} />
-              </View>
+              <RouteErrorState
+                title="Conversation not found"
+                message="This chat may have been removed or is no longer available."
+                onBack={() => navigation.goBack()}
+              />
             );
           }
           return (
@@ -1138,7 +1147,6 @@ export default function AppNavigator() {
             isLoading={providerTab.isLoading}
             errorMessage={providerTab.error}
             emptyState={emptyStates.hostBookings}
-            onBookingPress={() => undefined}
             {...mainTabSosProps(navigation)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
           />
@@ -1734,8 +1742,8 @@ export default function AppNavigator() {
                 await confirmBooking(bookingId);
                 homeApi.refresh();
                 navigation.navigate('BookingConfirmed', { bookingId });
-              } catch {
-                // Payment confirmation failed — user stays on bookings list
+              } catch (err) {
+                Alert.alert('Payment failed', getApiErrorMessage(err));
               }
             }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
@@ -1758,11 +1766,7 @@ export default function AppNavigator() {
             activeTabId="search"
             {...mainTabSosProps(navigation)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
-            onBack={
-              primaryIntent === 'STUDENT'
-                ? undefined
-                : () => navigation.goBack()
-            }
+            onBack={() => navigation.goBack()}
             onHostPress={(hostId) =>
               navigation.navigate('HostProfile', { hostId })
             }
@@ -1793,68 +1797,54 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="Booking">
-        {({ navigation, route }) => {
-          const host = resolveHost(route.params.hostId);
-          if (!host) {
-            return (
-              <View style={routeLoaderStyle.loader}>
-                <ActivityIndicator size="large" color={colors.teal} />
-              </View>
-            );
-          }
-          const bookingContext = makeBookingContext('HOST', route.params.bookingContext);
-          const priceBreakdown = computePriceBreakdown(
-            host.pricePerNight,
-            host.currency,
-            checkIn,
-            checkOut,
-          );
-          return (
-            <BookingScreen
-              host={host}
-              showMatchScores={showMatchScores}
-              checkIn={checkIn}
-              checkOut={checkOut}
-              priceBreakdown={priceBreakdown}
-              requestBlocked={!canBookHomestay}
-              requestBlockedMessage={bookingGateCopy.homestay}
-              onContinueSetup={() => continueSeekerSetup(navigation)}
-              onBack={() => navigation.goBack()}
-              onSendRequest={async () => {
-                try {
-                  await createBooking({
-                    bookingType: 'HOST',
-                    hostOrGuideId: host.id,
-                    matchId: host.matchId,
-                    checkIn,
-                    checkOut,
-                    nightlyRate: host.pricePerNight,
-                    guestMessage: 'Homestay request via NestBridge',
-                  });
-                  homeApi.refresh();
-                  setBookingFilter('pending');
-                  navigation.navigate('StudentBookings');
-                } catch {
-                  // Request failed — user stays on booking screen
-                }
-              }}
-            />
-          );
-        }}
+        {({ navigation, route }) => (
+          <BookingHostRoute
+            hostId={route.params.hostId}
+            resolveHost={resolveHost}
+            showMatchScores={showMatchScores}
+            checkIn={checkIn}
+            checkOut={checkOut}
+            canBookHomestay={canBookHomestay}
+            requestBlockedMessage={bookingGateCopy.homestay}
+            onContinueSetup={() => continueSeekerSetup(navigation)}
+            onBack={() => navigation.goBack()}
+            onSendRequest={async (host) => {
+              await createBooking({
+                bookingType: 'HOST',
+                hostOrGuideId: host.id,
+                matchId: host.matchId,
+                checkIn,
+                checkOut,
+                nightlyRate: host.pricePerNight,
+                guestMessage: 'Homestay request via NestBridge',
+              });
+              homeApi.refresh();
+              setBookingFilter('pending');
+              navigation.navigate('StudentBookings');
+            }}
+          />
+        )}
       </Stack.Screen>
 
       <Stack.Screen name="BookingConfirmed">
         {({ navigation, route }) => {
           const booking = bookings.find((b) => b.id === route.params.bookingId);
-          const fallback = bookings.find((b) => b.status === 'ACCEPTED') ?? bookings[0];
-          const resolved = booking ?? fallback;
+          if (!booking) {
+            return (
+              <RouteErrorState
+                title="Booking not found"
+                message="We could not find that booking confirmation."
+                onBack={() => navigation.goBack()}
+              />
+            );
+          }
           return (
             <BookingConfirmedScreen
-              hostName={resolved.hostName}
-              checkIn={resolved.checkIn}
-              checkOut={resolved.checkOut}
-              totalAmount={resolved.priceBreakdown.total}
-              currency={resolved.priceBreakdown.currency}
+              hostName={booking.hostName}
+              checkIn={booking.checkIn}
+              checkOut={booking.checkOut}
+              totalAmount={booking.priceBreakdown.total}
+              currency={booking.priceBreakdown.currency}
               onViewBookings={() => {
                 setBookingFilter('active');
                 homeApi.refresh();
@@ -1904,52 +1894,33 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="SessionBooking">
-        {({ navigation, route }) => {
-          const guide = resolveGuide(route.params.guideId);
-          if (!guide) {
-            return (
-              <View style={routeLoaderStyle.loader}>
-                <ActivityIndicator size="large" color={colors.teal} />
-              </View>
-            );
-          }
-          const bookingContext = makeBookingContext('GUIDE', route.params.bookingContext);
-          const sessionPrice = computeSessionPrice(
-            guide.pricePerSession,
-            guide.currency,
-          );
-          return (
-            <SessionBookingScreen
-              guide={guide}
-              sessionDate={sessionDate}
-              sessionStartTime={DEFAULT_SESSION_TIME}
-              sessionPrice={sessionPrice}
-              requestBlocked={!canBookGuideSession}
-              requestBlockedMessage={bookingGateCopy.guide}
-              onContinueSetup={() => continueSeekerSetup(navigation)}
-              onBack={() => navigation.goBack()}
-              onSendRequest={async () => {
-                try {
-                  await createBooking({
-                    bookingType: 'GUIDE',
-                    hostOrGuideId: guide.id,
-                    matchId: guide.matchId,
-                    sessionDate,
-                    sessionStartTime: DEFAULT_SESSION_TIME,
-                    sessionDurationHours: guide.sessionDurationHours,
-                    sessionRate: guide.pricePerSession,
-                    guestMessage: 'Guide session request via NestBridge',
-                  });
-                  homeApi.refresh();
-                  setBookingFilter('pending');
-                  navigation.navigate('StudentBookings');
-                } catch {
-                  // Request failed — user stays on session booking screen
-                }
-              }}
-            />
-          );
-        }}
+        {({ navigation, route }) => (
+          <SessionBookingGuideRoute
+            guideId={route.params.guideId}
+            resolveGuide={resolveGuide}
+            sessionDate={sessionDate}
+            sessionStartTime={DEFAULT_SESSION_TIME}
+            canBookGuideSession={canBookGuideSession}
+            requestBlockedMessage={bookingGateCopy.guide}
+            onContinueSetup={() => continueSeekerSetup(navigation)}
+            onBack={() => navigation.goBack()}
+            onSendRequest={async (guide) => {
+              await createBooking({
+                bookingType: 'GUIDE',
+                hostOrGuideId: guide.id,
+                matchId: guide.matchId,
+                sessionDate,
+                sessionStartTime: DEFAULT_SESSION_TIME,
+                sessionDurationHours: guide.sessionDurationHours,
+                sessionRate: guide.pricePerSession,
+                guestMessage: 'Guide session request via NestBridge',
+              });
+              homeApi.refresh();
+              setBookingFilter('pending');
+              navigation.navigate('StudentBookings');
+            }}
+          />
+        )}
       </Stack.Screen>
 
       <Stack.Screen name="LodgingDirectory">
@@ -2318,9 +2289,11 @@ export default function AppNavigator() {
           const request = hostIncoming.find((r) => r.id === route.params.requestId);
           if (!request) {
             return (
-              <View style={routeLoaderStyle.loader}>
-                <ActivityIndicator size="large" color={colors.teal} />
-              </View>
+              <RouteErrorState
+                title="Request not found"
+                message="This homestay request is no longer available."
+                onBack={() => navigation.goBack()}
+              />
             );
           }
           return (
@@ -2348,9 +2321,11 @@ export default function AppNavigator() {
           const request = guideIncoming.find((r) => r.id === route.params.requestId);
           if (!request) {
             return (
-              <View style={routeLoaderStyle.loader}>
-                <ActivityIndicator size="large" color={colors.teal} />
-              </View>
+              <RouteErrorState
+                title="Request not found"
+                message="This session request is no longer available."
+                onBack={() => navigation.goBack()}
+              />
             );
           }
           return (
@@ -2391,9 +2366,11 @@ export default function AppNavigator() {
           const sponsor = getSponsorById(route.params.sponsorId);
           if (!sponsor) {
             return (
-              <View style={routeLoaderStyle.loader}>
-                <ActivityIndicator size="large" color={colors.teal} />
-              </View>
+              <RouteErrorState
+                title="Sponsor not found"
+                message="This sponsorship listing is no longer available."
+                onBack={() => navigation.goBack()}
+              />
             );
           }
           return (
@@ -2416,9 +2393,11 @@ export default function AppNavigator() {
           const sponsor = getSponsorById(route.params.sponsorId);
           if (!sponsor) {
             return (
-              <View style={routeLoaderStyle.loader}>
-                <ActivityIndicator size="large" color={colors.teal} />
-              </View>
+              <RouteErrorState
+                title="Sponsor not found"
+                message="This sponsorship listing is no longer available."
+                onBack={() => navigation.goBack()}
+              />
             );
           }
           return (

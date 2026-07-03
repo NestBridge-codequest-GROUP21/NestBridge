@@ -20,6 +20,7 @@ import {
   layout,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
+import SosFloatingButton from '../../components/SosFloatingButton';
 
 export interface MatchResultHost {
   id: string;
@@ -93,6 +94,7 @@ export interface MatchResultsScreenProps {
   onHostPress?: (hostId: string) => void;
   onBack?: () => void;
   onRetry?: () => void;
+  onSosPress?: () => void;
 }
 
 type ViewMode = 'list' | 'map';
@@ -204,6 +206,7 @@ export default function MatchResultsScreen({
   onHostPress,
   onBack,
   onRetry,
+  onSosPress,
 }: MatchResultsScreenProps) {
   const insets = useSafeAreaInsets();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -243,6 +246,7 @@ export default function MatchResultsScreen({
             </Pressable>
           ) : null}
         </View>
+        <SosFloatingButton onPress={onSosPress} />
       </View>
     );
   }
@@ -276,6 +280,7 @@ export default function MatchResultsScreen({
             </Pressable>
           ) : null}
         </View>
+        <SosFloatingButton onPress={onSosPress} />
       </View>
     );
   }
@@ -359,6 +364,7 @@ export default function MatchResultsScreen({
           <MapPlaceholder />
         </View>
       )}
+      <SosFloatingButton onPress={onSosPress} />
     </View>
   );
 }

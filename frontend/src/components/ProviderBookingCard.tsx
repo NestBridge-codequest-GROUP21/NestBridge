@@ -60,18 +60,8 @@ export default function ProviderBookingCard({
   onPress,
 }: ProviderBookingCardProps) {
   const statusStyle = statusColors(booking.status);
-
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.card,
-        !isLast && styles.cardSpacing,
-        pressed && styles.pressed,
-      ]}
-      onPress={() => onPress?.(booking.id)}
-      accessibilityRole="button"
-      accessibilityLabel={`Booking with ${booking.guestName}`}
-    >
+  const cardBody = (
+    <>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{booking.guestInitials}</Text>
       </View>
@@ -92,6 +82,27 @@ export default function ProviderBookingCard({
           Payout {formatCurrency(booking.hostPayout, booking.currency)}
         </Text>
       </View>
+    </>
+  );
+
+  if (!onPress) {
+    return (
+      <View style={[styles.card, !isLast && styles.cardSpacing]}>{cardBody}</View>
+    );
+  }
+
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.card,
+        !isLast && styles.cardSpacing,
+        pressed && styles.pressed,
+      ]}
+      onPress={() => onPress(booking.id)}
+      accessibilityRole="button"
+      accessibilityLabel={`Booking with ${booking.guestName}`}
+    >
+      {cardBody}
     </Pressable>
   );
 }

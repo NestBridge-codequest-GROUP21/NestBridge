@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SosFloatingButton from '../../components/SosFloatingButton';
@@ -19,6 +20,7 @@ import {
   borderRadius,
   layout,
   lineHeights,
+  gradients,
 } from '../../constants/theme';
 
 export interface SponsorDetailScreenProps {
@@ -56,14 +58,19 @@ export default function SponsorDetailScreen({
         }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
+        <LinearGradient
+          colors={[...gradients.headerCompact]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.header, { paddingTop: insets.top + spacing.md }]}
+        >
           <Pressable
             style={styles.backBtn}
             onPress={onBack}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Text style={styles.backText}>← Back</Text>
+            <Text style={styles.backText}>←</Text>
           </Pressable>
           <Text style={styles.logo}>{sponsor.logo}</Text>
           <Text style={styles.name}>{sponsor.name}</Text>
@@ -71,7 +78,7 @@ export default function SponsorDetailScreen({
             <Text style={styles.categoryText}>{sponsor.category}</Text>
           </View>
           <Text style={styles.amount}>{sponsor.amountLabel}</Text>
-        </View>
+        </LinearGradient>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About this sponsor</Text>
@@ -126,7 +133,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    backgroundColor: colors.navy,
     paddingBottom: spacing.xl,
     paddingHorizontal: layout.screenPaddingHorizontal,
     alignItems: 'center',
@@ -139,10 +145,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   backText: {
-    fontFamily: fontFamilies.semibold,
-    color: colors.tealBright,
-    fontSize: fontSizes.body - 1,
-    fontWeight: fontWeights.semibold,
+    fontFamily: fontFamilies.bold,
+    color: colors.white,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.bold,
   },
   logo: {
     fontSize: spacing.xl + spacing.lg,

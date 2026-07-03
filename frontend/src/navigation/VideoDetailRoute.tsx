@@ -1,8 +1,6 @@
 import React from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import VideoDetailScreen from '../screens/shared/VideoDetailScreen';
 import { useVideo } from '../hooks/useContent';
-import { colors } from '../constants/theme';
 
 export interface VideoDetailRouteProps {
   videoKey: string;
@@ -18,15 +16,7 @@ export default function VideoDetailRoute({ videoKey, onBack }: VideoDetailRouteP
       isLoading={videoApi.isLoading}
       errorMessage={videoApi.error}
       onBack={onBack}
+      onRetry={() => videoApi.refresh()}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  loader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-});
