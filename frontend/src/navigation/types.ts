@@ -24,6 +24,7 @@ export type AppStackParamList = {
   TouristQuiz: { track: 'SEEKER' };
   GuideQuiz: { track: 'GUIDE' };
   ProfileSetup: { track: SetupTrack };
+  KYCPrompt: { track: 'HOST' | 'GUIDE' };
   OnboardingReady: { track: SetupTrack };
   StudentBookings: undefined;
   MatchSearch: undefined;
@@ -58,6 +59,11 @@ export type AppStackParamList = {
   TourTypesSetup: undefined;
   GuideAvailability: undefined;
   SitesDirectory: undefined;
+  VideoLibrary: undefined;
+  VideoDetail: { videoKey: string };
+  SponsorList: undefined;
+  SponsorDetail: { sponsorId: string };
+  SponsorApplication: { sponsorId: string };
   WelfareCheckIn: { bookingId: string };
   ReviewPrompt: { bookingId: string; hostName: string };
 };

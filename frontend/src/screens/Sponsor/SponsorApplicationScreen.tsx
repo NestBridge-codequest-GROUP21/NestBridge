@@ -3,21 +3,51 @@ import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   TextInput,
   Alert,
 } from 'react-native';
-import { colors } from '../../constants/theme';
+import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import SosFloatingButton from '../../components/SosFloatingButton';
+import type { SponsorListing } from '../../data/sponsorsMock';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  layout,
+  lineHeights,
+} from '../../constants/theme';
 
-interface Props {
-  navigation?: any;
-  route?: any;
+export interface SponsorApplicationForm {
+  fullName: string;
+  email: string;
+  university: string;
+  studentId: string;
+  gpa: string;
+  statement: string;
 }
 
-export default function SponsorApplicationScreen({ navigation, route }: Props) {
-  const sponsor = route?.params?.sponsor || { name: 'Ghana Tourism Authority', logo: '🏛️' };
+export interface SponsorApplicationScreenProps {
+  sponsor: Pick<SponsorListing, 'id' | 'name' | 'logo'>;
+  onBack?: () => void;
+  onSubmit?: (application: SponsorApplicationForm) => void;
+  onReturnToList?: () => void;
+  onSosPress?: () => void;
+}
 
+export default function SponsorApplicationScreen({
+  sponsor,
+  onBack,
+  onSubmit,
+  onReturnToList,
+  onSosPress,
+}: SponsorApplicationScreenProps) {
+  const insets = useSafeAreaInsets();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [university, setUniversity] = useState('');
@@ -26,188 +56,335 @@ export default function SponsorApplicationScreen({ navigation, route }: Props) {
   const [statement, setStatement] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  const wordCount = statement.trim().split(/\s+/).filter(Boolean).length;
+
   const handleSubmit = () => {
     if (!fullName || !email || !university || !studentId || !statement) {
-      Alert.alert('Missing Fields', 'Please fill in all required fields.');
+      Alert.alert('Missing fields', 'Please fill in all required fields.');
       return;
     }
+    onSubmit?.({ fullName, email, university, studentId, gpa, statement });
     setSubmitted(true);
   };
 
   if (submitted) {
     return (
       <View style={styles.successContainer}>
+        <StatusBar style="dark" />
         <Text style={styles.successIcon}>🎉</Text>
-        <Text style={styles.successTitle}>Application Submitted!</Text>
+        <Text style={styles.successTitle}>Application submitted</Text>
         <Text style={styles.successMessage}>
-          Your application to {sponsor.name} has been received. You will be contacted within 5-7 business days.
+          Your application to {sponsor.name} has been received. You will be contacted within 5–7 business days.
         </Text>
-        <TouchableOpacity
-          style={styles.doneBtn}
-          onPress={() => navigation?.navigate('SponsorList')}
+        <Text style={styles.demoNote}>
+          Demo only — applications are not sent to real sponsors yet.
+        </Text>
+        <Pressable
+          style={({ pressed }) => [styles.doneBtn, pressed && styles.pressed]}
+          onPress={onReturnToList}
+          accessibilityRole="button"
+          accessibilityLabel="Back to sponsors"
         >
-          <Text style={styles.doneBtnText}>Back to Sponsors</Text>
-        </TouchableOpacity>
+          <Text style={styles.doneBtnText}>Back to sponsors</Text>
+        </Pressable>
+        <SosFloatingButton onPress={onSosPress} />
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation?.goBack()}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.logo}>{sponsor.logo}</Text>
-        <Text style={styles.headerTitle}>Apply for Sponsorship</Text>
-        <Text style={styles.headerSubtitle}>{sponsor.name}</Text>
-      </View>
+    <View style={styles.root}>
+      <StatusBar style="light" />
 
-      <View style={styles.formContainer}>
-        {/* Personal Info */}
-        <Text style={styles.sectionTitle}>Personal Information</Text>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + spacing.xl * 3,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
+          <Pressable
+            style={styles.backBtn}
+            onPress={onBack}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Text style={styles.backText}>← Back</Text>
+          </Pressable>
+          <Text style={styles.logo}>{sponsor.logo}</Text>
+          <Text style={styles.headerTitle}>Apply for sponsorship</Text>
+          <Text style={styles.headerSubtitle}>{sponsor.name}</Text>
+        </View>
 
-        <Text style={styles.label}>Full Name *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your full name"
-          placeholderTextColor={colors.textTertiary}
-          value={fullName}
-          onChangeText={setFullName}
-        />
+        <View style={styles.formContainer}>
+          <Text style={styles.sectionTitle}>Personal information</Text>
 
-        <Text style={styles.label}>Email Address *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your email"
-          placeholderTextColor={colors.textTertiary}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+          <Text style={styles.label}>Full name *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your full name"
+            placeholderTextColor={colors.textTertiary}
+            value={fullName}
+            onChangeText={setFullName}
+            accessibilityLabel="Full name"
+          />
 
-        {/* Academic Info */}
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Academic Information</Text>
+          <Text style={styles.label}>Email address *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            placeholderTextColor={colors.textTertiary}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            accessibilityLabel="Email address"
+          />
 
-        <Text style={styles.label}>University / Institution *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. KNUST, University of Ghana"
-          placeholderTextColor={colors.textTertiary}
-          value={university}
-          onChangeText={setUniversity}
-        />
+          <Text style={[styles.sectionTitle, styles.sectionGap]}>Academic information</Text>
 
-        <Text style={styles.label}>Student ID *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your student ID"
-          placeholderTextColor={colors.textTertiary}
-          value={studentId}
-          onChangeText={setStudentId}
-        />
+          <Text style={styles.label}>University / institution *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. KNUST, University of Ghana"
+            placeholderTextColor={colors.textTertiary}
+            value={university}
+            onChangeText={setUniversity}
+            accessibilityLabel="University"
+          />
 
-        <Text style={styles.label}>GPA (optional)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. 3.5"
-          placeholderTextColor={colors.textTertiary}
-          value={gpa}
-          onChangeText={setGpa}
-          keyboardType="decimal-pad"
-        />
+          <Text style={styles.label}>Student ID *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your student ID"
+            placeholderTextColor={colors.textTertiary}
+            value={studentId}
+            onChangeText={setStudentId}
+            accessibilityLabel="Student ID"
+          />
 
-        {/* Personal Statement */}
-        <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Personal Statement</Text>
-        <Text style={styles.hint}>Tell the sponsor why you deserve this sponsorship (min. 100 words)</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Write your personal statement here..."
-          placeholderTextColor={colors.textTertiary}
-          value={statement}
-          onChangeText={setStatement}
-          multiline
-          numberOfLines={6}
-          textAlignVertical="top"
-        />
-        <Text style={styles.wordCount}>{statement.trim().split(/\s+/).filter(Boolean).length} words</Text>
+          <Text style={styles.label}>GPA (optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g. 3.5"
+            placeholderTextColor={colors.textTertiary}
+            value={gpa}
+            onChangeText={setGpa}
+            keyboardType="decimal-pad"
+            accessibilityLabel="GPA"
+          />
 
-        {/* Submit */}
-        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-          <Text style={styles.submitBtnText}>Submit Application</Text>
-        </TouchableOpacity>
+          <Text style={[styles.sectionTitle, styles.sectionGap]}>Personal statement</Text>
+          <Text style={styles.hint}>
+            Tell the sponsor why you deserve this sponsorship (min. 100 words)
+          </Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Write your personal statement here..."
+            placeholderTextColor={colors.textTertiary}
+            value={statement}
+            onChangeText={setStatement}
+            multiline
+            numberOfLines={6}
+            textAlignVertical="top"
+            accessibilityLabel="Personal statement"
+          />
+          <Text style={styles.wordCount}>{wordCount} words</Text>
 
-        <Text style={styles.disclaimer}>
-          By submitting, you confirm all information provided is accurate and complete.
-        </Text>
-      </View>
-    </ScrollView>
+          <Pressable
+            style={({ pressed }) => [styles.submitBtn, pressed && styles.pressed]}
+            onPress={handleSubmit}
+            accessibilityRole="button"
+            accessibilityLabel="Submit application"
+          >
+            <Text style={styles.submitBtnText}>Submit application</Text>
+          </Pressable>
+
+          <Text style={styles.disclaimer}>
+            By submitting, you confirm all information provided is accurate and complete. Demo submissions are stored locally only.
+          </Text>
+        </View>
+      </ScrollView>
+
+      <SosFloatingButton onPress={onSosPress} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  container: {
+    flex: 1,
+  },
   header: {
     backgroundColor: colors.navy,
-    paddingTop: 56,
-    paddingBottom: 28,
-    paddingHorizontal: 20,
+    paddingBottom: spacing.lg + 4,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     alignItems: 'center',
   },
-  backBtn: { alignSelf: 'flex-start', marginBottom: 12 },
-  backText: { color: colors.tealBright, fontSize: 15 },
-  logo: { fontSize: 44, marginBottom: 8 },
-  headerTitle: { fontSize: 22, fontWeight: '700', color: colors.white },
-  headerSubtitle: { fontSize: 13, color: colors.tealBright, marginTop: 4 },
-  formContainer: { padding: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
-  label: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: 6 },
+  backBtn: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    minWidth: 44,
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  backText: {
+    fontFamily: fontFamilies.semibold,
+    color: colors.tealBright,
+    fontSize: fontSizes.body - 1,
+    fontWeight: fontWeights.semibold,
+  },
+  logo: {
+    fontSize: spacing.xl + spacing.md,
+    marginBottom: spacing.sm,
+  },
+  headerTitle: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.bold,
+    color: colors.white,
+  },
+  headerSubtitle: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.tealBright,
+    marginTop: spacing.xs,
+  },
+  formContainer: {
+    padding: spacing.lg,
+  },
+  sectionTitle: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  sectionGap: {
+    marginTop: spacing.lg,
+  },
+  label: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs + 2,
+  },
   input: {
     backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    fontSize: 15,
+    borderRadius: borderRadius.md + 2,
+    paddingHorizontal: spacing.md,
+    minHeight: 44,
+    paddingVertical: spacing.sm + 2,
+    fontSize: fontSizes.body - 1,
+    fontFamily: fontFamilies.regular,
     color: colors.textPrimary,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
-  hint: { fontSize: 12, color: colors.textTertiary, marginBottom: 8 },
+  hint: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption - 1,
+    color: colors.textTertiary,
+    marginBottom: spacing.sm,
+  },
   textArea: {
     backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    fontSize: 15,
+    borderRadius: borderRadius.md + 2,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    fontSize: fontSizes.body - 1,
+    fontFamily: fontFamilies.regular,
     color: colors.textPrimary,
     borderWidth: 1,
     borderColor: colors.border,
     minHeight: 140,
-    marginBottom: 6,
+    marginBottom: spacing.xs + 2,
   },
-  wordCount: { fontSize: 12, color: colors.textTertiary, textAlign: 'right', marginBottom: 24 },
+  wordCount: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption - 1,
+    color: colors.textTertiary,
+    textAlign: 'right',
+    marginBottom: spacing.lg,
+  },
   submitBtn: {
     backgroundColor: colors.teal,
-    borderRadius: 16,
-    paddingVertical: 18,
+    borderRadius: borderRadius.lg,
+    minHeight: 44,
+    paddingVertical: spacing.md,
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
-  submitBtnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-  disclaimer: { fontSize: 12, color: colors.textTertiary, textAlign: 'center', lineHeight: 18 },
+  submitBtnText: {
+    fontFamily: fontFamilies.bold,
+    color: colors.white,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.bold,
+  },
+  disclaimer: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption - 1,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    lineHeight: lineHeights.caption + 2,
+  },
   successContainer: {
     flex: 1,
     backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: spacing.xl,
   },
-  successIcon: { fontSize: 72, marginBottom: 20 },
-  successTitle: { fontSize: 26, fontWeight: '800', color: colors.textPrimary, marginBottom: 12 },
-  successMessage: { fontSize: 15, color: colors.textSecondary, textAlign: 'center', lineHeight: 24, marginBottom: 32 },
-  doneBtn: { backgroundColor: colors.teal, borderRadius: 16, paddingVertical: 16, paddingHorizontal: 40 },
-  doneBtnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
+  successIcon: {
+    fontSize: spacing.xl * 2 + spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  successTitle: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.display - 6,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  successMessage: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body - 1,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: lineHeights.body,
+    marginBottom: spacing.sm,
+  },
+  demoNote: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption - 1,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+  },
+  doneBtn: {
+    backgroundColor: colors.teal,
+    borderRadius: borderRadius.lg,
+    minHeight: 44,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl + spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doneBtnText: {
+    fontFamily: fontFamilies.bold,
+    color: colors.white,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.bold,
+  },
+  pressed: {
+    opacity: 0.88,
+  },
 });

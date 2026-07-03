@@ -15,7 +15,7 @@ export const splashCopy = {
 export const welcomeCopy = {
   headline: 'Host families, local guides, and places to stay — starting in Ghana.',
   subheadline:
-    'Land in Accra with a host family, a local guide, or a room near campus — all from one login.',
+    'Create an account with any email — demo accounts are optional shortcuts only.',
   valuePills: [
     { icon: '🏠', label: 'Homestays near campus and city centres' },
     { icon: '🗺️', label: 'Verified guides for orientation and culture' },

@@ -9,6 +9,12 @@ export interface ProfileHubItem {
 
 const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
   {
+    id: 'video-library',
+    label: 'Video library',
+    description: 'Orientation, transport, and culture videos',
+    icon: '🎬',
+  },
+  {
     id: 'checklist',
     label: 'Prep checklist',
     description: 'Documents, packing, and arrival tasks',
@@ -21,6 +27,12 @@ const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
     icon: '👋',
   },
   {
+    id: 'sponsors',
+    label: 'Sponsors',
+    description: 'Scholarships and travel support partners',
+    icon: '🎓',
+  },
+  {
     id: 'transport',
     label: 'Transport guide',
     description: 'Tro-tro, ride apps, and getting around safely',
@@ -29,6 +41,12 @@ const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
 ];
 
 const TOURIST_CULTURAL_ITEMS: ProfileHubItem[] = [
+  {
+    id: 'video-library',
+    label: 'Video library',
+    description: 'Ghana travel tips and cultural guides',
+    icon: '🎬',
+  },
   {
     id: 'sites-directory',
     label: 'Sites & culture',

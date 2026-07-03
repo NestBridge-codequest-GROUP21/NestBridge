@@ -101,6 +101,9 @@ function mergeProfileData(
       ...data.quizAnswers,
     } as QuizAnswers;
   }
+  if (data?.checklistCompleted) {
+    merged.checklistCompleted = data.checklistCompleted;
+  }
   return merged;
 }
 

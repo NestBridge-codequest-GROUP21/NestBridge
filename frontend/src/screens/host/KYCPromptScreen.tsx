@@ -2,63 +2,86 @@ import React from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
 } from 'react-native';
-import { colors } from '../../constants/theme';
+import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import SosFloatingButton from '../../components/SosFloatingButton';
+import type { KYCPromptData } from '../../data/kycPromptMock';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  layout,
+  lineHeights,
+} from '../../constants/theme';
 
-interface KYCPromptData {
-  roleLabel: string;
-  message: string;
-  explanation: string;
+export interface KYCPromptScreenProps {
+  data: KYCPromptData;
+  onVerifyNow?: () => void;
+  onVerifyLater?: () => void;
+  onSosPress?: () => void;
 }
 
-interface Props {
-  data?: KYCPromptData;
-}
+export default function KYCPromptScreen({
+  data,
+  onVerifyNow,
+  onVerifyLater,
+  onSosPress,
+}: KYCPromptScreenProps) {
+  const insets = useSafeAreaInsets();
 
-const defaultData: KYCPromptData = {
-  roleLabel: 'Host Family',
-  message: 'One last step to go live.',
-  explanation: 'Verification helps students trust that you are a safe and reliable host. It only takes a few minutes.',
-};
-
-export default function KYCPromptScreen({ data = defaultData }: Props) {
   return (
     <View style={styles.container}>
-      {/* Top Section */}
-      <View style={styles.topSection}>
+      <StatusBar style="dark" />
+
+      <View
+        style={[
+          styles.topSection,
+          { paddingTop: insets.top + spacing.xl },
+        ]}
+      >
         <Text style={styles.roleLabel}>{data.roleLabel}</Text>
         <Text style={styles.heading}>{data.message}</Text>
         <Text style={styles.explanation}>{data.explanation}</Text>
       </View>
 
-      {/* Icon */}
-      <View style={styles.iconContainer}>
+      <View style={styles.iconContainer} accessibilityLabel="Identity verification">
         <Text style={styles.icon}>🪪</Text>
       </View>
 
-      {/* Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => console.log('Verify now tapped')}
+      <View
+        style={[
+          styles.buttonContainer,
+          { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.xl },
+        ]}
+      >
+        <Pressable
+          style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
+          onPress={onVerifyNow}
+          accessibilityRole="button"
+          accessibilityLabel="Verify now"
         >
           <Text style={styles.primaryButtonText}>Verify now</Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={() => console.log('Verify later tapped')}
+        <Pressable
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+          onPress={onVerifyLater}
+          accessibilityRole="button"
+          accessibilityLabel="Verify later"
         >
           <Text style={styles.secondaryButtonText}>Verify later</Text>
-        </TouchableOpacity>
+        </Pressable>
+
+        <Text style={styles.note}>{data.note}</Text>
       </View>
 
-      {/* Note */}
-      <Text style={styles.note}>
-        Your listing will not be visible until verified.
-      </Text>
+      <SosFloatingButton onPress={onSosPress} bottomOffset={spacing.xl * 3} />
     </View>
   );
 }
@@ -67,71 +90,84 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingHorizontal: 24,
-    paddingTop: 64,
-    paddingBottom: 40,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     justifyContent: 'space-between',
   },
   topSection: {
     alignItems: 'center',
   },
   roleLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    marginBottom: 12,
+    marginBottom: spacing.sm,
   },
   heading: {
-    fontSize: 26,
-    fontWeight: '800',
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.display - 6,
+    fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   explanation: {
-    fontSize: 15,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body - 1,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: lineHeights.body,
   },
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   icon: {
-    fontSize: 80,
+    fontSize: spacing.xl * 2 + spacing.sm,
   },
   buttonContainer: {
-    gap: 12,
+    gap: spacing.sm,
   },
   primaryButton: {
     backgroundColor: colors.teal,
-    borderRadius: 16,
-    paddingVertical: 18,
+    borderRadius: borderRadius.lg,
+    minHeight: 44,
+    paddingVertical: spacing.md,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   primaryButtonText: {
+    fontFamily: fontFamilies.bold,
     color: colors.white,
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.bold,
   },
   secondaryButton: {
-    borderRadius: 16,
-    paddingVertical: 18,
+    borderRadius: borderRadius.lg,
+    minHeight: 44,
+    paddingVertical: spacing.md,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
     borderColor: colors.teal,
   },
   secondaryButtonText: {
+    fontFamily: fontFamilies.semibold,
     color: colors.teal,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
   },
   note: {
-    fontSize: 13,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
     color: colors.textTertiary,
     textAlign: 'center',
+    marginTop: spacing.sm,
+    lineHeight: lineHeights.caption,
+  },
+  pressed: {
+    opacity: 0.88,
   },
 });

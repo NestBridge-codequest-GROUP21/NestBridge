@@ -1,57 +1,74 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
   FlatList,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   TextInput,
 } from 'react-native';
-import { colors } from '../../constants/theme';
+import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import SosFloatingButton from '../../components/SosFloatingButton';
+import type { SponsorCategory, SponsorListing } from '../../data/sponsorsMock';
+import { SPONSOR_CATEGORIES } from '../../data/sponsorsMock';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  layout,
+  lineHeights,
+} from '../../constants/theme';
 
-interface Sponsor {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  amount: string;
-  logo: string;
+export interface SponsorListScreenProps {
+  sponsors: SponsorListing[];
+  onSponsorPress?: (sponsorId: string) => void;
+  onBack?: () => void;
+  onSosPress?: () => void;
 }
 
-const SPONSORS: Sponsor[] = [
-  { id: '1', name: 'Ghana Tourism Authority', category: 'Government', description: 'Supporting student travel across Ghana.', amount: '$5,000', logo: '🏛️' },
-  { id: '2', name: 'Ashanti Royal Foundation', category: 'Foundation', description: 'Cultural heritage and student support.', amount: '$3,500', logo: '👑' },
-  { id: '3', name: 'KNUST Alumni Network', category: 'Education', description: 'Empowering KNUST students abroad.', amount: '$2,000', logo: '🎓' },
-  { id: '4', name: 'AfriTech Ventures', category: 'Technology', description: 'Tech-driven travel sponsorships.', amount: '$4,200', logo: '💻' },
-  { id: '5', name: 'Accra Hospitality Group', category: 'Hospitality', description: 'Comfortable stays for international students.', amount: '$1,800', logo: '🏨' },
-  { id: '6', name: 'West Africa Students Fund', category: 'NGO', description: 'Pan-African student travel support.', amount: '$6,000', logo: '🌍' },
-];
-
-interface Props {
-  navigation?: any;
-}
-
-export default function SponsorListScreen({ navigation }: Props) {
+export default function SponsorListScreen({
+  sponsors,
+  onSponsorPress,
+  onBack,
+  onSosPress,
+}: SponsorListScreenProps) {
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState('All');
+  const [selected, setSelected] = useState<SponsorCategory | 'All'>('All');
 
-  const categories = ['All', 'Government', 'Foundation', 'Education', 'Technology', 'Hospitality', 'NGO'];
-
-  const filtered = SPONSORS.filter(s => {
-    const matchSearch = s.name.toLowerCase().includes(search.toLowerCase());
-    const matchCat = selected === 'All' || s.category === selected;
-    return matchSearch && matchCat;
-  });
+  const filtered = useMemo(
+    () =>
+      sponsors.filter((sponsor) => {
+        const matchSearch = sponsor.name.toLowerCase().includes(search.toLowerCase());
+        const matchCategory = selected === 'All' || sponsor.category === selected;
+        return matchSearch && matchCategory;
+      }),
+    [sponsors, search, selected],
+  );
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+      <StatusBar style="light" />
+
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Text style={styles.backText}>← Back</Text>
+          </Pressable>
+        ) : null}
         <Text style={styles.headerTitle}>Sponsors</Text>
         <Text style={styles.headerSubtitle}>Find funding for your journey</Text>
       </View>
 
-      {/* Search */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -59,37 +76,52 @@ export default function SponsorListScreen({ navigation }: Props) {
           placeholderTextColor={colors.textTertiary}
           value={search}
           onChangeText={setSearch}
+          accessibilityLabel="Search sponsors"
         />
       </View>
 
-      {/* Category Filter */}
       <FlatList
-        data={categories}
+        data={SPONSOR_CATEGORIES}
         horizontal
         showsHorizontalScrollIndicator={false}
-        keyExtractor={item => item}
+        keyExtractor={(item) => item}
         style={styles.categoryList}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.categoryChip, selected === item && styles.categoryChipActive]}
+          <Pressable
+            style={[
+              styles.categoryChip,
+              selected === item && styles.categoryChipActive,
+            ]}
             onPress={() => setSelected(item)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: selected === item }}
+            accessibilityLabel={`Filter by ${item}`}
           >
-            <Text style={[styles.categoryText, selected === item && styles.categoryTextActive]}>
+            <Text
+              style={[
+                styles.categoryText,
+                selected === item && styles.categoryTextActive,
+              ]}
+            >
               {item}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         )}
       />
 
-      {/* Sponsor List */}
       <FlatList
         data={filtered}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: insets.bottom + spacing.xl * 3 },
+        ]}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation?.navigate('SponsorDetail', { sponsor: item })}
+          <Pressable
+            style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+            onPress={() => onSponsorPress?.(item.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`View ${item.name} sponsorship`}
           >
             <View style={styles.cardLeft}>
               <Text style={styles.logo}>{item.logo}</Text>
@@ -97,64 +129,163 @@ export default function SponsorListScreen({ navigation }: Props) {
             <View style={styles.cardBody}>
               <Text style={styles.sponsorName}>{item.name}</Text>
               <Text style={styles.sponsorCategory}>{item.category}</Text>
-              <Text style={styles.sponsorDesc} numberOfLines={2}>{item.description}</Text>
+              <Text style={styles.sponsorDesc} numberOfLines={2}>
+                {item.description}
+              </Text>
             </View>
             <View style={styles.cardRight}>
-              <Text style={styles.amount}>{item.amount}</Text>
+              <Text style={styles.amount}>{item.amountLabel}</Text>
               <Text style={styles.applyText}>Apply →</Text>
             </View>
-          </TouchableOpacity>
+          </Pressable>
         )}
       />
+
+      <SosFloatingButton onPress={onSosPress} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  header: { backgroundColor: colors.navy, paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20 },
-  headerTitle: { fontSize: 28, fontWeight: '700', color: colors.white },
-  headerSubtitle: { fontSize: 14, color: colors.tealBright, marginTop: 4 },
-  searchContainer: { margin: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    backgroundColor: colors.navy,
+    paddingBottom: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
+  },
+  backButton: {
+    minHeight: 44,
+    minWidth: 44,
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  backText: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body - 1,
+    color: colors.tealBright,
+    fontWeight: fontWeights.semibold,
+  },
+  headerTitle: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.display,
+    fontWeight: fontWeights.bold,
+    color: colors.white,
+  },
+  headerSubtitle: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption + 1,
+    color: colors.tealBright,
+    marginTop: spacing.xs,
+  },
+  searchContainer: {
+    margin: spacing.md,
+  },
   searchInput: {
     backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
+    borderRadius: borderRadius.md + 2,
+    paddingHorizontal: spacing.md,
+    minHeight: 44,
+    paddingVertical: spacing.sm,
+    fontSize: fontSizes.body - 1,
+    fontFamily: fontFamilies.regular,
     color: colors.textPrimary,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  categoryList: { paddingLeft: 16, marginBottom: 8, flexGrow: 0 },
-  categoryChip: {
-    paddingHorizontal: 16, paddingVertical: 8,
-    borderRadius: 20, backgroundColor: colors.white,
-    borderWidth: 1, borderColor: colors.border,
-    marginRight: 8,
+  categoryList: {
+    paddingLeft: spacing.md,
+    marginBottom: spacing.sm,
+    flexGrow: 0,
   },
-  categoryChipActive: { backgroundColor: colors.teal, borderColor: colors.teal },
-  categoryText: { fontSize: 13, color: colors.textSecondary },
-  categoryTextActive: { color: colors.white, fontWeight: '600' },
-  listContent: { padding: 16, gap: 12 },
+  categoryChip: {
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginRight: spacing.sm,
+    justifyContent: 'center',
+  },
+  categoryChipActive: {
+    backgroundColor: colors.teal,
+    borderColor: colors.teal,
+  },
+  categoryText: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+  },
+  categoryTextActive: {
+    fontFamily: fontFamilies.semibold,
+    color: colors.white,
+    fontWeight: fontWeights.semibold,
+  },
+  listContent: {
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
   card: {
     backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  cardLeft: { marginRight: 14 },
-  logo: { fontSize: 36 },
-  cardBody: { flex: 1 },
-  sponsorName: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
-  sponsorCategory: { fontSize: 12, color: colors.teal, marginTop: 2, fontWeight: '600' },
-  sponsorDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
-  cardRight: { alignItems: 'flex-end', marginLeft: 8 },
-  amount: { fontSize: 14, fontWeight: '700', color: colors.gold },
-  applyText: { fontSize: 12, color: colors.teal, marginTop: 6 },
+  cardLeft: {
+    marginRight: spacing.sm + 6,
+  },
+  logo: {
+    fontSize: spacing.xl + spacing.xs,
+  },
+  cardBody: {
+    flex: 1,
+  },
+  sponsorName: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.body - 1,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+  },
+  sponsorCategory: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption - 1,
+    color: colors.teal,
+    marginTop: spacing.xs / 2,
+    fontWeight: fontWeights.semibold,
+  },
+  sponsorDesc: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption - 1,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+    lineHeight: lineHeights.caption,
+  },
+  cardRight: {
+    alignItems: 'flex-end',
+    marginLeft: spacing.sm,
+  },
+  amount: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.caption + 1,
+    fontWeight: fontWeights.bold,
+    color: colors.gold,
+    textAlign: 'right',
+  },
+  applyText: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption - 1,
+    color: colors.teal,
+    marginTop: spacing.xs + 2,
+    fontWeight: fontWeights.semibold,
+  },
+  pressed: {
+    opacity: 0.92,
+  },
 });

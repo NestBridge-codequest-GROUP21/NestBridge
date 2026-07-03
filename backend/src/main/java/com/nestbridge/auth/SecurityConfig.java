@@ -28,6 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("GET", "/api/hosts/**").permitAll()
                         .requestMatchers("GET", "/api/guides/**").permitAll()
                         .requestMatchers("GET", "/api/lodging/**").permitAll()
+                        .requestMatchers("GET", "/api/content/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
