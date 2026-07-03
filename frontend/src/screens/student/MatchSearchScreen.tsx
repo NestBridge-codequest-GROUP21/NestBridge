@@ -177,6 +177,7 @@ export default function MatchSearchScreen({
           void handleFindMatches();
         }}
         onHostPress={onHostPress}
+        onSosPress={onSosPress}
       />
     );
   }

@@ -1,38 +1,50 @@
 import React, { useEffect, useState } from 'react';
-import HostProfileScreen from '../screens/student/HostProfileScreen';
-import GuideProfileDetailScreen from '../screens/shared/GuideProfileDetailScreen';
+import BookingScreen from '../screens/student/BookingScreen';
+import SessionBookingScreen from '../screens/shared/SessionBookingScreen';
 import RouteErrorState from '../components/RouteErrorState';
 import {
   getHostProfile,
   getGuideProfile,
   getApiErrorMessage,
 } from '../services/api';
-import type { GuideProfileSummary, HostProfileSummary } from '../types/booking';
+import type {
+  BookingContext,
+  GuideProfileSummary,
+  HostProfileSummary,
+  PriceBreakdown,
+} from '../types/booking';
+import { computePriceBreakdown } from '../data/bookingMock';
+import { computeSessionPrice } from '../data/guideSessionMock';
 
-export interface HostProfileRouteProps {
+export interface BookingHostRouteProps {
   hostId: string;
-  showMatchScores: boolean;
   resolveHost: (hostId: string) => HostProfileSummary | null;
+  showMatchScores: boolean;
+  checkIn: string;
+  checkOut: string;
   canBookHomestay: boolean;
+  requestBlockedMessage: string;
   onContinueSetup: () => void;
   onBack: () => void;
-  onBookPress: (host: HostProfileSummary) => void;
-  onMessagePress: (host: HostProfileSummary) => void;
+  onSendRequest: (host: HostProfileSummary) => Promise<void>;
 }
 
-export function HostProfileRoute({
+export function BookingHostRoute({
   hostId,
-  showMatchScores,
   resolveHost,
+  showMatchScores,
+  checkIn,
+  checkOut,
   canBookHomestay,
+  requestBlockedMessage,
   onContinueSetup,
   onBack,
-  onBookPress,
-  onMessagePress,
-}: HostProfileRouteProps) {
+  onSendRequest,
+}: BookingHostRouteProps) {
   const [host, setHost] = useState<HostProfileSummary | null>(() => resolveHost(hostId));
   const [isLoading, setIsLoading] = useState(!host);
   const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     const cached = resolveHost(hostId);
@@ -49,14 +61,18 @@ export function HostProfileRoute({
       setError(null);
       try {
         const profile = await getHostProfile(hostId);
-        if (!cancelled) setHost(profile);
+        if (!cancelled) {
+          setHost(profile);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(getApiErrorMessage(err));
           setHost(null);
         }
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     })();
 
@@ -73,53 +89,70 @@ export function HostProfileRoute({
     return (
       <RouteErrorState
         title="Host not found"
-        message={error ?? 'Could not load host profile.'}
+        message={error ?? 'We could not load this host listing.'}
         onBack={onBack}
       />
     );
   }
 
+  const priceBreakdown: PriceBreakdown = computePriceBreakdown(
+    host.pricePerNight,
+    host.currency,
+    checkIn,
+    checkOut,
+  );
+
   return (
-    <HostProfileScreen
+    <BookingScreen
       host={host}
       showMatchScores={showMatchScores}
+      checkIn={checkIn}
+      checkOut={checkOut}
+      priceBreakdown={priceBreakdown}
+      requestBlocked={!canBookHomestay}
+      requestBlockedMessage={requestBlockedMessage}
+      submitErrorMessage={submitError}
+      onContinueSetup={onContinueSetup}
       onBack={onBack}
-      onBookPress={() => {
-        if (!canBookHomestay) {
-          onContinueSetup();
-          return;
+      onSendRequest={async () => {
+        setSubmitError(null);
+        try {
+          await onSendRequest(host);
+        } catch (err) {
+          setSubmitError(getApiErrorMessage(err));
         }
-        onBookPress(host);
       }}
-      onMessagePress={() => onMessagePress(host)}
     />
   );
 }
 
-export interface GuideProfileRouteProps {
+export interface SessionBookingGuideRouteProps {
   guideId: string;
-  showMatchScores: boolean;
   resolveGuide: (guideId: string) => GuideProfileSummary | null;
+  sessionDate: string;
+  sessionStartTime: string;
   canBookGuideSession: boolean;
+  requestBlockedMessage: string;
   onContinueSetup: () => void;
   onBack: () => void;
-  onBookPress: (guide: GuideProfileSummary) => void;
-  onMessagePress: (guide: GuideProfileSummary) => void;
+  onSendRequest: (guide: GuideProfileSummary) => Promise<void>;
 }
 
-export function GuideProfileRoute({
+export function SessionBookingGuideRoute({
   guideId,
-  showMatchScores,
   resolveGuide,
+  sessionDate,
+  sessionStartTime,
   canBookGuideSession,
+  requestBlockedMessage,
   onContinueSetup,
   onBack,
-  onBookPress,
-  onMessagePress,
-}: GuideProfileRouteProps) {
+  onSendRequest,
+}: SessionBookingGuideRouteProps) {
   const [guide, setGuide] = useState<GuideProfileSummary | null>(() => resolveGuide(guideId));
   const [isLoading, setIsLoading] = useState(!guide);
   const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     const cached = resolveGuide(guideId);
@@ -136,14 +169,18 @@ export function GuideProfileRoute({
       setError(null);
       try {
         const profile = await getGuideProfile(guideId);
-        if (!cancelled) setGuide(profile);
+        if (!cancelled) {
+          setGuide(profile);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(getApiErrorMessage(err));
           setGuide(null);
         }
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     })();
 
@@ -160,25 +197,33 @@ export function GuideProfileRoute({
     return (
       <RouteErrorState
         title="Guide not found"
-        message={error ?? 'Could not load guide profile.'}
+        message={error ?? 'We could not load this guide profile.'}
         onBack={onBack}
       />
     );
   }
 
+  const sessionPrice = computeSessionPrice(guide.pricePerSession, guide.currency);
+
   return (
-    <GuideProfileDetailScreen
+    <SessionBookingScreen
       guide={guide}
-      showMatchScores={showMatchScores}
+      sessionDate={sessionDate}
+      sessionStartTime={sessionStartTime}
+      sessionPrice={sessionPrice}
+      requestBlocked={!canBookGuideSession}
+      requestBlockedMessage={requestBlockedMessage}
+      submitErrorMessage={submitError}
+      onContinueSetup={onContinueSetup}
       onBack={onBack}
-      onBookPress={() => {
-        if (!canBookGuideSession) {
-          onContinueSetup();
-          return;
+      onSendRequest={async () => {
+        setSubmitError(null);
+        try {
+          await onSendRequest(guide);
+        } catch (err) {
+          setSubmitError(getApiErrorMessage(err));
         }
-        onBookPress(guide);
       }}
-      onMessagePress={() => onMessagePress(guide)}
     />
   );
 }

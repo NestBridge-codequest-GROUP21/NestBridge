@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TextInput,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SosFloatingButton from '../../components/SosFloatingButton';
@@ -21,6 +22,7 @@ import {
   borderRadius,
   layout,
   lineHeights,
+  gradients,
 } from '../../constants/theme';
 
 export interface SponsorListScreenProps {
@@ -54,7 +56,12 @@ export default function SponsorListScreen({
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
+      <LinearGradient
+        colors={[...gradients.headerCompact]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.header, { paddingTop: insets.top + spacing.md }]}
+      >
         {onBack ? (
           <Pressable
             onPress={onBack}
@@ -62,12 +69,12 @@ export default function SponsorListScreen({
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Text style={styles.backText}>← Back</Text>
+            <Text style={styles.backText}>←</Text>
           </Pressable>
         ) : null}
         <Text style={styles.headerTitle}>Sponsors</Text>
         <Text style={styles.headerSubtitle}>Find funding for your journey</Text>
-      </View>
+      </LinearGradient>
 
       <View style={styles.searchContainer}>
         <TextInput
@@ -152,7 +159,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: colors.navy,
     paddingBottom: spacing.lg,
     paddingHorizontal: layout.screenPaddingHorizontal,
   },
@@ -163,10 +169,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   backText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body - 1,
-    color: colors.tealBright,
-    fontWeight: fontWeights.semibold,
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
+    color: colors.white,
+    fontWeight: fontWeights.bold,
   },
   headerTitle: {
     fontFamily: fontFamilies.bold,

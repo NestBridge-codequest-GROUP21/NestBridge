@@ -1,8 +1,7 @@
 import React from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import TouristSiteDetailScreen from '../screens/tourist/TouristSiteDetailScreen';
+import RouteErrorState from '../components/RouteErrorState';
 import { useSite } from '../hooks/useContent';
-import { colors } from '../constants/theme';
 
 export interface SiteDetailRouteProps {
   siteKey: string;
@@ -17,11 +16,18 @@ export default function SiteDetailRoute({
 }: SiteDetailRouteProps) {
   const siteApi = useSite(siteKey, !!siteKey);
 
-  if (siteApi.isLoading || !siteApi.data) {
+  if (siteApi.isLoading) {
+    return <RouteErrorState isLoading message="" />;
+  }
+
+  if (siteApi.error || !siteApi.data) {
     return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={colors.teal} />
-      </View>
+      <RouteErrorState
+        title="Site unavailable"
+        message={siteApi.error ?? 'We could not load this site.'}
+        onBack={onBack}
+        onRetry={() => siteApi.refresh()}
+      />
     );
   }
 
@@ -40,12 +46,3 @@ export default function SiteDetailRoute({
     />
   );
 }
-
-const styles = StyleSheet.create({
-  loader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-});
