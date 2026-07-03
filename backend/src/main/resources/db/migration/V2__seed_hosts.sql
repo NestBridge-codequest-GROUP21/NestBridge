@@ -64,3 +64,33 @@ INSERT INTO lodging_partners (partner_id, name, city, category, address, phone, 
 VALUES
   ('55555555-5555-5555-5555-555555555501', 'Accra City Hotel', 'Accra', 'Hotel', 'Independence Ave, Accra', '+233 30 123 4567', 'https://example.com/accra-city', 350.00, 'GHS', 'Central hotel for short stays.', true),
   ('55555555-5555-5555-5555-555555555502', 'Kumasi Guest Lodge', 'Kumasi', 'Guesthouse', 'Adum, Kumasi', '+233 32 234 5678', 'https://example.com/kumasi-lodge', 200.00, 'GHS', 'Affordable guest lodge near cultural sites.', true);
+
+-- Host users (5 additional — diverse cities, diets, languages)
+INSERT INTO users (user_id, full_name, email, password_hash, primary_intent, nationality, languages, is_verified)
+VALUES
+  ('22222222-2222-2222-2222-222222222209', 'Kwame Asante-Boateng', 'kwame.asante@nestbridge.app', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'HOST', 'Ghana', ARRAY['English','Twi'], true),
+  ('22222222-2222-2222-2222-222222222210', 'Fatima Al-Hassan', 'fatima.alhassan@nestbridge.app', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'HOST', 'Ghana', ARRAY['Arabic','English','Hausa'], true),
+  ('22222222-2222-2222-2222-222222222211', 'Abena Mensah-Quaye', 'abena.mensah@nestbridge.app', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'HOST', 'Ghana', ARRAY['English','Fante'], true),
+  ('22222222-2222-2222-2222-222222222212', 'Ibrahim Mahama', 'ibrahim.mahama@nestbridge.app', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'HOST', 'Ghana', ARRAY['Hausa','Dagbani','English'], true),
+  ('22222222-2222-2222-2222-222222222213', 'Celine Adjei-Mensah', 'celine.adjei@nestbridge.app', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'HOST', 'Ghana', ARRAY['French','English'], true);
+
+INSERT INTO provider_setup (user_id, track, status, steps_completed, profile_data, completed_at)
+VALUES
+  ('22222222-2222-2222-2222-222222222209', 'HOST', 'COMPLETE', ARRAY['listing','pricing','rules','photos','ready'], '{}'::jsonb, NOW()),
+  ('22222222-2222-2222-2222-222222222210', 'HOST', 'COMPLETE', ARRAY['listing','pricing','rules','photos','ready'], '{}'::jsonb, NOW()),
+  ('22222222-2222-2222-2222-222222222211', 'HOST', 'COMPLETE', ARRAY['listing','pricing','rules','photos','ready'], '{}'::jsonb, NOW()),
+  ('22222222-2222-2222-2222-222222222212', 'HOST', 'COMPLETE', ARRAY['listing','pricing','rules','photos','ready'], '{}'::jsonb, NOW()),
+  ('22222222-2222-2222-2222-222222222213', 'HOST', 'COMPLETE', ARRAY['listing','pricing','rules','photos','ready'], '{}'::jsonb, NOW());
+
+INSERT INTO host_profiles (host_id, user_id, address, city, country, lat, lng, room_type, max_guests, price_per_night, amenities, house_rules, diet_offered, religion_friendly, cancellation_policy, accepts_minors, is_active, review_count, average_rating)
+VALUES
+  ('33333333-3333-3333-3333-333333333309', '22222222-2222-2222-2222-222222222209', 'Adum, Kumasi, Ghana', 'Kumasi', 'Ghana', 6.688500, -1.624400, 'Private room', 1, 120.00,
+    ARRAY['WiFi','Breakfast included','Fan'], 'No smoking. Quiet hours after 9pm.', ARRAY['standard','vegetarian'], ARRAY['No specific accommodation'], 'FLEXIBLE', false, true, 4, 4.72),
+  ('33333333-3333-3333-3333-333333333310', '22222222-2222-2222-2222-222222222210', 'Madina, Accra, Ghana', 'Accra', 'Ghana', 5.680000, -0.166700, 'Private room', 2, 200.00,
+    ARRAY['WiFi','Halal meals','AC','Prayer mat provided'], 'Halal household. No alcohol on premises.', ARRAY['halal'], ARRAY['Prayer space available','Halal kitchen'], 'FLEXIBLE', false, true, 9, 4.88),
+  ('33333333-3333-3333-3333-333333333311', '22222222-2222-2222-2222-222222222211', 'Pedu, Cape Coast, Ghana', 'Cape Coast', 'Ghana', 5.105300, -1.246600, 'Shared room', 2, 95.00,
+    ARRAY['WiFi','Vegan meals','Garden','Bicycle rental'], 'Eco-friendly household. No single-use plastics.', ARRAY['vegan','vegetarian','gluten-free'], ARRAY['No specific accommodation'], 'FLEXIBLE', true, true, 6, 4.58),
+  ('33333333-3333-3333-3333-333333333312', '22222222-2222-2222-2222-222222222212', 'Kalpohin, Tamale, Ghana', 'Tamale', 'Ghana', 9.400800, -0.839300, 'Private room', 2, 85.00,
+    ARRAY['WiFi','Meals included','Motorbike rental'], 'Respectful household. Prayer times observed.', ARRAY['halal','standard'], ARRAY['Prayer space available','Separate prayer room'], 'FLEXIBLE', false, true, 3, 4.45),
+  ('33333333-3333-3333-3333-333333333313', '22222222-2222-2222-2222-222222222213', 'Cantonments, Accra, Ghana', 'Accra', 'Ghana', 5.591300, -0.188600, 'Private room', 1, 280.00,
+    ARRAY['WiFi','AC','Private bathroom','Meals included','Laundry'], 'Quiet professional household. No smoking.', ARRAY['kosher','standard','vegetarian'], ARRAY['Kosher kitchen available'], 'FLEXIBLE', false, true, 11, 4.92);

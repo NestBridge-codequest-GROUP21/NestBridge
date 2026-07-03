@@ -14,7 +14,13 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     List<Booking> findByGuestIdOrderByCreatedAtDesc(UUID guestId);
 
-    List<Booking> findByHostOrGuideIdAndStatusOrderByCreatedAtDesc(UUID hostOrGuideId, BookingStatus status);
+    @Query("""
+            SELECT b FROM Booking b WHERE b.hostOrGuideId = :hostOrGuideId
+            AND b.status = :status ORDER BY b.createdAt DESC
+            """)
+    List<Booking> findByHostOrGuideIdAndStatusOrderByCreatedAtDesc(
+            @Param("hostOrGuideId") UUID hostOrGuideId,
+            @Param("status") BookingStatus status);
 
     @Query("""
             SELECT b FROM Booking b WHERE b.hostOrGuideId = :providerId
@@ -28,8 +34,14 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
             @Param("checkIn") LocalDate checkIn,
             @Param("checkOut") LocalDate checkOut);
 
+    @Query("""
+            SELECT b FROM Booking b WHERE b.hostOrGuideId = :hostOrGuideId
+            AND b.status = :status AND b.bookingType = :bookingType
+            """)
     List<Booking> findByHostOrGuideIdAndStatusAndBookingType(
-            UUID hostOrGuideId, BookingStatus status, BookingType bookingType);
+            @Param("hostOrGuideId") UUID hostOrGuideId,
+            @Param("status") BookingStatus status,
+            @Param("bookingType") BookingType bookingType);
 
     @Query("""
             SELECT b FROM Booking b WHERE b.hostOrGuideId = :providerId
