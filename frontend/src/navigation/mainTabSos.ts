@@ -14,6 +14,10 @@ export function handleProfileCulturalItem(
   navigation: NativeStackNavigationProp<AppStackParamList>,
   itemId: string,
 ) {
+  if (itemId === 'video-library') {
+    navigation.navigate('VideoLibrary');
+    return;
+  }
   if (itemId === 'checklist') {
     navigation.navigate('PrepChecklist');
     return;
@@ -28,6 +32,10 @@ export function handleProfileCulturalItem(
   }
   if (itemId === 'offline-map') {
     navigation.navigate('OfflineMap');
+    return;
+  }
+  if (itemId === 'sponsors') {
+    navigation.navigate('SponsorList');
     return;
   }
   if (itemId === 'sites-directory') {

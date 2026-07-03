@@ -28,7 +28,17 @@ import SessionReviewScreen from '../screens/guide/SessionReviewScreen';
 import GuideSearchScreen from '../screens/shared/GuideSearchScreen';
 import SessionBookingScreen from '../screens/shared/SessionBookingScreen';
 import MessagesTabScreen from '../screens/shared/MessagesTabScreen';
-import ChatScreen from '../screens/shared/ChatScreen';
+import ChatRoute from './ChatRoute';
+import SiteDetailRoute from './SiteDetailRoute';
+import VideoDetailRoute from './VideoDetailRoute';
+import VideoLibraryScreen from '../screens/shared/VideoLibraryScreen';
+import VideoDetailScreen from '../screens/shared/VideoDetailScreen';
+import SponsorListScreen from '../screens/Sponsor/SponsorListScreen';
+import SponsorDetailScreen from '../screens/Sponsor/SponsorDetailScreen';
+import SponsorApplicationScreen from '../screens/Sponsor/SponsorApplicationScreen';
+import KYCPromptScreen from '../screens/host/KYCPromptScreen';
+import { SPONSORS_MOCK, getSponsorById } from '../data/sponsorsMock';
+import { kycPromptForTrack } from '../data/kycPromptMock';
 import HostRequestsTabScreen from '../screens/host/HostRequestsTabScreen';
 import HostBookingsTabScreen from '../screens/host/HostBookingsTabScreen';
 import HostEarningsTabScreen from '../screens/host/HostEarningsTabScreen';
@@ -42,7 +52,6 @@ import UnifiedSearchScreen from '../screens/shared/UnifiedSearchScreen';
 import ExploreHomeScreen from '../screens/tourist/ExploreHomeScreen';
 import LodgingDirectoryScreen from '../screens/tourist/LodgingDirectoryScreen';
 import LodgingDetailScreen from '../screens/tourist/LodgingDetailScreen';
-import TouristSiteDetailScreen from '../screens/tourist/TouristSiteDetailScreen';
 import PrepChecklistScreen from '../screens/student/PrepChecklistScreen';
 import LocalTipsScreen from '../screens/student/LocalTipsScreen';
 import TransportGuideScreen from '../screens/student/TransportGuideScreen';
@@ -97,8 +106,18 @@ import type { AccountProfileState } from '../types/accountProfile';
 
 import { useHomeApiData } from '../hooks/useHomeApiData';
 import { useProviderTabData } from '../hooks/useProviderTabData';
+import { useConversations } from '../hooks/useConversations';
+import {
+  usePhrases,
+  useTopics,
+  useTransport,
+  useSites,
+  useChecklist,
+  useEmergencyContacts,
+  useMapLandmarks,
+  useVideos,
+} from '../hooks/useContent';
 import { handleTabPress, navigateToHome } from './tabRouting';
-import { conversationFromId, messagesForConversation } from '../data/conversationsMock';
 import {
   acceptBooking,
   confirmBooking,
@@ -118,18 +137,8 @@ import {
   homeRoleFromIntent,
 } from '../data/homeNavigation';
 import {
-  touristFeaturedGuideMock,
-  touristStatusMock,
-  touristReminderMock,
-  touristRecentActivityMock,
   hostFeaturedRequestMock,
-  hostStatusMock,
-  hostReminderMock,
-  hostRecentActivityMock,
   guideFeaturedTourMock,
-  guideStatusMock,
-  guideReminderMock,
-  guideRecentActivityMock,
 } from '../data/homeContentMock';
 import {
   destinationMock,
@@ -148,11 +157,6 @@ import {
   listingFromId,
 } from '../data/lodgingDirectoryMock';
 import { exploreSectionsMock } from '../data/touristExploreMock';
-import {
-  emergencyContactsMock,
-  localEmergencyNumber,
-} from '../data/sosMock';
-import { touristSiteFromId, touristSiteIdFromCarouselSection, touristSitesMock } from '../data/touristSitesMock';
 import { welfareCheckInQuestions } from '../data/welfareMock';
 import {
   buildSearchMatchParams,
@@ -163,17 +167,18 @@ import {
 } from '../data/homeFeeds';
 import type { ConversationListItem } from '../types/messaging';
 import {
-  prepChecklistMock,
-  localTipsPhrasesMock,
-  localTipsTopicsMock,
-  transportTabsMock,
-  offlineMapLandmarksMock,
   hostCalendarDaysMock,
   hostActiveBookingMock,
   hostListingsMock,
   tourTypesMock,
   guideCalendarDaysMock,
 } from '../data/featureScreensMock';
+import {
+  buildStudentHomeStatus,
+  buildTouristHomeStatus,
+  buildHostHomeStatus,
+  buildGuideHomeStatus,
+} from '../utils/liveHomeStatus';
 import { getPersonalizedGreeting } from '../utils/greeting';
 import {
   onboardingReadyCopyByTrack,
@@ -196,6 +201,16 @@ function getInitials(name: string): string {
     .join('')
     .slice(0, 2)
     .toUpperCase();
+}
+
+function touristSiteIdFromCarouselSection(
+  sectionId: string,
+  knownSiteKeys: string[] = [],
+): string {
+  if (sectionId === 'sites') return 'site-cape-coast';
+  if (sectionId === 'site-food') return 'site-makola';
+  if (knownSiteKeys.includes(sectionId)) return sectionId;
+  return 'site-cape-coast';
 }
 
 function handleStudentQuickAction(
@@ -461,19 +476,22 @@ export default function AppNavigator() {
   const [bookingFilter, setBookingFilter] = useState<BookingTabFilter>('active');
   const [lodgingFilter, setLodgingFilter] = useState<LodgingCategoryFilter>('ALL');
   const [savedLodgingIds, setSavedLodgingIds] = useState<string[]>([]);
-  const [checklistTasks, setChecklistTasks] = useState(prepChecklistMock);
+  const [checklistCompleted, setChecklistCompleted] = useState<string[]>(
+    profileState.seekerSetup.data.checklistCompleted ?? [],
+  );
   const [hostListings, setHostListings] = useState(hostListingsMock);
   const [tourTypes, setTourTypes] = useState(tourTypesMock);
   const [tourBaseRate, setTourBaseRate] = useState('45');
   const [tourMaxGroupSize, setTourMaxGroupSize] = useState('8');
   const [hostProfileCache, setHostProfileCache] = useState<Record<string, HostProfileSummary>>({});
   const [guideProfileCache, setGuideProfileCache] = useState<Record<string, GuideProfileSummary>>({});
-  const [conversations, setConversations] = useState<ConversationListItem[]>([]);
+  const conversationsApi = useConversations(user?.userId);
+  const conversations = conversationsApi.conversations;
   const [completedWelfareCheckIns, setCompletedWelfareCheckIns] = useState<string[]>([]);
 
   const homeApi = useHomeApiData(user?.userId, profileState, {
-    fetchMatches: primaryIntent === 'STUDENT' && !!user,
-    fetchGuideMatches: primaryIntent === 'TOURIST' && !!user,
+    fetchMatches: (primaryIntent === 'STUDENT' || primaryIntent === 'TOURIST') && !!user,
+    fetchGuideMatches: (primaryIntent === 'TOURIST' || primaryIntent === 'STUDENT') && !!user,
     fetchHostIncoming: canAcceptHostBookings && !!user,
     fetchGuideIncoming: canAcceptGuideSessions && !!user,
     fetchBookings: !!user && isSeekerComplete(profileState),
@@ -485,18 +503,6 @@ export default function AppNavigator() {
     fetchGuidePending: primaryIntent === 'GUIDE' && !!user,
     fetchGuideActive: primaryIntent === 'GUIDE' && !!user,
   });
-
-  const sitesDirectoryItems = useMemo(
-    () =>
-      touristSitesMock.map((site) => ({
-        id: site.id,
-        name: site.name,
-        city: site.city,
-        description: site.description,
-        admission: site.admission,
-      })),
-    [],
-  );
 
   const seekerSetupIncomplete = !!user && !isSeekerComplete(profileState);
 
@@ -591,16 +597,12 @@ export default function AppNavigator() {
         lastMessage: 'Conversation started',
         lastMessageAt: new Date().toISOString(),
         unreadCount: 0,
+        firebasePath: conv.firebasePath,
       };
-      setConversations((prev) => {
-        if (prev.some((item) => item.id === conv.conversationId)) {
-          return prev;
-        }
-        return [listItem, ...prev];
-      });
+      conversationsApi.upsertConversation(listItem);
       navigation.navigate('Chat', { conversationId: conv.conversationId });
     },
-    [],
+    [conversationsApi],
   );
 
   const messageHost = useCallback(
@@ -672,6 +674,40 @@ export default function AppNavigator() {
   const profileFields = getProfileFields(profileState);
   const cityLabel = profileFields.city || city || 'Accra';
   const lodgingApi = useLodgingPartners(cityLabel, !!user);
+  const contentPhrases = usePhrases(cityLabel, !!user);
+  const contentTopics = useTopics(cityLabel, !!user);
+  const contentTransport = useTransport(cityLabel, !!user);
+  const contentSites = useSites(cityLabel, !!user);
+  const contentChecklist = useChecklist(cityLabel, !!user);
+  const contentEmergency = useEmergencyContacts(!!user);
+  const contentLandmarks = useMapLandmarks(cityLabel, !!user);
+  const contentVideos = useVideos(cityLabel, undefined, !!user);
+
+  const checklistTasks = useMemo(
+    () =>
+      contentChecklist.data.map((item) => ({
+        id: item.itemKey,
+        label: item.label,
+        completed: checklistCompleted.includes(item.itemKey),
+      })),
+    [contentChecklist.data, checklistCompleted],
+  );
+
+  const sitesDirectoryItems = useMemo(
+    () =>
+      contentSites.data.map((site) => ({
+        id: site.siteKey,
+        name: site.name,
+        city: site.city,
+        description: site.description,
+        admission: site.admission ?? '',
+      })),
+    [contentSites.data],
+  );
+
+  useEffect(() => {
+    setChecklistCompleted(profileState.seekerSetup.data.checklistCompleted ?? []);
+  }, [profileState.seekerSetup.data.checklistCompleted, user?.userId]);
   const checkIn = defaultCheckIn(arrivalDate || profileFields.arrivalDate);
   const checkOut = defaultCheckOut(departureDate || profileFields.departureDate);
   const sessionDate = arrivalDate || profileFields.arrivalDate || DEFAULT_SESSION_DATE;
@@ -856,9 +892,20 @@ export default function AppNavigator() {
 
   const homeDataError = homeApi.error;
   const isHomeLoading = homeApi.isLoading;
-  const homeReminder = homeDataError
-    ? `Could not load live data: ${homeDataError}`
-    : studentHomeMockData.reminder;
+  const studentLive = buildStudentHomeStatus(
+    bookings,
+    cityLabel,
+    seekerSetupIncomplete,
+    homeDataError,
+  );
+  const touristLive = buildTouristHomeStatus(
+    bookings,
+    cityLabel,
+    seekerSetupIncomplete,
+    homeDataError,
+  );
+  const hostLive = buildHostHomeStatus(hostIncoming, providerTab.error ?? homeDataError);
+  const guideLive = buildGuideHomeStatus(guideIncoming, providerTab.error ?? homeDataError);
 
   const homeProps = useMemo(
     () => ({
@@ -874,24 +921,22 @@ export default function AppNavigator() {
       showMatchScores,
       isHomeLoading,
       homeDataError,
-      statusLabel: cityLabel
-        ? `Heading to ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`
-        : studentHomeMockData.statusLabel,
-      reminder: homeReminder,
+      statusLabel: studentLive.statusLabel,
+      reminder: studentLive.reminder,
       showSetupBanner: seekerSetupIncomplete && primaryIntent === 'STUDENT',
     }),
     [
       firstName,
       resolvedInitials,
       tabBarItems,
-      cityLabel,
       personalizedGreeting,
       homeApi.featuredMatch,
       homeApi.suggestedHosts,
       showMatchScores,
       isHomeLoading,
       homeDataError,
-      homeReminder,
+      studentLive.statusLabel,
+      studentLive.reminder,
       seekerSetupIncomplete,
       primaryIntent,
     ],
@@ -921,19 +966,19 @@ export default function AppNavigator() {
       userName: firstName,
       userInitials: resolvedInitials,
       cityLabel,
-      statusIcon: touristStatusMock.icon,
-      statusLabel: `Discover ${cityLabel}`,
-      featuredGuide: touristFeaturedGuideMock,
+      statusIcon: '🌍',
+      statusLabel: touristLive.statusLabel,
+      featuredGuide: homeApi.featuredGuide ?? undefined,
       quickActions: getQuickActionsForRole('BROWSE'),
       sections: exploreSectionsMock,
       exploreSectionTitle: `Explore ${cityLabel.split(',')[0]?.trim() || cityLabel}`,
-      recentActivity: touristRecentActivityMock,
-      reminder: touristReminderMock,
+      recentActivity: touristLive.recentActivity,
+      reminder: touristLive.reminder,
       tabBarItems,
       activeTabId: 'home',
       showSetupBanner: false,
     }),
-    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting],
+    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide],
   );
 
   const exploreHomeProps = useMemo(
@@ -942,8 +987,8 @@ export default function AppNavigator() {
       userName: firstName,
       userInitials: resolvedInitials,
       cityLabel,
-      statusIcon: touristStatusMock.icon,
-      statusLabel: touristStatusMock.label,
+      statusIcon: '🌍',
+      statusLabel: touristLive.statusLabel,
       featuredGuide: homeApi.featuredGuide ?? undefined,
       suggestedGuides: homeApi.suggestedGuides,
       showMatchScores,
@@ -952,10 +997,8 @@ export default function AppNavigator() {
       quickActions: getQuickActionsForRole('TOURIST'),
       sections: exploreSectionsMock,
       exploreSectionTitle: `Explore ${cityLabel.split(',')[0]?.trim() || cityLabel}`,
-      recentActivity: touristRecentActivityMock,
-      reminder: homeDataError
-        ? `Could not load live data: ${homeDataError}`
-        : touristReminderMock,
+      recentActivity: touristLive.recentActivity,
+      reminder: touristLive.reminder,
       tabBarItems,
       activeTabId: 'home',
       showSetupBanner: seekerSetupIncomplete && primaryIntent === 'TOURIST',
@@ -1030,6 +1073,8 @@ export default function AppNavigator() {
             tabBarItems={tabBarItems}
             activeTabId="messages"
             emptyState={emptyStates.messages}
+            isLoading={conversationsApi.isLoading}
+            errorMessage={conversationsApi.error}
             {...mainTabSosProps(navigation)}
             onConversationPress={(conversationId) =>
               navigation.navigate('Chat', { conversationId })
@@ -1041,15 +1086,22 @@ export default function AppNavigator() {
 
       <Stack.Screen name="Chat">
         {({ navigation, route }) => {
-          const conversation =
-            conversations.find((item) => item.id === route.params.conversationId) ??
-            conversationFromId(route.params.conversationId);
+          const conversation = conversations.find(
+            (item) => item.id === route.params.conversationId,
+          );
+          if (!conversation || !user) {
+            return (
+              <View style={routeLoaderStyle.loader}>
+                <ActivityIndicator size="large" color={colors.teal} />
+              </View>
+            );
+          }
           return (
-            <ChatScreen
-              participantName={conversation.participantName}
-              participantInitials={conversation.participantInitials}
-              messages={messagesForConversation(conversation.id)}
+            <ChatRoute
+              conversation={conversation}
+              currentUserId={user.userId}
               onBack={() => navigation.goBack()}
+              onMessageSent={() => conversationsApi.refresh()}
             />
           );
         }}
@@ -1370,6 +1422,10 @@ export default function AppNavigator() {
                 if (profileName && profileName !== displayName) {
                   setDisplayName(profileName);
                 }
+                if (track === 'HOST' || track === 'GUIDE') {
+                  navigation.navigate('KYCPrompt', { track });
+                  return;
+                }
                 navigation.navigate('OnboardingReady', { track });
               }}
               onSkip={() => {
@@ -1382,9 +1438,27 @@ export default function AppNavigator() {
                 if (profileName && profileName !== displayName) {
                   setDisplayName(profileName);
                 }
+                if (track === 'HOST' || track === 'GUIDE') {
+                  navigation.navigate('KYCPrompt', { track });
+                  return;
+                }
                 navigation.navigate('OnboardingReady', { track });
               }}
               onBack={() => navigation.goBack()}
+            />
+          );
+        }}
+      </Stack.Screen>
+
+      <Stack.Screen name="KYCPrompt">
+        {({ navigation, route }) => {
+          const { track } = route.params;
+          return (
+            <KYCPromptScreen
+              data={kycPromptForTrack(track)}
+              onVerifyNow={() => navigation.navigate('OnboardingReady', { track })}
+              onVerifyLater={() => navigation.navigate('OnboardingReady', { track })}
+              onSosPress={() => navigation.navigate('SOS')}
             />
           );
         }}
@@ -1524,19 +1598,15 @@ export default function AppNavigator() {
               greeting={personalizedGreeting}
               userName={firstName}
               userInitials={resolvedInitials}
-              statusIcon={hostStatusMock.icon}
-              statusLabel={
-                hostIncoming.length > 0
-                  ? `${hostIncoming.length} active bookings`
-                  : hostStatusMock.label
-              }
+              statusIcon="🏠"
+              statusLabel={hostLive.statusLabel}
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('HOST')}
               performanceStats={[]}
               requests={hostIncoming}
               emptyState={emptyStates.hostRequests}
-              recentActivity={hostRecentActivityMock}
-              reminder={homeDataError ? `Could not load live data: ${homeDataError}` : hostReminderMock}
+              recentActivity={hostLive.recentActivity}
+              reminder={hostLive.reminder}
               tabBarItems={hostTabBarItems}
               activeTabId="home"
               {...mainTabSosProps(navigation)}
@@ -1593,20 +1663,16 @@ export default function AppNavigator() {
               greeting={personalizedGreeting}
               userName={firstName}
               userInitials={resolvedInitials}
-              statusIcon={guideStatusMock.icon}
-              statusLabel={
-                guideIncoming.length > 0
-                  ? `${guideIncoming.length} upcoming tours`
-                  : guideStatusMock.label
-              }
+              statusIcon="🗺️"
+              statusLabel={guideLive.statusLabel}
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('GUIDE')}
               tourSuggestions={guideTourSections}
               tourSuggestionsTitle="Your tour types"
               requests={guideIncoming}
               emptyState={emptyStates.guideRequests}
-              recentActivity={guideRecentActivityMock}
-              reminder={guideReminderMock}
+              recentActivity={guideLive.recentActivity}
+              reminder={guideLive.reminder}
               tabBarItems={guideTabBarItems}
               activeTabId="home"
               {...mainTabSosProps(navigation)}
@@ -1979,11 +2045,14 @@ export default function AppNavigator() {
       <Stack.Screen name="SOS">
         {({ navigation }) => (
           <SOSScreen
-            emergencyContacts={emergencyContactsMock}
+            emergencyContacts={contentEmergency.data.map((contact) => ({
+              label: contact.label,
+              number: contact.number,
+            }))}
             onBack={() => navigation.goBack()}
             onCallEmergencyServices={() => {
               void logSos({ contactedEmergency: true });
-              dialPhoneNumber(localEmergencyNumber);
+              dialPhoneNumber('191');
             }}
             onContactCallPress={(contact) => {
               void logSos({ contactedSupport: true });
@@ -1995,10 +2064,32 @@ export default function AppNavigator() {
 
       <Stack.Screen name="TouristSiteDetail">
         {({ navigation, route }) => (
-          <TouristSiteDetailScreen
-            site={touristSiteFromId(route.params.siteId)}
+          <SiteDetailRoute
+            siteKey={route.params.siteId}
             onBack={() => navigation.goBack()}
             onFindGuidePress={() => navigation.navigate('GuideSearch')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="VideoLibrary">
+        {({ navigation }) => (
+          <VideoLibraryScreen
+            cityLabel={cityLabel}
+            videos={contentVideos.data}
+            isLoading={contentVideos.isLoading}
+            errorMessage={contentVideos.error}
+            onBack={() => navigation.goBack()}
+            onVideoPress={(videoKey) => navigation.navigate('VideoDetail', { videoKey })}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="VideoDetail">
+        {({ navigation, route }) => (
+          <VideoDetailRoute
+            videoKey={route.params.videoKey}
+            onBack={() => navigation.goBack()}
           />
         )}
       </Stack.Screen>
@@ -2010,20 +2101,14 @@ export default function AppNavigator() {
             userName={firstName}
             userInitials={resolvedInitials}
             statusIcon={studentHomeMockData.statusIcon}
-            statusLabel={
-              cityLabel
-                ? `Heading to ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`
-                : studentHomeMockData.statusLabel
-            }
+            statusLabel={studentLive.statusLabel}
             tasks={checklistTasks}
             onToggleTask={(taskId) => {
-              setChecklistTasks((prev) =>
-                prev.map((task) =>
-                  task.id === taskId
-                    ? { ...task, completed: !task.completed }
-                    : task,
-                ),
-              );
+              const next = checklistCompleted.includes(taskId)
+                ? checklistCompleted.filter((id) => id !== taskId)
+                : [...checklistCompleted, taskId];
+              setChecklistCompleted(next);
+              void completeStep('SEEKER', 'profile', { checklistCompleted: next });
             }}
             onBack={() => navigation.goBack()}
           />
@@ -2037,14 +2122,20 @@ export default function AppNavigator() {
             userName={firstName}
             userInitials={resolvedInitials}
             statusIcon={studentHomeMockData.statusIcon}
-            statusLabel={
-              cityLabel
-                ? `Heading to ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`
-                : studentHomeMockData.statusLabel
-            }
-            phrases={localTipsPhrasesMock}
-            topics={localTipsTopicsMock}
-            onPlayAudio={() => undefined}
+            statusLabel={studentLive.statusLabel}
+            phrases={contentPhrases.data.map((phrase) => ({
+              id: phrase.id,
+              emoji: phrase.emoji,
+              phrase: phrase.phrase,
+              translation: phrase.translation,
+              hasAudio: phrase.hasAudio,
+            }))}
+            topics={contentTopics.data.map((topic) => ({
+              id: topic.id,
+              emoji: topic.emoji,
+              title: topic.title,
+              description: topic.description,
+            }))}
             onBack={() => navigation.goBack()}
           />
         )}
@@ -2057,12 +2148,18 @@ export default function AppNavigator() {
             userName={firstName}
             userInitials={resolvedInitials}
             statusIcon={studentHomeMockData.statusIcon}
-            statusLabel={
-              cityLabel
-                ? `Heading to ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`
-                : studentHomeMockData.statusLabel
-            }
-            tabs={transportTabsMock}
+            statusLabel={studentLive.statusLabel}
+            tabs={contentTransport.data.map((tab) => ({
+              id: tab.id,
+              label: tab.label,
+              routes: tab.routes.map((route) => ({
+                id: route.id,
+                name: route.name,
+                description: route.description,
+                fareLabel: route.fareLabel,
+                estimatedPrice: route.estimatedPrice,
+              })),
+            }))}
             onBack={() => navigation.goBack()}
           />
         )}
@@ -2074,8 +2171,8 @@ export default function AppNavigator() {
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
-            statusIcon={touristStatusMock.icon}
-            statusLabel={`Exploring ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`}
+            statusIcon="🏡"
+            statusLabel={touristLive.statusLabel}
             listings={exploreStayListings}
             onBookPress={(listingId) =>
               navigation.navigate('HostProfile', { hostId: listingId })
@@ -2091,15 +2188,16 @@ export default function AppNavigator() {
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
-            statusIcon={touristStatusMock.icon}
-            statusLabel={
-              cityLabel
-                ? `Heading to ${cityLabel.split(',')[0]?.trim() || cityLabel} soon`
-                : touristStatusMock.label
-            }
+            statusIcon="📍"
+            statusLabel={touristLive.statusLabel}
             regionLabel="Greater Accra Region"
-            downloadSize="1.2GB"
-            landmarks={offlineMapLandmarksMock}
+            downloadSize="Offline landmarks from NestBridge"
+            landmarks={contentLandmarks.data.map((landmark) => ({
+              id: landmark.id,
+              name: landmark.name,
+              topPercent: landmark.topPercent,
+              leftPercent: landmark.leftPercent,
+            }))}
             onBack={() => navigation.goBack()}
           />
         )}
@@ -2111,7 +2209,7 @@ export default function AppNavigator() {
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
-            statusIcon={hostStatusMock.icon}
+            statusIcon="📅"
             statusLabel="Host"
             calendarTitle={`${firstName}'s Calendar`}
             monthLabel="July 2026"
@@ -2129,7 +2227,7 @@ export default function AppNavigator() {
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
-            statusIcon={hostStatusMock.icon}
+            statusIcon="📅"
             statusLabel="Host"
             listings={hostListings}
             onToggleOnline={(listingId, isOnline) => {
@@ -2150,7 +2248,7 @@ export default function AppNavigator() {
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
-            statusIcon={guideStatusMock.icon}
+            statusIcon="🗺️"
             statusLabel="Guide"
             tourTypes={tourTypes}
             baseRate={tourBaseRate}
@@ -2176,7 +2274,7 @@ export default function AppNavigator() {
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
-            statusIcon={guideStatusMock.icon}
+            statusIcon="🗺️"
             statusLabel="Guide"
             calendarTitle={`${firstName}'s Availability`}
             monthLabel="July 2026"
@@ -2270,6 +2368,69 @@ export default function AppNavigator() {
                 void declineBooking(request.id).then(() => homeApi.refresh());
                 navigation.navigate('IncomingSessionRequests');
               }}
+            />
+          );
+        }}
+      </Stack.Screen>
+
+      <Stack.Screen name="SponsorList">
+        {({ navigation }) => (
+          <SponsorListScreen
+            sponsors={SPONSORS_MOCK}
+            onBack={() => navigation.goBack()}
+            onSponsorPress={(sponsorId) =>
+              navigation.navigate('SponsorDetail', { sponsorId })
+            }
+            onSosPress={() => navigation.navigate('SOS')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="SponsorDetail">
+        {({ navigation, route }) => {
+          const sponsor = getSponsorById(route.params.sponsorId);
+          if (!sponsor) {
+            return (
+              <View style={routeLoaderStyle.loader}>
+                <ActivityIndicator size="large" color={colors.teal} />
+              </View>
+            );
+          }
+          return (
+            <SponsorDetailScreen
+              sponsor={sponsor}
+              onBack={() => navigation.goBack()}
+              onApplyPress={() =>
+                navigation.navigate('SponsorApplication', {
+                  sponsorId: sponsor.id,
+                })
+              }
+              onSosPress={() => navigation.navigate('SOS')}
+            />
+          );
+        }}
+      </Stack.Screen>
+
+      <Stack.Screen name="SponsorApplication">
+        {({ navigation, route }) => {
+          const sponsor = getSponsorById(route.params.sponsorId);
+          if (!sponsor) {
+            return (
+              <View style={routeLoaderStyle.loader}>
+                <ActivityIndicator size="large" color={colors.teal} />
+              </View>
+            );
+          }
+          return (
+            <SponsorApplicationScreen
+              sponsor={{
+                id: sponsor.id,
+                name: sponsor.name,
+                logo: sponsor.logo,
+              }}
+              onBack={() => navigation.goBack()}
+              onReturnToList={() => navigation.navigate('SponsorList')}
+              onSosPress={() => navigation.navigate('SOS')}
             />
           );
         }}
