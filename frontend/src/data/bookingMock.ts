@@ -219,6 +219,46 @@ export const incomingBookingRequestsMock: IncomingBookingRequest[] = [
       canAccept: true,
     },
   },
+  {
+    id: 'req-guide-1',
+    bookingType: 'GUIDE',
+    seekerRole: 'STUDENT',
+    studentId: 'student-1',
+    studentName: 'Akosua Darko',
+    studentInitials: 'AD',
+    studentOrigin: 'Lagos, Nigeria',
+    studentUniversity: 'University of Ghana',
+    compatibilityScore: 93,
+    checkIn: '2026-09-05',
+    checkOut: '2026-09-05',
+    session: {
+      sessionDate: '2026-09-05',
+      sessionStartTime: '10:00',
+      durationHours: 3,
+    },
+    message: 'City orientation walk around Osu and Labadi.',
+    priceBreakdown: {
+      nightlyRate: 0,
+      currency: 'GHS',
+      nights: 0,
+      subtotal: 0,
+      platformFee: 0,
+      total: 0,
+    },
+    sessionPrice: {
+      sessionRate: 120,
+      currency: 'GHS',
+      platformFee: 6,
+      total: 126,
+    },
+    cancellationPolicy: FLEXIBLE_POLICY,
+    capacity: {
+      overlappingAccepted: 1,
+      maxAllowed: 4,
+      periodLabel: 'Sep 5, 2026',
+      canAccept: true,
+    },
+  },
 ];
 
 export const bookingNotificationsMock: AppNotification[] = [

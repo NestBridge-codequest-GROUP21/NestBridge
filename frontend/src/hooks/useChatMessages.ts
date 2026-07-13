@@ -4,6 +4,7 @@ import {
   sendConversationMessage,
   getApiErrorMessage,
 } from '../services/api';
+import { messagesForConversation } from '../data/conversationsMock';
 import {
   isFirebaseConfigured,
   sendFirebaseMessage,
@@ -31,15 +32,29 @@ export function useChatMessages(
       return;
     }
     const items = await getConversationMessages(conversationId);
-    setMessages(
-      items.map((item) => ({
-        id: item.messageId,
-        senderId: item.senderId,
-        text: item.text,
-        sentAt: item.sentAt,
-        isOwn: item.senderId === currentUserId,
-      })),
-    );
+    if (items.length > 0) {
+      setMessages(
+        items.map((item) => ({
+          id: item.messageId,
+          senderId: item.senderId,
+          text: item.text,
+          sentAt: item.sentAt,
+          isOwn: item.senderId === currentUserId,
+        })),
+      );
+      return;
+    }
+
+    const demoMessages = messagesForConversation(conversationId);
+    if (demoMessages.length > 0) {
+      setMessages(
+        demoMessages.map((item) => ({
+          ...item,
+          senderId: item.senderId === 'self' ? currentUserId : item.senderId,
+          isOwn: item.senderId === 'self' || item.senderId === currentUserId,
+        })),
+      );
+    }
   }, [conversationId, currentUserId]);
 
   useEffect(() => {

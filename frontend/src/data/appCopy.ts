@@ -123,6 +123,10 @@ export const devTestingCopy = {
   exchangeStudentTitle: 'Exchange student flag',
   exchangeStudentActive: 'Active exchange student (provider listing blocked)',
   exchangeStudentInactive: 'No longer on exchange (provider listing allowed)',
+  demoActorsTitle: 'Switch demo actor',
+  demoActorsHint:
+    'Signs in as a seeded demo account with real bookings and messages. Password: password',
+  demoActorsLoginError: 'Could not sign in — is the backend running?',
 };
 
 export const validationCopy = {

@@ -36,7 +36,7 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer>
-      {user ? <AppNavigator /> : <AuthNavigator />}
+      {user ? <AppNavigator key={user.userId} /> : <AuthNavigator />}
     </NavigationContainer>
   );
 }
