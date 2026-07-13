@@ -24,7 +24,8 @@ import {
 import { splashCopy } from '../../data/appCopy';
 
 const BG_SHIFT_MS = 10000;
-const SPLASH_AUTO_MS = 5000;
+/** Cold-start brand hold — short enough to feel like a normal app launch. */
+const SPLASH_AUTO_MS = 2500;
 const TAGLINE = splashCopy.tagline;
 const CONTINUE_HINT = splashCopy.continueHint;
 
@@ -295,7 +296,7 @@ export default function SplashScreen({ appName, onContinue }: SplashScreenProps)
       onPress={handleContinue}
       disabled={!onContinue}
       accessibilityRole={onContinue ? 'button' : undefined}
-      accessibilityLabel={onContinue ? 'Continue to welcome screen' : undefined}
+      accessibilityLabel={onContinue ? 'Continue' : undefined}
       accessibilityHint={onContinue ? 'Skips the splash wait' : undefined}
     >
       <StatusBar style="light" />

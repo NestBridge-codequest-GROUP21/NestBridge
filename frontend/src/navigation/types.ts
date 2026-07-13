@@ -1,7 +1,6 @@
 import type { SetupTrack } from '../types/accountProfile';
 
 export type AuthStackParamList = {
-  Splash: undefined;
   Welcome: undefined;
   Register: undefined;
   Login: undefined;
@@ -59,6 +58,8 @@ export type AppStackParamList = {
   TourTypesSetup: undefined;
   GuideAvailability: undefined;
   SitesDirectory: undefined;
+  StudentEvents: undefined;
+  CreateEvent: undefined;
   VideoLibrary: undefined;
   VideoDetail: { videoKey: string };
   SponsorList: undefined;
