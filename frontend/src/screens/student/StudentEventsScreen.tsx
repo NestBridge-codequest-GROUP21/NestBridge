@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-nati
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -47,7 +48,7 @@ function EventCard({
     <View style={styles.card}>
       <View style={styles.tagRow}>
         <View style={styles.typeTag}>
-          <Text style={styles.typeTagIcon}>{typeMeta.icon}</Text>
+          <AppIcon glyph={typeMeta.icon} size={fontSizes.caption} color={colors.textPrimary} />
           <Text style={styles.typeTagText}>{typeMeta.label}</Text>
         </View>
         <View style={styles.organizerTag}>
@@ -70,11 +71,11 @@ function EventCard({
       </View>
 
       <View style={styles.metaRow}>
-        <Text style={styles.metaIcon}>🗓️</Text>
+        <AppIcon name="calendar-outline" size={fontSizes.caption} color={colors.textSecondary} />
         <Text style={styles.metaText}>{event.dateLabel}</Text>
       </View>
       <View style={styles.metaRow}>
-        <Text style={styles.metaIcon}>📍</Text>
+        <AppIcon name="location-outline" size={fontSizes.caption} color={colors.textSecondary} />
         <Text style={styles.metaText}>{event.location}</Text>
       </View>
 
@@ -146,7 +147,7 @@ export default function StudentEventsScreen({
           accessibilityLabel="Create an event"
         >
           <View style={styles.createIconWrap}>
-            <Text style={styles.createIcon}>＋</Text>
+            <AppIcon name="add" size={28} color={colors.white} />
           </View>
           <View style={styles.createTextWrap}>
             <Text style={styles.createTitle}>Host your own</Text>

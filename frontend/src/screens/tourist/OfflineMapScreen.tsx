@@ -9,6 +9,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeader from '../../components/ScreenHeader';
+import AppIcon from '../../components/AppIcon';
 import type { MapLandmark } from '../../data/featureScreensMock';
 import {
   colors,
@@ -92,7 +93,7 @@ export default function OfflineMapScreen({
               accessibilityRole="button"
               accessibilityLabel={landmark.name}
             >
-              <Text style={styles.pinIcon}>📍</Text>
+              <AppIcon name="location" size={fontSizes.subheading} color={colors.danger} />
               <View style={styles.landmarkCard}>
                 <View style={styles.landmarkDot} />
                 <Text style={styles.landmarkName}>{landmark.name}</Text>
@@ -110,21 +111,21 @@ export default function OfflineMapScreen({
             accessibilityRole="button"
             accessibilityLabel="Center on current location"
           >
-            <Text style={styles.locateIcon}>⊕</Text>
+            <AppIcon name="locate" size={fontSizes.subheading} color={colors.teal} />
           </Pressable>
         </View>
       </View>
 
       <View style={[styles.searchPanel, { paddingBottom: insets.bottom + spacing.md }]}>
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <AppIcon name="search" size={fontSizes.body} color={colors.textTertiary} />
           <Text style={styles.searchPlaceholder}>Search</Text>
         </View>
 
         <Text style={styles.routingLabel}>Offline routing between points</Text>
 
         <View style={styles.routeInputRow}>
-          <Text style={styles.routePin}>📍</Text>
+          <AppIcon name="location-outline" size={fontSizes.body} color={colors.textSecondary} />
           <TextInput
             style={styles.routeInput}
             placeholder="Route point A"
@@ -135,7 +136,7 @@ export default function OfflineMapScreen({
         </View>
 
         <View style={styles.routeInputRow}>
-          <Text style={styles.routePin}>📍</Text>
+          <AppIcon name="location-outline" size={fontSizes.body} color={colors.textSecondary} />
           <TextInput
             style={styles.routeInput}
             placeholder="Route point B"
@@ -148,7 +149,7 @@ export default function OfflineMapScreen({
             accessibilityRole="button"
             accessibilityLabel="Calculate offline route"
           >
-            <Text style={styles.routeGoIcon}>→</Text>
+            <AppIcon name="arrow-forward" size={fontSizes.subheading} color={colors.white} />
           </Pressable>
         </View>
       </View>

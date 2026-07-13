@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import StatusPill from './StatusPill';
+import AppIcon from './AppIcon';
 import {
   colors,
   fontFamilies,
@@ -47,6 +48,15 @@ export default function ScreenHeader({
   const showUserRow = Boolean(greeting || userName);
   const showTopActions = Boolean(onBack || onHelpPress);
 
+  // Avoid showing the person's name twice (e.g. greeting "Good evening, Blessing"
+  // above a large "Blessing"). Strip the name from the greeting line when it's
+  // also rendered on its own below.
+  const displayGreeting = React.useMemo(() => {
+    if (!greeting || !userName) return greeting;
+    if (!greeting.includes(userName)) return greeting;
+    return greeting.replace(userName, '').replace(/[\s,]+$/, '').trim();
+  }, [greeting, userName]);
+
   return (
     <LinearGradient
       colors={[...(compact ? gradients.headerCompact : gradients.header)]}
@@ -63,7 +73,7 @@ export default function ScreenHeader({
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
-              <Text style={styles.actionText}>←</Text>
+              <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
             </Pressable>
           ) : (
             <View style={styles.actionSpacer} />
@@ -75,7 +85,7 @@ export default function ScreenHeader({
               accessibilityRole="button"
               accessibilityLabel="Help"
             >
-              <Text style={styles.actionText}>?</Text>
+              <AppIcon name="help-circle-outline" size={fontSizes.heading} color={colors.white} />
             </Pressable>
           ) : (
             <View style={styles.actionSpacer} />
@@ -87,7 +97,9 @@ export default function ScreenHeader({
         <>
           <View style={styles.userRow}>
             <View style={styles.userText}>
-              {greeting ? <Text style={styles.greeting}>{greeting}</Text> : null}
+              {displayGreeting ? (
+                <Text style={styles.greeting}>{displayGreeting}</Text>
+              ) : null}
               {userName ? <Text style={styles.userName}>{userName}</Text> : null}
               {subtitle && !statusLabel ? (
                 <Text style={styles.subtitleInline}>{subtitle}</Text>
@@ -105,7 +117,11 @@ export default function ScreenHeader({
                       : 'Notifications'
                   }
                 >
-                  <Text style={styles.notificationIcon}>🔔</Text>
+                  <AppIcon
+                    name="notifications-outline"
+                    size={fontSizes.subheading}
+                    color={colors.white}
+                  />
                   {notificationCount > 0 ? (
                     <View style={styles.notificationBadge}>
                       <Text style={styles.notificationBadgeText}>

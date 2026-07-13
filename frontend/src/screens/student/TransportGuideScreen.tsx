@@ -3,15 +3,24 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import AppIcon, { type IoniconName } from '../../components/AppIcon';
 import type { TransportTab } from '../../data/featureScreensMock';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
 } from '../../constants/theme';
+
+const TRANSPORT_MODE_ICONS: IoniconName[] = [
+  'bus-outline',
+  'car-outline',
+  'train-outline',
+  'flash-outline',
+];
 
 export interface TransportGuideScreenProps {
   greeting: string;
@@ -99,10 +108,11 @@ export default function TransportGuideScreen({
         </ScrollView>
 
         <View style={styles.modeIcons}>
-          <Text style={styles.modeIcon}>🚌</Text>
-          <Text style={styles.modeIcon}>🚐</Text>
-          <Text style={styles.modeIcon}>🚕</Text>
-          <Text style={styles.modeIcon}>⚡</Text>
+          {TRANSPORT_MODE_ICONS.map((iconName) => (
+            <View key={iconName} style={styles.modeIconTile}>
+              <AppIcon name={iconName} size={24} color={colors.tealDeep} />
+            </View>
+          ))}
         </View>
 
         <View style={styles.routeList}>
@@ -158,8 +168,13 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.lg,
   },
-  modeIcon: {
-    fontSize: fontSizes.heading,
+  modeIconTile: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   routeList: {
     gap: spacing.md,

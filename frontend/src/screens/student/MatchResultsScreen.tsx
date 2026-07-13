@@ -9,6 +9,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -227,7 +228,7 @@ export default function MatchResultsScreen({
         >
           {onBack ? (
             <Pressable onPress={onBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
-              <Text style={styles.backIcon}>←</Text>
+              <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
             </Pressable>
           ) : (
             <View style={styles.backButtonSpacer} />
@@ -259,7 +260,7 @@ export default function MatchResultsScreen({
         >
           {onBack ? (
             <Pressable onPress={onBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
-              <Text style={styles.backIcon}>←</Text>
+              <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
             </Pressable>
           ) : (
             <View style={styles.backButtonSpacer} />
@@ -297,7 +298,7 @@ export default function MatchResultsScreen({
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Text style={styles.backIcon}>←</Text>
+            <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
           </Pressable>
         ) : (
           <View style={styles.backButtonSpacer} />
@@ -339,19 +340,19 @@ export default function MatchResultsScreen({
       {viewMode === 'list' ? (
         <ScrollView
           style={styles.scroll}
+          horizontal
+          showsHorizontalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: insets.bottom + spacing.xl },
+            { paddingRight: layout.screenPaddingHorizontal + insets.right },
           ]}
-          showsVerticalScrollIndicator={false}
         >
-          {results.map((host, index) => (
-            <View
+          {results.map((host) => (
+            <HostMatchCard
               key={host.id}
-              style={index < results.length - 1 ? styles.cardSpacing : undefined}
-            >
-              <HostMatchCard host={host} onPress={() => handleHostPress(host.id)} />
-            </View>
+              host={host}
+              onPress={() => handleHostPress(host.id)}
+            />
           ))}
         </ScrollView>
       ) : (
@@ -438,11 +439,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
-  },
-  cardSpacing: {
-    marginBottom: spacing.md,
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
+    alignItems: 'flex-start',
   },
   hostCard: {
+    width: 300,
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,

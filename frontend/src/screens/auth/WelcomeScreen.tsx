@@ -14,8 +14,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BrandLogoMark from '../../components/BrandLogoMark';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -166,7 +168,9 @@ export default function WelcomeScreen({
           <View style={styles.pillsWrap}>
             {valuePills.map((pill) => (
               <View key={pill.label} style={styles.pill}>
-                <Text style={styles.pillIcon}>{pill.icon}</Text>
+                <View style={styles.pillIconTile}>
+                  <AppIcon glyph={pill.icon} size={20} color={colors.tealDeep} />
+                </View>
                 <Text style={styles.pillLabel}>{pill.label}</Text>
               </View>
             ))}
@@ -265,8 +269,13 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     minHeight: 44,
   },
-  pillIcon: {
-    fontSize: fontSizes.subheading,
+  pillIconTile: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pillLabel: {
     flex: 1,

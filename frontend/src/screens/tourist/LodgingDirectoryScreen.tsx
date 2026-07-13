@@ -10,6 +10,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontSizes,
@@ -79,7 +80,7 @@ export default function LodgingDirectoryScreen({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Text style={styles.backIcon}>←</Text>
+          <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
         </Pressable>
         <Text style={styles.headerTitle}>Find lodging</Text>
         <Text style={styles.headerSubtitle}>
@@ -88,7 +89,12 @@ export default function LodgingDirectoryScreen({
       </LinearGradient>
 
       <View style={styles.banner}>
-        <Text style={styles.bannerIcon}>ℹ️</Text>
+        <AppIcon
+          name="information-circle-outline"
+          size={fontSizes.subheading}
+          color={colors.teal}
+          style={styles.bannerIcon}
+        />
         <Text style={styles.bannerText}>
           You will complete booking outside NestBridge. We help you find and
           contact options.
@@ -160,7 +166,10 @@ export default function LodgingDirectoryScreen({
                   <Text style={styles.name} numberOfLines={1}>
                     {listing.name}
                   </Text>
-                  <Text style={styles.rating}>★ {listing.rating}</Text>
+                  <View style={styles.ratingRow}>
+                    <AppIcon name="star" size={fontSizes.caption} color={colors.warning} />
+                    <Text style={styles.rating}>{listing.rating}</Text>
+                  </View>
                 </View>
                 <Text style={styles.category}>
                   {lodgingCategoryLabel(listing.category)} · {listing.area}
@@ -312,6 +321,11 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginRight: spacing.sm,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs / 2,
   },
   rating: {
     fontSize: fontSizes.caption,

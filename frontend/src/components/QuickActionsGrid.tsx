@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import AppIcon from './AppIcon';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -44,11 +46,11 @@ export default function QuickActionsGrid({
                 action.id === 'sos' && styles.sosIconWrap,
               ]}
             >
-              <Text
-                style={[styles.icon, action.id === 'sos' && styles.sosIcon]}
-              >
-                {action.icon ?? action.label.charAt(0)}
-              </Text>
+              <AppIcon
+                glyph={action.icon}
+                size={26}
+                color={action.id === 'sos' ? colors.white : colors.teal}
+              />
             </View>
             <Text style={styles.label}>{action.label}</Text>
           </Pressable>
@@ -89,29 +91,13 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.white,
+    backgroundColor: tints.teal,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
   },
   sosIconWrap: {
     backgroundColor: colors.danger,
-    borderColor: colors.danger,
-  },
-  icon: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    color: colors.tealDeep,
-  },
-  sosIcon: {
-    color: colors.white,
   },
   label: {
     fontFamily: fontFamilies.semibold,

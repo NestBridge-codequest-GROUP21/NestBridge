@@ -12,8 +12,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SponsorListing } from '../../data/sponsorsMock';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -71,7 +73,9 @@ export default function SponsorApplicationScreen({
     return (
       <View style={styles.successContainer}>
         <StatusBar style="dark" />
-        <Text style={styles.successIcon}>🎉</Text>
+        <View style={styles.successIcon}>
+          <AppIcon name="checkmark-circle" size={56} color={colors.success} />
+        </View>
         <Text style={styles.successTitle}>Application submitted</Text>
         <Text style={styles.successMessage}>
           Your application to {sponsor.name} has been received. You will be contacted within 5–7 business days.
@@ -114,9 +118,11 @@ export default function SponsorApplicationScreen({
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Text style={styles.backText}>←</Text>
+            <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
           </Pressable>
-          <Text style={styles.logo}>{sponsor.logo}</Text>
+          <View style={styles.logoTile}>
+            <AppIcon glyph={sponsor.logo} size={28} color={colors.white} />
+          </View>
           <Text style={styles.headerTitle}>Apply for sponsorship</Text>
           <Text style={styles.headerSubtitle}>{sponsor.name}</Text>
         </LinearGradient>
@@ -240,8 +246,13 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
   },
-  logo: {
-    fontSize: spacing.xl + spacing.md,
+  logoTile: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.navyMid,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   headerTitle: {
