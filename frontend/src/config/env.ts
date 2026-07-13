@@ -21,16 +21,33 @@ function devServerHost(): string | undefined {
   return host;
 }
 
+function isLoopbackUrl(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return hostname === 'localhost' || hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
 function resolveApiBaseUrl(): string {
   const override = Constants.expoConfig?.extra?.apiBaseUrl;
-  if (typeof override === 'string' && override.length > 0) {
+  const hasOverride = typeof override === 'string' && override.length > 0;
+  const lanHost = devServerHost();
+
+  // Explicit non-loopback override always wins (e.g. staging URL or LAN IP).
+  if (hasOverride && !isLoopbackUrl(override)) {
     return override.replace(/\/$/, '');
   }
 
-  // Physical device: reuse the Expo dev server IP so API hits the same machine.
-  const lanHost = devServerHost();
+  // Physical device / Expo Go: hit the same machine as Metro, not the phone's localhost.
   if (lanHost) {
     return `http://${lanHost}:8080`;
+  }
+
+  // Loopback override is fine for simulators / web when no LAN host is available.
+  if (hasOverride) {
+    return override.replace(/\/$/, '');
   }
 
   if (Platform.OS === 'android') {
@@ -40,5 +57,10 @@ function resolveApiBaseUrl(): string {
   return 'http://localhost:8080';
 }
 
-/** Override via app.json `expo.extra.apiBaseUrl` if needed. */
+/**
+ * Resolved at runtime.
+ * - Expo Go on a phone → http://<Metro LAN IP>:8080
+ * - Android emulator → http://10.0.2.2:8080
+ * - Optional: set expo.extra.apiBaseUrl to a real host (not localhost) to force a URL
+ */
 export const API_BASE_URL = resolveApiBaseUrl();
