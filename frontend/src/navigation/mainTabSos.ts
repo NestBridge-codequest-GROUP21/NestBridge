@@ -1,7 +1,11 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AppStackParamList } from './types';
 
-/** Screens that already expose SOS via the tab bar or an in-screen control. */
+/**
+ * Screens that expose SOS via their own bottom tab bar (raised SOS button).
+ * Everything else is wrapped by StackSosLayout, which anchors SOS in a slim
+ * bottom bar — so SOS is never a floating overlay on top of content.
+ */
 export const STACK_SOS_EXCLUDED = new Set<keyof AppStackParamList>([
   'SOS',
   'BrowseHome',
@@ -19,10 +23,6 @@ export const STACK_SOS_EXCLUDED = new Set<keyof AppStackParamList>([
   'UnifiedSearch',
   'StudentBookings',
   'MatchSearch',
-  'KYCPrompt',
-  'SponsorList',
-  'SponsorDetail',
-  'SponsorApplication',
 ]);
 
 export function shouldWrapStackSos(routeName: keyof AppStackParamList): boolean {

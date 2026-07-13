@@ -90,6 +90,8 @@ export const layout = {
   tabBarHeight: 56,
   tabBarBottomInset: spacing.sm,
   sosDockHeight: 52,
+  sosButtonSize: 56,
+  sosRaise: spacing.lg,
   sectionGap: spacing.lg,
   scrollBottomInset: 72,
   scrollBottomInsetWithSos: 124,

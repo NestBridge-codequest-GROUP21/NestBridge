@@ -12,6 +12,12 @@ import type {
 } from '../types/booking';
 import type { AuthSession, AuthUser } from '../types/auth';
 import type { LodgingCategory, LodgingListing } from '../types/lodging';
+import type {
+  StudentEvent,
+  StudentEventDraft,
+  StudentEventOrganizerKind,
+  StudentEventType,
+} from '../data/studentEventsMock';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -737,6 +743,77 @@ export async function getVideos(city?: string, category?: string): Promise<Video
 
 export async function getVideo(videoKey: string): Promise<VideoResourceApi> {
   return fetchContent(`/api/content/videos/${videoKey}`);
+}
+
+export interface StudentEventApi {
+  eventId: string;
+  hostId: string;
+  title: string;
+  type: StudentEventType;
+  organizerKind: StudentEventOrganizerKind;
+  organizerName: string;
+  organizerInitials: string;
+  eventDateLabel: string;
+  location: string;
+  description: string;
+  capacity: number;
+  attendeeCount: number;
+  spotsLeft: number;
+  joined: boolean;
+  hostedByYou: boolean;
+  createdAt?: string;
+}
+
+export function mapStudentEvent(dto: StudentEventApi): StudentEvent {
+  return {
+    id: dto.eventId,
+    title: dto.title,
+    type: dto.type,
+    organizerKind: dto.organizerKind,
+    organizerName: dto.organizerName,
+    organizerInitials: dto.organizerInitials,
+    dateLabel: dto.eventDateLabel,
+    location: dto.location,
+    description: dto.description,
+    capacity: dto.capacity,
+    attending: dto.attendeeCount,
+    hostedByYou: dto.hostedByYou,
+  };
+}
+
+export async function listStudentEvents(): Promise<StudentEventApi[]> {
+  const { data } = await api.get<ApiResponse<StudentEventApi[]>>('/api/events');
+  return unwrap({ data });
+}
+
+export async function createStudentEvent(
+  draft: StudentEventDraft,
+): Promise<StudentEventApi> {
+  const capacityNum = parseInt(draft.capacity, 10);
+  const { data } = await api.post<ApiResponse<StudentEventApi>>('/api/events', {
+    title: draft.title,
+    type: draft.type,
+    organizerKind: draft.organizerKind,
+    eventDateLabel: draft.dateLabel,
+    location: draft.location,
+    capacity: Number.isFinite(capacityNum) && capacityNum > 0 ? capacityNum : null,
+    description: draft.description,
+  });
+  return unwrap({ data });
+}
+
+export async function joinStudentEvent(eventId: string): Promise<StudentEventApi> {
+  const { data } = await api.post<ApiResponse<StudentEventApi>>(
+    `/api/events/${eventId}/join`,
+  );
+  return unwrap({ data });
+}
+
+export async function leaveStudentEvent(eventId: string): Promise<StudentEventApi> {
+  const { data } = await api.post<ApiResponse<StudentEventApi>>(
+    `/api/events/${eventId}/leave`,
+  );
+  return unwrap({ data });
 }
 
 export function getApiErrorMessage(error: unknown): string {

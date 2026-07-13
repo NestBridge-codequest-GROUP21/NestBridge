@@ -11,7 +11,6 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import SosFloatingButton from '../../components/SosFloatingButton';
 import type { SponsorListing } from '../../data/sponsorsMock';
 import {
   colors,
@@ -47,7 +46,6 @@ export default function SponsorApplicationScreen({
   onBack,
   onSubmit,
   onReturnToList,
-  onSosPress,
 }: SponsorApplicationScreenProps) {
   const insets = useSafeAreaInsets();
   const [fullName, setFullName] = useState('');
@@ -89,7 +87,6 @@ export default function SponsorApplicationScreen({
         >
           <Text style={styles.doneBtnText}>Back to sponsors</Text>
         </Pressable>
-        <SosFloatingButton onPress={onSosPress} />
       </View>
     );
   }
@@ -213,8 +210,6 @@ export default function SponsorApplicationScreen({
           </Text>
         </View>
       </ScrollView>
-
-      <SosFloatingButton onPress={onSosPress} />
     </View>
   );
 }

@@ -53,6 +53,10 @@ import ExploreHomeScreen from '../screens/tourist/ExploreHomeScreen';
 import LodgingDirectoryScreen from '../screens/tourist/LodgingDirectoryScreen';
 import LodgingDetailScreen from '../screens/tourist/LodgingDetailScreen';
 import PrepChecklistScreen from '../screens/student/PrepChecklistScreen';
+import StudentEventsScreen from '../screens/student/StudentEventsScreen';
+import CreateEventScreen from '../screens/student/CreateEventScreen';
+import { useStudentEvents } from '../hooks/useStudentEvents';
+import type { StudentEventDraft } from '../data/studentEventsMock';
 import LocalTipsScreen from '../screens/student/LocalTipsScreen';
 import TransportGuideScreen from '../screens/student/TransportGuideScreen';
 import ExploreStaysScreen from '../screens/tourist/ExploreStaysScreen';
@@ -254,9 +258,16 @@ function handleProviderQuickAction(
   if (actionId === 'listings') {
     navigation.navigate('HostListings');
   }
-  if (actionId === 'availability' || actionId === 'calendar') {
+  if (actionId === 'availability') {
+    // Manage open slots. Guides use the availability calendar; hosts use their
+    // stay calendar as the equivalent slot-management surface.
+    navigation.navigate(role === 'guide' ? 'GuideAvailability' : 'HostCalendar');
+  }
+  if (actionId === 'calendar') {
+    // View committed schedule. Distinct from availability: hosts have a stay
+    // calendar; guides see their booked sessions on the bookings tab.
     if (role === 'guide') {
-      navigation.navigate('GuideAvailability');
+      navigation.reset({ index: 0, routes: [{ name: 'GuideBookingsTab' }] });
     } else {
       navigation.navigate('HostCalendar');
     }
@@ -303,7 +314,7 @@ function handleExploreSectionPress(
     return;
   }
   if (sectionId === 'events') {
-    navigation.navigate('UnifiedSearch');
+    navigation.navigate('StudentEvents');
     return;
   }
   navigation.navigate('TouristSiteDetail', {
@@ -485,6 +496,7 @@ export default function AppNavigator() {
   const conversationsApi = useConversations(user?.userId);
   const conversations = conversationsApi.conversations;
   const [completedWelfareCheckIns, setCompletedWelfareCheckIns] = useState<string[]>([]);
+  const studentEventsApi = useStudentEvents(user?.userId);
 
   const homeApi = useHomeApiData(user?.userId, profileState, {
     fetchMatches: (primaryIntent === 'STUDENT' || primaryIntent === 'TOURIST') && !!user,
@@ -2346,6 +2358,35 @@ export default function AppNavigator() {
             />
           );
         }}
+      </Stack.Screen>
+
+      <Stack.Screen name="StudentEvents">
+        {({ navigation }) => (
+          <StudentEventsScreen
+            events={studentEventsApi.events}
+            joinedIds={studentEventsApi.joinedIds}
+            isLoading={studentEventsApi.isLoading}
+            error={studentEventsApi.error}
+            onBack={() => navigation.goBack()}
+            onCreatePress={() => navigation.navigate('CreateEvent')}
+            onRetry={studentEventsApi.refresh}
+            onToggleJoin={(eventId) => {
+              void studentEventsApi.toggleJoin(eventId);
+            }}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="CreateEvent">
+        {({ navigation }) => (
+          <CreateEventScreen
+            onBack={() => navigation.goBack()}
+            onSubmit={async (draft: StudentEventDraft) => {
+              await studentEventsApi.createEvent(draft);
+              navigation.goBack();
+            }}
+          />
+        )}
       </Stack.Screen>
 
       <Stack.Screen name="SponsorList">

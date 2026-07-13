@@ -1,20 +1,38 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import SosFloatingButton from './SosFloatingButton';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import SosCircleButton from './SosCircleButton';
+import { colors, spacing, layout } from '../constants/theme';
 
 export interface StackSosLayoutProps {
   children: React.ReactNode;
   onSosPress?: () => void;
 }
 
+/**
+ * Wraps stack/detail screens that have no bottom tab bar. Renders content
+ * above a slim bottom bar holding the SOS control, so SOS is always reachable
+ * without floating over scrollable content.
+ */
 export default function StackSosLayout({
   children,
   onSosPress,
 }: StackSosLayoutProps) {
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.root}>
-      {children}
-      <SosFloatingButton onPress={onSosPress} />
+      <View style={styles.content}>{children}</View>
+      {onSosPress ? (
+        <View
+          style={[
+            styles.sosBar,
+            { paddingBottom: insets.bottom + layout.tabBarBottomInset },
+          ]}
+        >
+          <SosCircleButton onPress={onSosPress} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -22,5 +40,15 @@ export default function StackSosLayout({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+  sosBar: {
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    alignItems: 'center',
+    paddingTop: spacing.sm,
   },
 });
