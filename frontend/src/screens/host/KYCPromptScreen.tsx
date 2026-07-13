@@ -7,7 +7,6 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import SosFloatingButton from '../../components/SosFloatingButton';
 import type { KYCPromptData } from '../../data/kycPromptMock';
 import {
   colors,
@@ -31,7 +30,6 @@ export default function KYCPromptScreen({
   data,
   onVerifyNow,
   onVerifyLater,
-  onSosPress,
 }: KYCPromptScreenProps) {
   const insets = useSafeAreaInsets();
 
@@ -80,8 +78,6 @@ export default function KYCPromptScreen({
 
         <Text style={styles.note}>{data.note}</Text>
       </View>
-
-      <SosFloatingButton onPress={onSosPress} bottomOffset={spacing.xl * 3} />
     </View>
   );
 }
