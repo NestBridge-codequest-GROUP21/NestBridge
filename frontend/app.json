@@ -30,7 +30,7 @@
       "expo-font"
     ],
     "extra": {
-      "apiBaseUrl": "http://localhost:8080",
+      "apiBaseUrl": "",
       "firebaseApiKey": "",
       "firebaseAuthDomain": "",
       "firebaseDatabaseUrl": "",
