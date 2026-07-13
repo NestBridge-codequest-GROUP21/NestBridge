@@ -144,6 +144,7 @@ import {
 import {
   hostFeaturedRequestMock,
   guideFeaturedTourMock,
+  studentRecentActivityMock,
 } from '../data/homeContentMock';
 import {
   destinationMock,
@@ -153,7 +154,11 @@ import {
 } from '../data/studentOnboardingMock';
 import {
   getUnreadNotificationCount,
+  studentBookingsMock,
+  incomingBookingRequestsMock,
 } from '../data/bookingMock';
+import { conversationsMock } from '../data/conversationsMock';
+import { withDemoFallback } from '../utils/demoLiveMerge';
 import {
   listingFromId,
 } from '../data/lodgingDirectoryMock';
@@ -494,7 +499,14 @@ export default function AppNavigator() {
   const [hostProfileCache, setHostProfileCache] = useState<Record<string, HostProfileSummary>>({});
   const [guideProfileCache, setGuideProfileCache] = useState<Record<string, GuideProfileSummary>>({});
   const conversationsApi = useConversations(user?.userId);
-  const conversations = conversationsApi.conversations;
+  const conversations = useMemo(
+    () =>
+      withDemoFallback(conversationsApi.conversations, conversationsMock, {
+        isLoading: conversationsApi.isLoading,
+        error: conversationsApi.error,
+      }),
+    [conversationsApi.conversations, conversationsApi.isLoading, conversationsApi.error],
+  );
   const [completedWelfareCheckIns, setCompletedWelfareCheckIns] = useState<string[]>([]);
   const studentEventsApi = useStudentEvents(user?.userId);
 
@@ -503,7 +515,7 @@ export default function AppNavigator() {
     fetchGuideMatches: (primaryIntent === 'TOURIST' || primaryIntent === 'STUDENT') && !!user,
     fetchHostIncoming: canAcceptHostBookings && !!user,
     fetchGuideIncoming: canAcceptGuideSessions && !!user,
-    fetchBookings: !!user && isSeekerComplete(profileState),
+    fetchBookings: !!user,
   });
 
   const providerTab = useProviderTabData(user?.userId, {
@@ -515,12 +527,36 @@ export default function AppNavigator() {
 
   const seekerSetupIncomplete = !!user && !isSeekerComplete(profileState);
 
-  const hostIncoming = homeApi.hostIncoming;
-  const guideIncoming = homeApi.guideIncoming;
+  const hostIncoming = useMemo(
+    () =>
+      withDemoFallback(homeApi.hostIncoming, incomingBookingRequestsMock, {
+        isLoading: homeApi.isLoading,
+        error: homeApi.error,
+      }),
+    [homeApi.hostIncoming, homeApi.isLoading, homeApi.error],
+  );
+  const guideIncoming = useMemo(
+    () =>
+      withDemoFallback(
+        homeApi.guideIncoming,
+        incomingBookingRequestsMock.filter((r) => r.bookingType === 'GUIDE'),
+        { isLoading: homeApi.isLoading, error: homeApi.error },
+      ),
+    [homeApi.guideIncoming, homeApi.isLoading, homeApi.error],
+  );
+
+  const displayBookings = useMemo(
+    () =>
+      withDemoFallback(homeApi.bookings, studentBookingsMock, {
+        isLoading: homeApi.isLoading,
+        error: homeApi.error,
+      }),
+    [homeApi.bookings, homeApi.isLoading, homeApi.error],
+  );
 
   useEffect(() => {
-    setBookings(homeApi.bookings);
-  }, [homeApi.bookings]);
+    setBookings(displayBookings);
+  }, [displayBookings]);
 
   useEffect(() => {
     if (homeApi.hostMatches.length === 0) return;
@@ -676,8 +712,9 @@ export default function AppNavigator() {
     [primaryIntent],
   );
 
+  // Login name wins everywhere — profile displayName is only for editing, not greeting.
   const resolvedName =
-    displayName.trim() || user?.displayName?.trim() || 'Guest';
+    user?.displayName?.trim() || displayName.trim() || 'Guest';
   const resolvedInitials = getInitials(resolvedName);
   const homeRouteKey = getHomeRoute(profileState);
   const profileFields = getProfileFields(profileState);
