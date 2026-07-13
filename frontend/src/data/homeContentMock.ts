@@ -8,12 +8,12 @@ export const studentFeaturedMatchMock: Omit<
   'onPress'
 > = {
   sectionLabel: 'Your top match',
-  name: 'Amara Owusu',
-  badge: '92% match',
+  name: 'Abena Mensah',
+  badge: '96% match',
   details: 'East Legon, Accra · GHS 180/night',
-  matchReasons: ['Speaks French', 'Halal meals included'],
+  matchReasons: ['Speaks Twi & English', 'Halal & vegetarian meals'],
   ctaLabel: 'View profile →',
-  initials: 'AO',
+  initials: 'AM',
 };
 
 export const studentStatusMock = {
