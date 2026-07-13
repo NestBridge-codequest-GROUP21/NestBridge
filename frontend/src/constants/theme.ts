@@ -30,6 +30,20 @@ export const colors = {
 
 export type ColorToken = keyof typeof colors;
 
+/**
+ * Soft, low-saturation tints derived from the brand palette. Used only as
+ * backgrounds behind icons/tiles and progress-bar tracks — never for text.
+ */
+export const tints = {
+  teal: '#E3F1EE',
+  gold: '#F7ECCF',
+  terracotta: '#F8E3D9',
+  navy: '#E4E8F0',
+  cream: colors.warmCream,
+} as const;
+
+export type TintToken = keyof typeof tints;
+
 export const fontFamilies = {
   regular: 'Inter_400Regular',
   semibold: 'Inter_600SemiBold',
@@ -112,6 +126,7 @@ export const motion = {
 
 const theme = {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   lineHeights,

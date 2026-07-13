@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontSizes,
@@ -84,9 +85,11 @@ export default function ReviewPromptScreen({
                 accessibilityRole="button"
                 accessibilityLabel={`${value} stars`}
               >
-                <Text style={[styles.star, filled && styles.starFilled]}>
-                  {filled ? '★' : '☆'}
-                </Text>
+                <AppIcon
+                  name={filled ? 'star' : 'star-outline'}
+                  size={fontSizes.display}
+                  color={filled ? colors.gold : colors.border}
+                />
               </Pressable>
             );
           })}

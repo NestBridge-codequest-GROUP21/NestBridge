@@ -10,8 +10,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SponsorListing } from '../../data/sponsorsMock';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -68,9 +70,11 @@ export default function SponsorDetailScreen({
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Text style={styles.backText}>←</Text>
+            <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
           </Pressable>
-          <Text style={styles.logo}>{sponsor.logo}</Text>
+          <View style={styles.logoTile}>
+            <AppIcon glyph={sponsor.logo} size={32} color={colors.white} />
+          </View>
           <Text style={styles.name}>{sponsor.name}</Text>
           <View style={styles.categoryBadge}>
             <Text style={styles.categoryText}>{sponsor.category}</Text>
@@ -99,7 +103,7 @@ export default function SponsorDetailScreen({
           <Text style={styles.sectionTitle}>Requirements</Text>
           {sponsor.requirements.map((requirement) => (
             <View key={requirement} style={styles.requirementRow}>
-              <Text style={styles.bullet}>✓</Text>
+              <AppIcon name="checkmark-circle" size={fontSizes.body} color={colors.teal} style={styles.bullet} />
               <Text style={styles.requirementText}>{requirement}</Text>
             </View>
           ))}
@@ -146,8 +150,13 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
   },
-  logo: {
-    fontSize: spacing.xl + spacing.lg,
+  logoTile: {
+    width: 64,
+    height: 64,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.navyMid,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   name: {

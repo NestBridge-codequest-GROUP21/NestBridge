@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import PrimaryButton from '../../components/PrimaryButton';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -112,7 +113,11 @@ export default function CreateEventScreen({
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={meta.label}
               >
-                <Text style={styles.chipIcon}>{meta.icon}</Text>
+                <AppIcon
+                  glyph={meta.icon}
+                  size={fontSizes.caption}
+                  color={active ? colors.white : colors.textSecondary}
+                />
                 <Text style={[styles.chipText, active && styles.chipTextActive]}>
                   {meta.label}
                 </Text>

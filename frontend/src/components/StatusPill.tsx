@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import AppIcon from './AppIcon';
 import {
   colors,
   fontFamilies,
@@ -18,9 +19,7 @@ export default function StatusPill({ icon, label }: StatusPillProps) {
   return (
     <View style={styles.pill} accessibilityRole="text">
       {icon ? (
-        <Text style={styles.icon} accessibilityElementsHidden>
-          {icon}
-        </Text>
+        <AppIcon glyph={icon} size={fontSizes.body} color={colors.white} />
       ) : null}
       <Text style={styles.label}>{label}</Text>
     </View>

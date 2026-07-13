@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -291,7 +292,12 @@ export default function StudentBookingsScreen({
 
         {filtered.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📋</Text>
+            <AppIcon
+              name="clipboard-outline"
+              size={fontSizes.display}
+              color={colors.textTertiary}
+              style={styles.emptyIcon}
+            />
             <Text style={styles.emptyTitle}>Nothing here yet</Text>
             <Text style={styles.emptySubtitle}>
               {activeFilter === 'pending'
