@@ -145,6 +145,7 @@ import {
   hostFeaturedRequestMock,
   guideFeaturedTourMock,
   studentRecentActivityMock,
+  touristRecentActivityMock,
 } from '../data/homeContentMock';
 import {
   destinationMock,
@@ -159,6 +160,10 @@ import {
 } from '../data/bookingMock';
 import { conversationsMock } from '../data/conversationsMock';
 import { withDemoFallback } from '../utils/demoLiveMerge';
+import {
+  hostConfirmedStaysMock,
+  guideUpcomingToursMock,
+} from '../data/providerBookingsMock';
 import {
   listingFromId,
 } from '../data/lodgingDirectoryMock';
@@ -190,7 +195,9 @@ import {
   onboardingReadyCopyByTrack,
   bookingGateCopy,
   emptyStates,
+  devTestingCopy,
 } from '../data/appCopy';
+import { DEMO_PASSWORD, type DemoAccount } from '../data/demoAccounts';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -454,7 +461,7 @@ const SEARCH_CATEGORIES = [
 ];
 
 export default function AppNavigator() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, signIn } = useAuth();
   const {
     state: profileState,
     primaryIntent,
@@ -484,6 +491,8 @@ export default function AppNavigator() {
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
   const [pendingIntent, setPendingIntent] = useState<PrimaryIntent | null>(null);
+  const [demoLoginBusy, setDemoLoginBusy] = useState(false);
+  const [demoLoginError, setDemoLoginError] = useState<string | null>(null);
 
   const [bookings, setBookings] = useState<BookingListItem[]>([]);
   const [bookingFilter, setBookingFilter] = useState<BookingTabFilter>('active');
@@ -524,6 +533,33 @@ export default function AppNavigator() {
     fetchGuidePending: primaryIntent === 'GUIDE' && !!user,
     fetchGuideActive: primaryIntent === 'GUIDE' && !!user,
   });
+
+  const hostPendingDisplay = useMemo(
+    () =>
+      withDemoFallback(providerTab.hostPending, incomingBookingRequestsMock, {
+        isLoading: providerTab.isLoading,
+        error: providerTab.error,
+      }),
+    [providerTab.hostPending, providerTab.isLoading, providerTab.error],
+  );
+
+  const hostActiveDisplay = useMemo(
+    () =>
+      withDemoFallback(providerTab.hostActiveBookings, hostConfirmedStaysMock, {
+        isLoading: providerTab.isLoading,
+        error: providerTab.error,
+      }),
+    [providerTab.hostActiveBookings, providerTab.isLoading, providerTab.error],
+  );
+
+  const guideActiveDisplay = useMemo(
+    () =>
+      withDemoFallback(providerTab.guideActiveBookings, guideUpcomingToursMock, {
+        isLoading: providerTab.isLoading,
+        error: providerTab.error,
+      }),
+    [providerTab.guideActiveBookings, providerTab.isLoading, providerTab.error],
+  );
 
   const seekerSetupIncomplete = !!user && !isSeekerComplete(profileState);
 
@@ -821,6 +857,19 @@ export default function AppNavigator() {
     );
   };
 
+  const handleDemoActorLogin = useCallback(async (account: DemoAccount) => {
+    setDemoLoginError(null);
+    setDemoLoginBusy(true);
+    try {
+      const ok = await signIn(account.email, DEMO_PASSWORD, true);
+      if (!ok) {
+        setDemoLoginError(devTestingCopy.demoActorsLoginError);
+      }
+    } finally {
+      setDemoLoginBusy(false);
+    }
+  }, [signIn]);
+
   const handleDevPreset = (
     navigation: NativeStackNavigationProp<AppStackParamList>,
     options: {
@@ -915,6 +964,22 @@ export default function AppNavigator() {
 
   const firstName = resolvedName.split(' ')[0] || resolvedName;
 
+  const hostCalendarActiveBooking = useMemo(() => {
+    const active = hostActiveDisplay[0];
+    if (!active) {
+      return hostActiveBookingMock;
+    }
+    const range =
+      active.checkIn === active.checkOut
+        ? active.checkIn
+        : `${active.checkIn} – ${active.checkOut}`;
+    return {
+      guestName: active.guestName,
+      dateRange: range,
+      totalAmount: `GHS ${active.hostPayout.toLocaleString('en-GH')}`,
+    };
+  }, [hostActiveDisplay]);
+
   const personalizedGreeting = getPersonalizedGreeting(firstName);
 
   const navigateToMatchSearch = (
@@ -969,6 +1034,10 @@ export default function AppNavigator() {
       homeDataError,
       statusLabel: studentLive.statusLabel,
       reminder: studentLive.reminder,
+      recentActivity:
+        studentLive.recentActivity.length > 0
+          ? studentLive.recentActivity
+          : studentRecentActivityMock,
       showSetupBanner: seekerSetupIncomplete && primaryIntent === 'STUDENT',
     }),
     [
@@ -983,6 +1052,7 @@ export default function AppNavigator() {
       homeDataError,
       studentLive.statusLabel,
       studentLive.reminder,
+      studentLive.recentActivity,
       seekerSetupIncomplete,
       primaryIntent,
     ],
@@ -1018,7 +1088,10 @@ export default function AppNavigator() {
       quickActions: getQuickActionsForRole('BROWSE'),
       sections: exploreSectionsMock,
       exploreSectionTitle: `Explore ${cityLabel.split(',')[0]?.trim() || cityLabel}`,
-      recentActivity: touristLive.recentActivity,
+      recentActivity:
+        touristLive.recentActivity.length > 0
+          ? touristLive.recentActivity
+          : touristRecentActivityMock,
       reminder: touristLive.reminder,
       tabBarItems,
       activeTabId: 'home',
@@ -1043,7 +1116,10 @@ export default function AppNavigator() {
       quickActions: getQuickActionsForRole('TOURIST'),
       sections: exploreSectionsMock,
       exploreSectionTitle: `Explore ${cityLabel.split(',')[0]?.trim() || cityLabel}`,
-      recentActivity: touristLive.recentActivity,
+      recentActivity:
+        touristLive.recentActivity.length > 0
+          ? touristLive.recentActivity
+          : touristRecentActivityMock,
       reminder: touristLive.reminder,
       tabBarItems,
       activeTabId: 'home',
@@ -1170,7 +1246,7 @@ export default function AppNavigator() {
           <HostRequestsTabScreen
             userName={firstName}
             userInitials={resolvedInitials}
-            requests={providerTab.hostPending}
+            requests={hostPendingDisplay}
             tabBarItems={hostTabBarItems}
             activeTabId="requests"
             isLoading={providerTab.isLoading}
@@ -1190,7 +1266,7 @@ export default function AppNavigator() {
           <HostBookingsTabScreen
             userName={firstName}
             userInitials={resolvedInitials}
-            bookings={providerTab.hostActiveBookings}
+            bookings={hostActiveDisplay}
             tabBarItems={hostTabBarItems}
             activeTabId="bookings"
             isLoading={providerTab.isLoading}
@@ -1225,7 +1301,7 @@ export default function AppNavigator() {
           <GuideBookingsTabScreen
             userName={firstName}
             userInitials={resolvedInitials}
-            bookings={providerTab.guideActiveBookings}
+            bookings={guideActiveDisplay}
             tabBarItems={guideTabBarItems}
             activeTabId="bookings"
             isLoading={providerTab.isLoading}
@@ -1296,6 +1372,8 @@ export default function AppNavigator() {
           {({ navigation }) => (
             <DevTestingScreen
               isActiveExchangeStudent={isActiveExchangeStudent}
+              demoLoginBusy={demoLoginBusy}
+              demoLoginError={demoLoginError}
               onBack={() => navigation.goBack()}
               onApplyPreset={(options) => handleDevPreset(navigation, options)}
               onToggleExchangeStudent={(active) => {
@@ -1306,6 +1384,9 @@ export default function AppNavigator() {
                   await resetAccountProfile();
                   await signOut();
                 })();
+              }}
+              onDemoActorLogin={(account) => {
+                void handleDemoActorLogin(account);
               }}
             />
           )}
@@ -1712,7 +1793,9 @@ export default function AppNavigator() {
                 ctaLabel: 'View details →',
                 initials: firstRequest.studentInitials,
               }
-            : undefined;
+            : homeDataError
+              ? undefined
+              : guideFeaturedTourMock;
 
           return (
             <ProviderHomeDashboard
@@ -2235,7 +2318,7 @@ export default function AppNavigator() {
             monthLabel="July 2026"
             startWeekday={3}
             days={hostCalendarDaysMock}
-            activeBooking={hostActiveBookingMock}
+            activeBooking={hostCalendarActiveBooking}
             onBack={() => navigation.goBack()}
           />
         )}

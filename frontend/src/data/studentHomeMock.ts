@@ -39,8 +39,8 @@ export const studentHomeMockData: Omit<
   | 'onTabPress'
 > = {
   greeting: 'Good morning',
-  userName: 'Akosua Darko',
-  userInitials: 'AD',
+  userName: '',
+  userInitials: '',
   statusIcon: studentStatusMock.icon,
   statusLabel: studentStatusMock.label,
   notificationCount: 2,
