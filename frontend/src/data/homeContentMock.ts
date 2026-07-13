@@ -112,11 +112,11 @@ export const touristRecentActivityMock: RecentActivityItem[] = [
 
 export const hostFeaturedRequestMock: Omit<FeaturedHomeCardProps, 'onPress'> = {
   sectionLabel: 'Incoming request',
-  name: 'Sarah M.',
-  badge: '92% match',
-  details: 'Requesting Aug 10–20 · Halal meals needed',
+  name: 'James Osei',
+  badge: '88% match',
+  details: 'Requesting Sep 10–Nov 20 · Close to campus',
   ctaLabel: 'Review request →',
-  initials: 'SM',
+  initials: 'JO',
 };
 
 export const hostStatusMock = {

@@ -38,7 +38,7 @@ export const chatMessagesByConversation: Record<string, ChatMessage[]> = {
     {
       id: 'm1',
       senderId: 'host-1',
-      text: 'Hi Akosua! We saw your booking request and would love to host you.',
+      text: 'Hi! We saw your booking request and would love to host you.',
       sentAt: '2026-06-28T08:50:00',
       isOwn: false,
     },

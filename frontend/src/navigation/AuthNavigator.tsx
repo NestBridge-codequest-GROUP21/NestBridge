@@ -4,6 +4,7 @@ import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import { welcomeMock, registerMock, loginMock } from '../data/studentOnboardingMock';
+import { DEMO_ACTOR_ACCOUNTS, DEMO_PASSWORD, type DemoAccount } from '../data/demoAccounts';
 import { useAuth } from '../context/AuthContext';
 import type { AuthStackParamList } from './types';
 
@@ -17,6 +18,22 @@ export default function AuthNavigator() {
   const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [loginError, setLoginError] = useState('');
   const [registerError, setRegisterError] = useState('');
+  const [demoLoginBusy, setDemoLoginBusy] = useState(false);
+
+  const handleDemoLogin = async (account: DemoAccount) => {
+    setLoginError('');
+    setDemoLoginBusy(true);
+    try {
+      const ok = await signIn(account.email, DEMO_PASSWORD, keepSignedIn);
+      if (!ok) {
+        setLoginError(
+          `Could not sign in as ${account.name}. Make sure the backend is running and Flyway seeds have applied.`,
+        );
+      }
+    } finally {
+      setDemoLoginBusy(false);
+    }
+  };
 
   return (
     <Stack.Navigator
@@ -49,6 +66,18 @@ export default function AuthNavigator() {
             onSubmit={async () => {
               try {
                 setRegisterError('');
+                if (!fullName.trim()) {
+                  setRegisterError('Please enter your full name.');
+                  return;
+                }
+                if (!email.trim()) {
+                  setRegisterError('Please enter your email address.');
+                  return;
+                }
+                if (password.length < 6) {
+                  setRegisterError('Password must be at least 6 characters.');
+                  return;
+                }
                 await register(fullName, email, password, keepSignedIn);
               } catch (error) {
                 setRegisterError(
@@ -70,6 +99,8 @@ export default function AuthNavigator() {
             password={password}
             keepSignedIn={keepSignedIn}
             errorMessage={loginError}
+            demoAccounts={DEMO_ACTOR_ACCOUNTS}
+            demoLoginBusy={demoLoginBusy}
             onEmailChange={setEmail}
             onPasswordChange={setPassword}
             onToggleKeepSignedIn={() => setKeepSignedIn((value) => !value)}
@@ -79,6 +110,9 @@ export default function AuthNavigator() {
               if (!ok) {
                 setLoginError('Email or password is incorrect.');
               }
+            }}
+            onDemoLogin={(account) => {
+              void handleDemoLogin(account);
             }}
             onCreateAccountPress={() => navigation.navigate('Register')}
             onBack={() => navigation.goBack()}
