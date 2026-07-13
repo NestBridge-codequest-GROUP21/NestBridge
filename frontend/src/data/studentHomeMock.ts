@@ -22,7 +22,7 @@ export const suggestedHostsMock: SuggestedHostItem[] = [
   },
   {
     id: 'host-2',
-    name: 'Kwame & Grace',
+    name: 'Kwame & Grace Asante',
     matchPercentage: 91,
     location: 'Cantonments, Accra',
     pricePerNight: 'GHS 220/night',

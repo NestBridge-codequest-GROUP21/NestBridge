@@ -17,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -30,6 +31,7 @@ public class SecurityConfig {
                         .requestMatchers("GET", "/api/lodging/**").permitAll()
                         .requestMatchers("GET", "/api/content/**").permitAll()
                         .anyRequest().authenticated())
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
