@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import AppIcon from './AppIcon';
 import {
   colors,
   fontFamilies,
@@ -39,7 +40,7 @@ export default function RecentActivityList({
           style={[styles.row, index < items.length - 1 && styles.rowBorder]}
         >
           <View style={styles.iconWrap}>
-            <Text style={styles.icon}>{item.icon ?? '•'}</Text>
+            <AppIcon glyph={item.icon} size={fontSizes.subheading} color={colors.tealDeep} />
           </View>
           <View style={styles.textBlock}>
             <Text style={styles.itemTitle}>{item.title}</Text>

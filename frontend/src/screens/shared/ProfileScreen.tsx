@@ -5,10 +5,12 @@ import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import SecondaryButton from '../../components/SecondaryButton';
+import AppIcon from '../../components/AppIcon';
 import { profileCopy } from '../../data/appCopy';
 import type { ProfileHubItem } from '../../data/profileHub';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -94,12 +96,14 @@ export default function ProfileScreen({
                 accessibilityRole="button"
                 accessibilityLabel={item.label}
               >
-                <Text style={styles.hubIcon}>{item.icon}</Text>
+                <View style={styles.hubIconTile}>
+                  <AppIcon glyph={item.icon} size={20} color={colors.tealDeep} />
+                </View>
                 <View style={styles.hubText}>
                   <Text style={styles.hubLabel}>{item.label}</Text>
                   <Text style={styles.hubDescription}>{item.description}</Text>
                 </View>
-                <Text style={styles.hubChevron}>›</Text>
+                <AppIcon name="chevron-forward" size={fontSizes.subheading} color={colors.textTertiary} />
               </Pressable>
             ))}
           </View>
@@ -233,8 +237,13 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     minHeight: 44,
   },
-  hubIcon: {
-    fontSize: 22,
+  hubIconTile: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.md,
   },
   hubText: {
@@ -253,11 +262,6 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.caption,
     color: colors.textSecondary,
     lineHeight: 18,
-  },
-  hubChevron: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.heading,
-    color: colors.textTertiary,
   },
   section: {
     backgroundColor: colors.white,

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import AppIcon from './AppIcon';
 import {
   colors,
   fontFamilies,
@@ -22,9 +23,7 @@ export default function ReminderBanner({
 }: ReminderBannerProps) {
   const content = (
     <>
-      <Text style={styles.icon} accessibilityElementsHidden>
-        {icon}
-      </Text>
+      <AppIcon glyph={icon} size={fontSizes.subheading} color={colors.warning} />
       <Text style={styles.message}>{message}</Text>
     </>
   );

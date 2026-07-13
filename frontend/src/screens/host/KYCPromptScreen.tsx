@@ -7,9 +7,11 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AppIcon from '../../components/AppIcon';
 import type { KYCPromptData } from '../../data/kycPromptMock';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -49,7 +51,9 @@ export default function KYCPromptScreen({
       </View>
 
       <View style={styles.iconContainer} accessibilityLabel="Identity verification">
-        <Text style={styles.icon}>🪪</Text>
+        <View style={styles.iconTile}>
+          <AppIcon name="card-outline" size={64} color={colors.tealDeep} />
+        </View>
       </View>
 
       <View
@@ -120,8 +124,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: {
-    fontSize: spacing.xl * 2 + spacing.sm,
+  iconTile: {
+    width: 120,
+    height: 120,
+    borderRadius: borderRadius.lg,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonContainer: {
     gap: spacing.sm,

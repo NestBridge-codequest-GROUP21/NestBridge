@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import AppIcon from '../../components/AppIcon';
 import type {
   CulturalPhraseCard,
   CulturalTopicCard,
 } from '../../data/featureScreensMock';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -38,7 +40,9 @@ function PhraseCard({
 }) {
   return (
     <View style={styles.phraseCard}>
-      <Text style={styles.phraseEmoji}>{phrase.emoji}</Text>
+      <View style={styles.iconTile}>
+        <AppIcon glyph={phrase.emoji} size={26} color={colors.tealDeep} />
+      </View>
       <Text style={styles.phraseText}>{phrase.phrase}</Text>
       <Text style={styles.phraseTranslation}>{phrase.translation}</Text>
       {phrase.hasAudio ? (
@@ -48,7 +52,7 @@ function PhraseCard({
           accessibilityRole="button"
           accessibilityLabel={`Play audio for ${phrase.phrase}`}
         >
-          <Text style={styles.audioIcon}>🔊</Text>
+          <AppIcon name="volume-high-outline" size={fontSizes.body} color={colors.teal} />
           <Text style={styles.audioLabel}>Audio</Text>
         </Pressable>
       ) : null}
@@ -70,7 +74,9 @@ function TopicCard({
       accessibilityRole="button"
       accessibilityLabel={topic.title}
     >
-      <Text style={styles.topicEmoji}>{topic.emoji}</Text>
+      <View style={styles.iconTile}>
+        <AppIcon glyph={topic.emoji} size={26} color={colors.tealDeep} />
+      </View>
       <Text style={styles.topicTitle}>{topic.title}</Text>
       <Text style={styles.topicDescription}>{topic.description}</Text>
     </Pressable>
@@ -151,8 +157,13 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     alignItems: 'center',
   },
-  phraseEmoji: {
-    fontSize: fontSizes.display,
+  iconTile: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   phraseText: {
@@ -178,9 +189,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     minHeight: 44,
   },
-  audioIcon: {
-    fontSize: fontSizes.body,
-  },
   audioLabel: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
@@ -194,10 +202,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     minHeight: 140,
-  },
-  topicEmoji: {
-    fontSize: fontSizes.heading,
-    marginBottom: spacing.sm,
   },
   topicTitle: {
     fontFamily: fontFamilies.bold,

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import AppIcon from './AppIcon';
 import {
   colors,
   fontFamilies,
@@ -21,7 +22,12 @@ export default function FeatureHighlightRow({ items }: FeatureHighlightRowProps)
     <View style={styles.row}>
       {items.map((item) => (
         <View key={item.label} style={styles.item}>
-          <Text style={styles.icon}>{item.icon}</Text>
+          <AppIcon
+            glyph={item.icon}
+            size={fontSizes.subheading}
+            color={colors.white}
+            style={styles.icon}
+          />
           <Text style={styles.label} numberOfLines={2}>
             {item.label}
           </Text>

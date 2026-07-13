@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import AppIcon from './AppIcon';
 import {
   colors,
   fontFamilies,
@@ -34,7 +35,7 @@ export default function OnboardingNextStepsCard({
           style={[styles.row, index < steps.length - 1 && styles.rowBorder]}
         >
           <View style={styles.iconWrap}>
-            <Text style={styles.icon}>{step.icon}</Text>
+            <AppIcon glyph={step.icon} size={fontSizes.subheading} color={colors.tealDeep} />
           </View>
           <View style={styles.textBlock}>
             <Text style={styles.stepTitle}>{step.title}</Text>

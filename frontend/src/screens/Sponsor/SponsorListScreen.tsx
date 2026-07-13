@@ -12,8 +12,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SponsorCategory, SponsorListing } from '../../data/sponsorsMock';
 import { SPONSOR_CATEGORIES } from '../../data/sponsorsMock';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -67,7 +69,7 @@ export default function SponsorListScreen({
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Text style={styles.backText}>←</Text>
+            <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
           </Pressable>
         ) : null}
         <Text style={styles.headerTitle}>Sponsors</Text>
@@ -117,10 +119,9 @@ export default function SponsorListScreen({
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={[
-          styles.listContent,
-          { paddingBottom: insets.bottom + spacing.xl * 3 },
-        ]}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <Pressable
             style={({ pressed }) => [styles.card, pressed && styles.pressed]}
@@ -128,18 +129,22 @@ export default function SponsorListScreen({
             accessibilityRole="button"
             accessibilityLabel={`View ${item.name} sponsorship`}
           >
-            <View style={styles.cardLeft}>
-              <Text style={styles.logo}>{item.logo}</Text>
+            <View style={styles.logoTile}>
+              <AppIcon glyph={item.logo} size={26} color={colors.tealDeep} />
             </View>
-            <View style={styles.cardBody}>
-              <Text style={styles.sponsorName}>{item.name}</Text>
-              <Text style={styles.sponsorCategory}>{item.category}</Text>
-              <Text style={styles.sponsorDesc} numberOfLines={2}>
-                {item.description}
+            <Text style={styles.sponsorName} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <Text style={styles.sponsorCategory} numberOfLines={1}>
+              {item.category}
+            </Text>
+            <Text style={styles.sponsorDesc} numberOfLines={3}>
+              {item.description}
+            </Text>
+            <View style={styles.cardFooter}>
+              <Text style={styles.amount} numberOfLines={1}>
+                {item.amountLabel}
               </Text>
-            </View>
-            <View style={styles.cardRight}>
-              <Text style={styles.amount}>{item.amountLabel}</Text>
               <Text style={styles.applyText}>Apply →</Text>
             </View>
           </Pressable>
@@ -228,64 +233,67 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
   },
   listContent: {
-    padding: spacing.md,
-    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
   },
   card: {
+    width: 220,
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
   },
-  cardLeft: {
-    marginRight: spacing.sm + 6,
-  },
-  logo: {
-    fontSize: spacing.xl + spacing.xs,
-  },
-  cardBody: {
-    flex: 1,
+  logoTile: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
   sponsorName: {
     fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body - 1,
+    fontSize: fontSizes.body,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
   },
   sponsorCategory: {
     fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption - 1,
+    fontSize: fontSizes.caption,
     color: colors.teal,
     marginTop: spacing.xs / 2,
     fontWeight: fontWeights.semibold,
   },
   sponsorDesc: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption - 1,
+    fontSize: fontSizes.caption,
     color: colors.textSecondary,
     marginTop: spacing.xs,
     lineHeight: lineHeights.caption,
+    minHeight: lineHeights.caption * 3,
   },
-  cardRight: {
-    alignItems: 'flex-end',
-    marginLeft: spacing.sm,
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.md,
   },
   amount: {
+    flex: 1,
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption + 1,
     fontWeight: fontWeights.bold,
     color: colors.gold,
-    textAlign: 'right',
   },
   applyText: {
     fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption - 1,
+    fontSize: fontSizes.caption,
     color: colors.teal,
-    marginTop: spacing.xs + 2,
     fontWeight: fontWeights.semibold,
+    marginLeft: spacing.sm,
   },
   pressed: {
     opacity: 0.92,

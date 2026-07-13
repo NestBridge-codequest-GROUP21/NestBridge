@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import AppIcon from '../../components/AppIcon';
 import type { HostListingItem } from '../../data/featureScreensMock';
 import {
   colors,
@@ -43,7 +44,7 @@ function ListingCard({
   return (
     <View style={styles.listingCard}>
       <View style={styles.thumbnail}>
-        <Text style={styles.thumbnailEmoji}>{listing.imageEmoji}</Text>
+        <AppIcon glyph={listing.imageEmoji} size={32} color={colors.tealDeep} />
       </View>
 
       <View style={styles.listingBody}>
@@ -137,7 +138,7 @@ export default function HostListingsScreen({
         accessibilityRole="button"
         accessibilityLabel="Add new listing"
       >
-        <Text style={styles.fabIcon}>+</Text>
+        <AppIcon name="add" size={fontSizes.heading} color={colors.white} />
         <Text style={styles.fabLabel}>Add New Listing</Text>
       </Pressable>
     </View>

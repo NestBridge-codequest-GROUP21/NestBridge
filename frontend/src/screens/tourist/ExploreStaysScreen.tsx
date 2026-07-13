@@ -1,12 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import PrimaryButton from '../../components/PrimaryButton';
+import AppIcon from '../../components/AppIcon';
 import type { StayListing } from '../../data/featureScreensMock';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -30,12 +32,12 @@ function StarRow({ rating }: { rating: number }) {
   return (
     <View style={styles.starRow}>
       {Array.from({ length: 5 }).map((_, index) => (
-        <Text
+        <AppIcon
           key={`star-${index}`}
-          style={[styles.star, index < rating ? styles.starFilled : styles.starEmpty]}
-        >
-          ★
-        </Text>
+          name={index < rating ? 'star' : 'star-outline'}
+          size={fontSizes.body}
+          color={index < rating ? colors.warning : colors.border}
+        />
       ))}
     </View>
   );
@@ -50,18 +52,8 @@ function StayCard({
 }) {
   return (
     <View style={styles.stayCard}>
-      <View style={styles.imageCarousel}>
-        <View style={styles.mainImage}>
-          <Text style={styles.imageEmoji}>{listing.imageEmoji}</Text>
-        </View>
-        <View style={styles.thumbnailRow}>
-          <View style={styles.thumbnail}>
-            <Text style={styles.thumbnailEmoji}>{listing.imageEmoji}</Text>
-          </View>
-          <View style={styles.thumbnail}>
-            <Text style={styles.thumbnailEmoji}>🛋️</Text>
-          </View>
-        </View>
+      <View style={styles.imageTile}>
+        <AppIcon glyph={listing.imageEmoji} size={44} color={colors.tealDeep} />
       </View>
 
       <View style={styles.cardBody}>
@@ -125,11 +117,15 @@ export default function ExploreStaysScreen({
             accessibilityRole="button"
             accessibilityLabel="Filter listings"
           >
-            <Text style={styles.filterIcon}>⚙</Text>
+            <AppIcon name="options-outline" size={fontSizes.heading} color={colors.textSecondary} />
           </Pressable>
         </View>
 
-        <View style={styles.list}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.list}
+        >
           {listings.map((listing) => (
             <StayCard
               key={listing.id}
@@ -137,7 +133,7 @@ export default function ExploreStaysScreen({
               onBookPress={() => onBookPress?.(listing.id)}
             />
           ))}
-        </View>
+        </ScrollView>
       </ScreenScroll>
     </View>
   );
@@ -166,49 +162,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  filterIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.textSecondary,
-  },
   list: {
     gap: spacing.lg,
+    paddingBottom: spacing.sm,
   },
   stayCard: {
+    width: 280,
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
   },
-  imageCarousel: {
-    flexDirection: 'row',
-    padding: spacing.sm,
-    gap: spacing.sm,
-  },
-  mainImage: {
-    flex: 1,
+  imageTile: {
     height: 120,
-    backgroundColor: colors.warmCream,
+    margin: spacing.sm,
+    backgroundColor: tints.teal,
     borderRadius: borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  imageEmoji: {
-    fontSize: 48,
-  },
-  thumbnailRow: {
-    gap: spacing.sm,
-  },
-  thumbnail: {
-    width: 56,
-    height: 56,
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  thumbnailEmoji: {
-    fontSize: fontSizes.heading,
   },
   cardBody: {
     padding: spacing.md,
@@ -239,15 +211,6 @@ const styles = StyleSheet.create({
   starRow: {
     flexDirection: 'row',
     gap: spacing.xs,
-  },
-  star: {
-    fontSize: fontSizes.body,
-  },
-  starFilled: {
-    color: colors.warning,
-  },
-  starEmpty: {
-    color: colors.border,
   },
   amenityRow: {
     flexDirection: 'row',

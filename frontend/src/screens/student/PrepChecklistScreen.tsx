@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import ProgressBar from '../../components/ProgressBar';
 import type { ChecklistTask } from '../../data/featureScreensMock';
 import {
   colors,
@@ -49,6 +50,8 @@ export default function PrepChecklistScreen({
   onBack,
 }: PrepChecklistScreenProps) {
   const completedCount = tasks.filter((t) => t.completed).length;
+  const percent =
+    tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
 
   return (
     <View style={styles.root}>
@@ -67,6 +70,8 @@ export default function PrepChecklistScreen({
           <Text style={styles.screenTitle}>Prep & Packing Checklist</Text>
           <ProgressRing completed={completedCount} total={tasks.length} />
         </View>
+
+        <ProgressBar percent={percent} style={styles.progressBar} />
 
         <View style={styles.taskList}>
           {tasks.map((task) => (
@@ -148,6 +153,9 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.caption,
     color: colors.success,
     marginTop: spacing.xs,
+  },
+  progressBar: {
+    marginBottom: spacing.lg,
   },
   taskList: {
     gap: spacing.sm,

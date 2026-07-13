@@ -19,6 +19,7 @@ import OnboardingNextStepsCard, {
 import FeatureHighlightRow, {
   type FeatureHighlight,
 } from '../../components/FeatureHighlightRow';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -96,7 +97,7 @@ export default function OnboardingReadyScreen({
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Text style={styles.topAction}>←</Text>
+            <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
           </Pressable>
         ) : (
           <View style={styles.topSpacer} />
@@ -108,7 +109,7 @@ export default function OnboardingReadyScreen({
             accessibilityRole="button"
             accessibilityLabel="Help"
           >
-            <Text style={styles.topAction}>?</Text>
+            <AppIcon name="help-circle-outline" size={fontSizes.heading} color={colors.white} />
           </Pressable>
         ) : (
           <View style={styles.topSpacer} />
@@ -131,9 +132,9 @@ export default function OnboardingReadyScreen({
         >
           <View style={styles.hero}>
             <View style={styles.heroIconWrap}>
-              <Text style={styles.heroIcon}>{heroIcon}</Text>
+              <AppIcon glyph={heroIcon} size={44} color={colors.white} />
               <View style={styles.checkBadge}>
-                <Text style={styles.checkText}>✓</Text>
+                <AppIcon name="checkmark" size={fontSizes.body} color={colors.white} />
               </View>
             </View>
             {roleLabel ? (
