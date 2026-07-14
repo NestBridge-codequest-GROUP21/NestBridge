@@ -1,5 +1,6 @@
 package com.nestbridge.content;
 
+import com.nestbridge.common.GhanaReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -13,10 +14,7 @@ public class ContentService {
     private final JdbcTemplate jdbc;
 
     private String normalizeCity(String city) {
-        if (city == null || city.isBlank()) {
-            return "Accra";
-        }
-        return city.split(",")[0].trim();
+        return GhanaReference.normalizeCity(city);
     }
 
     public List<PhraseDto> getPhrases(String city) {

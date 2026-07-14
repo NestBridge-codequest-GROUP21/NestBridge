@@ -34,7 +34,7 @@ import {
 } from '../../constants/theme';
 
 export interface OnboardingReadyScreenProps {
-  roleHeadline: string;
+  userName: string;
   subtitle: string;
   heroIcon: string;
   nextSteps: OnboardingNextStep[];
@@ -49,7 +49,7 @@ export interface OnboardingReadyScreenProps {
 }
 
 export default function OnboardingReadyScreen({
-  roleHeadline,
+  userName,
   subtitle,
   heroIcon,
   nextSteps,
@@ -144,7 +144,7 @@ export default function OnboardingReadyScreen({
             ) : null}
             <Text style={styles.title}>
               You are all set,{'\n'}
-              <Text style={styles.titleAccent}>{roleHeadline}!</Text>
+              <Text style={styles.titleAccent}>{userName}!</Text>
             </Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
           </View>

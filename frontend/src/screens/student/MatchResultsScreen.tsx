@@ -21,6 +21,7 @@ import {
   layout,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
+export { sampleMatchResults } from '../../data/matchResultsMock';
 export interface MatchResultHost {
   id: string;
   matchId?: string;
@@ -33,57 +34,6 @@ export interface MatchResultHost {
   currency: string;
   location: string;
 }
-
-export const sampleMatchResults: MatchResultHost[] = [
-  {
-    id: 'host-1',
-    hostName: 'Abena Mensah',
-    initials: 'AM',
-    compatibilityScore: 92,
-    trustBadge: 'VERIFIED',
-    matchReasons: [
-      'Halal meals offered',
-      'Quiet evenings for study',
-      'Speaks English and Twi',
-      '10 min from University of Ghana',
-    ],
-    pricePerNight: 180,
-    currency: 'GHS',
-    location: 'East Legon, Accra',
-  },
-  {
-    id: 'host-2',
-    hostName: 'Kwame & Grace',
-    initials: 'KG',
-    compatibilityScore: 88,
-    trustBadge: 'TRUSTED',
-    matchReasons: [
-      'Social household — family dinners',
-      'Vegetarian-friendly',
-      'Near Cantonments and airport',
-      'Verified host family since 2023',
-    ],
-    pricePerNight: 220,
-    currency: 'GHS',
-    location: 'Cantonments, Accra',
-  },
-  {
-    id: 'host-3',
-    hostName: 'Efua Boateng',
-    initials: 'EB',
-    compatibilityScore: 85,
-    trustBadge: 'PRO',
-    matchReasons: [
-      'Early riser friendly',
-      'Quiet household',
-      'French and English spoken',
-      'Osu — close to shops and campus shuttle',
-    ],
-    pricePerNight: 165,
-    currency: 'GHS',
-    location: 'Osu, Accra',
-  },
-];
 
 export interface MatchResultsScreenProps {
   results: MatchResultHost[];

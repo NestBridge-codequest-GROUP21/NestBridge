@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -111,6 +111,12 @@ export default function MatchSearchScreen({
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<MatchResultHost[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDestinationCity(defaults.destinationCity);
+    setCheckIn(defaults.checkIn);
+    setCheckOut(defaults.checkOut);
+  }, [defaults.destinationCity, defaults.checkIn, defaults.checkOut]);
 
   const currentParams = useMemo<MatchSearchDefaults>(
     () => ({
@@ -249,7 +255,7 @@ export default function MatchSearchScreen({
                   style={styles.fieldInput}
                   value={destinationCity}
                   onChangeText={setDestinationCity}
-                  placeholder="e.g. Accra"
+                  placeholder="e.g. Accra, Kumasi, Wa, Ho"
                   placeholderTextColor={colors.textTertiary}
                   autoCapitalize="words"
                 />

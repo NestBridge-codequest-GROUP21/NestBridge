@@ -30,6 +30,7 @@ public class SecurityConfig {
                         .requestMatchers("GET", "/api/guides/**").permitAll()
                         .requestMatchers("GET", "/api/lodging/**").permitAll()
                         .requestMatchers("GET", "/api/content/**").permitAll()
+                        .requestMatchers("GET", "/api/reference/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
