@@ -1,53 +1,15 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AppStackParamList } from './types';
 
-/**
- * Screens that expose SOS via their own bottom tab bar (raised SOS button).
- * Everything else is wrapped by StackSosLayout, which anchors SOS in a slim
- * bottom bar — so SOS is never a floating overlay on top of content.
- */
-export const STACK_SOS_EXCLUDED = new Set<keyof AppStackParamList>([
-  'SOS',
-  'BrowseHome',
+/** Actor home dashboards — the only screens that show the raised SOS tab-bar button. */
+export const HOME_SOS_ROUTES = new Set<keyof AppStackParamList>([
   'StudentHome',
   'ExploreHome',
   'HostHome',
   'GuideHome',
-  'MessagesTab',
-  'HostRequestsTab',
-  'HostBookingsTab',
-  'HostEarningsTab',
-  'GuideBookingsTab',
-  'GuideEarningsTab',
-  'UnifiedSearch',
-  'StudentBookings',
-  'MatchSearch',
 ]);
 
-/**
- * Pre-dashboard onboarding screens. SOS only becomes available once the user
- * has signed in and reached a dashboard — so these screens get neither the
- * tab-bar SOS dock nor the StackSosLayout SOS bar.
- */
-export const PRE_DASHBOARD_NO_SOS = new Set<keyof AppStackParamList>([
-  'IntentSelect',
-  'Destination',
-  'StudentQuiz',
-  'HostQuiz',
-  'TouristQuiz',
-  'GuideQuiz',
-  'ProfileSetup',
-  'KYCPrompt',
-  'OnboardingReady',
-]);
-
-export function shouldWrapStackSos(routeName: keyof AppStackParamList): boolean {
-  return (
-    !STACK_SOS_EXCLUDED.has(routeName) && !PRE_DASHBOARD_NO_SOS.has(routeName)
-  );
-}
-
-export function mainTabSosProps(
+export function homeTabSosProps(
   navigation: NativeStackNavigationProp<AppStackParamList>,
 ) {
   return {
