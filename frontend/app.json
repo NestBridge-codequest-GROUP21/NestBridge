@@ -28,7 +28,8 @@
     "plugins": [
       "expo-secure-store",
       "expo-font",
-      "expo-image-picker"
+      "expo-image-picker",
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "apiBaseUrl": "",
