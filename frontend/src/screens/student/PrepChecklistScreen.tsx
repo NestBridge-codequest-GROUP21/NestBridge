@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -49,9 +49,53 @@ export default function PrepChecklistScreen({
   onToggleTask,
   onBack,
 }: PrepChecklistScreenProps) {
-  const completedCount = tasks.filter((t) => t.completed).length;
+  const [customTasks, setCustomTasks] = useState<ChecklistTask[]>([]);
+  const [newItemLabel, setNewItemLabel] = useState('');
+
+  const handleAddItem = () => {
+    const label = newItemLabel.trim();
+    if (label.length === 0) {
+      return;
+    }
+    setCustomTasks((prev) => [
+      ...prev,
+      { id: `custom-${Date.now()}`, label, completed: false },
+    ]);
+    setNewItemLabel('');
+  };
+
+  const handleToggleCustom = (taskId: string) => {
+    setCustomTasks((prev) =>
+      prev.map((task) =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task,
+      ),
+    );
+  };
+
+  const allTasks = [...tasks, ...customTasks];
+  const completedCount = allTasks.filter((t) => t.completed).length;
   const percent =
-    tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
+    allTasks.length > 0 ? Math.round((completedCount / allTasks.length) * 100) : 0;
+
+  const renderTaskRow = (task: ChecklistTask, onToggle: (id: string) => void) => (
+    <Pressable
+      key={task.id}
+      style={styles.taskRow}
+      onPress={() => onToggle(task.id)}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked: task.completed }}
+      accessibilityLabel={task.label}
+    >
+      <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
+        {task.completed ? <Text style={styles.checkmark}>✓</Text> : null}
+      </View>
+      <Text
+        style={[styles.taskLabel, task.completed && styles.taskLabelCompleted]}
+      >
+        {task.label}
+      </Text>
+    </Pressable>
+  );
 
   return (
     <View style={styles.root}>
@@ -65,44 +109,45 @@ export default function PrepChecklistScreen({
         onBack={onBack}
       />
 
-      <ScreenScroll>
+      <ScreenScroll keyboardShouldPersistTaps="handled">
         <View style={styles.titleRow}>
           <Text style={styles.screenTitle}>Prep & Packing Checklist</Text>
-          <ProgressRing completed={completedCount} total={tasks.length} />
+          <ProgressRing completed={completedCount} total={allTasks.length} />
         </View>
 
         <ProgressBar percent={percent} style={styles.progressBar} />
 
         <View style={styles.taskList}>
-          {tasks.map((task) => (
+          {tasks.map((task) => renderTaskRow(task, (id) => onToggleTask?.(id)))}
+          {customTasks.map((task) => renderTaskRow(task, handleToggleCustom))}
+        </View>
+
+        <View style={styles.addCard}>
+          <Text style={styles.addTitle}>Add your own item</Text>
+          <View style={styles.addRow}>
+            <TextInput
+              style={styles.addInput}
+              value={newItemLabel}
+              onChangeText={setNewItemLabel}
+              placeholder="e.g. Travel adapter"
+              placeholderTextColor={colors.textTertiary}
+              onSubmitEditing={handleAddItem}
+              returnKeyType="done"
+              accessibilityLabel="New checklist item"
+            />
             <Pressable
-              key={task.id}
-              style={styles.taskRow}
-              onPress={() => onToggleTask?.(task.id)}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: task.completed }}
-              accessibilityLabel={task.label}
+              style={[
+                styles.addButton,
+                newItemLabel.trim().length === 0 && styles.addButtonDisabled,
+              ]}
+              onPress={handleAddItem}
+              disabled={newItemLabel.trim().length === 0}
+              accessibilityRole="button"
+              accessibilityLabel="Add item"
             >
-              <View
-                style={[
-                  styles.checkbox,
-                  task.completed && styles.checkboxChecked,
-                ]}
-              >
-                {task.completed ? (
-                  <Text style={styles.checkmark}>✓</Text>
-                ) : null}
-              </View>
-              <Text
-                style={[
-                  styles.taskLabel,
-                  task.completed && styles.taskLabelCompleted,
-                ]}
-              >
-                {task.label}
-              </Text>
+              <Text style={styles.addButtonText}>Add</Text>
             </Pressable>
-          ))}
+          </View>
         </View>
       </ScreenScroll>
     </View>
@@ -198,5 +243,57 @@ const styles = StyleSheet.create({
   taskLabelCompleted: {
     color: colors.textSecondary,
     textDecorationLine: 'line-through',
+  },
+  addCard: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+  },
+  addTitle: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: spacing.sm,
+  },
+  addRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  addInput: {
+    flex: 1,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textPrimary,
+    minHeight: 48,
+  },
+  addButton: {
+    backgroundColor: colors.teal,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.lg,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButtonDisabled: {
+    opacity: 0.5,
+  },
+  addButtonText: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.bold,
+    color: colors.white,
   },
 });
