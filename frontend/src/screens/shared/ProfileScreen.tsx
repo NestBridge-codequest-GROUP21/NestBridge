@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
-import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import SecondaryButton from '../../components/SecondaryButton';
 import AppIcon from '../../components/AppIcon';
 import { profileCopy } from '../../data/appCopy';
@@ -26,10 +25,6 @@ export interface ProfileScreenProps {
   setupSummary: string;
   culturalGuidanceItems?: ProfileHubItem[];
   showTravelBooking?: boolean;
-  tabBarItems: TabBarItem[];
-  activeTabId: string;
-  showSosDock?: boolean;
-  onSosPress?: () => void;
   onAccountSetupPress?: () => void;
   onCulturalGuidanceItemPress?: (itemId: string) => void;
   onCoreServicesPress?: () => void;
@@ -37,7 +32,6 @@ export interface ProfileScreenProps {
   onSignOut?: () => void;
   onResetDemo?: () => void;
   onDevTestingPress?: () => void;
-  onTabPress?: (tabId: string) => void;
 }
 
 export default function ProfileScreen({
@@ -47,10 +41,6 @@ export default function ProfileScreen({
   setupSummary,
   culturalGuidanceItems = [],
   showTravelBooking = false,
-  tabBarItems,
-  activeTabId,
-  showSosDock = false,
-  onSosPress,
   onAccountSetupPress,
   onCulturalGuidanceItemPress,
   onCoreServicesPress,
@@ -58,7 +48,6 @@ export default function ProfileScreen({
   onSignOut,
   onResetDemo,
   onDevTestingPress,
-  onTabPress,
 }: ProfileScreenProps) {
   return (
     <View style={styles.root}>
@@ -71,7 +60,7 @@ export default function ProfileScreen({
         subtitle={email}
       />
 
-      <ScreenScroll withTabBar withSosDock={showSosDock}>
+      <ScreenScroll>
         <Pressable
           style={({ pressed }) => [styles.servicesCard, pressed && styles.pressed]}
           onPress={onAccountSetupPress}
@@ -173,14 +162,6 @@ export default function ProfileScreen({
           </>
         ) : null}
       </ScreenScroll>
-
-      <AppTabBar
-        items={tabBarItems}
-        activeTabId={activeTabId}
-        showSosDock={showSosDock}
-        onSosPress={onSosPress}
-        onTabPress={onTabPress}
-      />
     </View>
   );
 }

@@ -13,7 +13,6 @@ export const STACK_SOS_EXCLUDED = new Set<keyof AppStackParamList>([
   'ExploreHome',
   'HostHome',
   'GuideHome',
-  'Profile',
   'MessagesTab',
   'HostRequestsTab',
   'HostBookingsTab',
@@ -25,8 +24,27 @@ export const STACK_SOS_EXCLUDED = new Set<keyof AppStackParamList>([
   'MatchSearch',
 ]);
 
+/**
+ * Pre-dashboard onboarding screens. SOS only becomes available once the user
+ * has signed in and reached a dashboard — so these screens get neither the
+ * tab-bar SOS dock nor the StackSosLayout SOS bar.
+ */
+export const PRE_DASHBOARD_NO_SOS = new Set<keyof AppStackParamList>([
+  'IntentSelect',
+  'Destination',
+  'StudentQuiz',
+  'HostQuiz',
+  'TouristQuiz',
+  'GuideQuiz',
+  'ProfileSetup',
+  'KYCPrompt',
+  'OnboardingReady',
+]);
+
 export function shouldWrapStackSos(routeName: keyof AppStackParamList): boolean {
-  return !STACK_SOS_EXCLUDED.has(routeName);
+  return (
+    !STACK_SOS_EXCLUDED.has(routeName) && !PRE_DASHBOARD_NO_SOS.has(routeName)
+  );
 }
 
 export function mainTabSosProps(

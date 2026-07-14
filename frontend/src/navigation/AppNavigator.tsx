@@ -1364,9 +1364,6 @@ export default function AppNavigator() {
             setupSummary={setupSummary}
             culturalGuidanceItems={profileCulturalItems}
             showTravelBooking={shouldShowTravelBookingEntry(homeRole)}
-            tabBarItems={tabBarItems}
-            activeTabId="profile"
-            {...mainTabSosProps(navigation)}
             onAccountSetupPress={() => navigation.navigate('AccountSetup')}
             onCulturalGuidanceItemPress={(itemId) =>
               handleProfileCulturalItem(navigation, itemId)
@@ -1383,7 +1380,6 @@ export default function AppNavigator() {
                 await signOut();
               })();
             }}
-            onTabPress={(tabId) => routeTabPress(navigation, tabId)}
           />
         )}
       </Stack.Screen>

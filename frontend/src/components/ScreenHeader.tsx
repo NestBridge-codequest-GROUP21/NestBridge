@@ -2,8 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import StatusPill from './StatusPill';
 import AppIcon from './AppIcon';
+import type { AppStackParamList } from '../navigation/types';
 import {
   colors,
   fontFamilies,
@@ -45,6 +48,8 @@ export default function ScreenHeader({
   onNotificationPress,
 }: ScreenHeaderProps) {
   const insets = useSafeAreaInsets();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const showUserRow = Boolean(greeting || userName);
   const showTopActions = Boolean(onBack || onHelpPress);
 
@@ -132,9 +137,15 @@ export default function ScreenHeader({
                 </Pressable>
               ) : null}
               {userInitials ? (
-                <View style={styles.avatar}>
+                <Pressable
+                  onPress={() => navigation.navigate('Profile')}
+                  style={styles.avatar}
+                  accessibilityRole="button"
+                  accessibilityLabel="Open profile"
+                  hitSlop={spacing.sm}
+                >
                   <Text style={styles.avatarText}>{userInitials}</Text>
-                </View>
+                </Pressable>
               ) : null}
             </View>
           </View>
