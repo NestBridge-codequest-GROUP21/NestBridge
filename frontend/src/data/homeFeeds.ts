@@ -2,11 +2,13 @@ import type { FeaturedHomeCardProps } from '../components/FeaturedHomeCard';
 import type { DiscoveryListingItem } from '../components/DiscoveryListingSection';
 import type { MatchResult, MatchFindParams } from '../services/api';
 import type { MatchResultHost } from '../screens/student/MatchResultsScreen';
+import { sampleMatchResults } from '../screens/student/MatchResultsScreen';
 import type { SuggestedHostItem } from '../screens/student/StudentHomeDashboard';
 import type { GuideProfileSummary, HostProfileSummary } from '../types/booking';
 import type { StayListing } from './featureScreensMock';
 import type { AccountProfileState } from '../types/accountProfile';
 import { FLEXIBLE_POLICY } from './bookingMock';
+import { suggestedGuidesMock } from './guideSessionMock';
 
 const DEFAULT_MATCH_REASONS = [
   'Verified host family',
@@ -139,13 +141,73 @@ export function hostMatchesToStayListings(matches: MatchResult[]): StayListing[]
       location: match.location ?? 'Ghana',
       rating: match.compatibilityScore >= 90 ? 5 : match.compatibilityScore >= 80 ? 4 : 4,
       pricePerNight: match.pricePerNight != null
-        ? `$${(match.pricePerNight / 14).toFixed(2)}/night`
+        ? `GHS ${Math.round(match.pricePerNight)}/night`
         : 'Price on request',
       verifiedHost: true,
       amenities: ['Wifi', 'Meals'],
       imageEmoji: index % 2 === 0 ? '🏡' : '🏠',
     }));
 }
+
+export function matchResultHostToHostSummary(host: MatchResultHost): HostProfileSummary {
+  return {
+    id: host.id,
+    matchId: host.matchId,
+    name: host.hostName,
+    initials: host.initials,
+    location: host.location,
+    matchPercentage: host.compatibilityScore,
+    pricePerNight: host.pricePerNight,
+    currency: host.currency,
+    cancellationPolicy: FLEXIBLE_POLICY,
+    icon: '🏡',
+  };
+}
+
+export function buildDemoHostProfileCache(): Record<string, HostProfileSummary> {
+  const cache: Record<string, HostProfileSummary> = {};
+  for (const host of sampleMatchResults) {
+    cache[host.id] = matchResultHostToHostSummary(host);
+  }
+  return cache;
+}
+
+export function buildDemoGuideProfileCache(): Record<string, GuideProfileSummary> {
+  const cache: Record<string, GuideProfileSummary> = {};
+  for (const guide of suggestedGuidesMock) {
+    cache[guide.id] = guide;
+  }
+  return cache;
+}
+
+export function guideSummariesToDiscoveryItems(
+  guides: GuideProfileSummary[],
+): DiscoveryListingItem[] {
+  return guides.map((guide) => ({
+    id: guide.id,
+    name: guide.name,
+    subtitle: guide.location,
+    priceLabel: `GHS ${Math.round(guide.pricePerSession)}/session`,
+    initials: guide.initials,
+    matchPercentage: guide.matchPercentage,
+  }));
+}
+
+export function matchResultsToStayListings(results: MatchResultHost[]): StayListing[] {
+  return results.slice(0, 6).map((host, index) => ({
+    id: host.id,
+    title: `${host.hostName}'s Homestay`,
+    location: host.location,
+    rating: host.compatibilityScore >= 90 ? 5 : 4,
+    pricePerNight: `${host.currency} ${host.pricePerNight}/night`,
+    verifiedHost: true,
+    amenities: ['Wifi', 'Meals'],
+    imageEmoji: index % 2 === 0 ? '🏡' : '🏠',
+  }));
+}
+
+export const demoTopMatchHostId = sampleMatchResults[0]?.id ?? 'host-1';
+export const demoTopGuideId = suggestedGuidesMock[0]?.id ?? 'guide-1';
 
 export function buildHostMatchParams(
   profileState: AccountProfileState,

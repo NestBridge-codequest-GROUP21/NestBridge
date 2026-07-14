@@ -1,4 +1,5 @@
-import type { PrimaryIntent } from '../types/accountProfile';
+import type { AccountProfileState, PrimaryIntent } from '../types/accountProfile';
+import { presetHomeDashboard } from '../utils/devTestingPresets';
 
 /** Password for every seeded @nestbridge.app demo account (see V4 migration). */
 export const DEMO_PASSWORD = 'password';
@@ -19,6 +20,25 @@ export interface DemoAccount {
  * Seeded backend users — one tap signs in with real DB data (bookings, messages, etc.).
  * Password for all: {@link DEMO_PASSWORD}
  */
+/** Complete seeker profile preset for a seeded demo actor (Accra / UG context). */
+export function demoPresetForAccount(account: DemoAccount): AccountProfileState {
+  const base = presetHomeDashboard(account.intent);
+  return {
+    ...base,
+    seekerSetup: {
+      ...base.seekerSetup,
+      data: {
+        city: 'Accra, Ghana',
+        university: 'University of Ghana',
+        arrivalDate: '2026-09-01',
+        departureDate: '2026-12-15',
+        displayName: account.name,
+        bio: 'Exchange student exploring homestays and cultural experiences in Ghana.',
+      },
+    },
+  };
+}
+
 export const DEMO_ACTOR_ACCOUNTS: DemoAccount[] = [
   {
     id: 'student',
