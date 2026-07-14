@@ -89,6 +89,7 @@ export default function SponsorListScreen({
 
       <FlatList
         data={SPONSOR_CATEGORIES}
+        extraData={selected}
         horizontal
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item}
