@@ -142,7 +142,6 @@ export interface OnboardingReadyCopyContext {
 }
 
 export interface OnboardingReadyCopy {
-  roleHeadline: string;
   subtitle: string;
   heroIcon: string;
   nextSteps: OnboardingNextStep[];
@@ -166,7 +165,6 @@ export function onboardingReadyCopy(
 
   if (intent === 'HOST') {
     return {
-      roleHeadline: 'Host',
       subtitle:
         'Your answers are in. We will connect you with students who are the right fit for your home.',
       heroIcon: '🏠',
@@ -201,7 +199,6 @@ export function onboardingReadyCopy(
 
   if (intent === 'GUIDE') {
     return {
-      roleHeadline: 'Guide',
       subtitle:
         'Your answers are in. We will connect you with travellers looking for amazing tours.',
       heroIcon: '🗺️',
@@ -236,7 +233,6 @@ export function onboardingReadyCopy(
 
   if (intent === 'TOURIST') {
     return {
-      roleHeadline: 'Traveller',
       subtitle:
         'Your answers are in. We will suggest top-rated guides and experiences just for you.',
       heroIcon: '📸',
@@ -270,7 +266,6 @@ export function onboardingReadyCopy(
   }
 
   return {
-    roleHeadline: 'Student',
     subtitle: `Your answers are in. We will suggest host families that match your lifestyle and study needs in ${destination}.`,
     heroIcon: '🎓',
     nextSteps: [

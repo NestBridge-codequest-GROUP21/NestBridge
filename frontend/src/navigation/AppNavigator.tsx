@@ -135,7 +135,7 @@ import {
   getApiErrorMessage,
 } from '../services/api';
 import { colors, spacing } from '../constants/theme';
-import { studentHomeMockData, tabBarWithBadgesForRole, suggestedHostsMock } from '../data/studentHomeMock';
+import { studentHomeMockData, tabBarWithBadgesForRole, suggestedHostsForCity } from '../data/studentHomeMock';
 import {
   getQuickActionsForRole,
   homeRoleFromIntent,
@@ -147,6 +147,7 @@ import {
   touristRecentActivityMock,
   hostPerformanceMock,
   touristFeaturedGuideMock,
+  studentFeaturedMatchForCity,
 } from '../data/homeContentMock';
 import {
   destinationMock,
@@ -173,7 +174,7 @@ import {
   guideUpcomingToursMock,
   computeEarningsFromBookings,
 } from '../data/providerBookingsMock';
-import { lodgingDirectoryMock, listingFromId } from '../data/lodgingDirectoryMock';
+import { lodgingListingsForCity, listingFromId } from '../data/lodgingDirectoryMock';
 import {
   checklistApiMock,
   landmarksApiMock,
@@ -191,15 +192,14 @@ import {
   matchToGuideSummary,
   matchToHostSummary,
   matchToMatchResultHost,
-  matchResultHostToHostSummary,
   buildDemoHostProfileCache,
   buildDemoGuideProfileCache,
   guideSummariesToDiscoveryItems,
   matchResultsToStayListings,
-  demoTopMatchHostId,
+  demoTopMatchHostIdForCity,
   demoTopGuideId,
 } from '../data/homeFeeds';
-import { sampleMatchResults } from '../screens/student/MatchResultsScreen';
+import { sampleMatchResultsForCity } from '../data/matchResultsMock';
 import { suggestedGuidesMock } from '../data/guideSessionMock';
 import type { ConversationListItem } from '../types/messaging';
 import {
@@ -748,25 +748,16 @@ export default function AppNavigator() {
 
   const runMatchSearch = useCallback(
     async (params: MatchSearchDefaults) => {
-      const seedDemoResults = () => {
-        setHostProfileCache((prev) => {
-          const next = { ...prev };
-          for (const host of sampleMatchResults) {
-            next[host.id] = matchResultHostToHostSummary(host);
-          }
-          return next;
-        });
-      };
+      const matchParams = buildSearchMatchParams(profileState, {
+        destinationCity: params.destinationCity,
+        checkIn: params.checkIn,
+        checkOut: params.checkOut,
+        budgetMax: params.budgetMax,
+      });
+      const cityLabel = matchParams.city ?? params.destinationCity;
 
       try {
-        const matches = await findMatches(
-          buildSearchMatchParams(profileState, {
-            destinationCity: params.destinationCity,
-            checkIn: params.checkIn,
-            checkOut: params.checkOut,
-            budgetMax: params.budgetMax,
-          }),
-        );
+        const matches = await findMatches(matchParams);
         const hostMatches = matches.filter((m) => m.targetType === 'HOST');
         if (hostMatches.length > 0) {
           const results = hostMatches.map(matchToMatchResultHost);
@@ -780,11 +771,14 @@ export default function AppNavigator() {
           return { results };
         }
 
-        seedDemoResults();
-        return { results: sampleMatchResults };
-      } catch {
-        seedDemoResults();
-        return { results: sampleMatchResults };
+        return {
+          results: [],
+          error: `No hosts found in ${cityLabel}. Try adjusting your dates or budget.`,
+        };
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Could not load matches.';
+        return { results: [], error: message };
       }
     },
     [profileState],
@@ -870,25 +864,6 @@ export default function AppNavigator() {
     [homeApi.guideMatches, homeApi.isLoading, homeApi.error],
   );
 
-  const exploreStayListings = useMemo(
-    () =>
-      withDemoFallback(
-        hostMatchesToStayListings(homeApi.hostMatches),
-        matchResultsToStayListings(sampleMatchResults),
-        { isLoading: homeApi.isLoading, error: homeApi.error },
-      ),
-    [homeApi.hostMatches, homeApi.isLoading, homeApi.error],
-  );
-
-  const suggestedHostsDisplay = useMemo(
-    () =>
-      withDemoFallback(homeApi.suggestedHosts, suggestedHostsMock, {
-        isLoading: homeApi.isLoading,
-        error: homeApi.error,
-      }),
-    [homeApi.suggestedHosts, homeApi.isLoading, homeApi.error],
-  );
-
   const suggestedGuidesDisplay = useMemo(
     () =>
       withDemoFallback(
@@ -898,9 +873,6 @@ export default function AppNavigator() {
       ),
     [homeApi.suggestedGuides, homeApi.isLoading, homeApi.error],
   );
-
-  const displayTopMatchHostId = homeApi.topMatchTargetId ?? demoTopMatchHostId;
-  const displayTopGuideId = homeApi.topGuideTargetId ?? demoTopGuideId;
 
   const guideTourSections = useMemo(
     () => guideTourSectionsFromTypes(tourTypes),
@@ -919,6 +891,30 @@ export default function AppNavigator() {
   const homeRouteKey = getHomeRoute(profileState);
   const profileFields = getProfileFields(profileState);
   const cityLabel = profileFields.city || city || 'Accra';
+
+  const exploreStayListings = useMemo(
+    () =>
+      withDemoFallback(
+        hostMatchesToStayListings(homeApi.hostMatches),
+        matchResultsToStayListings(sampleMatchResultsForCity(cityLabel)),
+        { isLoading: homeApi.isLoading, error: homeApi.error },
+      ),
+    [homeApi.hostMatches, homeApi.isLoading, homeApi.error, cityLabel],
+  );
+
+  const suggestedHostsDisplay = useMemo(
+    () =>
+      withDemoFallback(homeApi.suggestedHosts, suggestedHostsForCity(cityLabel), {
+        isLoading: homeApi.isLoading,
+        error: homeApi.error,
+      }),
+    [homeApi.suggestedHosts, homeApi.isLoading, homeApi.error, cityLabel],
+  );
+
+  const displayTopMatchHostId =
+    homeApi.topMatchTargetId ?? demoTopMatchHostIdForCity(cityLabel);
+  const displayTopGuideId = homeApi.topGuideTargetId ?? demoTopGuideId;
+
   const lodgingApi = useLodgingPartners(cityLabel, !!user);
   const contentPhrases = usePhrases(cityLabel, !!user);
   const contentTopics = useTopics(cityLabel, !!user);
@@ -940,11 +936,11 @@ export default function AppNavigator() {
 
   const lodgingListingsDisplay = useMemo(
     () =>
-      withDemoFallback(lodgingApi.listings, lodgingDirectoryMock, {
+      withDemoFallback(lodgingApi.listings, lodgingListingsForCity(cityLabel), {
         isLoading: lodgingApi.isLoading,
         error: lodgingApi.error,
       }),
-    [lodgingApi.listings, lodgingApi.isLoading, lodgingApi.error],
+    [lodgingApi.listings, lodgingApi.isLoading, lodgingApi.error, cityLabel],
   );
 
   const phrasesDisplay = useMemo(
@@ -1287,7 +1283,7 @@ export default function AppNavigator() {
       tabBarItems,
       featuredMatch: withDemoFallbackValue(
         homeApi.featuredMatch,
-        studentHomeMockData.featuredMatch!,
+        studentFeaturedMatchForCity(cityLabel),
         { isLoading: homeApi.isLoading, error: homeApi.error },
       ),
       suggestedHosts: suggestedHostsDisplay,
@@ -1318,6 +1314,7 @@ export default function AppNavigator() {
       studentLive.recentActivity,
       seekerSetupIncomplete,
       primaryIntent,
+      cityLabel,
     ],
   );
 
@@ -2059,7 +2056,7 @@ export default function AppNavigator() {
 
           return (
             <OnboardingReadyScreen
-              roleHeadline={readyCopy.roleHeadline}
+              userName={firstName}
               subtitle={readyCopy.subtitle}
               heroIcon={readyCopy.heroIcon}
               nextSteps={readyCopy.nextSteps}

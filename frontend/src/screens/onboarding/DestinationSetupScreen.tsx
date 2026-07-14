@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,33 +11,12 @@ import PrimaryButton from '../../components/PrimaryButton';
 import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
 import { isLikelyValidPlaceName } from '../../utils/textValidation';
 import { validationCopy } from '../../data/appCopy';
+import {
+  destinationCityOptions,
+  universityOptionsForCity,
+} from '../../data/ghanaReference';
 
-const DESTINATION_OPTIONS = [
-  'Accra',
-  'Kumasi',
-  'Tamale',
-  'Cape Coast',
-  'Takoradi',
-  'Sunyani',
-  'Koforidua',
-  'Ho',
-  'Wa',
-  'Bolgatanga',
-];
-
-const UNIVERSITY_OPTIONS = [
-  'University of Ghana, Legon',
-  'Kwame Nkrumah University of Science and Technology (KNUST)',
-  'Ashesi University',
-  'University of Cape Coast',
-  'University of Professional Studies (UPSA)',
-  'Ghana Institute of Management and Public Administration (GIMPA)',
-  'Central University',
-  'University for Development Studies',
-  'University of Education, Winneba',
-  'East Legon',
-  'Other / area not listed',
-];
+const DESTINATION_OPTIONS = destinationCityOptions();
 
 function parseDateValue(value: string): Date | null {
   const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -178,6 +157,10 @@ export default function DestinationSetupScreen({
   const [destinationError, setDestinationError] = useState<'required' | 'gibberish' | null>(
     null,
   );
+  const universityOptions = useMemo(
+    () => universityOptionsForCity(city),
+    [city],
+  );
 
   const handleContinue = () => {
     if (city.trim().length === 0) {
@@ -251,7 +234,7 @@ export default function DestinationSetupScreen({
             label="University or area"
             value={university}
             placeholder="Select a university or area"
-            options={UNIVERSITY_OPTIONS}
+            options={universityOptions}
             onSelect={onUniversityChange}
           />
           <View style={styles.dateRow}>

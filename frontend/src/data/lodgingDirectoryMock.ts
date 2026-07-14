@@ -1,4 +1,5 @@
 import type { LodgingListing } from '../types/lodging';
+import { normalizeCity } from './ghanaReference';
 
 export const lodgingDirectoryMock: LodgingListing[] = [
   {
@@ -87,6 +88,16 @@ export const lodgingDirectoryMock: LodgingListing[] = [
     icon: '🛏️',
   },
 ];
+
+export function lodgingListingsForCity(city: string): LodgingListing[] {
+  const normalized = normalizeCity(city).toLowerCase();
+  if (!normalized) return lodgingDirectoryMock;
+
+  const filtered = lodgingDirectoryMock.filter(
+    (listing) => listing.city.toLowerCase() === normalized,
+  );
+  return filtered;
+}
 
 export function lodgingCategoryLabel(category: LodgingListing['category']): string {
   switch (category) {

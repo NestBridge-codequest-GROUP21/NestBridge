@@ -2,6 +2,7 @@ import type { FeaturedHomeCardProps } from '../components/FeaturedHomeCard';
 import type { RecentActivityItem } from '../components/RecentActivityList';
 import type { HomeStatItem } from '../components/HomeStatsCarousel';
 import type { ExploreSectionItem } from '../screens/tourist/ExploreHomeScreen';
+import { normalizeCity } from './ghanaReference';
 
 export const studentFeaturedMatchMock: Omit<
   FeaturedHomeCardProps,
@@ -15,6 +16,29 @@ export const studentFeaturedMatchMock: Omit<
   ctaLabel: 'View profile →',
   initials: 'AM',
 };
+
+export const studentFeaturedMatchKumasiMock: Omit<
+  FeaturedHomeCardProps,
+  'onPress'
+> = {
+  sectionLabel: 'Your top match',
+  name: 'Ama Serwaa Osei',
+  badge: '90% match',
+  details: 'Adum, Kumasi · GHS 150/night',
+  matchReasons: ['Warm Ashanti hospitality', 'Halal & vegetarian meals'],
+  ctaLabel: 'View profile →',
+  initials: 'AS',
+};
+
+export function studentFeaturedMatchForCity(
+  city: string,
+): Omit<FeaturedHomeCardProps, 'onPress'> {
+  const normalized = normalizeCity(city).toLowerCase();
+  if (normalized === 'kumasi') {
+    return studentFeaturedMatchKumasiMock;
+  }
+  return studentFeaturedMatchMock;
+}
 
 export const studentStatusMock = {
   icon: '✈️',

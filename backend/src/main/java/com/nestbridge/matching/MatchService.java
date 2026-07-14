@@ -3,6 +3,7 @@ package com.nestbridge.matching;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nestbridge.auth.TokenBlacklistService;
+import com.nestbridge.common.GhanaReference;
 import com.nestbridge.guide.GuideProfile;
 import com.nestbridge.guide.GuideProfileRepository;
 import com.nestbridge.host.HostProfile;
@@ -34,6 +35,9 @@ public class MatchService {
 
     @Transactional
     public List<MatchResultDto> findMatches(UUID seekerId, MatchFindRequest request) {
+        if (request.getCity() != null && !request.getCity().isBlank()) {
+            request.setCity(GhanaReference.normalizeCity(request.getCity()));
+        }
         String cacheKey = seekerId + ":" + searchHash(request);
         try {
             String cached = cacheService.getCachedMatchResults(cacheKey);
@@ -63,8 +67,9 @@ public class MatchService {
     }
 
     private List<MatchResultDto> findHostMatches(User seeker, MatchFindRequest request) {
+        String city = GhanaReference.normalizeCity(request.getCity());
         List<HostProfile> hosts = request.getCity() != null
-                ? hostProfileRepository.findByCityIgnoreCaseAndActiveTrue(request.getCity())
+                ? hostProfileRepository.findByCityIgnoreCaseAndActiveTrue(city)
                 : hostProfileRepository.findByActiveTrue();
         Map<UUID, User> users = loadUsers(hosts.stream().map(HostProfile::getUserId).collect(Collectors.toSet()));
         List<MatchingAlgorithm.ScoredHost> scored = algorithm.scoreHosts(hosts, users, request, seeker);
@@ -96,8 +101,9 @@ public class MatchService {
     }
 
     private List<MatchResultDto> findGuideMatches(User seeker, MatchFindRequest request) {
+        String city = GhanaReference.normalizeCity(request.getCity());
         List<GuideProfile> guides = request.getCity() != null
-                ? guideProfileRepository.findByCityIgnoreCaseAndActiveTrue(request.getCity())
+                ? guideProfileRepository.findByCityIgnoreCaseAndActiveTrue(city)
                 : guideProfileRepository.findByActiveTrue();
         Map<UUID, User> users = loadUsers(guides.stream().map(GuideProfile::getUserId).collect(Collectors.toSet()));
         List<MatchingAlgorithm.ScoredGuide> scored = algorithm.scoreGuides(guides, users, request, seeker);
