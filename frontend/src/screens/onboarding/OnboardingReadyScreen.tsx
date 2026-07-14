@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,18 +7,15 @@ import {
   Easing,
   ScrollView,
   Pressable,
+  Image,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
-import SecondaryButton from '../../components/SecondaryButton';
-import OnboardingNextStepsCard, {
-  type OnboardingNextStep,
-} from '../../components/OnboardingNextStepsCard';
-import FeatureHighlightRow, {
-  type FeatureHighlight,
-} from '../../components/FeatureHighlightRow';
+import OnboardingReadyCarousel from '../../components/OnboardingReadyCarousel';
+import type { OnboardingNextStep } from '../../components/OnboardingNextStepsCard';
 import AppIcon from '../../components/AppIcon';
 import {
   colors,
@@ -34,36 +31,34 @@ import {
 } from '../../constants/theme';
 
 export interface OnboardingReadyScreenProps {
-  userName: string;
   subtitle: string;
-  heroIcon: string;
-  nextSteps: OnboardingNextStep[];
-  featureHighlights: FeatureHighlight[];
+  heroImageUri: string;
+  carouselCards: OnboardingNextStep[];
   ctaLabel: string;
-  secondaryCtaLabel: string;
-  roleLabel?: string;
-  onEnterDashboard?: () => void;
-  onExploreLater?: () => void;
+  roleLabel: string;
+  roleIcon?: string;
+  onPrimaryAction?: () => void;
+  onContinueLater?: () => void;
   onBack?: () => void;
-  onHelpPress?: () => void;
 }
 
+const HERO_HEIGHT_RATIO = 0.38;
+
 export default function OnboardingReadyScreen({
-  userName,
   subtitle,
-  heroIcon,
-  nextSteps,
-  featureHighlights,
+  heroImageUri,
+  carouselCards,
   ctaLabel,
-  secondaryCtaLabel,
   roleLabel,
-  onEnterDashboard,
-  onExploreLater,
+  roleIcon,
+  onPrimaryAction,
+  onContinueLater,
   onBack,
-  onHelpPress,
 }: OnboardingReadyScreenProps) {
   const insets = useSafeAreaInsets();
   const entrance = useRef(new Animated.Value(0)).current;
+  const [heroFailed, setHeroFailed] = useState(false);
+  const heroHeight = Dimensions.get('window').height * HERO_HEIGHT_RATIO;
 
   useEffect(() => {
     Animated.timing(entrance, {
@@ -81,106 +76,146 @@ export default function OnboardingReadyScreen({
   });
 
   return (
-    <LinearGradient
-      colors={[...gradients.header]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.root}
-    >
+    <View style={styles.root}>
       <StatusBar style="light" />
 
-      <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
-        {onBack ? (
-          <Pressable
-            onPress={onBack}
-            style={styles.topActionButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
-          </Pressable>
-        ) : (
-          <View style={styles.topSpacer} />
-        )}
-        {onHelpPress ? (
-          <Pressable
-            onPress={onHelpPress}
-            style={styles.topActionButton}
-            accessibilityRole="button"
-            accessibilityLabel="Help"
-          >
-            <AppIcon name="help-circle-outline" size={fontSizes.heading} color={colors.white} />
-          </Pressable>
-        ) : (
-          <View style={styles.topSpacer} />
-        )}
-      </View>
-
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + spacing.lg },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View
-          style={{
-            opacity: contentOpacity,
-            transform: [{ translateY: contentTranslateY }],
-          }}
-        >
-          <View style={styles.hero}>
-            <View style={styles.heroIconWrap}>
-              <AppIcon glyph={heroIcon} size={44} color={colors.white} />
-              <View style={styles.checkBadge}>
-                <AppIcon name="checkmark" size={fontSizes.body} color={colors.white} />
-              </View>
-            </View>
-            {roleLabel ? (
-              <View style={styles.roleBadge}>
-                <Text style={styles.roleBadgeText}>{roleLabel}</Text>
-              </View>
-            ) : null}
-            <Text style={styles.title}>
-              You are all set,{'\n'}
-              <Text style={styles.titleAccent}>{userName}!</Text>
-            </Text>
-            <Text style={styles.subtitle}>{subtitle}</Text>
-          </View>
-
-          <OnboardingNextStepsCard steps={nextSteps} />
-
-          <FeatureHighlightRow items={featureHighlights} />
-        </Animated.View>
-      </ScrollView>
-
-      <View
-        style={[
-          styles.footer,
-          { paddingBottom: insets.bottom + spacing.md },
-        ]}
-      >
-        <PrimaryButton label={ctaLabel} onPress={onEnterDashboard} />
-        <View style={styles.secondarySpacing}>
-          <SecondaryButton
-            label={secondaryCtaLabel}
-            onPress={onExploreLater ?? onEnterDashboard}
+      <View style={[styles.heroWrap, { height: heroHeight }]}>
+        {!heroFailed ? (
+          <Image
+            source={{ uri: heroImageUri }}
+            style={styles.heroImage}
+            resizeMode="cover"
+            accessibilityIgnoresInvertColors
+            onError={() => setHeroFailed(true)}
           />
+        ) : (
+          <LinearGradient
+            colors={[colors.tealDeep, colors.teal, colors.navyMid]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroFallback}
+          />
+        )}
+        <LinearGradient
+          colors={['transparent', 'rgba(12, 23, 53, 0.55)']}
+          style={styles.heroScrim}
+        />
+
+        <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
+          {onBack ? (
+            <Pressable
+              onPress={onBack}
+              style={styles.topActionButton}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <AppIcon
+                name="chevron-back"
+                size={fontSizes.heading}
+                color={colors.white}
+              />
+            </Pressable>
+          ) : (
+            <View style={styles.topSpacer} />
+          )}
+        </View>
+
+        <View style={styles.roleBadge}>
+          {roleIcon ? (
+            <AppIcon
+              glyph={roleIcon}
+              size={fontSizes.body}
+              color={colors.white}
+              style={styles.roleBadgeIcon}
+            />
+          ) : null}
+          <Text style={styles.roleBadgeText}>{roleLabel}</Text>
         </View>
       </View>
-    </LinearGradient>
+
+      <LinearGradient
+        colors={[...gradients.header]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.contentGradient}
+      >
+        <View style={styles.decorWrap} pointerEvents="none">
+          <Text style={[styles.decorGlyph, styles.decorTopRight]}>+</Text>
+          <Text style={[styles.decorGlyph, styles.decorMidLeft]}>✦</Text>
+          <Text style={[styles.decorGlyph, styles.decorBottomRight]}>+</Text>
+        </View>
+
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + spacing.lg },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View
+            style={{
+              opacity: contentOpacity,
+              transform: [{ translateY: contentTranslateY }],
+            }}
+          >
+            <Text style={styles.headline}>ALL SET!</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
+
+            <View style={styles.carouselOverlap}>
+              <OnboardingReadyCarousel cards={carouselCards} />
+            </View>
+
+            <View style={styles.actions}>
+              <PrimaryButton label={ctaLabel} onPress={onPrimaryAction} />
+              <Pressable
+                onPress={onContinueLater}
+                style={({ pressed }) => [
+                  styles.continueLaterButton,
+                  pressed && styles.continueLaterPressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Continue Later"
+              >
+                <Text style={styles.continueLaterLabel}>Continue Later</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: colors.navy,
+  },
+  heroWrap: {
+    width: '100%',
+    position: 'relative',
+    backgroundColor: colors.navyMid,
+  },
+  heroImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+  },
+  heroFallback: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  heroScrim: {
+    ...StyleSheet.absoluteFillObject,
   },
   topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingHorizontal: layout.screenPaddingHorizontal,
+    zIndex: 2,
   },
   topActionButton: {
     minWidth: 44,
@@ -188,82 +223,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topAction: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.heading,
-    color: colors.white,
-  },
   topSpacer: {
     width: 44,
   },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
-  },
-  hero: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  heroIconWrap: {
-    width: 96,
-    height: 96,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.navyMid,
-    borderWidth: 2,
-    borderColor: colors.tealBright,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-    position: 'relative',
-  },
-  heroIcon: {
-    fontSize: 44,
-  },
-  checkBadge: {
-    position: 'absolute',
-    bottom: -spacing.xs,
-    right: -spacing.xs,
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.tealBright,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.white,
-  },
-  checkText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    color: colors.white,
-  },
   roleBadge: {
+    position: 'absolute',
+    left: layout.screenPaddingHorizontal,
+    bottom: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.navyMid,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
     borderWidth: 1,
     borderColor: colors.tealBright,
-    marginBottom: spacing.md,
+    zIndex: 2,
+  },
+  roleBadgeIcon: {
+    marginRight: spacing.xs,
   },
   roleBadgeText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
   },
-  title: {
+  contentGradient: {
+    flex: 1,
+    position: 'relative',
+  },
+  decorWrap: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+  decorGlyph: {
+    position: 'absolute',
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.heading,
+    color: colors.gold,
+    opacity: 0.22,
+  },
+  decorTopRight: {
+    top: spacing.md,
+    right: spacing.xl,
+  },
+  decorMidLeft: {
+    top: spacing.xl * 2,
+    left: spacing.lg,
+  },
+  decorBottomRight: {
+    bottom: spacing.xl,
+    right: spacing.lg,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: spacing.lg,
+  },
+  headline: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
     lineHeight: lineHeights.display,
     textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  titleAccent: {
-    color: colors.tealBright,
+    marginBottom: spacing.sm,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
@@ -272,16 +299,31 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.subheading,
     textAlign: 'center',
     opacity: 0.92,
+    marginBottom: spacing.md,
+    paddingHorizontal: layout.screenPaddingHorizontal,
+  },
+  carouselOverlap: {
+    marginTop: -spacing.xl,
     marginBottom: spacing.lg,
   },
-  footer: {
+  actions: {
     paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingTop: spacing.md,
-    backgroundColor: colors.navyMid,
-    borderTopWidth: 1,
-    borderTopColor: colors.tealDeep,
+    gap: spacing.sm,
   },
-  secondarySpacing: {
-    marginTop: spacing.sm,
+  continueLaterButton: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+  },
+  continueLaterPressed: {
+    opacity: 0.75,
+  },
+  continueLaterLabel: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.white,
+    textDecorationLine: 'underline',
   },
 });

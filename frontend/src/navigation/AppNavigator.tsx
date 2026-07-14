@@ -2024,12 +2024,45 @@ export default function AppNavigator() {
           const destination =
             city || profileFields.city || 'your destination';
           const readyCopy = onboardingReadyCopyByTrack(track, primaryIntent, {
+            userName: firstName,
             destination,
             university: university || profileFields.university,
             city: city || profileFields.city,
           });
 
-          const goToDashboard = async () => {
+          const resolveHome = (): keyof AppStackParamList => {
+            if (track === 'HOST' || primaryIntent === 'HOST') {
+              return 'HostHome';
+            }
+            if (track === 'GUIDE' || primaryIntent === 'GUIDE') {
+              return 'GuideHome';
+            }
+            if (primaryIntent === 'TOURIST') {
+              return 'ExploreHome';
+            }
+            if (primaryIntent === 'STUDENT') {
+              return 'StudentHome';
+            }
+            return 'BrowseHome';
+          };
+
+          const resolvePrimaryScreen = (): keyof AppStackParamList => {
+            if (track === 'HOST') {
+              return 'IncomingRequests';
+            }
+            if (track === 'GUIDE') {
+              return 'GuideBookingsTab';
+            }
+            if (primaryIntent === 'STUDENT') {
+              return 'MatchSearch';
+            }
+            if (primaryIntent === 'TOURIST') {
+              return 'GuideSearch';
+            }
+            return 'UnifiedSearch';
+          };
+
+          const finishOnboarding = async () => {
             await completeStep(track, 'ready');
             await markTrackComplete(track);
             if (track === 'SEEKER' && primaryIntent === 'STUDENT') {
@@ -2038,36 +2071,38 @@ export default function AppNavigator() {
             if (track === 'SEEKER' && primaryIntent === 'TOURIST') {
               homeApi.refresh();
             }
-            let nextHome: keyof AppStackParamList = 'BrowseHome';
-            if (primaryIntent === 'STUDENT') {
-              nextHome = 'StudentHome';
-            } else if (primaryIntent === 'TOURIST') {
-              nextHome = 'ExploreHome';
-            } else if (primaryIntent === 'HOST') {
-              nextHome = 'HostHome';
-            } else if (primaryIntent === 'GUIDE') {
-              nextHome = 'GuideHome';
-            }
+          };
+
+          const goToDashboard = async () => {
+            await finishOnboarding();
             navigation.reset({
               index: 0,
-              routes: [{ name: nextHome }],
+              routes: [{ name: resolveHome() }],
+            });
+          };
+
+          const goToPrimaryAction = async () => {
+            await finishOnboarding();
+            const home = resolveHome();
+            const primaryScreen = resolvePrimaryScreen();
+            navigation.reset({
+              index: 1,
+              routes: [{ name: home }, { name: primaryScreen }],
             });
           };
 
           return (
             <OnboardingReadyScreen
-              userName={firstName}
               subtitle={readyCopy.subtitle}
-              heroIcon={readyCopy.heroIcon}
-              nextSteps={readyCopy.nextSteps}
-              featureHighlights={readyCopy.featureHighlights}
+              heroImageUri={readyCopy.heroImageUri}
+              carouselCards={readyCopy.carouselCards}
               ctaLabel={readyCopy.ctaLabel}
-              secondaryCtaLabel={readyCopy.secondaryCtaLabel}
               roleLabel={readyCopy.roleLabel}
-              onEnterDashboard={() => {
-                void goToDashboard();
+              roleIcon={readyCopy.roleIcon}
+              onPrimaryAction={() => {
+                void goToPrimaryAction();
               }}
-              onExploreLater={() => {
+              onContinueLater={() => {
                 void goToDashboard();
               }}
               onBack={() => navigation.goBack()}
