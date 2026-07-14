@@ -130,7 +130,7 @@ export default function SponsorApplicationScreen({
         <View style={styles.formContainer}>
           <Text style={styles.sectionTitle}>Personal information</Text>
 
-          <Text style={styles.label}>Full name *</Text>
+          <Text style={styles.label}>Full name</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter your full name"
@@ -140,7 +140,7 @@ export default function SponsorApplicationScreen({
             accessibilityLabel="Full name"
           />
 
-          <Text style={styles.label}>Email address *</Text>
+          <Text style={styles.label}>Email address</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter your email"
@@ -154,7 +154,7 @@ export default function SponsorApplicationScreen({
 
           <Text style={[styles.sectionTitle, styles.sectionGap]}>Academic information</Text>
 
-          <Text style={styles.label}>University / institution *</Text>
+          <Text style={styles.label}>University / institution</Text>
           <TextInput
             style={styles.input}
             placeholder="e.g. KNUST, University of Ghana"
@@ -164,7 +164,7 @@ export default function SponsorApplicationScreen({
             accessibilityLabel="University"
           />
 
-          <Text style={styles.label}>Student ID *</Text>
+          <Text style={styles.label}>Student ID</Text>
           <TextInput
             style={styles.input}
             placeholder="Enter your student ID"
