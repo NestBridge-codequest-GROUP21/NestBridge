@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SosCircleButton from './SosCircleButton';
+import AppIcon, { type IoniconName } from './AppIcon';
 import {
   colors,
   fontFamilies,
@@ -14,6 +15,8 @@ import {
 export interface TabBarItem {
   id: string;
   label: string;
+  /** Ionicons name (outline variant); the active tab renders the filled glyph. */
+  icon?: IoniconName;
   badgeCount?: number;
 }
 
@@ -38,6 +41,11 @@ export default function AppTabBar({
 
   const renderTab = (tab: TabBarItem) => {
     const active = tab.id === activeTabId;
+    const iconName = tab.icon
+      ? active
+        ? (tab.icon.replace('-outline', '') as IoniconName)
+        : tab.icon
+      : undefined;
     return (
       <Pressable
         key={tab.id}
@@ -47,6 +55,14 @@ export default function AppTabBar({
         accessibilityState={{ selected: active }}
         accessibilityLabel={tab.label}
       >
+        {iconName ? (
+          <AppIcon
+            name={iconName}
+            size={fontSizes.subheading}
+            color={active ? colors.teal : colors.textTertiary}
+            style={styles.tabIcon}
+          />
+        ) : null}
         <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
           {tab.label}
         </Text>
@@ -113,6 +129,9 @@ const styles = StyleSheet.create({
   },
   sosRaise: {
     marginTop: -layout.sosRaise,
+  },
+  tabIcon: {
+    marginBottom: spacing.xs,
   },
   tabLabel: {
     fontFamily: fontFamilies.regular,

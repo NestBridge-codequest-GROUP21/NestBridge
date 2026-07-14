@@ -5,26 +5,23 @@ import type { PrimaryIntent } from '../types/accountProfile';
 export type HomeRole = PrimaryIntent | 'BROWSE';
 
 export const SEEKER_TAB_ITEMS: TabBarItem[] = [
-  { id: 'home', label: 'Home' },
-  { id: 'search', label: 'Search' },
-  { id: 'bookings', label: 'Bookings' },
-  { id: 'messages', label: 'Messages' },
-  { id: 'profile', label: 'Profile' },
+  { id: 'home', label: 'Home', icon: 'home-outline' },
+  { id: 'search', label: 'Search', icon: 'search-outline' },
+  { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
+  { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
 ];
 
 export const HOST_TAB_ITEMS: TabBarItem[] = [
-  { id: 'home', label: 'Home' },
-  { id: 'requests', label: 'Requests' },
-  { id: 'bookings', label: 'Bookings' },
-  { id: 'profile', label: 'Profile' },
+  { id: 'home', label: 'Home', icon: 'home-outline' },
+  { id: 'requests', label: 'Requests', icon: 'documents-outline' },
+  { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
 ];
 
 export const GUIDE_TAB_ITEMS: TabBarItem[] = [
-  { id: 'home', label: 'Home' },
-  { id: 'bookings', label: 'Bookings' },
-  { id: 'earnings', label: 'Earnings' },
-  { id: 'messages', label: 'Messages' },
-  { id: 'profile', label: 'Profile' },
+  { id: 'home', label: 'Home', icon: 'home-outline' },
+  { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
+  { id: 'earnings', label: 'Earnings', icon: 'cash-outline' },
+  { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
 ];
 
 export const STUDENT_QUICK_ACTIONS: QuickActionItem[] = [
