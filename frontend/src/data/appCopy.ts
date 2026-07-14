@@ -3,9 +3,9 @@
  */
 
 import type { PrimaryIntent, SetupTrack } from '../types/accountProfile';
-import { PRIMARY_INTENT_LABELS } from '../types/accountProfile';
+import { PRIMARY_INTENT_ICONS } from '../types/accountProfile';
 import type { OnboardingNextStep } from '../components/OnboardingNextStepsCard';
-import type { FeatureHighlight } from '../components/FeatureHighlightRow';
+import { ONBOARDING_HERO_IMAGES } from './onboardingHeroImages';
 
 export const splashCopy = {
   tagline: 'From Arrival to Belonging.',
@@ -136,6 +136,7 @@ export const validationCopy = {
 };
 
 export interface OnboardingReadyCopyContext {
+  userName?: string;
   destination?: string;
   university?: string;
   city?: string;
@@ -143,12 +144,32 @@ export interface OnboardingReadyCopyContext {
 
 export interface OnboardingReadyCopy {
   subtitle: string;
-  heroIcon: string;
-  nextSteps: OnboardingNextStep[];
-  featureHighlights: FeatureHighlight[];
+  heroImageUri: string;
+  carouselCards: OnboardingNextStep[];
   ctaLabel: string;
-  secondaryCtaLabel: string;
-  roleLabel?: string;
+  roleLabel: string;
+  roleIcon: string;
+}
+
+const ONBOARDING_ROLE_LABELS: Record<PrimaryIntent, string> = {
+  STUDENT: 'Student',
+  TOURIST: 'Tourist',
+  HOST: 'Host',
+  GUIDE: 'Guide',
+};
+
+function onboardingReadySubtitle(intent: PrimaryIntent, userName: string): string {
+  const name = userName.trim() || 'there';
+  if (intent === 'TOURIST') {
+    return `Explore local culture, ${name}!`;
+  }
+  if (intent === 'HOST') {
+    return `Find your ideal guest, ${name}!`;
+  }
+  if (intent === 'GUIDE') {
+    return `Showcase your expertise, ${name}!`;
+  }
+  return `Let's find your perfect home, ${name}!`;
 }
 
 export function trackToIntent(track: SetupTrack): PrimaryIntent {
@@ -162,17 +183,18 @@ export function onboardingReadyCopy(
   ctx: OnboardingReadyCopyContext = {},
 ): OnboardingReadyCopy {
   const destination = ctx.destination?.trim() || ctx.city?.trim() || 'your destination';
+  const userName = ctx.userName?.trim() || 'there';
+  const subtitle = onboardingReadySubtitle(intent, userName);
 
   if (intent === 'HOST') {
     return {
-      subtitle:
-        'Your answers are in. We will connect you with students who are the right fit for your home.',
-      heroIcon: '🏠',
-      nextSteps: [
+      subtitle,
+      heroImageUri: ONBOARDING_HERO_IMAGES.HOST,
+      carouselCards: [
         {
-          icon: '🤝',
-          title: 'We match you with students',
-          body: 'We recommend students who align with your home and preferences.',
+          icon: '🔑',
+          title: 'Verified guests',
+          body: 'Connect with matched travelers seeking a home-stay experience.',
         },
         {
           icon: '💬',
@@ -182,36 +204,29 @@ export function onboardingReadyCopy(
         {
           icon: '🛡️',
           title: 'Safe and supported',
-          body: 'Every student is verified before they can request a stay.',
+          body: 'Every guest is verified before they can request a stay.',
         },
       ],
-      featureHighlights: [
-        { icon: '🎯', label: 'Great matches' },
-        { icon: '😌', label: 'Peace of mind' },
-        { icon: '🤲', label: 'Support' },
-        { icon: '💛', label: 'Meaningful connections' },
-      ],
-      ctaLabel: 'View incoming requests',
-      secondaryCtaLabel: 'Save profile and explore later',
-      roleLabel: PRIMARY_INTENT_LABELS.HOST,
+      ctaLabel: 'View Guest Matches',
+      roleLabel: ONBOARDING_ROLE_LABELS.HOST,
+      roleIcon: PRIMARY_INTENT_ICONS.HOST,
     };
   }
 
   if (intent === 'GUIDE') {
     return {
-      subtitle:
-        'Your answers are in. We will connect you with travellers looking for amazing tours.',
-      heroIcon: '🗺️',
-      nextSteps: [
+      subtitle,
+      heroImageUri: ONBOARDING_HERO_IMAGES.GUIDE,
+      carouselCards: [
         {
-          icon: '📩',
-          title: 'We find tour opportunities',
-          body: 'See travellers looking for experiences you offer.',
+          icon: '🗺️',
+          title: 'Book your tour',
+          body: 'Attract and accept bookings from matched tourists.',
         },
         {
           icon: '📆',
-          title: 'Manage your tours',
-          body: 'Set availability, prices, and tour preferences.',
+          title: 'Manage availability',
+          body: 'Set prices, tour types, and your weekly schedule.',
         },
         {
           icon: '⭐',
@@ -219,65 +234,52 @@ export function onboardingReadyCopy(
           body: 'Collect reviews and build trust with every session.',
         },
       ],
-      featureHighlights: [
-        { icon: '📈', label: 'More bookings' },
-        { icon: '🕐', label: 'Flexible' },
-        { icon: '✅', label: 'Trusted platform' },
-        { icon: '🌍', label: 'Make an impact' },
-      ],
-      ctaLabel: 'Explore tour requests',
-      secondaryCtaLabel: 'Save profile and explore later',
-      roleLabel: PRIMARY_INTENT_LABELS.GUIDE,
+      ctaLabel: 'Browse Bookings & Accept Matches',
+      roleLabel: ONBOARDING_ROLE_LABELS.GUIDE,
+      roleIcon: PRIMARY_INTENT_ICONS.GUIDE,
     };
   }
 
   if (intent === 'TOURIST') {
     return {
-      subtitle:
-        'Your answers are in. We will suggest top-rated guides and experiences just for you.',
-      heroIcon: '📸',
-      nextSteps: [
+      subtitle,
+      heroImageUri: ONBOARDING_HERO_IMAGES.TOURIST,
+      carouselCards: [
         {
-          icon: '🗺️',
-          title: 'We find the best guides',
-          body: 'Get recommendations for trusted local guides in your destination.',
+          icon: '🏪',
+          title: 'Your authentic guide',
+          body: `Immerse yourself in the heart of ${destination}'s markets and crafts.`,
         },
         {
-          icon: '✨',
-          title: 'Curated experiences',
-          body: 'Browse tours, food walks, and must-see places nearby.',
+          icon: '🏠',
+          title: 'Verified homestays',
+          body: 'Book stays with host families reviewed by other travellers.',
         },
         {
           icon: '🛡️',
-          title: 'Safe and reliable',
-          body: 'All guides are verified and reviewed by other travellers.',
+          title: 'Safety tips on the go',
+          body: 'SOS help and emergency contacts wherever you explore.',
         },
       ],
-      featureHighlights: [
-        { icon: '⭐', label: 'Top rated' },
-        { icon: '💡', label: 'Local insights' },
-        { icon: '🔒', label: 'Secure and safe' },
-        { icon: '🎒', label: 'Adventure made easy' },
-      ],
-      ctaLabel: 'Explore experiences',
-      secondaryCtaLabel: 'Save profile and explore later',
-      roleLabel: PRIMARY_INTENT_LABELS.TOURIST,
+      ctaLabel: 'Explore Your Cultural Matches',
+      roleLabel: ONBOARDING_ROLE_LABELS.TOURIST,
+      roleIcon: PRIMARY_INTENT_ICONS.TOURIST,
     };
   }
 
   return {
-    subtitle: `Your answers are in. We will suggest host families that match your lifestyle and study needs in ${destination}.`,
-    heroIcon: '🎓',
-    nextSteps: [
+    subtitle,
+    heroImageUri: ONBOARDING_HERO_IMAGES.STUDENT,
+    carouselCards: [
       {
-        icon: '🏠',
-        title: 'We find your best matches',
-        body: 'Surface host families by your preferences and location.',
+        icon: '📖',
+        title: 'Your new home base',
+        body: 'Connect with warm host families that match your needs.',
       },
       {
-        icon: '✨',
-        title: 'Personalised recommendations',
-        body: 'Matches improve as you explore and update your profile.',
+        icon: '🎯',
+        title: 'Smart matching',
+        body: `We surface hosts near ${destination} by your lifestyle and study preferences.`,
       },
       {
         icon: '🛡️',
@@ -285,15 +287,9 @@ export function onboardingReadyCopy(
         body: 'All host families are verified before listing.',
       },
     ],
-    featureHighlights: [
-      { icon: '🤗', label: 'Welcoming' },
-      { icon: '🎯', label: 'Smart matches' },
-      { icon: '✅', label: 'Trusted' },
-      { icon: '🚀', label: 'Start your journey' },
-    ],
-    ctaLabel: 'Explore your matches',
-    secondaryCtaLabel: 'Save profile and explore later',
-    roleLabel: PRIMARY_INTENT_LABELS.STUDENT,
+    ctaLabel: 'Meet Your Best Matches',
+    roleLabel: ONBOARDING_ROLE_LABELS.STUDENT,
+    roleIcon: PRIMARY_INTENT_ICONS.STUDENT,
   };
 }
 
