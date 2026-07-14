@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -57,7 +57,7 @@ import PrepChecklistScreen from '../screens/student/PrepChecklistScreen';
 import StudentEventsScreen from '../screens/student/StudentEventsScreen';
 import CreateEventScreen from '../screens/student/CreateEventScreen';
 import { useStudentEvents } from '../hooks/useStudentEvents';
-import type { StudentEventDraft } from '../data/studentEventsMock';
+import { studentEventsMock, type StudentEventDraft } from '../data/studentEventsMock';
 import LocalTipsScreen from '../screens/student/LocalTipsScreen';
 import TransportGuideScreen from '../screens/student/TransportGuideScreen';
 import ExploreStaysScreen from '../screens/tourist/ExploreStaysScreen';
@@ -137,7 +137,7 @@ import {
   getApiErrorMessage,
 } from '../services/api';
 import { colors, spacing } from '../constants/theme';
-import { studentHomeMockData, tabBarWithBadgesForRole } from '../data/studentHomeMock';
+import { studentHomeMockData, tabBarWithBadgesForRole, suggestedHostsMock } from '../data/studentHomeMock';
 import {
   getQuickActionsForRole,
   homeRoleFromIntent,
@@ -147,6 +147,8 @@ import {
   guideFeaturedTourMock,
   studentRecentActivityMock,
   touristRecentActivityMock,
+  hostPerformanceMock,
+  touristFeaturedGuideMock,
 } from '../data/homeContentMock';
 import {
   destinationMock,
@@ -160,14 +162,29 @@ import {
   incomingBookingRequestsMock,
 } from '../data/bookingMock';
 import { conversationsMock } from '../data/conversationsMock';
-import { withDemoFallback } from '../utils/demoLiveMerge';
+import { withDemoFallback, withDemoFallbackValue, presentableLoading, presentableError } from '../utils/demoLiveMerge';
+import {
+  confirmDemoBooking,
+  createDemoGuideBookingRequest,
+  createDemoHostBookingRequest,
+  mergeBookingsWithLocalOverrides,
+} from '../utils/demoBookingFlow';
+import { emergencyContactsMock } from '../data/sosMock';
 import {
   hostConfirmedStaysMock,
   guideUpcomingToursMock,
+  computeEarningsFromBookings,
 } from '../data/providerBookingsMock';
+import { lodgingDirectoryMock, listingFromId } from '../data/lodgingDirectoryMock';
 import {
-  listingFromId,
-} from '../data/lodgingDirectoryMock';
+  checklistApiMock,
+  landmarksApiMock,
+  phrasesApiMock,
+  sitesApiMock,
+  topicsApiMock,
+  transportApiMock,
+  videosApiMock,
+} from '../data/contentLibraryMock';
 import { exploreSectionsMock } from '../data/touristExploreMock';
 import { welfareCheckInQuestions } from '../data/welfareMock';
 import {
@@ -176,7 +193,16 @@ import {
   matchToGuideSummary,
   matchToHostSummary,
   matchToMatchResultHost,
+  matchResultHostToHostSummary,
+  buildDemoHostProfileCache,
+  buildDemoGuideProfileCache,
+  guideSummariesToDiscoveryItems,
+  matchResultsToStayListings,
+  demoTopMatchHostId,
+  demoTopGuideId,
 } from '../data/homeFeeds';
+import { sampleMatchResults } from '../screens/student/MatchResultsScreen';
+import { suggestedGuidesMock } from '../data/guideSessionMock';
 import type { ConversationListItem } from '../types/messaging';
 import {
   hostCalendarDaysMock,
@@ -198,7 +224,7 @@ import {
   emptyStates,
   devTestingCopy,
 } from '../data/appCopy';
-import { DEMO_PASSWORD, type DemoAccount } from '../data/demoAccounts';
+import { DEMO_PASSWORD, DEMO_ACTOR_ACCOUNTS, demoPresetForAccount, type DemoAccount } from '../data/demoAccounts';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -516,6 +542,8 @@ export default function AppNavigator() {
   const [demoLoginError, setDemoLoginError] = useState<string | null>(null);
 
   const [bookings, setBookings] = useState<BookingListItem[]>([]);
+  const [localBookings, setLocalBookings] = useState<BookingListItem[]>([]);
+  const demoProfileSyncedForUser = useRef<string | null>(null);
   const [bookingFilter, setBookingFilter] = useState<BookingTabFilter>('active');
   const [lodgingFilter, setLodgingFilter] = useState<LodgingCategoryFilter>('ALL');
   const [savedLodgingIds, setSavedLodgingIds] = useState<string[]>([]);
@@ -526,8 +554,12 @@ export default function AppNavigator() {
   const [tourTypes, setTourTypes] = useState(tourTypesMock);
   const [tourBaseRate, setTourBaseRate] = useState('45');
   const [tourMaxGroupSize, setTourMaxGroupSize] = useState('8');
-  const [hostProfileCache, setHostProfileCache] = useState<Record<string, HostProfileSummary>>({});
-  const [guideProfileCache, setGuideProfileCache] = useState<Record<string, GuideProfileSummary>>({});
+  const [hostProfileCache, setHostProfileCache] = useState<Record<string, HostProfileSummary>>(
+    () => buildDemoHostProfileCache(),
+  );
+  const [guideProfileCache, setGuideProfileCache] = useState<Record<string, GuideProfileSummary>>(
+    () => buildDemoGuideProfileCache(),
+  );
   const conversationsApi = useConversations(user?.userId);
   const conversations = useMemo(
     () =>
@@ -564,6 +596,16 @@ export default function AppNavigator() {
     [providerTab.hostPending, providerTab.isLoading, providerTab.error],
   );
 
+  const guidePendingDisplay = useMemo(
+    () =>
+      withDemoFallback(
+        providerTab.guidePending,
+        incomingBookingRequestsMock.filter((request) => request.bookingType === 'GUIDE'),
+        { isLoading: providerTab.isLoading, error: providerTab.error },
+      ),
+    [providerTab.guidePending, providerTab.isLoading, providerTab.error],
+  );
+
   const hostActiveDisplay = useMemo(
     () =>
       withDemoFallback(providerTab.hostActiveBookings, hostConfirmedStaysMock, {
@@ -580,6 +622,28 @@ export default function AppNavigator() {
         error: providerTab.error,
       }),
     [providerTab.guideActiveBookings, providerTab.isLoading, providerTab.error],
+  );
+
+  // Earnings mirror the confirmed stays/tours shown on the Bookings tabs, so a
+  // demo host or guide sees payouts that match their calendar instead of an
+  // empty "No payouts yet" screen when the backend has no live earnings yet.
+  const hostEarningsDisplay = useMemo(
+    () => computeEarningsFromBookings(hostActiveDisplay, 'This month'),
+    [hostActiveDisplay],
+  );
+
+  const guideEarningsDisplay = useMemo(
+    () => computeEarningsFromBookings(guideActiveDisplay, 'This month'),
+    [guideActiveDisplay],
+  );
+
+  const studentEventsDisplay = useMemo(
+    () =>
+      withDemoFallback(studentEventsApi.events, studentEventsMock, {
+        isLoading: studentEventsApi.isLoading,
+        error: studentEventsApi.error,
+      }),
+    [studentEventsApi.events, studentEventsApi.isLoading, studentEventsApi.error],
   );
 
   const seekerSetupIncomplete = !!user && !isSeekerComplete(profileState);
@@ -611,9 +675,42 @@ export default function AppNavigator() {
     [homeApi.bookings, homeApi.isLoading, homeApi.error],
   );
 
+  const mergedBookings = useMemo(
+    () => mergeBookingsWithLocalOverrides(displayBookings, localBookings),
+    [displayBookings, localBookings],
+  );
+
   useEffect(() => {
-    setBookings(displayBookings);
-  }, [displayBookings]);
+    setBookings(mergedBookings);
+  }, [mergedBookings]);
+
+  const upsertLocalBooking = useCallback((booking: BookingListItem) => {
+    setLocalBookings((prev) => {
+      const index = prev.findIndex((item) => item.id === booking.id);
+      if (index === -1) {
+        return [booking, ...prev];
+      }
+      const next = [...prev];
+      next[index] = booking;
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!user?.userId) {
+      demoProfileSyncedForUser.current = null;
+      return;
+    }
+    const demoAccount = DEMO_ACTOR_ACCOUNTS.find((account) => account.email === user.email);
+    if (!demoAccount || demoProfileSyncedForUser.current === user.userId) {
+      return;
+    }
+    demoProfileSyncedForUser.current = user.userId;
+    void (async () => {
+      await applyDevPreset(demoPresetForAccount(demoAccount));
+      await setPrimaryIntent(demoAccount.intent);
+    })();
+  }, [user?.userId, user?.email, applyDevPreset, setPrimaryIntent]);
 
   useEffect(() => {
     if (homeApi.hostMatches.length === 0) return;
@@ -653,6 +750,16 @@ export default function AppNavigator() {
 
   const runMatchSearch = useCallback(
     async (params: MatchSearchDefaults) => {
+      const seedDemoResults = () => {
+        setHostProfileCache((prev) => {
+          const next = { ...prev };
+          for (const host of sampleMatchResults) {
+            next[host.id] = matchResultHostToHostSummary(host);
+          }
+          return next;
+        });
+      };
+
       try {
         const matches = await findMatches(
           buildSearchMatchParams(profileState, {
@@ -663,17 +770,23 @@ export default function AppNavigator() {
           }),
         );
         const hostMatches = matches.filter((m) => m.targetType === 'HOST');
-        const results = hostMatches.map(matchToMatchResultHost);
-        setHostProfileCache((prev) => {
-          const next = { ...prev };
-          for (const match of hostMatches) {
-            next[match.targetId] = matchToHostSummary(match);
-          }
-          return next;
-        });
-        return { results };
-      } catch (err) {
-        return { results: [], error: getApiErrorMessage(err) };
+        if (hostMatches.length > 0) {
+          const results = hostMatches.map(matchToMatchResultHost);
+          setHostProfileCache((prev) => {
+            const next = { ...prev };
+            for (const match of hostMatches) {
+              next[match.targetId] = matchToHostSummary(match);
+            }
+            return next;
+          });
+          return { results };
+        }
+
+        seedDemoResults();
+        return { results: sampleMatchResults };
+      } catch {
+        seedDemoResults();
+        return { results: sampleMatchResults };
       }
     },
     [profileState],
@@ -750,14 +863,46 @@ export default function AppNavigator() {
   );
 
   const guideListForSearch = useMemo(
-    () => homeApi.guideMatches.map(matchToGuideSummary),
-    [homeApi.guideMatches],
+    () =>
+      withDemoFallback(
+        homeApi.guideMatches.map(matchToGuideSummary),
+        suggestedGuidesMock,
+        { isLoading: homeApi.isLoading, error: homeApi.error },
+      ),
+    [homeApi.guideMatches, homeApi.isLoading, homeApi.error],
   );
 
   const exploreStayListings = useMemo(
-    () => hostMatchesToStayListings(homeApi.hostMatches),
-    [homeApi.hostMatches],
+    () =>
+      withDemoFallback(
+        hostMatchesToStayListings(homeApi.hostMatches),
+        matchResultsToStayListings(sampleMatchResults),
+        { isLoading: homeApi.isLoading, error: homeApi.error },
+      ),
+    [homeApi.hostMatches, homeApi.isLoading, homeApi.error],
   );
+
+  const suggestedHostsDisplay = useMemo(
+    () =>
+      withDemoFallback(homeApi.suggestedHosts, suggestedHostsMock, {
+        isLoading: homeApi.isLoading,
+        error: homeApi.error,
+      }),
+    [homeApi.suggestedHosts, homeApi.isLoading, homeApi.error],
+  );
+
+  const suggestedGuidesDisplay = useMemo(
+    () =>
+      withDemoFallback(
+        homeApi.suggestedGuides,
+        guideSummariesToDiscoveryItems(suggestedGuidesMock),
+        { isLoading: homeApi.isLoading, error: homeApi.error },
+      ),
+    [homeApi.suggestedGuides, homeApi.isLoading, homeApi.error],
+  );
+
+  const displayTopMatchHostId = homeApi.topMatchTargetId ?? demoTopMatchHostId;
+  const displayTopGuideId = homeApi.topGuideTargetId ?? demoTopGuideId;
 
   const guideTourSections = useMemo(
     () => guideTourSectionsFromTypes(tourTypes),
@@ -786,26 +931,107 @@ export default function AppNavigator() {
   const contentLandmarks = useMapLandmarks(cityLabel, !!user);
   const contentVideos = useVideos(cityLabel, undefined, !!user);
 
+  const emergencyContactsDisplay = useMemo(
+    () =>
+      withDemoFallback(contentEmergency.data, emergencyContactsMock, {
+        isLoading: contentEmergency.isLoading,
+        error: contentEmergency.error,
+      }),
+    [contentEmergency.data, contentEmergency.isLoading, contentEmergency.error],
+  );
+
+  const lodgingListingsDisplay = useMemo(
+    () =>
+      withDemoFallback(lodgingApi.listings, lodgingDirectoryMock, {
+        isLoading: lodgingApi.isLoading,
+        error: lodgingApi.error,
+      }),
+    [lodgingApi.listings, lodgingApi.isLoading, lodgingApi.error],
+  );
+
+  const phrasesDisplay = useMemo(
+    () =>
+      withDemoFallback(contentPhrases.data, phrasesApiMock, {
+        isLoading: contentPhrases.isLoading,
+        error: contentPhrases.error,
+      }),
+    [contentPhrases.data, contentPhrases.isLoading, contentPhrases.error],
+  );
+
+  const topicsDisplay = useMemo(
+    () =>
+      withDemoFallback(contentTopics.data, topicsApiMock, {
+        isLoading: contentTopics.isLoading,
+        error: contentTopics.error,
+      }),
+    [contentTopics.data, contentTopics.isLoading, contentTopics.error],
+  );
+
+  const transportDisplay = useMemo(
+    () =>
+      withDemoFallback(contentTransport.data, transportApiMock, {
+        isLoading: contentTransport.isLoading,
+        error: contentTransport.error,
+      }),
+    [contentTransport.data, contentTransport.isLoading, contentTransport.error],
+  );
+
+  const sitesDisplay = useMemo(
+    () =>
+      withDemoFallback(contentSites.data, sitesApiMock, {
+        isLoading: contentSites.isLoading,
+        error: contentSites.error,
+      }),
+    [contentSites.data, contentSites.isLoading, contentSites.error],
+  );
+
+  const checklistContentDisplay = useMemo(
+    () =>
+      withDemoFallback(contentChecklist.data, checklistApiMock, {
+        isLoading: contentChecklist.isLoading,
+        error: contentChecklist.error,
+      }),
+    [contentChecklist.data, contentChecklist.isLoading, contentChecklist.error],
+  );
+
+  const landmarksDisplay = useMemo(
+    () =>
+      withDemoFallback(contentLandmarks.data, landmarksApiMock, {
+        isLoading: contentLandmarks.isLoading,
+        error: contentLandmarks.error,
+      }),
+    [contentLandmarks.data, contentLandmarks.isLoading, contentLandmarks.error],
+  );
+
+  const videosDisplay = useMemo(
+    () =>
+      withDemoFallback(contentVideos.data, videosApiMock, {
+        isLoading: contentVideos.isLoading,
+        error: contentVideos.error,
+      }),
+    [contentVideos.data, contentVideos.isLoading, contentVideos.error],
+  );
+
   const checklistTasks = useMemo(
     () =>
-      contentChecklist.data.map((item) => ({
+      checklistContentDisplay.map((item) => ({
         id: item.itemKey,
         label: item.label,
         completed: checklistCompleted.includes(item.itemKey),
       })),
-    [contentChecklist.data, checklistCompleted],
+    [checklistContentDisplay, checklistCompleted],
   );
 
   const sitesDirectoryItems = useMemo(
     () =>
-      contentSites.data.map((site) => ({
+      sitesDisplay.map((site) => ({
         id: site.siteKey,
         name: site.name,
         city: site.city,
         description: site.description,
         admission: site.admission ?? '',
       })),
-    [contentSites.data],
+    [sitesDisplay],
   );
 
   useEffect(() => {
@@ -1022,22 +1248,36 @@ export default function AppNavigator() {
     [cityLabel, checkIn, checkOut, runMatchSearch],
   );
 
-  const homeDataError = homeApi.error;
-  const isHomeLoading = homeApi.isLoading;
+  const homeDataError = presentableError(
+    homeApi.error,
+    homeApi.bookings,
+    displayBookings,
+  );
+  const isHomeLoading = presentableLoading(
+    homeApi.isLoading,
+    homeApi.hostMatches,
+    suggestedHostsDisplay,
+  );
   const studentLive = buildStudentHomeStatus(
-    bookings,
+    mergedBookings,
     cityLabel,
     seekerSetupIncomplete,
     homeDataError,
   );
   const touristLive = buildTouristHomeStatus(
-    bookings,
+    mergedBookings,
     cityLabel,
     seekerSetupIncomplete,
     homeDataError,
   );
-  const hostLive = buildHostHomeStatus(hostIncoming, providerTab.error ?? homeDataError);
-  const guideLive = buildGuideHomeStatus(guideIncoming, providerTab.error ?? homeDataError);
+  const hostLive = buildHostHomeStatus(
+    hostIncoming,
+    presentableError(providerTab.error ?? homeApi.error, providerTab.hostPending, hostPendingDisplay),
+  );
+  const guideLive = buildGuideHomeStatus(
+    guideIncoming,
+    presentableError(providerTab.error ?? homeApi.error, providerTab.guidePending, guidePendingDisplay),
+  );
 
   const homeProps = useMemo(
     () => ({
@@ -1047,8 +1287,12 @@ export default function AppNavigator() {
       userInitials: resolvedInitials,
       activeTabId: 'home',
       tabBarItems,
-      featuredMatch: homeApi.featuredMatch ?? undefined,
-      suggestedHosts: homeApi.suggestedHosts,
+      featuredMatch: withDemoFallbackValue(
+        homeApi.featuredMatch,
+        studentHomeMockData.featuredMatch!,
+        { isLoading: homeApi.isLoading, error: homeApi.error },
+      ),
+      suggestedHosts: suggestedHostsDisplay,
       recommendedSectionTitle: 'Prep before you arrive',
       showMatchScores,
       isHomeLoading,
@@ -1067,7 +1311,7 @@ export default function AppNavigator() {
       tabBarItems,
       personalizedGreeting,
       homeApi.featuredMatch,
-      homeApi.suggestedHosts,
+      suggestedHostsDisplay,
       showMatchScores,
       isHomeLoading,
       homeDataError,
@@ -1105,7 +1349,11 @@ export default function AppNavigator() {
       cityLabel,
       statusIcon: '🌍',
       statusLabel: touristLive.statusLabel,
-      featuredGuide: homeApi.featuredGuide ?? undefined,
+      featuredGuide: withDemoFallbackValue(
+        homeApi.featuredGuide,
+        touristFeaturedGuideMock,
+        { isLoading: homeApi.isLoading, error: homeApi.error },
+      ),
       quickActions: getQuickActionsForRole('BROWSE'),
       sections: exploreSectionsMock,
       exploreSectionTitle: `Explore ${cityLabel.split(',')[0]?.trim() || cityLabel}`,
@@ -1117,8 +1365,10 @@ export default function AppNavigator() {
       tabBarItems,
       activeTabId: 'home',
       showSetupBanner: false,
+      suggestedGuides: suggestedGuidesDisplay,
+      showMatchScores,
     }),
-    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide],
+    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeDataError, suggestedGuidesDisplay, showMatchScores],
   );
 
   const exploreHomeProps = useMemo(
@@ -1129,8 +1379,12 @@ export default function AppNavigator() {
       cityLabel,
       statusIcon: '🌍',
       statusLabel: touristLive.statusLabel,
-      featuredGuide: homeApi.featuredGuide ?? undefined,
-      suggestedGuides: homeApi.suggestedGuides,
+      featuredGuide: withDemoFallbackValue(
+        homeApi.featuredGuide,
+        touristFeaturedGuideMock,
+        { isLoading: homeApi.isLoading, error: homeApi.error },
+      ),
+      suggestedGuides: suggestedGuidesDisplay,
       showMatchScores,
       isHomeLoading,
       homeDataError,
@@ -1152,13 +1406,104 @@ export default function AppNavigator() {
       cityLabel,
       tabBarItems,
       homeApi.featuredGuide,
-      homeApi.suggestedGuides,
+      suggestedGuidesDisplay,
       showMatchScores,
       isHomeLoading,
       homeDataError,
       seekerSetupIncomplete,
       primaryIntent,
     ],
+  );
+
+  const conversationsLoading = presentableLoading(
+    conversationsApi.isLoading,
+    conversationsApi.conversations,
+    conversations,
+  );
+  const conversationsError = presentableError(
+    conversationsApi.error,
+    conversationsApi.conversations,
+    conversations,
+  );
+  const hostRequestsLoading = presentableLoading(
+    providerTab.isLoading,
+    providerTab.hostPending,
+    hostPendingDisplay,
+  );
+  const hostRequestsError = presentableError(
+    providerTab.error,
+    providerTab.hostPending,
+    hostPendingDisplay,
+  );
+  const hostBookingsLoading = presentableLoading(
+    providerTab.isLoading,
+    providerTab.hostActiveBookings,
+    hostActiveDisplay,
+  );
+  const hostBookingsError = presentableError(
+    providerTab.error,
+    providerTab.hostActiveBookings,
+    hostActiveDisplay,
+  );
+  const guideBookingsLoading = presentableLoading(
+    providerTab.isLoading,
+    providerTab.guideActiveBookings,
+    guideActiveDisplay,
+  );
+  const guideBookingsError = presentableError(
+    providerTab.error,
+    providerTab.guideActiveBookings,
+    guideActiveDisplay,
+  );
+  const hostEarningsLoading = presentableLoading(
+    providerTab.isLoading,
+    providerTab.hostEarningsLineItems,
+    hostEarningsDisplay.lineItems,
+  );
+  const hostEarningsError = presentableError(
+    providerTab.error,
+    providerTab.hostEarningsLineItems,
+    hostEarningsDisplay.lineItems,
+  );
+  const guideEarningsLoading = presentableLoading(
+    providerTab.isLoading,
+    providerTab.earningsLineItems,
+    guideEarningsDisplay.lineItems,
+  );
+  const guideEarningsError = presentableError(
+    providerTab.error,
+    providerTab.earningsLineItems,
+    guideEarningsDisplay.lineItems,
+  );
+  const lodgingLoading = presentableLoading(
+    lodgingApi.isLoading,
+    lodgingApi.listings,
+    lodgingListingsDisplay,
+  );
+  const lodgingError = presentableError(
+    lodgingApi.error,
+    lodgingApi.listings,
+    lodgingListingsDisplay,
+  );
+  const videosLoading = presentableLoading(
+    contentVideos.isLoading,
+    contentVideos.data,
+    videosDisplay,
+  );
+  const videosError = presentableError(
+    contentVideos.error,
+    contentVideos.data,
+    videosDisplay,
+  );
+  const studentEventsLoading = presentableLoading(
+    studentEventsApi.isLoading,
+    studentEventsApi.events,
+    studentEventsDisplay,
+  );
+  const studentEventsError = presentableError(
+    studentEventsApi.error,
+    studentEventsApi.events,
+    studentEventsDisplay,
   );
 
   const initialRoute = primaryIntent
@@ -1169,6 +1514,77 @@ export default function AppNavigator() {
     bookingType: 'HOST' | 'GUIDE',
     override?: BookingContext,
   ): BookingContext => override ?? getBookingContext(bookingType);
+
+  const submitHostBookingRequest = useCallback(
+    async (host: HostProfileSummary) => {
+      const bookingContext = getBookingContext('HOST');
+      try {
+        await createBooking({
+          bookingType: 'HOST',
+          hostOrGuideId: host.id,
+          matchId: host.matchId,
+          checkIn,
+          checkOut,
+          nightlyRate: host.pricePerNight,
+          guestMessage: 'Homestay request via NestBridge',
+        });
+        homeApi.refresh();
+      } catch {
+        upsertLocalBooking(
+          createDemoHostBookingRequest(host, checkIn, checkOut, bookingContext),
+        );
+      }
+    },
+    [checkIn, checkOut, getBookingContext, homeApi, upsertLocalBooking],
+  );
+
+  const submitGuideBookingRequest = useCallback(
+    async (guide: GuideProfileSummary) => {
+      const bookingContext = getBookingContext('GUIDE');
+      try {
+        await createBooking({
+          bookingType: 'GUIDE',
+          hostOrGuideId: guide.id,
+          matchId: guide.matchId,
+          sessionDate,
+          sessionStartTime: DEFAULT_SESSION_TIME,
+          sessionDurationHours: guide.sessionDurationHours,
+          sessionRate: guide.pricePerSession,
+          guestMessage: 'Guide session request via NestBridge',
+        });
+        homeApi.refresh();
+      } catch {
+        upsertLocalBooking(
+          createDemoGuideBookingRequest(
+            guide,
+            sessionDate,
+            DEFAULT_SESSION_TIME,
+            bookingContext,
+          ),
+        );
+      }
+    },
+    [sessionDate, getBookingContext, homeApi, upsertLocalBooking],
+  );
+
+  const confirmBookingWithDemoFallback = useCallback(
+    async (bookingId: string): Promise<BookingListItem | null> => {
+      try {
+        await confirmBooking(bookingId);
+        homeApi.refresh();
+        return mergedBookings.find((item) => item.id === bookingId) ?? null;
+      } catch {
+        const booking = mergedBookings.find((item) => item.id === bookingId);
+        if (!booking) {
+          return null;
+        }
+        const confirmed = confirmDemoBooking(booking);
+        upsertLocalBooking(confirmed);
+        return confirmed;
+      }
+    },
+    [homeApi, mergedBookings, upsertLocalBooking],
+  );
 
   return (
     <Stack.Navigator
@@ -1210,7 +1626,12 @@ export default function AppNavigator() {
             {...browseHomeProps}
             {...mainTabSosProps(navigation)}
             onSectionPress={(sectionId) => handleExploreSectionPress(navigation, sectionId)}
-            onFeaturedGuidePress={() => navigation.navigate('GuideSearch')}
+            onFeaturedGuidePress={() =>
+              navigation.navigate('GuideProfile', { guideId: displayTopGuideId })
+            }
+            onSuggestedGuidePress={(guideId) =>
+              navigation.navigate('GuideProfile', { guideId })
+            }
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'BrowseHome')}
           />
@@ -1226,8 +1647,8 @@ export default function AppNavigator() {
             tabBarItems={tabBarItems}
             activeTabId="messages"
             emptyState={emptyStates.messages}
-            isLoading={conversationsApi.isLoading}
-            errorMessage={conversationsApi.error}
+            isLoading={conversationsLoading}
+            errorMessage={conversationsError}
             {...mainTabSosProps(navigation)}
             onConversationPress={(conversationId) =>
               navigation.navigate('Chat', { conversationId })
@@ -1270,8 +1691,8 @@ export default function AppNavigator() {
             requests={hostPendingDisplay}
             tabBarItems={hostTabBarItems}
             activeTabId="requests"
-            isLoading={providerTab.isLoading}
-            errorMessage={providerTab.error}
+            isLoading={hostRequestsLoading}
+            errorMessage={hostRequestsError}
             emptyState={emptyStates.hostRequests}
             {...mainTabSosProps(navigation)}
             onRequestPress={(requestId) =>
@@ -1290,8 +1711,8 @@ export default function AppNavigator() {
             bookings={hostActiveDisplay}
             tabBarItems={hostTabBarItems}
             activeTabId="bookings"
-            isLoading={providerTab.isLoading}
-            errorMessage={providerTab.error}
+            isLoading={hostBookingsLoading}
+            errorMessage={hostBookingsError}
             emptyState={emptyStates.hostBookings}
             {...mainTabSosProps(navigation)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
@@ -1304,12 +1725,12 @@ export default function AppNavigator() {
           <HostEarningsTabScreen
             userName={firstName}
             userInitials={resolvedInitials}
-            summary={providerTab.hostEarningsSummary}
-            lineItems={providerTab.hostEarningsLineItems}
+            summary={hostEarningsDisplay.summary}
+            lineItems={hostEarningsDisplay.lineItems}
             tabBarItems={hostTabBarItems}
             activeTabId="earnings"
-            isLoading={providerTab.isLoading}
-            errorMessage={providerTab.error}
+            isLoading={hostEarningsLoading}
+            errorMessage={hostEarningsError}
             emptyState={emptyStates.hostEarnings}
             {...mainTabSosProps(navigation)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
@@ -1325,8 +1746,8 @@ export default function AppNavigator() {
             bookings={guideActiveDisplay}
             tabBarItems={guideTabBarItems}
             activeTabId="bookings"
-            isLoading={providerTab.isLoading}
-            errorMessage={providerTab.error}
+            isLoading={guideBookingsLoading}
+            errorMessage={guideBookingsError}
             emptyState={emptyStates.guideBookings}
             onBookingPress={(requestId) =>
               navigation.navigate('SessionReview', { requestId })
@@ -1342,12 +1763,12 @@ export default function AppNavigator() {
           <GuideEarningsTabScreen
             userName={firstName}
             userInitials={resolvedInitials}
-            summary={providerTab.earningsSummary}
-            lineItems={providerTab.earningsLineItems}
+            summary={guideEarningsDisplay.summary}
+            lineItems={guideEarningsDisplay.lineItems}
             tabBarItems={guideTabBarItems}
             activeTabId="earnings"
-            isLoading={providerTab.isLoading}
-            errorMessage={providerTab.error}
+            isLoading={guideEarningsLoading}
+            errorMessage={guideEarningsError}
             emptyState={emptyStates.guideEarnings}
             {...mainTabSosProps(navigation)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'GuideHome')}
@@ -1686,13 +2107,9 @@ export default function AppNavigator() {
             {...mainTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
             onFeaturedMatchPress={() => {
-              if (homeApi.topMatchTargetId) {
-                navigation.navigate('HostProfile', {
-                  hostId: homeApi.topMatchTargetId,
-                });
-              } else {
-                navigation.navigate('MatchSearch');
-              }
+              navigation.navigate('HostProfile', {
+                hostId: displayTopMatchHostId,
+              });
             }}
             onSuggestedHostPress={(hostId) =>
               navigation.navigate('HostProfile', { hostId })
@@ -1715,13 +2132,9 @@ export default function AppNavigator() {
             {...mainTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
             onFeaturedGuidePress={() => {
-              if (homeApi.topGuideTargetId) {
-                navigation.navigate('GuideProfile', {
-                  guideId: homeApi.topGuideTargetId,
-                });
-              } else {
-                navigation.navigate('GuideSearch');
-              }
+              navigation.navigate('GuideProfile', {
+                guideId: displayTopGuideId,
+              });
             }}
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
@@ -1745,9 +2158,7 @@ export default function AppNavigator() {
                 ctaLabel: 'Review request →',
                 initials: firstRequest.studentInitials,
               }
-            : homeDataError
-              ? undefined
-              : hostFeaturedRequestMock;
+            : hostFeaturedRequestMock;
 
           return (
             <ProviderHomeDashboard
@@ -1759,7 +2170,7 @@ export default function AppNavigator() {
               statusLabel={hostLive.statusLabel}
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('HOST')}
-              performanceStats={[]}
+              performanceStats={hostPerformanceMock}
               requests={hostIncoming}
               emptyState={emptyStates.hostRequests}
               recentActivity={hostLive.recentActivity}
@@ -1812,9 +2223,7 @@ export default function AppNavigator() {
                 ctaLabel: 'View details →',
                 initials: firstRequest.studentInitials,
               }
-            : homeDataError
-              ? undefined
-              : guideFeaturedTourMock;
+            : guideFeaturedTourMock;
 
           return (
             <ProviderHomeDashboard
@@ -1889,13 +2298,12 @@ export default function AppNavigator() {
               if (!canBookHomestay && !canBookGuideSession) {
                 return;
               }
-              try {
-                await confirmBooking(bookingId);
-                homeApi.refresh();
-                navigation.navigate('BookingConfirmed', { bookingId });
-              } catch (err) {
-                Alert.alert('Payment failed', getApiErrorMessage(err));
+              const confirmed = await confirmBookingWithDemoFallback(bookingId);
+              if (!confirmed) {
+                Alert.alert('Payment failed', 'We could not find that booking.');
+                return;
               }
+              navigation.navigate('BookingConfirmed', { bookingId });
             }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
             onBack={
@@ -1960,16 +2368,7 @@ export default function AppNavigator() {
             onContinueSetup={() => continueSeekerSetup(navigation)}
             onBack={() => navigation.goBack()}
             onSendRequest={async (host) => {
-              await createBooking({
-                bookingType: 'HOST',
-                hostOrGuideId: host.id,
-                matchId: host.matchId,
-                checkIn,
-                checkOut,
-                nightlyRate: host.pricePerNight,
-                guestMessage: 'Homestay request via NestBridge',
-              });
-              homeApi.refresh();
+              await submitHostBookingRequest(host);
               setBookingFilter('pending');
               navigation.navigate('StudentBookings');
             }}
@@ -1979,7 +2378,9 @@ export default function AppNavigator() {
 
       <Stack.Screen name="BookingConfirmed">
         {({ navigation, route }) => {
-          const booking = bookings.find((b) => b.id === route.params.bookingId);
+          const booking =
+            mergedBookings.find((b) => b.id === route.params.bookingId) ??
+            bookings.find((b) => b.id === route.params.bookingId);
           if (!booking) {
             return (
               <RouteErrorState
@@ -2056,17 +2457,7 @@ export default function AppNavigator() {
             onContinueSetup={() => continueSeekerSetup(navigation)}
             onBack={() => navigation.goBack()}
             onSendRequest={async (guide) => {
-              await createBooking({
-                bookingType: 'GUIDE',
-                hostOrGuideId: guide.id,
-                matchId: guide.matchId,
-                sessionDate,
-                sessionStartTime: DEFAULT_SESSION_TIME,
-                sessionDurationHours: guide.sessionDurationHours,
-                sessionRate: guide.pricePerSession,
-                guestMessage: 'Guide session request via NestBridge',
-              });
-              homeApi.refresh();
+              await submitGuideBookingRequest(guide);
               setBookingFilter('pending');
               navigation.navigate('StudentBookings');
             }}
@@ -2078,9 +2469,9 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <LodgingDirectoryScreen
             cityLabel={cityLabel}
-            listings={lodgingApi.listings}
-            isLoading={lodgingApi.isLoading}
-            errorMessage={lodgingApi.error}
+            listings={lodgingListingsDisplay}
+            isLoading={lodgingLoading}
+            errorMessage={lodgingError}
             activeFilter={lodgingFilter}
             savedCount={savedLodgingIds.length}
             onFilterChange={setLodgingFilter}
@@ -2095,7 +2486,7 @@ export default function AppNavigator() {
       <Stack.Screen name="LodgingDetail">
         {({ navigation, route }) => {
           const listing =
-            lodgingListingFromId(route.params.listingId, lodgingApi.listings) ??
+            lodgingListingFromId(route.params.listingId, lodgingListingsDisplay) ??
             listingFromId(route.params.listingId);
           const isSaved = savedLodgingIds.includes(listing.id);
           return (
@@ -2167,7 +2558,7 @@ export default function AppNavigator() {
       <Stack.Screen name="SOS">
         {({ navigation }) => (
           <SOSScreen
-            emergencyContacts={contentEmergency.data.map((contact) => ({
+            emergencyContacts={emergencyContactsDisplay.map((contact) => ({
               label: contact.label,
               number: contact.number,
             }))}
@@ -2198,9 +2589,9 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <VideoLibraryScreen
             cityLabel={cityLabel}
-            videos={contentVideos.data}
-            isLoading={contentVideos.isLoading}
-            errorMessage={contentVideos.error}
+            videos={videosDisplay}
+            isLoading={videosLoading}
+            errorMessage={videosError}
             onBack={() => navigation.goBack()}
             onVideoPress={(videoKey) => navigation.navigate('VideoDetail', { videoKey })}
           />
@@ -2245,14 +2636,14 @@ export default function AppNavigator() {
             userInitials={resolvedInitials}
             statusIcon={studentHomeMockData.statusIcon}
             statusLabel={studentLive.statusLabel}
-            phrases={contentPhrases.data.map((phrase) => ({
+            phrases={phrasesDisplay.map((phrase) => ({
               id: phrase.id,
               emoji: phrase.emoji,
               phrase: phrase.phrase,
               translation: phrase.translation,
               hasAudio: phrase.hasAudio,
             }))}
-            topics={contentTopics.data.map((topic) => ({
+            topics={topicsDisplay.map((topic) => ({
               id: topic.id,
               emoji: topic.emoji,
               title: topic.title,
@@ -2271,7 +2662,7 @@ export default function AppNavigator() {
             userInitials={resolvedInitials}
             statusIcon={studentHomeMockData.statusIcon}
             statusLabel={studentLive.statusLabel}
-            tabs={contentTransport.data.map((tab) => ({
+            tabs={transportDisplay.map((tab) => ({
               id: tab.id,
               label: tab.label,
               routes: tab.routes.map((route) => ({
@@ -2314,7 +2705,7 @@ export default function AppNavigator() {
             statusLabel={touristLive.statusLabel}
             regionLabel="Greater Accra Region"
             downloadSize="Offline landmarks from NestBridge"
-            landmarks={contentLandmarks.data.map((landmark) => ({
+            landmarks={landmarksDisplay.map((landmark) => ({
               id: landmark.id,
               name: landmark.name,
               topPercent: landmark.topPercent,
@@ -2502,10 +2893,10 @@ export default function AppNavigator() {
       <Stack.Screen name="StudentEvents">
         {({ navigation }) => (
           <StudentEventsScreen
-            events={studentEventsApi.events}
+            events={studentEventsDisplay}
             joinedIds={studentEventsApi.joinedIds}
-            isLoading={studentEventsApi.isLoading}
-            error={studentEventsApi.error}
+            isLoading={studentEventsLoading}
+            error={studentEventsError}
             onBack={() => navigation.goBack()}
             onCreatePress={() => navigation.navigate('CreateEvent')}
             onRetry={studentEventsApi.refresh}
