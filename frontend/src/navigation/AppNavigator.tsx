@@ -32,7 +32,6 @@ import SiteDetailRoute from './SiteDetailRoute';
 import VideoDetailRoute from './VideoDetailRoute';
 import VideoLibraryScreen from '../screens/shared/VideoLibraryScreen';
 import RouteErrorState from '../components/RouteErrorState';
-import StackSosLayout from '../components/StackSosLayout';
 import { BookingHostRoute, SessionBookingGuideRoute } from './bookingRoutes';
 import SponsorListScreen from '../screens/Sponsor/SponsorListScreen';
 import SponsorDetailScreen from '../screens/Sponsor/SponsorDetailScreen';
@@ -104,8 +103,7 @@ import {
 import {
   guideTourSectionsFromTypes,
   handleProfileCulturalItem,
-  mainTabSosProps,
-  shouldWrapStackSos,
+  homeTabSosProps,
 } from './mainTabSos';
 import type { DevHomeRoute } from '../utils/devTestingPresets';
 import type { AccountProfileState } from '../types/accountProfile';
@@ -1590,16 +1588,6 @@ export default function AppNavigator() {
     <Stack.Navigator
       initialRouteName={initialRoute}
       screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
-      screenLayout={({ children, navigation, route }) => {
-        if (!shouldWrapStackSos(route.name)) {
-          return children;
-        }
-        return (
-          <StackSosLayout onSosPress={() => navigation.navigate('SOS')}>
-            {children}
-          </StackSosLayout>
-        );
-      }}
     >
       <Stack.Screen name="IntentSelect">
         {({ navigation }) => (
@@ -1624,7 +1612,6 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <BrowseHomeScreen
             {...browseHomeProps}
-            {...mainTabSosProps(navigation)}
             onSectionPress={(sectionId) => handleExploreSectionPress(navigation, sectionId)}
             onFeaturedGuidePress={() =>
               navigation.navigate('GuideProfile', { guideId: displayTopGuideId })
@@ -1649,7 +1636,6 @@ export default function AppNavigator() {
             emptyState={emptyStates.messages}
             isLoading={conversationsLoading}
             errorMessage={conversationsError}
-            {...mainTabSosProps(navigation)}
             onConversationPress={(conversationId) =>
               navigation.navigate('Chat', { conversationId })
             }
@@ -1694,7 +1680,6 @@ export default function AppNavigator() {
             isLoading={hostRequestsLoading}
             errorMessage={hostRequestsError}
             emptyState={emptyStates.hostRequests}
-            {...mainTabSosProps(navigation)}
             onRequestPress={(requestId) =>
               navigation.navigate('MatchRequestReview', { requestId })
             }
@@ -1714,7 +1699,6 @@ export default function AppNavigator() {
             isLoading={hostBookingsLoading}
             errorMessage={hostBookingsError}
             emptyState={emptyStates.hostBookings}
-            {...mainTabSosProps(navigation)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
           />
         )}
@@ -1732,7 +1716,6 @@ export default function AppNavigator() {
             isLoading={hostEarningsLoading}
             errorMessage={hostEarningsError}
             emptyState={emptyStates.hostEarnings}
-            {...mainTabSosProps(navigation)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
           />
         )}
@@ -1752,7 +1735,6 @@ export default function AppNavigator() {
             onBookingPress={(requestId) =>
               navigation.navigate('SessionReview', { requestId })
             }
-            {...mainTabSosProps(navigation)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'GuideHome')}
           />
         )}
@@ -1770,7 +1752,6 @@ export default function AppNavigator() {
             isLoading={guideEarningsLoading}
             errorMessage={guideEarningsError}
             emptyState={emptyStates.guideEarnings}
-            {...mainTabSosProps(navigation)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'GuideHome')}
           />
         )}
@@ -1878,7 +1859,6 @@ export default function AppNavigator() {
             categories={SEARCH_CATEGORIES}
             tabBarItems={tabBarItems}
             activeTabId="search"
-            {...mainTabSosProps(navigation)}
             onBack={() => navigation.goBack()}
             onCategoryPress={(categoryId) => {
               if (categoryId === 'homestays') {
@@ -2036,7 +2016,6 @@ export default function AppNavigator() {
               data={kycPromptForTrack(track)}
               onVerifyNow={() => navigation.navigate('OnboardingReady', { track })}
               onVerifyLater={() => navigation.navigate('OnboardingReady', { track })}
-              onSosPress={() => navigation.navigate('SOS')}
             />
           );
         }}
@@ -2104,7 +2083,7 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentHomeDashboard
             {...homeProps}
-            {...mainTabSosProps(navigation)}
+            {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
             onFeaturedMatchPress={() => {
               navigation.navigate('HostProfile', {
@@ -2129,7 +2108,7 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <ExploreHomeScreen
             {...exploreHomeProps}
-            {...mainTabSosProps(navigation)}
+            {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
             onFeaturedGuidePress={() => {
               navigation.navigate('GuideProfile', {
@@ -2177,7 +2156,7 @@ export default function AppNavigator() {
               reminder={hostLive.reminder}
               tabBarItems={hostTabBarItems}
               activeTabId="home"
-              {...mainTabSosProps(navigation)}
+              {...homeTabSosProps(navigation)}
               onFeaturedPress={() => {
                 if (firstRequest) {
                   navigation.navigate('MatchRequestReview', {
@@ -2243,7 +2222,7 @@ export default function AppNavigator() {
               reminder={guideLive.reminder}
               tabBarItems={guideTabBarItems}
               activeTabId="home"
-              {...mainTabSosProps(navigation)}
+              {...homeTabSosProps(navigation)}
               onFeaturedPress={() => {
                 if (firstRequest) {
                   navigation.navigate('SessionReview', { requestId: firstRequest.id });
@@ -2269,7 +2248,6 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentBookingsScreen
             {...bookingsTabProps}
-            {...mainTabSosProps(navigation)}
             onFilterChange={setBookingFilter}
             onBookingPress={(bookingId) => {
               const booking = bookings.find((entry) => entry.id === bookingId);
@@ -2323,7 +2301,6 @@ export default function AppNavigator() {
             {...matchSearchProps}
             tabBarItems={tabBarItems}
             activeTabId="search"
-            {...mainTabSosProps(navigation)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
             onBack={() => navigation.goBack()}
             onHostPress={(hostId) =>
@@ -2532,7 +2509,6 @@ export default function AppNavigator() {
               questions={welfareCheckInQuestions}
               alreadyCompleted={alreadyCompleted}
               onBack={() => navigation.goBack()}
-              onSosPress={() => navigation.navigate('SOS')}
               onSubmit={() => {
                 setCompletedWelfareCheckIns((prev) =>
                   prev.includes(bookingId) ? prev : [...prev, bookingId],
@@ -2927,7 +2903,6 @@ export default function AppNavigator() {
             onSponsorPress={(sponsorId) =>
               navigation.navigate('SponsorDetail', { sponsorId })
             }
-            onSosPress={() => navigation.navigate('SOS')}
           />
         )}
       </Stack.Screen>
@@ -2953,7 +2928,6 @@ export default function AppNavigator() {
                   sponsorId: sponsor.id,
                 })
               }
-              onSosPress={() => navigation.navigate('SOS')}
             />
           );
         }}
@@ -2980,7 +2954,6 @@ export default function AppNavigator() {
               }}
               onBack={() => navigation.goBack()}
               onReturnToList={() => navigation.navigate('SponsorList')}
-              onSosPress={() => navigation.navigate('SOS')}
             />
           );
         }}
