@@ -2,11 +2,16 @@ import type { FeaturedHomeCardProps } from '../components/FeaturedHomeCard';
 import type { DiscoveryListingItem } from '../components/DiscoveryListingSection';
 import type { MatchResult, MatchFindParams } from '../services/api';
 import type { MatchResultHost } from '../screens/student/MatchResultsScreen';
-import { sampleMatchResults } from '../screens/student/MatchResultsScreen';
+import {
+  allSampleMatchResults,
+  demoTopMatchHostIdForCity,
+  sampleMatchResultsForCity,
+} from './matchResultsMock';
 import type { SuggestedHostItem } from '../screens/student/StudentHomeDashboard';
 import type { GuideProfileSummary, HostProfileSummary } from '../types/booking';
 import type { StayListing } from './featureScreensMock';
 import type { AccountProfileState } from '../types/accountProfile';
+import { normalizeCity } from './ghanaReference';
 import { FLEXIBLE_POLICY } from './bookingMock';
 import { suggestedGuidesMock } from './guideSessionMock';
 
@@ -166,7 +171,7 @@ export function matchResultHostToHostSummary(host: MatchResultHost): HostProfile
 
 export function buildDemoHostProfileCache(): Record<string, HostProfileSummary> {
   const cache: Record<string, HostProfileSummary> = {};
-  for (const host of sampleMatchResults) {
+  for (const host of allSampleMatchResults) {
     cache[host.id] = matchResultHostToHostSummary(host);
   }
   return cache;
@@ -206,7 +211,8 @@ export function matchResultsToStayListings(results: MatchResultHost[]): StayList
   }));
 }
 
-export const demoTopMatchHostId = sampleMatchResults[0]?.id ?? 'host-1';
+export { demoTopMatchHostIdForCity, sampleMatchResultsForCity } from './matchResultsMock';
+export const demoTopMatchHostId = demoTopMatchHostIdForCity('Accra');
 export const demoTopGuideId = suggestedGuidesMock[0]?.id ?? 'guide-1';
 
 export function buildHostMatchParams(
@@ -214,7 +220,7 @@ export function buildHostMatchParams(
   overrides?: Partial<MatchFindParams>,
 ): MatchFindParams {
   const data = profileState.seekerSetup.data;
-  const city = data.city?.split(',')[0]?.trim() || data.city || 'Accra';
+  const city = data.city ? normalizeCity(data.city) : 'Accra';
   return {
     city,
     checkIn: data.arrivalDate || undefined,
@@ -233,7 +239,7 @@ export function buildGuideMatchParams(
   overrides?: Partial<MatchFindParams>,
 ): MatchFindParams {
   const data = profileState.seekerSetup.data;
-  const city = data.city?.split(',')[0]?.trim() || data.city || 'Accra';
+  const city = data.city ? normalizeCity(data.city) : 'Accra';
   return {
     city,
     maxBudget: 300,
@@ -251,8 +257,16 @@ export function buildSearchMatchParams(
     budgetMax: number;
   },
 ): MatchFindParams {
+  const profileCity = profileState.seekerSetup.data.city
+    ? normalizeCity(profileState.seekerSetup.data.city)
+    : undefined;
+  const searchCity = search.destinationCity
+    ? normalizeCity(search.destinationCity)
+    : undefined;
+  const city = searchCity || profileCity || 'Accra';
+
   return {
-    city: search.destinationCity.split(',')[0]?.trim() || search.destinationCity,
+    city,
     checkIn: search.checkIn,
     checkOut: search.checkOut,
     maxBudget: search.budgetMax,

@@ -4,6 +4,20 @@ import { presetHomeDashboard } from '../utils/devTestingPresets';
 /** Password for every seeded @nestbridge.app demo account (see V4 migration). */
 export const DEMO_PASSWORD = 'password';
 
+export function demoFirstName(fullName: string): string {
+  return fullName.split(' ')[0]?.trim() || fullName.trim();
+}
+
+export function demoInitials(fullName: string): string {
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export interface DemoAccount {
   id: string;
   /** Short role label shown on buttons */
