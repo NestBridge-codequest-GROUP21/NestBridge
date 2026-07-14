@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as ImagePicker from 'expo-image-picker';
 
 import IntentSelectScreen, {
   intentOptionsFromPrimary,
@@ -490,6 +491,26 @@ export default function AppNavigator() {
   const [departureDate, setDepartureDate] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
+  const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
+  const handleAddProfilePhoto = useCallback(async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        'Photo access needed',
+        'Allow photo library access to add a profile picture, or skip for now.',
+      );
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setProfilePhotoUri(result.assets[0].uri);
+    }
+  }, []);
   const [pendingIntent, setPendingIntent] = useState<PrimaryIntent | null>(null);
   const [demoLoginBusy, setDemoLoginBusy] = useState(false);
   const [demoLoginError, setDemoLoginError] = useState<string | null>(null);
@@ -1548,6 +1569,8 @@ export default function AppNavigator() {
               displayName={displayName}
               bio={bio}
               initials={resolvedInitials}
+              photoUri={profilePhotoUri}
+              onAddPhoto={handleAddProfilePhoto}
               onDisplayNameChange={setDisplayName}
               onBioChange={setBio}
               onContinue={() => {
