@@ -242,6 +242,8 @@ export interface HostProfileApi {
   matchReasons?: string[];
   averageRating?: number;
   reviewCount?: number;
+  active?: boolean;
+  availabilityCalendar?: Record<string, unknown>;
 }
 
 export interface GuideProfileApi {
@@ -259,6 +261,26 @@ export interface GuideProfileApi {
   matchReasons?: string[];
   averageRating?: number;
   reviewCount?: number;
+  active?: boolean;
+  availabilitySchedule?: Record<string, unknown>;
+}
+
+export interface HostCalendarDayApi {
+  date?: string;
+  day?: number;
+  status?: string;
+}
+
+export interface GuideCalendarDayApi {
+  date?: string;
+  day?: number;
+  shifts?: string[];
+}
+
+export interface HostActiveBookingApi {
+  guestName?: string;
+  dateRange?: string;
+  totalAmount?: string;
 }
 
 const api = axios.create({
@@ -548,6 +570,59 @@ export async function getGuideProfile(guideId: string): Promise<GuideProfileSumm
   return mapGuideProfileApi(unwrap({ data }));
 }
 
+export async function getMyHostProfile(): Promise<HostProfileApi> {
+  const { data } = await api.get<ApiResponse<HostProfileApi>>('/api/hosts/profile/mine');
+  return unwrap({ data });
+}
+
+export async function updateMyHostProfile(
+  body: Partial<HostProfileApi>,
+): Promise<HostProfileApi> {
+  const { data } = await api.put<ApiResponse<HostProfileApi>>('/api/hosts/profile', body);
+  return unwrap({ data });
+}
+
+export async function getMyHostCalendar(
+  year: number,
+  month: number,
+): Promise<HostCalendarDayApi[]> {
+  const { data } = await api.get<ApiResponse<HostCalendarDayApi[]>>(
+    '/api/hosts/profile/mine/calendar',
+    { params: { year, month } },
+  );
+  return unwrap({ data });
+}
+
+export async function getMyHostActiveBooking(): Promise<HostActiveBookingApi | null> {
+  const { data } = await api.get<ApiResponse<HostActiveBookingApi | null>>(
+    '/api/hosts/profile/mine/active-booking',
+  );
+  return unwrap({ data });
+}
+
+export async function getMyGuideProfile(): Promise<GuideProfileApi> {
+  const { data } = await api.get<ApiResponse<GuideProfileApi>>('/api/guides/profile/mine');
+  return unwrap({ data });
+}
+
+export async function updateMyGuideProfile(
+  body: Partial<GuideProfileApi>,
+): Promise<GuideProfileApi> {
+  const { data } = await api.put<ApiResponse<GuideProfileApi>>('/api/guides/profile', body);
+  return unwrap({ data });
+}
+
+export async function getMyGuideCalendar(
+  year: number,
+  month: number,
+): Promise<GuideCalendarDayApi[]> {
+  const { data } = await api.get<ApiResponse<GuideCalendarDayApi[]>>(
+    '/api/guides/profile/mine/calendar',
+    { params: { year, month } },
+  );
+  return unwrap({ data });
+}
+
 export async function findMatches(params: MatchFindParams): Promise<MatchResult[]> {
   const { data } = await api.post<ApiResponse<MatchResult[]>>('/api/matches/find', params);
   return unwrap({ data });
@@ -754,6 +829,37 @@ export async function getLodgingPartners(city?: string): Promise<LodgingListing[
 export async function getWelfareCheckIns(bookingId: string): Promise<WelfareCheckInApi[]> {
   const { data } = await api.get<ApiResponse<WelfareCheckInApi[]>>(
     `/api/welfare/checkins/${bookingId}`,
+  );
+  return unwrap({ data });
+}
+
+export async function submitWelfareCheckIn(
+  bookingId: string,
+  responses: Record<string, boolean>,
+): Promise<WelfareCheckInApi> {
+  const { data } = await api.post<ApiResponse<WelfareCheckInApi>>(
+    `/api/welfare/checkins/${bookingId}`,
+    { responses },
+  );
+  return unwrap({ data });
+}
+
+export interface ReviewApi {
+  reviewId?: string;
+  bookingId?: string;
+  rating?: number;
+  comment?: string;
+  status?: string;
+}
+
+export async function submitReview(
+  bookingId: string,
+  rating: number,
+  comment: string,
+): Promise<ReviewApi> {
+  const { data } = await api.post<ApiResponse<ReviewApi>>(
+    `/api/reviews/bookings/${bookingId}`,
+    { rating, comment },
   );
   return unwrap({ data });
 }

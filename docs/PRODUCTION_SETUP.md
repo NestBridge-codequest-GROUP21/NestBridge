@@ -107,7 +107,9 @@ Without S3, photos stay on device only (same as before).
 4. Railway:
    - `FIREBASE_ENABLED` = `true`
    - `FIREBASE_DATABASE_URL` = your RTDB URL
-   - Upload service account JSON → set `FIREBASE_CREDENTIALS_PATH` or paste JSON as env (Railway secret)
+   - `FIREBASE_CREDENTIALS_JSON` = paste the **entire** service-account JSON file as one Railway secret (recommended on Railway)
+   - Or `FIREBASE_CREDENTIALS_PATH` = path to JSON file if you mount a file on the server
+   - `SUPPORT_ALERT_EMAIL` = your team inbox (optional — SOS and flagged welfare check-ins email this address when SendGrid is configured)
 5. EAS build env (Step 7):
    - `EXPO_PUBLIC_FIREBASE_API_KEY`
    - `EXPO_PUBLIC_FIREBASE_DATABASE_URL`

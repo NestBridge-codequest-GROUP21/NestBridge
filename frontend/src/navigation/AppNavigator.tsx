@@ -1,7 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, View, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 
 import IntentSelectScreen, {
@@ -137,8 +140,28 @@ import {
   getGuideProfile,
   getHostProfile,
   logSos,
+  getWelfareCheckIns,
+  submitWelfareCheckIn,
+  submitReview,
+  getMyHostProfile,
+  updateMyHostProfile,
+  getMyHostCalendar,
+  getMyHostActiveBooking,
+  getMyGuideProfile,
+  updateMyGuideProfile,
+  getMyGuideCalendar,
   getApiErrorMessage,
 } from '../services/api';
+import {
+  hostProfileToListing,
+  mergeTourTypesFromProfile,
+  tourTypesToServiceTypes,
+  buildGuideSchedulePatch,
+  readMaxGroupSize,
+  mapHostCalendarDays,
+  mapGuideCalendarDays,
+  mapActiveBooking,
+} from '../services/providerProfile';
 import { completeBookingPayment } from '../services/paymentFlow';
 import { uploadProfilePhotoIfConfigured } from '../services/mediaUpload';
 import { studentHomeMockData, tabBarWithBadgesForRole, suggestedHostsForCity } from '../data/studentHomeMock';
@@ -193,6 +216,7 @@ import {
 } from '../data/contentLibraryMock';
 import { exploreSectionsMock } from '../data/touristExploreMock';
 import { welfareCheckInQuestions } from '../data/welfareMock';
+import type { WelfareCheckInQuestion } from '../data/welfareMock';
 import {
   buildSearchMatchParams,
   hostMatchesToStayListings,
@@ -209,6 +233,11 @@ import {
 import { sampleMatchResultsForCity } from '../data/matchResultsMock';
 import { suggestedGuidesMock } from '../data/guideSessionMock';
 import type { ConversationListItem } from '../types/messaging';
+import type {
+  ActiveBookingDetail,
+  HostListingItem,
+  TourTypeOption,
+} from '../data/featureScreensMock';
 import {
   hostCalendarDaysMock,
   hostActiveBookingMock,
@@ -232,6 +261,20 @@ import {
 import { DEMO_PASSWORD, DEMO_ACTOR_ACCOUNTS, demoPresetForAccount, type DemoAccount } from '../data/demoAccounts';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
+
+const PROVIDER_CALENDAR = {
+  year: 2026,
+  month: 7,
+  monthLabel: 'July 2026',
+  startWeekday: 3,
+};
+
+type ProviderScreenHeaderProps = {
+  greeting: string;
+  userName: string;
+  userInitials: string;
+  navigation: NativeStackNavigationProp<AppStackParamList>;
+};
 
 function dialPhoneNumber(number: string) {
   const sanitized = number.replace(/[^\d+]/g, '');
@@ -396,6 +439,291 @@ function handleBookingsBack(
     return;
   }
   navigateToHome(navigation, homeRoute);
+}
+
+type WelfareCheckInStackProps = NativeStackScreenProps<AppStackParamList, 'WelfareCheckIn'> & {
+  hostName: string;
+  checkIn: string;
+  checkOut: string;
+  questions: WelfareCheckInQuestion[];
+  onSosPress: () => void;
+};
+
+function WelfareCheckInStackScreen({
+  navigation,
+  route,
+  hostName,
+  checkIn,
+  checkOut,
+  questions,
+  onSosPress,
+}: WelfareCheckInStackProps) {
+  const bookingId = route.params.bookingId;
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    void getWelfareCheckIns(bookingId)
+      .then((rows) => setAlreadyCompleted(rows.some((row) => !!row.completedAt)))
+      .catch(() => undefined);
+  }, [bookingId]);
+
+  return (
+    <WelfareCheckInScreen
+      hostName={hostName}
+      checkIn={checkIn}
+      checkOut={checkOut}
+      questions={questions}
+      alreadyCompleted={alreadyCompleted}
+      isLoading={submitting}
+      errorMessage={errorMessage}
+      onBack={() => navigation.goBack()}
+      onSosPress={onSosPress}
+      onSubmit={(answers) => {
+        setSubmitting(true);
+        setErrorMessage(null);
+        void submitWelfareCheckIn(bookingId, answers)
+          .then(() => {
+            setAlreadyCompleted(true);
+            navigation.goBack();
+          })
+          .catch((error) => {
+            setErrorMessage(getApiErrorMessage(error));
+            setSubmitting(false);
+          });
+      }}
+    />
+  );
+}
+
+type ReviewPromptStackProps = NativeStackScreenProps<AppStackParamList, 'ReviewPrompt'>;
+
+function ReviewPromptStackScreen({ navigation, route }: ReviewPromptStackProps) {
+  const [submitting, setSubmitting] = useState(false);
+
+  return (
+    <ReviewPromptScreen
+      hostName={route.params.hostName}
+      onBack={() => navigation.goBack()}
+      onSkip={() => navigation.goBack()}
+      onSubmit={(rating, comment) => {
+        if (submitting) {
+          return;
+        }
+        setSubmitting(true);
+        void submitReview(route.params.bookingId, rating, comment)
+          .then(() => navigation.goBack())
+          .catch((error) => {
+            setSubmitting(false);
+            Alert.alert('Could not submit review', getApiErrorMessage(error));
+          });
+      }}
+    />
+  );
+}
+
+function HostListingsStackScreen({
+  greeting,
+  userName,
+  userInitials,
+  navigation,
+}: ProviderScreenHeaderProps) {
+  const [listings, setListings] = useState<HostListingItem[]>([]);
+
+  useEffect(() => {
+    void getMyHostProfile()
+      .then((profile) => setListings([hostProfileToListing(profile)]))
+      .catch(() => setListings([]));
+  }, []);
+
+  const displayListings = withDemoFallback(listings, hostListingsMock);
+
+  return (
+    <HostListingsScreen
+      greeting={greeting}
+      userName={userName}
+      userInitials={userInitials}
+      statusIcon="📅"
+      statusLabel="Host"
+      listings={displayListings}
+      onToggleOnline={(listingId, isOnline) => {
+        setListings((prev) =>
+          prev.map((listing) =>
+            listing.id === listingId ? { ...listing, isOnline } : listing,
+          ),
+        );
+        void updateMyHostProfile({ active: isOnline })
+          .then((profile) => setListings([hostProfileToListing(profile)]))
+          .catch((error) => {
+            Alert.alert('Could not update listing', getApiErrorMessage(error));
+          });
+      }}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+function HostCalendarStackScreen({
+  greeting,
+  userName,
+  userInitials,
+  navigation,
+  fallbackActiveBooking,
+}: ProviderScreenHeaderProps & { fallbackActiveBooking: ActiveBookingDetail }) {
+  const [days, setDays] = useState(hostCalendarDaysMock);
+  const [activeBooking, setActiveBooking] = useState(fallbackActiveBooking);
+
+  useEffect(() => {
+    void getMyHostCalendar(PROVIDER_CALENDAR.year, PROVIDER_CALENDAR.month)
+      .then((rows) => {
+        const mapped = mapHostCalendarDays(rows);
+        if (mapped.length > 0) {
+          setDays(mapped);
+        }
+      })
+      .catch(() => undefined);
+
+    void getMyHostActiveBooking()
+      .then((booking) => {
+        const mapped = mapActiveBooking(booking);
+        if (mapped) {
+          setActiveBooking(mapped);
+        }
+      })
+      .catch(() => undefined);
+  }, [fallbackActiveBooking]);
+
+  const displayDays = withDemoFallback(days, hostCalendarDaysMock);
+  const displayBooking = withDemoFallbackValue(activeBooking, hostActiveBookingMock);
+
+  return (
+    <HostCalendarScreen
+      greeting={greeting}
+      userName={userName}
+      userInitials={userInitials}
+      statusIcon="📅"
+      statusLabel="Host"
+      calendarTitle={`${userName}'s Calendar`}
+      monthLabel={PROVIDER_CALENDAR.monthLabel}
+      startWeekday={PROVIDER_CALENDAR.startWeekday}
+      days={displayDays}
+      activeBooking={displayBooking}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+type TourTypesStackProps = ProviderScreenHeaderProps & {
+  onProfileSaved?: (tourTypes: TourTypeOption[], baseRate: string, maxGroupSize: string) => void;
+};
+
+function TourTypesStackScreen({
+  greeting,
+  userName,
+  userInitials,
+  navigation,
+  onProfileSaved,
+}: TourTypesStackProps) {
+  const [tourTypes, setTourTypes] = useState(tourTypesMock);
+  const [baseRate, setBaseRate] = useState('45');
+  const [maxGroupSize, setMaxGroupSize] = useState('8');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    void getMyGuideProfile()
+      .then((profile) => {
+        const merged = mergeTourTypesFromProfile(profile.serviceTypes, profile.pricePerSession);
+        setTourTypes(merged.tourTypes);
+        setBaseRate(merged.baseRate);
+        setMaxGroupSize(readMaxGroupSize(profile.availabilitySchedule));
+      })
+      .catch(() => undefined);
+  }, []);
+
+  return (
+    <TourTypesSetupScreen
+      greeting={greeting}
+      userName={userName}
+      userInitials={userInitials}
+      statusIcon="🗺️"
+      statusLabel="Guide"
+      tourTypes={tourTypes}
+      baseRate={baseRate}
+      maxGroupSize={maxGroupSize}
+      onToggleTourType={(tourTypeId, enabled) => {
+        setTourTypes((prev) =>
+          prev.map((tour) => (tour.id === tourTypeId ? { ...tour, enabled } : tour)),
+        );
+      }}
+      onBaseRateChange={setBaseRate}
+      onMaxGroupSizeChange={setMaxGroupSize}
+      onSavePress={() => {
+        if (saving) {
+          return;
+        }
+        setSaving(true);
+        const parsedRate = Number.parseFloat(baseRate);
+        void getMyGuideProfile()
+          .then((existing) =>
+            updateMyGuideProfile({
+              serviceTypes: tourTypesToServiceTypes(tourTypes),
+              pricePerSession: Number.isNaN(parsedRate) ? undefined : parsedRate,
+              availabilitySchedule: buildGuideSchedulePatch(
+                existing.availabilitySchedule,
+                maxGroupSize,
+              ),
+            }),
+          )
+          .then(() => {
+            onProfileSaved?.(tourTypes, baseRate, maxGroupSize);
+            navigation.goBack();
+          })
+          .catch((error) => {
+            Alert.alert('Could not save tour types', getApiErrorMessage(error));
+            setSaving(false);
+          });
+      }}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+function GuideAvailabilityStackScreen({
+  greeting,
+  userName,
+  userInitials,
+  navigation,
+}: ProviderScreenHeaderProps) {
+  const [days, setDays] = useState(guideCalendarDaysMock);
+
+  useEffect(() => {
+    void getMyGuideCalendar(PROVIDER_CALENDAR.year, PROVIDER_CALENDAR.month)
+      .then((rows) => {
+        const mapped = mapGuideCalendarDays(rows);
+        if (mapped.length > 0) {
+          setDays(mapped);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const displayDays = withDemoFallback(days, guideCalendarDaysMock);
+
+  return (
+    <GuideAvailabilityScreen
+      greeting={greeting}
+      userName={userName}
+      userInitials={userInitials}
+      statusIcon="🗺️"
+      statusLabel="Guide"
+      calendarTitle={`${userName}'s Availability`}
+      monthLabel={PROVIDER_CALENDAR.monthLabel}
+      startWeekday={PROVIDER_CALENDAR.startWeekday}
+      days={displayDays}
+      onBack={() => navigation.goBack()}
+    />
+  );
 }
 
 function getProfileFields(
@@ -580,7 +908,6 @@ export default function AppNavigator() {
   const [checklistCompleted, setChecklistCompleted] = useState<string[]>(
     profileState.seekerSetup.data.checklistCompleted ?? [],
   );
-  const [hostListings, setHostListings] = useState(hostListingsMock);
   const [tourTypes, setTourTypes] = useState(tourTypesMock);
   const [tourBaseRate, setTourBaseRate] = useState('45');
   const [tourMaxGroupSize, setTourMaxGroupSize] = useState('8');
@@ -599,7 +926,6 @@ export default function AppNavigator() {
       }),
     [conversationsApi.conversations, conversationsApi.isLoading, conversationsApi.error],
   );
-  const [completedWelfareCheckIns, setCompletedWelfareCheckIns] = useState<string[]>([]);
   const studentEventsApi = useStudentEvents(user?.userId);
 
   const homeApi = useHomeApiData(user?.userId, profileState, {
@@ -616,6 +942,20 @@ export default function AppNavigator() {
     fetchGuidePending: primaryIntent === 'GUIDE' && !!user,
     fetchGuideActive: primaryIntent === 'GUIDE' && !!user,
   });
+
+  useEffect(() => {
+    if (primaryIntent !== 'GUIDE' || !user?.userId) {
+      return;
+    }
+    void getMyGuideProfile()
+      .then((profile) => {
+        const merged = mergeTourTypesFromProfile(profile.serviceTypes, profile.pricePerSession);
+        setTourTypes(merged.tourTypes);
+        setTourBaseRate(merged.baseRate);
+        setTourMaxGroupSize(readMaxGroupSize(profile.availabilitySchedule));
+      })
+      .catch(() => undefined);
+  }, [primaryIntent, user?.userId]);
 
   const hostPendingDisplay = useMemo(
     () =>
@@ -2669,38 +3009,23 @@ export default function AppNavigator() {
       <Stack.Screen name="WelfareCheckIn">
         {({ navigation, route }) => {
           const booking = bookings.find((entry) => entry.id === route.params.bookingId);
-          const bookingId = route.params.bookingId;
-          const alreadyCompleted =
-            completedWelfareCheckIns.includes(bookingId);
 
           return (
-            <WelfareCheckInScreen
+            <WelfareCheckInStackScreen
+              navigation={navigation}
+              route={route}
               hostName={booking?.hostName ?? 'your host'}
               checkIn={booking?.checkIn ?? checkIn}
               checkOut={booking?.checkOut ?? checkOut}
               questions={welfareCheckInQuestions}
-              alreadyCompleted={alreadyCompleted}
-              onBack={() => navigation.goBack()}
-              onSubmit={() => {
-                setCompletedWelfareCheckIns((prev) =>
-                  prev.includes(bookingId) ? prev : [...prev, bookingId],
-                );
-                navigation.goBack();
-              }}
+              onSosPress={() => navigation.navigate('SOS')}
             />
           );
         }}
       </Stack.Screen>
 
       <Stack.Screen name="ReviewPrompt">
-        {({ navigation, route }) => (
-          <ReviewPromptScreen
-            hostName={route.params.hostName}
-            onBack={() => navigation.goBack()}
-            onSkip={() => navigation.goBack()}
-            onSubmit={() => navigation.goBack()}
-          />
-        )}
+        {(props) => <ReviewPromptStackScreen {...props} />}
       </Stack.Screen>
 
       <Stack.Screen name="SOS">
@@ -2866,82 +3191,50 @@ export default function AppNavigator() {
 
       <Stack.Screen name="HostCalendar">
         {({ navigation }) => (
-          <HostCalendarScreen
+          <HostCalendarStackScreen
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
-            statusIcon="📅"
-            statusLabel="Host"
-            calendarTitle={`${firstName}'s Calendar`}
-            monthLabel="July 2026"
-            startWeekday={3}
-            days={hostCalendarDaysMock}
-            activeBooking={hostCalendarActiveBooking}
-            onBack={() => navigation.goBack()}
+            navigation={navigation}
+            fallbackActiveBooking={hostCalendarActiveBooking}
           />
         )}
       </Stack.Screen>
 
       <Stack.Screen name="HostListings">
         {({ navigation }) => (
-          <HostListingsScreen
+          <HostListingsStackScreen
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
-            statusIcon="📅"
-            statusLabel="Host"
-            listings={hostListings}
-            onToggleOnline={(listingId, isOnline) => {
-              setHostListings((prev) =>
-                prev.map((listing) =>
-                  listing.id === listingId ? { ...listing, isOnline } : listing,
-                ),
-              );
-            }}
-            onBack={() => navigation.goBack()}
+            navigation={navigation}
           />
         )}
       </Stack.Screen>
 
       <Stack.Screen name="TourTypesSetup">
         {({ navigation }) => (
-          <TourTypesSetupScreen
+          <TourTypesStackScreen
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
-            statusIcon="🗺️"
-            statusLabel="Guide"
-            tourTypes={tourTypes}
-            baseRate={tourBaseRate}
-            maxGroupSize={tourMaxGroupSize}
-            onToggleTourType={(tourTypeId, enabled) => {
-              setTourTypes((prev) =>
-                prev.map((tour) =>
-                  tour.id === tourTypeId ? { ...tour, enabled } : tour,
-                ),
-              );
+            navigation={navigation}
+            onProfileSaved={(nextTourTypes, nextBaseRate, nextMaxGroupSize) => {
+              setTourTypes(nextTourTypes);
+              setTourBaseRate(nextBaseRate);
+              setTourMaxGroupSize(nextMaxGroupSize);
             }}
-            onBaseRateChange={setTourBaseRate}
-            onMaxGroupSizeChange={setTourMaxGroupSize}
-            onSavePress={() => navigation.goBack()}
-            onBack={() => navigation.goBack()}
           />
         )}
       </Stack.Screen>
 
       <Stack.Screen name="GuideAvailability">
         {({ navigation }) => (
-          <GuideAvailabilityScreen
+          <GuideAvailabilityStackScreen
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
-            statusIcon="🗺️"
-            statusLabel="Guide"
-            calendarTitle={`${firstName}'s Availability`}
-            monthLabel="July 2026"
-            startWeekday={3}
-            days={guideCalendarDaysMock}
-            onBack={() => navigation.goBack()}
+            navigation={navigation}
           />
         )}
       </Stack.Screen>

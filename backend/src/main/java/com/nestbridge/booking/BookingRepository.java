@@ -45,6 +45,17 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     @Query("""
             SELECT b FROM Booking b WHERE b.hostOrGuideId = :providerId
+            AND b.bookingType = com.nestbridge.common.BookingType.HOST
+            AND b.status IN (com.nestbridge.common.BookingStatus.ACCEPTED, com.nestbridge.common.BookingStatus.CONFIRMED, com.nestbridge.common.BookingStatus.CHECKED_IN)
+            AND b.checkIn < :monthEndExclusive AND b.checkOut > :monthStart
+            """)
+    List<Booking> findActiveHostStaysOverlappingMonth(
+            @Param("providerId") UUID providerId,
+            @Param("monthStart") LocalDate monthStart,
+            @Param("monthEndExclusive") LocalDate monthEndExclusive);
+
+    @Query("""
+            SELECT b FROM Booking b WHERE b.hostOrGuideId = :providerId
             AND b.bookingType = com.nestbridge.common.BookingType.GUIDE
             AND b.status = com.nestbridge.common.BookingStatus.PENDING_HOST
             AND b.sessionDate = :sessionDate
