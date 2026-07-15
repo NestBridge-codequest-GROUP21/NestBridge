@@ -1,0 +1,32 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_ENABLE_DEMO_FALLBACK": "true"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_ENABLE_DEMO_FALLBACK": "true",
+        "API_BASE_URL": ""
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_ENABLE_DEMO_FALLBACK": "false",
+        "API_BASE_URL": ""
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

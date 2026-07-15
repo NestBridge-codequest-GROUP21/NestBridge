@@ -8,11 +8,14 @@ import com.nestbridge.host.HostProfile;
 import com.nestbridge.host.HostProfileRepository;
 import com.nestbridge.matching.MatchRecord;
 import com.nestbridge.matching.MatchRecordRepository;
+import com.nestbridge.notification.BookingNotificationService;
+import com.nestbridge.user.ProfileGateService;
 import com.nestbridge.user.SeekerProfile;
 import com.nestbridge.user.SeekerProfileRepository;
 import com.nestbridge.user.User;
 import com.nestbridge.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,9 +42,19 @@ public class BookingService {
     private final GuideProfileRepository guideProfileRepository;
     private final MatchRecordRepository matchRecordRepository;
     private final SeekerProfileRepository seekerProfileRepository;
+    private final ProfileGateService profileGateService;
+    private final BookingNotificationService bookingNotificationService;
+
+    @Value("${paystack.enabled:false}")
+    private boolean paystackEnabled;
+
+    @Value("${paystack.secret-key:}")
+    private String paystackSecretKey;
 
     @Transactional
     public BookingDto createBooking(UUID guestId, CreateBookingRequest request) {
+        profileGateService.requireEmailVerified(guestId);
+        profileGateService.requireSeekerComplete(guestId);
         BookingType type = request.getBookingType();
         BigDecimal total;
         BigDecimal platformFee;
@@ -79,6 +92,7 @@ public class BookingService {
                 .build();
 
         booking = bookingRepository.save(booking);
+        bookingNotificationService.onBookingCreated(booking);
         return toDto(booking);
     }
 
@@ -113,6 +127,7 @@ public class BookingService {
     public BookingDto acceptBooking(UUID bookingId, UUID providerUserId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
+        profileGateService.requireProviderCompleteForBooking(providerUserId, booking.getBookingType());
         verifyProvider(booking, providerUserId);
 
         if (booking.getBookingType() == BookingType.HOST) {
@@ -132,6 +147,7 @@ public class BookingService {
             bookingRepository.save(booking);
             autoDeclineOverlappingGuidePending(booking);
         }
+        bookingNotificationService.onBookingAccepted(booking);
         return toDto(booking);
     }
 
@@ -141,11 +157,17 @@ public class BookingService {
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
         verifyProvider(booking, providerUserId);
         booking.setStatus(BookingStatus.DECLINED);
-        return toDto(bookingRepository.save(booking));
+        booking = bookingRepository.save(booking);
+        bookingNotificationService.onBookingDeclined(booking);
+        return toDto(booking);
     }
 
     @Transactional
     public BookingDto confirmBooking(UUID bookingId, UUID guestId) {
+        profileGateService.requireEmailVerified(guestId);
+        if (paystackEnabled && paystackSecretKey != null && !paystackSecretKey.isBlank()) {
+            throw new IllegalArgumentException("Use the in-app payment flow for this booking.");
+        }
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
         if (!booking.getGuestId().equals(guestId)) {
@@ -156,7 +178,9 @@ public class BookingService {
         }
         booking.setStatus(BookingStatus.CONFIRMED);
         booking.setPaymentStatus("PAID");
-        return toDto(bookingRepository.save(booking));
+        booking = bookingRepository.save(booking);
+        bookingNotificationService.onBookingConfirmed(booking);
+        return toDto(booking);
     }
 
     @Transactional
