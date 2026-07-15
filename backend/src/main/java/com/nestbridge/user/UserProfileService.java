@@ -57,6 +57,10 @@ public class UserProfileService {
             if (name instanceof String s && !s.isBlank()) {
                 user.setFullName(s);
             }
+            var photo = update.getSeekerSetup().getData().get("profilePhotoUrl");
+            if (photo instanceof String s && !s.isBlank()) {
+                user.setProfilePhotoUrl(s);
+            }
         }
         userRepository.save(user);
 

@@ -4,6 +4,7 @@ export type AuthStackParamList = {
   Welcome: undefined;
   Register: undefined;
   Login: undefined;
+  VerifyEmail: { email: string };
 };
 
 export type AppStackParamList = {
@@ -67,6 +68,7 @@ export type AppStackParamList = {
   SponsorApplication: { sponsorId: string };
   WelfareCheckIn: { bookingId: string };
   ReviewPrompt: { bookingId: string; hostName: string };
+  Notifications: undefined;
 };
 
 export type RootStackParamList = {

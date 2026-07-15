@@ -4,28 +4,38 @@
  * Live API data wins when the backend returns real rows. When the database is
  * empty, the request errors, or the app is still loading, curated Ghana mock
  * content keeps every screen populated so judges see the deployed experience.
+ *
+ * Disable via EXPO_PUBLIC_ENABLE_DEMO_FALLBACK=false before real production.
  */
+
+import { isDemoFallbackEnabled } from '../config/demoMode';
 
 export interface DemoFallbackOptions {
   isLoading?: boolean;
   error?: string | null | undefined;
 }
 
-/** Prefer live rows; otherwise always show demo (even while loading or on error). */
+/** Prefer live rows; otherwise show demo when fallback is enabled. */
 export function withDemoFallback<T>(
   live: T[],
   demo: T[],
   _options?: DemoFallbackOptions,
 ): T[] {
+  if (!isDemoFallbackEnabled()) {
+    return live;
+  }
   return live.length > 0 ? live : demo;
 }
 
-/** Prefer a live value; otherwise show the demo default. */
+/** Prefer a live value; otherwise show the demo default when fallback is enabled. */
 export function withDemoFallbackValue<T>(
   live: T | null | undefined,
   demo: T,
   _options?: DemoFallbackOptions,
 ): T {
+  if (!isDemoFallbackEnabled()) {
+    return (live !== null && live !== undefined ? live : demo) as T;
+  }
   return live ?? demo;
 }
 
