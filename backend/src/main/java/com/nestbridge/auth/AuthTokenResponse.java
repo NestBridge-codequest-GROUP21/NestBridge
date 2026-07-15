@@ -12,4 +12,5 @@ public class AuthTokenResponse {
     private String userId;
     private String email;
     private String displayName;
+    private Boolean emailVerified;
 }

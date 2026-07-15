@@ -11,6 +11,12 @@ export interface StoredCredential {
   password: string;
 }
 
+export interface RegisterResult {
+  email: string;
+  displayName: string;
+  requiresEmailVerification: boolean;
+}
+
 export interface AuthSession {
   token: string;
   refreshToken?: string;
