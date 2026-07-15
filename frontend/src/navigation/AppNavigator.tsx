@@ -576,13 +576,19 @@ function HostCalendarStackScreen({
   navigation,
   fallbackActiveBooking,
 }: ProviderScreenHeaderProps & { fallbackActiveBooking: ActiveBookingDetail }) {
+  const { user } = useAuth();
   const [days, setDays] = useState(hostCalendarDaysMock);
   const [activeBooking, setActiveBooking] = useState(fallbackActiveBooking);
   const [loadedFromApi, setLoadedFromApi] = useState(false);
+  const [providerReady, setProviderReady] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    void getMyHostProfile()
+      .then(() => setProviderReady(true))
+      .catch(() => setProviderReady(false));
+
     void getMyHostCalendar(PROVIDER_CALENDAR.year, PROVIDER_CALENDAR.month)
       .then((rows) => {
         const mapped = mapHostCalendarDays(rows);
@@ -601,9 +607,10 @@ function HostCalendarStackScreen({
         }
       })
       .catch(() => undefined);
-  }, [fallbackActiveBooking]);
+  }, [fallbackActiveBooking, user?.userId]);
 
-  const displayDays = loadedFromApi ? days : withDemoFallback(days, hostCalendarDaysMock);
+  const canEdit = (loadedFromApi || providerReady) && !saving;
+  const displayDays = loadedFromApi || providerReady ? days : withDemoFallback(days, hostCalendarDaysMock);
   const displayBooking = withDemoFallbackValue(activeBooking, hostActiveBookingMock);
 
   const persistHostCalendar = (nextDays: typeof days) => {
@@ -638,7 +645,7 @@ function HostCalendarStackScreen({
       startWeekday={PROVIDER_CALENDAR.startWeekday}
       days={displayDays}
       activeBooking={displayBooking}
-      editable={loadedFromApi && !saving}
+      editable={canEdit}
       statusMessage={statusMessage}
       onDayInteract={(dayNumber) => {
         const nextDays = toggleHostDayBlocked(days, dayNumber);
@@ -735,13 +742,19 @@ function GuideAvailabilityStackScreen({
   userInitials,
   navigation,
 }: ProviderScreenHeaderProps) {
+  const { user } = useAuth();
   const [days, setDays] = useState(guideCalendarDaysMock);
   const [loadedFromApi, setLoadedFromApi] = useState(false);
+  const [providerReady, setProviderReady] = useState(false);
   const [selectedDay, setSelectedDay] = useState(11);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    void getMyGuideProfile()
+      .then(() => setProviderReady(true))
+      .catch(() => setProviderReady(false));
+
     void getMyGuideCalendar(PROVIDER_CALENDAR.year, PROVIDER_CALENDAR.month)
       .then((rows) => {
         const mapped = mapGuideCalendarDays(rows);
@@ -751,9 +764,11 @@ function GuideAvailabilityStackScreen({
         }
       })
       .catch(() => undefined);
-  }, []);
+  }, [user?.userId]);
 
-  const displayDays = loadedFromApi ? days : withDemoFallback(days, guideCalendarDaysMock);
+  const canEdit = (loadedFromApi || providerReady) && !saving;
+  const displayDays =
+    loadedFromApi || providerReady ? days : withDemoFallback(days, guideCalendarDaysMock);
 
   const persistGuideSchedule = (nextDays: typeof days) => {
     setSaving(true);
@@ -786,7 +801,7 @@ function GuideAvailabilityStackScreen({
       monthLabel={PROVIDER_CALENDAR.monthLabel}
       startWeekday={PROVIDER_CALENDAR.startWeekday}
       days={displayDays}
-      editable={loadedFromApi && !saving}
+      editable={canEdit}
       statusMessage={statusMessage}
       onSelectedDayChange={setSelectedDay}
       onShiftToggle={(shift: GuideShiftBlock, enabled: boolean) => {
@@ -1600,11 +1615,14 @@ export default function AppNavigator() {
       const ok = await signIn(account.email, DEMO_PASSWORD, true);
       if (!ok) {
         setDemoLoginError(devTestingCopy.demoActorsLoginError);
+        return;
       }
+      await applyDevPreset(demoPresetForAccount(account));
+      await setPrimaryIntent(account.intent);
     } finally {
       setDemoLoginBusy(false);
     }
-  }, [signIn]);
+  }, [signIn, applyDevPreset, setPrimaryIntent]);
 
   const handleDevPreset = (
     navigation: NativeStackNavigationProp<AppStackParamList>,
