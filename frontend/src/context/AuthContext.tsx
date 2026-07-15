@@ -6,13 +6,14 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import type { AuthSession, AuthUser } from '../types/auth';
+import type { AuthSession, AuthUser, RegisterResult } from '../types/auth';
 import {
   clearSession,
   loadSession,
   saveSession,
 } from '../services/authStorage';
 import * as api from '../services/api';
+import { registerPushTokenIfAvailable } from '../services/pushRegistration';
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -23,12 +24,12 @@ interface AuthContextValue {
     email: string,
     password: string,
     keepSignedIn: boolean,
-  ) => Promise<void>;
+  ) => Promise<RegisterResult>;
   signIn: (
     email: string,
     password: string,
     keepSignedIn: boolean,
-  ) => Promise<boolean>;
+  ) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const session = await loadSession();
       if (mounted && session?.user) {
         setUser(session.user);
+        void registerPushTokenIfAvailable();
       }
       if (mounted) {
         setIsLoading(false);
@@ -59,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await saveSession(session);
     setUser(session.user);
     setAuthError(null);
+    void registerPushTokenIfAvailable();
   }, []);
 
   const register = useCallback(
@@ -66,18 +69,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       displayName: string,
       email: string,
       password: string,
-      keepSignedIn: boolean,
+      _keepSignedIn: boolean,
     ) => {
       try {
-        const session = await api.register(displayName, email, password);
-        await persistSession({ ...session, keepSignedIn });
+        const result = await api.register(displayName, email, password);
+        setAuthError(null);
+        return result;
       } catch (error) {
         const message = api.getApiErrorMessage(error);
         setAuthError(message);
         throw new Error(message);
       }
     },
-    [persistSession],
+    [],
   );
 
   const signIn = useCallback(
@@ -85,9 +89,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const session = await api.login(email, password);
         await persistSession({ ...session, keepSignedIn });
-        return true;
-      } catch {
-        return false;
+      } catch (error) {
+        const message = api.getApiErrorMessage(error);
+        setAuthError(message);
+        throw new Error(message);
       }
     },
     [persistSession],

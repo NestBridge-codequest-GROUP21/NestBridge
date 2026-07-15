@@ -1,5 +1,6 @@
 package com.nestbridge.auth;
 
+import com.nestbridge.security.RateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final RateLimitFilter rateLimitFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -25,6 +27,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/webhooks/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("GET", "/api/hosts/**").permitAll()
                         .requestMatchers("GET", "/api/guides/**").permitAll()
@@ -33,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("GET", "/api/reference/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

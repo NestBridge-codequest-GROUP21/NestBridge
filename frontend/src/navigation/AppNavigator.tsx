@@ -70,6 +70,7 @@ import HostListingsScreen from '../screens/host/HostListingsScreen';
 import TourTypesSetupScreen from '../screens/guide/TourTypesSetupScreen';
 import GuideAvailabilityScreen from '../screens/guide/GuideAvailabilityScreen';
 import SOSScreen from '../screens/shared/SOSScreen';
+import NotificationsScreen from '../screens/shared/NotificationsScreen';
 import { HostProfileRoute, GuideProfileRoute } from './profileRoutes';
 import type {
   BookingContext,
@@ -124,17 +125,22 @@ import {
 import { handleTabPress, navigateToHome } from './tabRouting';
 import {
   acceptBooking,
-  confirmBooking,
   createBooking,
   createConversation,
   declineBooking,
+  fetchUnreadNotificationCount,
+  fetchNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  createKycSession,
   findMatches,
   getGuideProfile,
   getHostProfile,
   logSos,
   getApiErrorMessage,
 } from '../services/api';
-import { colors, spacing } from '../constants/theme';
+import { completeBookingPayment } from '../services/paymentFlow';
+import { uploadProfilePhotoIfConfigured } from '../services/mediaUpload';
 import { studentHomeMockData, tabBarWithBadgesForRole, suggestedHostsForCity } from '../data/studentHomeMock';
 import {
   getQuickActionsForRole,
@@ -159,6 +165,7 @@ import {
   getUnreadNotificationCount,
   studentBookingsMock,
   incomingBookingRequestsMock,
+  bookingNotificationsMock,
 } from '../data/bookingMock';
 import { conversationsMock } from '../data/conversationsMock';
 import { withDemoFallback, withDemoFallbackValue, presentableLoading, presentableError } from '../utils/demoLiveMerge';
@@ -535,6 +542,31 @@ export default function AppNavigator() {
       setProfilePhotoUri(result.assets[0].uri);
     }
   }, []);
+
+  const saveProfileSetupStep = useCallback(
+    async (track: SetupTrack) => {
+      const profileName = displayName.trim() || user?.displayName?.trim() || '';
+      let profilePhotoUrl: string | undefined;
+      try {
+        profilePhotoUrl = await uploadProfilePhotoIfConfigured(profilePhotoUri);
+      } catch {
+        profilePhotoUrl = undefined;
+      }
+      const stepData: Record<string, string> = {
+        displayName: profileName,
+        bio,
+      };
+      if (profilePhotoUrl) {
+        stepData.profilePhotoUrl = profilePhotoUrl;
+      }
+      await completeStep(track, 'profile', stepData);
+      if (profileName && profileName !== displayName) {
+        setDisplayName(profileName);
+      }
+    },
+    [bio, completeStep, displayName, profilePhotoUri, user?.displayName],
+  );
+
   const [pendingIntent, setPendingIntent] = useState<PrimaryIntent | null>(null);
   const [demoLoginBusy, setDemoLoginBusy] = useState(false);
   const [demoLoginError, setDemoLoginError] = useState<string | null>(null);
@@ -1037,7 +1069,49 @@ export default function AppNavigator() {
   const setupSummary = getAccountSetupSummary(profileState);
   const showMatchScores = isSeekerComplete(profileState);
 
-  const unreadNotifications = getUnreadNotificationCount();
+  const [unreadNotifications, setUnreadNotifications] = useState(
+    getUnreadNotificationCount(),
+  );
+  const [notificationsList, setNotificationsList] = useState(
+    bookingNotificationsMock,
+  );
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  const refreshNotificationState = useCallback(async () => {
+    if (!user) {
+      return;
+    }
+    try {
+      const [count, list] = await Promise.all([
+        fetchUnreadNotificationCount(),
+        fetchNotifications(),
+      ]);
+      setUnreadNotifications(count);
+      setNotificationsList(
+        withDemoFallback(list, bookingNotificationsMock),
+      );
+    } catch {
+      setUnreadNotifications(getUnreadNotificationCount());
+      setNotificationsList(bookingNotificationsMock);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadNotifications(0);
+      return;
+    }
+    void refreshNotificationState();
+  }, [user?.userId, bookings.length, hostIncoming.length, guideIncoming.length, refreshNotificationState]);
+
+  const openNotifications = useCallback(
+    (navigation: NativeStackNavigationProp<AppStackParamList>) => {
+      setNotificationsLoading(true);
+      void refreshNotificationState().finally(() => setNotificationsLoading(false));
+      navigation.navigate('Notifications');
+    },
+    [refreshNotificationState],
+  );
   const incomingBadgeCount =
     (canAcceptGuideSessions && guideIncoming.length > 0
       ? guideIncoming.length
@@ -1565,17 +1639,21 @@ export default function AppNavigator() {
   const confirmBookingWithDemoFallback = useCallback(
     async (bookingId: string): Promise<BookingListItem | null> => {
       try {
-        await confirmBooking(bookingId);
+        await completeBookingPayment(bookingId);
         homeApi.refresh();
         return mergedBookings.find((item) => item.id === bookingId) ?? null;
-      } catch {
+      } catch (error) {
+        const message = getApiErrorMessage(error);
         const booking = mergedBookings.find((item) => item.id === bookingId);
-        if (!booking) {
-          return null;
+        if (booking && message.includes('Cannot reach the server')) {
+          const confirmed = confirmDemoBooking(booking);
+          upsertLocalBooking(confirmed);
+          return confirmed;
         }
-        const confirmed = confirmDemoBooking(booking);
-        upsertLocalBooking(confirmed);
-        return confirmed;
+        if (error instanceof Error) {
+          throw error;
+        }
+        throw new Error(message);
       }
     },
     [homeApi, mergedBookings, upsertLocalBooking],
@@ -1750,6 +1828,46 @@ export default function AppNavigator() {
             errorMessage={guideEarningsError}
             emptyState={emptyStates.guideEarnings}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'GuideHome')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="Notifications">
+        {({ navigation }) => (
+          <NotificationsScreen
+            userName={firstName}
+            userInitials={resolvedInitials}
+            notifications={notificationsList}
+            isLoading={notificationsLoading}
+            onBack={() => navigation.goBack()}
+            onMarkAllRead={() => {
+              void (async () => {
+                try {
+                  await markAllNotificationsRead();
+                  await refreshNotificationState();
+                } catch {
+                  Alert.alert('Notifications', 'Could not mark all as read.');
+                }
+              })();
+            }}
+            onNotificationPress={(notification) => {
+              void (async () => {
+                try {
+                  if (!notification.read) {
+                    await markNotificationRead(notification.id);
+                    await refreshNotificationState();
+                  }
+                  if (notification.relatedBookingId) {
+                    navigation.navigate('StudentBookings');
+                  }
+                } catch {
+                  // still allow navigation
+                  if (notification.relatedBookingId) {
+                    navigation.navigate('StudentBookings');
+                  }
+                }
+              })();
+            }}
           />
         )}
       </Stack.Screen>
@@ -1968,36 +2086,24 @@ export default function AppNavigator() {
               onDisplayNameChange={setDisplayName}
               onBioChange={setBio}
               onContinue={() => {
-                const profileName =
-                  displayName.trim() || user?.displayName?.trim() || '';
-                void completeStep(track, 'profile', {
-                  displayName: profileName,
-                  bio,
-                });
-                if (profileName && profileName !== displayName) {
-                  setDisplayName(profileName);
-                }
-                if (track === 'HOST' || track === 'GUIDE') {
-                  navigation.navigate('KYCPrompt', { track });
-                  return;
-                }
-                navigation.navigate('OnboardingReady', { track });
+                void (async () => {
+                  await saveProfileSetupStep(track);
+                  if (track === 'HOST' || track === 'GUIDE') {
+                    navigation.navigate('KYCPrompt', { track });
+                    return;
+                  }
+                  navigation.navigate('OnboardingReady', { track });
+                })();
               }}
               onSkip={() => {
-                const profileName =
-                  displayName.trim() || user?.displayName?.trim() || '';
-                void completeStep(track, 'profile', {
-                  displayName: profileName,
-                  bio,
-                });
-                if (profileName && profileName !== displayName) {
-                  setDisplayName(profileName);
-                }
-                if (track === 'HOST' || track === 'GUIDE') {
-                  navigation.navigate('KYCPrompt', { track });
-                  return;
-                }
-                navigation.navigate('OnboardingReady', { track });
+                void (async () => {
+                  await saveProfileSetupStep(track);
+                  if (track === 'HOST' || track === 'GUIDE') {
+                    navigation.navigate('KYCPrompt', { track });
+                    return;
+                  }
+                  navigation.navigate('OnboardingReady', { track });
+                })();
               }}
               onBack={() => navigation.goBack()}
             />
@@ -2011,7 +2117,24 @@ export default function AppNavigator() {
           return (
             <KYCPromptScreen
               data={kycPromptForTrack(track)}
-              onVerifyNow={() => navigation.navigate('OnboardingReady', { track })}
+              onVerifyNow={() => {
+                void (async () => {
+                  try {
+                    const session = await createKycSession();
+                    if (session.verificationUrl) {
+                      await Linking.openURL(session.verificationUrl);
+                    } else if (session.message) {
+                      Alert.alert('Verification', session.message);
+                    }
+                  } catch (error) {
+                    Alert.alert(
+                      'Verification',
+                      getApiErrorMessage(error),
+                    );
+                  }
+                  navigation.navigate('OnboardingReady', { track });
+                })();
+              }}
               onVerifyLater={() => navigation.navigate('OnboardingReady', { track })}
             />
           );
@@ -2115,6 +2238,8 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentHomeDashboard
             {...homeProps}
+            notificationCount={unreadNotifications}
+            onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
             onFeaturedMatchPress={() => {
@@ -2140,6 +2265,8 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <ExploreHomeScreen
             {...exploreHomeProps}
+            notificationCount={unreadNotifications}
+            onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
             onFeaturedGuidePress={() => {
@@ -2188,6 +2315,8 @@ export default function AppNavigator() {
               reminder={hostLive.reminder}
               tabBarItems={hostTabBarItems}
               activeTabId="home"
+              notificationCount={unreadNotifications}
+              onNotificationPress={() => openNotifications(navigation)}
               {...homeTabSosProps(navigation)}
               onFeaturedPress={() => {
                 if (firstRequest) {
@@ -2254,6 +2383,8 @@ export default function AppNavigator() {
               reminder={guideLive.reminder}
               tabBarItems={guideTabBarItems}
               activeTabId="home"
+              notificationCount={unreadNotifications}
+              onNotificationPress={() => openNotifications(navigation)}
               {...homeTabSosProps(navigation)}
               onFeaturedPress={() => {
                 if (firstRequest) {
@@ -2308,12 +2439,21 @@ export default function AppNavigator() {
               if (!canBookHomestay && !canBookGuideSession) {
                 return;
               }
-              const confirmed = await confirmBookingWithDemoFallback(bookingId);
-              if (!confirmed) {
-                Alert.alert('Payment failed', 'We could not find that booking.');
-                return;
+              try {
+                const confirmed = await confirmBookingWithDemoFallback(bookingId);
+                if (!confirmed) {
+                  Alert.alert('Payment failed', 'We could not find that booking.');
+                  return;
+                }
+                navigation.navigate('BookingConfirmed', { bookingId });
+              } catch (error) {
+                Alert.alert(
+                  'Payment',
+                  error instanceof Error
+                    ? error.message
+                    : 'Payment could not be completed.',
+                );
               }
-              navigation.navigate('BookingConfirmed', { bookingId });
             }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
             onBack={

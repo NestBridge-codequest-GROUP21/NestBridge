@@ -435,23 +435,31 @@ export async function register(
   displayName: string,
   email: string,
   password: string,
-): Promise<AuthSession> {
-  const { data } = await api.post<ApiResponse<AuthTokenPayload>>('/api/auth/register', {
+): Promise<import('../types/auth').RegisterResult> {
+  const { data } = await api.post<
+    ApiResponse<{
+      email: string;
+      displayName: string;
+      requiresEmailVerification: boolean;
+    }>
+  >('/api/auth/register', {
     fullName: displayName,
     email,
     password,
   });
   const payload = unwrap({ data });
   return {
-    token: payload.accessToken,
-    refreshToken: payload.refreshToken,
-    user: {
-      userId: payload.userId,
-      email: payload.email,
-      displayName: payload.displayName,
-    },
-    keepSignedIn: true,
+    email: payload.email,
+    displayName: payload.displayName,
+    requiresEmailVerification: payload.requiresEmailVerification,
   };
+}
+
+export async function resendVerificationEmail(email: string): Promise<void> {
+  const { data } = await api.post<ApiResponse<null>>('/api/auth/resend-verification', {
+    email,
+  });
+  unwrap({ data });
 }
 
 export async function login(
@@ -608,6 +616,101 @@ export async function declineBooking(bookingId: string): Promise<BookingApi> {
 
 export async function confirmBooking(bookingId: string): Promise<BookingApi> {
   const { data } = await api.put<ApiResponse<BookingApi>>(`/api/bookings/${bookingId}/confirm`);
+  return unwrap({ data });
+}
+
+export interface PaymentInitializeResult {
+  mockPayment: boolean;
+  authorizationUrl?: string;
+  reference?: string;
+}
+
+export async function initializeBookingPayment(
+  bookingId: string,
+): Promise<PaymentInitializeResult> {
+  const { data } = await api.post<ApiResponse<PaymentInitializeResult>>(
+    `/api/bookings/${bookingId}/payment/initialize`,
+  );
+  return unwrap({ data });
+}
+
+export async function getBookingById(bookingId: string): Promise<BookingApi> {
+  const { data } = await api.get<ApiResponse<BookingApi>>(`/api/bookings/${bookingId}`);
+  return unwrap({ data });
+}
+
+export async function fetchUnreadNotificationCount(): Promise<number> {
+  const { data } = await api.get<ApiResponse<{ count: number }>>('/api/notifications/unread-count');
+  const payload = unwrap({ data });
+  return payload.count ?? 0;
+}
+
+export async function fetchNotifications(): Promise<import('../types/booking').AppNotification[]> {
+  const { data } = await api.get<
+    ApiResponse<
+      Array<{
+        id: string;
+        type: string;
+        title: string;
+        body: string;
+        read: boolean;
+        createdAt: string;
+        data?: { bookingId?: string };
+      }>
+    >
+  >('/api/notifications');
+  return unwrap({ data }).map((item) => ({
+    id: item.id,
+    title: item.title,
+    body: item.body,
+    read: item.read,
+    createdAt: item.createdAt,
+    relatedBookingId:
+      typeof item.data?.bookingId === 'string' ? item.data.bookingId : undefined,
+  }));
+}
+
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  await api.put(`/api/notifications/${notificationId}/read`);
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  await api.put('/api/notifications/read-all');
+}
+
+export interface KycSessionResult {
+  enabled: boolean;
+  verificationUrl?: string;
+  jobId?: string;
+  message?: string;
+}
+
+export async function createKycSession(): Promise<KycSessionResult> {
+  const { data } = await api.post<ApiResponse<KycSessionResult>>('/api/kyc/session');
+  return unwrap({ data });
+}
+
+export async function registerDeviceToken(
+  expoPushToken: string,
+  platform: string,
+): Promise<void> {
+  await api.post('/api/users/me/device-tokens', { expoPushToken, platform });
+}
+
+export interface PhotoUploadUrlResult {
+  enabled: boolean;
+  uploadUrl?: string;
+  publicUrl?: string;
+  contentType?: string;
+}
+
+export async function getProfilePhotoUploadUrl(
+  contentType = 'image/jpeg',
+): Promise<PhotoUploadUrlResult> {
+  const { data } = await api.post<ApiResponse<PhotoUploadUrlResult>>(
+    '/api/users/me/profile-photo/upload-url',
+    { contentType },
+  );
   return unwrap({ data });
 }
 
