@@ -1,6 +1,7 @@
 import type {
   ActiveBookingDetail,
   GuideCalendarDay,
+  GuideShiftBlock,
   HostCalendarDay,
   HostListingItem,
   TourTypeOption,
@@ -113,4 +114,82 @@ export function mapActiveBooking(
     dateRange: booking.dateRange ?? '',
     totalAmount: booking.totalAmount ?? '',
   };
+}
+
+const GUIDE_SHIFT_ORDER: GuideShiftBlock[] = ['morning', 'afternoon', 'evening'];
+
+export function toggleHostDayBlocked(
+  days: HostCalendarDay[],
+  dayNumber: number,
+): HostCalendarDay[] | null {
+  const target = days.find((day) => day.day === dayNumber);
+  if (!target || target.status === 'booked') {
+    return null;
+  }
+  const nextStatus = target.status === 'blocked' ? 'available' : 'blocked';
+  return days.map((day) =>
+    day.day === dayNumber ? { ...day, status: nextStatus } : day,
+  );
+}
+
+export function mergeHostAvailabilityCalendar(
+  existing: Record<string, unknown> | undefined,
+  monthDays: HostCalendarDay[],
+): Record<string, unknown> {
+  const calendar: Record<string, unknown> = { ...(existing ?? {}) };
+  for (const day of monthDays) {
+    if (!day.date || !isAvailabilityDateKey(day.date)) {
+      continue;
+    }
+    if (day.status === 'blocked') {
+      calendar[day.date] = 'blocked';
+      continue;
+    }
+    if (day.status === 'available') {
+      delete calendar[day.date];
+    }
+  }
+  return calendar;
+}
+
+export function toggleGuideShift(
+  days: GuideCalendarDay[],
+  dayNumber: number,
+  shift: GuideShiftBlock,
+): GuideCalendarDay[] {
+  return days.map((day) => {
+    if (day.day !== dayNumber) {
+      return day;
+    }
+    const enabled = day.shifts.includes(shift);
+    const nextShifts = enabled
+      ? day.shifts.filter((entry) => entry !== shift)
+      : [...day.shifts, shift];
+    nextShifts.sort(
+      (left, right) =>
+        GUIDE_SHIFT_ORDER.indexOf(left) - GUIDE_SHIFT_ORDER.indexOf(right),
+    );
+    return { ...day, shifts: nextShifts };
+  });
+}
+
+export function mergeGuideAvailabilitySchedule(
+  existing: Record<string, unknown> | undefined,
+  monthDays: GuideCalendarDay[],
+): Record<string, unknown> {
+  const schedule: Record<string, unknown> = { ...(existing ?? {}) };
+  if (existing?.maxGroupSize != null) {
+    schedule.maxGroupSize = existing.maxGroupSize;
+  }
+  for (const day of monthDays) {
+    if (!day.date || !isAvailabilityDateKey(day.date)) {
+      continue;
+    }
+    if (day.shifts.length > 0) {
+      schedule[day.date] = day.shifts;
+      continue;
+    }
+    delete schedule[day.date];
+  }
+  return schedule;
 }

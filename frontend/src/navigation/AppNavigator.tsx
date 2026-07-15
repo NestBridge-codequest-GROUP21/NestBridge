@@ -161,6 +161,10 @@ import {
   mapHostCalendarDays,
   mapGuideCalendarDays,
   mapActiveBooking,
+  toggleHostDayBlocked,
+  mergeHostAvailabilityCalendar,
+  toggleGuideShift,
+  mergeGuideAvailabilitySchedule,
 } from '../services/providerProfile';
 import { completeBookingPayment } from '../services/paymentFlow';
 import { uploadProfilePhotoIfConfigured } from '../services/mediaUpload';
@@ -235,6 +239,7 @@ import { suggestedGuidesMock } from '../data/guideSessionMock';
 import type { ConversationListItem } from '../types/messaging';
 import type {
   ActiveBookingDetail,
+  GuideShiftBlock,
   HostListingItem,
   TourTypeOption,
 } from '../data/featureScreensMock';
@@ -573,6 +578,9 @@ function HostCalendarStackScreen({
 }: ProviderScreenHeaderProps & { fallbackActiveBooking: ActiveBookingDetail }) {
   const [days, setDays] = useState(hostCalendarDaysMock);
   const [activeBooking, setActiveBooking] = useState(fallbackActiveBooking);
+  const [loadedFromApi, setLoadedFromApi] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     void getMyHostCalendar(PROVIDER_CALENDAR.year, PROVIDER_CALENDAR.month)
@@ -580,6 +588,7 @@ function HostCalendarStackScreen({
         const mapped = mapHostCalendarDays(rows);
         if (mapped.length > 0) {
           setDays(mapped);
+          setLoadedFromApi(true);
         }
       })
       .catch(() => undefined);
@@ -594,8 +603,28 @@ function HostCalendarStackScreen({
       .catch(() => undefined);
   }, [fallbackActiveBooking]);
 
-  const displayDays = withDemoFallback(days, hostCalendarDaysMock);
+  const displayDays = loadedFromApi ? days : withDemoFallback(days, hostCalendarDaysMock);
   const displayBooking = withDemoFallbackValue(activeBooking, hostActiveBookingMock);
+
+  const persistHostCalendar = (nextDays: typeof days) => {
+    setSaving(true);
+    setStatusMessage('Saving…');
+    void getMyHostProfile()
+      .then((profile) =>
+        updateMyHostProfile({
+          availabilityCalendar: mergeHostAvailabilityCalendar(
+            profile.availabilityCalendar,
+            nextDays,
+          ),
+        }),
+      )
+      .then(() => setStatusMessage('Calendar saved'))
+      .catch((error) => {
+        setStatusMessage(null);
+        Alert.alert('Could not save calendar', getApiErrorMessage(error));
+      })
+      .finally(() => setSaving(false));
+  };
 
   return (
     <HostCalendarScreen
@@ -609,6 +638,17 @@ function HostCalendarStackScreen({
       startWeekday={PROVIDER_CALENDAR.startWeekday}
       days={displayDays}
       activeBooking={displayBooking}
+      editable={loadedFromApi && !saving}
+      statusMessage={statusMessage}
+      onDayInteract={(dayNumber) => {
+        const nextDays = toggleHostDayBlocked(days, dayNumber);
+        if (!nextDays) {
+          setStatusMessage('Booked days cannot be changed.');
+          return;
+        }
+        setDays(nextDays);
+        persistHostCalendar(nextDays);
+      }}
       onBack={() => navigation.goBack()}
     />
   );
@@ -696,6 +736,10 @@ function GuideAvailabilityStackScreen({
   navigation,
 }: ProviderScreenHeaderProps) {
   const [days, setDays] = useState(guideCalendarDaysMock);
+  const [loadedFromApi, setLoadedFromApi] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(11);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     void getMyGuideCalendar(PROVIDER_CALENDAR.year, PROVIDER_CALENDAR.month)
@@ -703,12 +747,33 @@ function GuideAvailabilityStackScreen({
         const mapped = mapGuideCalendarDays(rows);
         if (mapped.length > 0) {
           setDays(mapped);
+          setLoadedFromApi(true);
         }
       })
       .catch(() => undefined);
   }, []);
 
-  const displayDays = withDemoFallback(days, guideCalendarDaysMock);
+  const displayDays = loadedFromApi ? days : withDemoFallback(days, guideCalendarDaysMock);
+
+  const persistGuideSchedule = (nextDays: typeof days) => {
+    setSaving(true);
+    setStatusMessage('Saving…');
+    void getMyGuideProfile()
+      .then((profile) =>
+        updateMyGuideProfile({
+          availabilitySchedule: mergeGuideAvailabilitySchedule(
+            profile.availabilitySchedule,
+            nextDays,
+          ),
+        }),
+      )
+      .then(() => setStatusMessage('Availability saved'))
+      .catch((error) => {
+        setStatusMessage(null);
+        Alert.alert('Could not save availability', getApiErrorMessage(error));
+      })
+      .finally(() => setSaving(false));
+  };
 
   return (
     <GuideAvailabilityScreen
@@ -721,6 +786,22 @@ function GuideAvailabilityStackScreen({
       monthLabel={PROVIDER_CALENDAR.monthLabel}
       startWeekday={PROVIDER_CALENDAR.startWeekday}
       days={displayDays}
+      editable={loadedFromApi && !saving}
+      statusMessage={statusMessage}
+      onSelectedDayChange={setSelectedDay}
+      onShiftToggle={(shift: GuideShiftBlock, enabled: boolean) => {
+        const current = days.find((day) => day.day === selectedDay);
+        if (!current) {
+          return;
+        }
+        const alreadyEnabled = current.shifts.includes(shift);
+        if (alreadyEnabled === enabled) {
+          return;
+        }
+        const nextDays = toggleGuideShift(days, selectedDay, shift);
+        setDays(nextDays);
+        persistGuideSchedule(nextDays);
+      }}
       onBack={() => navigation.goBack()}
     />
   );
