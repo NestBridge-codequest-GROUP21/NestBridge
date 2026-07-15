@@ -52,7 +52,6 @@ public class UserController {
         PublicUserDto dto = PublicUserDto.builder()
                 .userId(user.getUserId().toString())
                 .fullName(user.getFullName())
-                .email(user.getEmail())
                 .bio(user.getBio())
                 .profilePhotoUrl(user.getProfilePhotoUrl())
                 .primaryIntent(user.getPrimaryIntent())

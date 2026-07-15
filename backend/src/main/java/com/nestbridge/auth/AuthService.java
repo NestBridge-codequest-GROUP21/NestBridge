@@ -1,5 +1,6 @@
 package com.nestbridge.auth;
 
+import com.nestbridge.notification.EmailVerificationService;
 import com.nestbridge.user.User;
 import com.nestbridge.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +17,16 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
+    private final EmailVerificationService emailVerificationService;
 
     @Value("${jwt.refresh-expiry-ms}")
     private long refreshExpiryMs;
 
+    @Value("${email.verification-enabled:true}")
+    private boolean verificationEnabled;
+
     @Transactional
-    public AuthTokenResponse register(RegisterRequest request) {
+    public RegisterResponse register(RegisterRequest request) {
         String email = request.getEmail().trim().toLowerCase();
         if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new IllegalArgumentException("An account with this email already exists.");
@@ -31,10 +36,25 @@ public class AuthService {
                 .email(email)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .activeExchangeStudent(true)
-                .verified(false)
+                .identityVerified(false)
+                .emailVerified(!verificationEnabled)
                 .build();
         user = userRepository.save(user);
-        return issueTokens(user);
+
+        if (verificationEnabled) {
+            emailVerificationService.sendVerificationEmail(user);
+            return RegisterResponse.builder()
+                    .email(user.getEmail())
+                    .displayName(user.getFullName())
+                    .requiresEmailVerification(true)
+                    .build();
+        }
+
+        return RegisterResponse.builder()
+                .email(user.getEmail())
+                .displayName(user.getFullName())
+                .requiresEmailVerification(false)
+                .build();
     }
 
     public AuthTokenResponse login(LoginRequest request) {
@@ -43,6 +63,9 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid email or password.");
+        }
+        if (verificationEnabled && !user.isEmailVerified()) {
+            throw new EmailNotVerifiedException();
         }
         return issueTokens(user);
     }
@@ -73,7 +96,7 @@ public class AuthService {
     public void verifyIdentity(java.util.UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
-        user.setVerified(true);
+        user.setIdentityVerified(true);
         userRepository.save(user);
     }
 
@@ -87,6 +110,7 @@ public class AuthService {
                 .userId(user.getUserId().toString())
                 .email(user.getEmail())
                 .displayName(user.getFullName())
+                .emailVerified(user.isEmailVerified())
                 .build();
     }
 }

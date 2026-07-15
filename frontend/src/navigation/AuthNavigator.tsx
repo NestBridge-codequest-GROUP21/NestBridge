@@ -3,9 +3,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
+import VerifyEmailScreen from '../screens/auth/VerifyEmailScreen';
 import { welcomeMock, registerMock, loginMock } from '../data/studentOnboardingMock';
 import { DEMO_ACTOR_ACCOUNTS, DEMO_PASSWORD, type DemoAccount } from '../data/demoAccounts';
 import { useAuth } from '../context/AuthContext';
+import * as api from '../services/api';
 import type { AuthStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -19,17 +21,19 @@ export default function AuthNavigator() {
   const [loginError, setLoginError] = useState('');
   const [registerError, setRegisterError] = useState('');
   const [demoLoginBusy, setDemoLoginBusy] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState('');
+  const [verifyError, setVerifyError] = useState('');
+  const [resendBusy, setResendBusy] = useState(false);
 
   const handleDemoLogin = async (account: DemoAccount) => {
     setLoginError('');
     setDemoLoginBusy(true);
     try {
-      const ok = await signIn(account.email, DEMO_PASSWORD, keepSignedIn);
-      if (!ok) {
-        setLoginError(
-          `Could not sign in as ${account.name}. Make sure the backend is running and Flyway seeds have applied.`,
-        );
-      }
+      await signIn(account.email, DEMO_PASSWORD, keepSignedIn);
+    } catch {
+      setLoginError(
+        `Could not sign in as ${account.name}. Make sure the backend is running and Flyway seeds have applied.`,
+      );
     } finally {
       setDemoLoginBusy(false);
     }
@@ -78,7 +82,12 @@ export default function AuthNavigator() {
                   setRegisterError('Password must be at least 6 characters.');
                   return;
                 }
-                await register(fullName, email, password, keepSignedIn);
+                const result = await register(fullName, email, password, keepSignedIn);
+                if (result.requiresEmailVerification) {
+                  navigation.navigate('VerifyEmail', { email: result.email });
+                } else {
+                  await signIn(email, password, keepSignedIn);
+                }
               } catch (error) {
                 setRegisterError(
                   error instanceof Error ? error.message : 'Could not create account.',
@@ -87,6 +96,35 @@ export default function AuthNavigator() {
             }}
             onSignInPress={() => navigation.navigate('Login')}
             onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="VerifyEmail">
+        {({ navigation, route }) => (
+          <VerifyEmailScreen
+            email={route.params.email}
+            statusMessage={verifyStatus}
+            errorMessage={verifyError}
+            resendBusy={resendBusy}
+            onResend={async () => {
+              setVerifyStatus('');
+              setVerifyError('');
+              setResendBusy(true);
+              try {
+                await api.resendVerificationEmail(route.params.email);
+                setVerifyStatus('Verification email sent. Check your inbox.');
+              } catch (error) {
+                setVerifyError(api.getApiErrorMessage(error));
+              } finally {
+                setResendBusy(false);
+              }
+            }}
+            onBackToSignIn={() => {
+              setVerifyStatus('');
+              setVerifyError('');
+              navigation.navigate('Login');
+            }}
           />
         )}
       </Stack.Screen>
@@ -106,9 +144,15 @@ export default function AuthNavigator() {
             onToggleKeepSignedIn={() => setKeepSignedIn((value) => !value)}
             onSubmit={async () => {
               setLoginError('');
-              const ok = await signIn(email, password, keepSignedIn);
-              if (!ok) {
-                setLoginError('Email or password is incorrect.');
+              try {
+                await signIn(email, password, keepSignedIn);
+              } catch (error) {
+                const message =
+                  error instanceof Error ? error.message : 'Email or password is incorrect.';
+                setLoginError(message);
+                if (message.toLowerCase().includes('verify your email')) {
+                  navigation.navigate('VerifyEmail', { email: email.trim() });
+                }
               }
             }}
             onDemoLogin={(account) => {
