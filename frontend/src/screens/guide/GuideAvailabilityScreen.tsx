@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -27,28 +27,68 @@ export interface GuideAvailabilityScreenProps {
   monthLabel: string;
   startWeekday: number;
   days: GuideCalendarDay[];
+  editable?: boolean;
+  statusMessage?: string | null;
+  onSelectedDayChange?: (day: number) => void;
+  onShiftToggle?: (shift: GuideShiftBlock, enabled: boolean) => void;
   onBack?: () => void;
 }
 
-function ShiftDetailCard({ shifts }: { shifts: GuideShiftBlock[] }) {
-  if (shifts.length === 0) {
+const GUIDE_SHIFTS: GuideShiftBlock[] = ['morning', 'afternoon', 'evening'];
+
+function ShiftDetailCard({
+  shifts,
+  editable,
+  onShiftToggle,
+}: {
+  shifts: GuideShiftBlock[];
+  editable?: boolean;
+  onShiftToggle?: (shift: GuideShiftBlock, enabled: boolean) => void;
+}) {
+  if (!editable) {
+    if (shifts.length === 0) {
+      return (
+        <View style={styles.shiftCard}>
+          <Text style={styles.shiftTitle}>No shifts scheduled</Text>
+          <Text style={styles.shiftDetail}>Tap a day to manage availability</Text>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.shiftCard}>
-        <Text style={styles.shiftTitle}>No shifts scheduled</Text>
-        <Text style={styles.shiftDetail}>Tap a day to manage availability</Text>
+        <Text style={styles.shiftTitle}>Working shifts</Text>
+        {shifts.map((shift) => (
+          <View key={shift} style={styles.shiftRow}>
+            <View style={[styles.shiftDot, shiftDotStyle(shift)]} />
+            <Text style={styles.shiftDetail}>{GUIDE_SHIFT_LABELS[shift]}</Text>
+          </View>
+        ))}
       </View>
     );
   }
 
   return (
     <View style={styles.shiftCard}>
-      <Text style={styles.shiftTitle}>Working shifts</Text>
-      {shifts.map((shift) => (
-        <View key={shift} style={styles.shiftRow}>
-          <View style={[styles.shiftDot, shiftDotStyle(shift)]} />
-          <Text style={styles.shiftDetail}>{GUIDE_SHIFT_LABELS[shift]}</Text>
-        </View>
-      ))}
+      <Text style={styles.shiftTitle}>Shifts for selected day</Text>
+      {GUIDE_SHIFTS.map((shift) => {
+        const enabled = shifts.includes(shift);
+        return (
+          <View key={shift} style={styles.shiftToggleRow}>
+            <View style={styles.shiftToggleInfo}>
+              <View style={[styles.shiftDot, shiftDotStyle(shift)]} />
+              <Text style={styles.shiftDetail}>{GUIDE_SHIFT_LABELS[shift]}</Text>
+            </View>
+            <Switch
+              value={enabled}
+              onValueChange={(value) => onShiftToggle?.(shift, value)}
+              trackColor={{ false: colors.border, true: colors.tealBright }}
+              thumbColor={colors.white}
+              accessibilityLabel={`Toggle ${GUIDE_SHIFT_LABELS[shift]} for selected day`}
+            />
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -76,6 +116,10 @@ export default function GuideAvailabilityScreen({
   monthLabel,
   startWeekday,
   days,
+  editable = false,
+  statusMessage,
+  onSelectedDayChange,
+  onShiftToggle,
   onBack,
 }: GuideAvailabilityScreenProps) {
   const [selectedDay, setSelectedDay] = useState(11);
@@ -86,7 +130,12 @@ export default function GuideAvailabilityScreen({
   );
 
   const selectedShifts =
-    days.find((d) => d.day === selectedDay)?.shifts ?? [];
+    days.find((day) => day.day === selectedDay)?.shifts ?? [];
+
+  const handleDayPress = (day: number) => {
+    setSelectedDay(day);
+    onSelectedDayChange?.(day);
+  };
 
   return (
     <View style={styles.root}>
@@ -103,7 +152,9 @@ export default function GuideAvailabilityScreen({
       <ScreenScroll>
         <Text style={styles.screenTitle}>{calendarTitle}</Text>
         <Text style={styles.screenSubtitle}>
-          Manage Morning, Afternoon, and Evening availability blocks.
+          {editable
+            ? 'Tap a day, then toggle Morning, Afternoon, or Evening shifts below.'
+            : 'Manage Morning, Afternoon, and Evening availability blocks.'}
         </Text>
 
         <MonthCalendarGrid
@@ -111,10 +162,16 @@ export default function GuideAvailabilityScreen({
           mode="guide"
           guideDays={gridDays}
           selectedDay={selectedDay}
-          onDayPress={setSelectedDay}
+          onDayPress={handleDayPress}
         />
 
-        <ShiftDetailCard shifts={selectedShifts} />
+        {statusMessage ? <Text style={styles.statusMessage}>{statusMessage}</Text> : null}
+
+        <ShiftDetailCard
+          shifts={selectedShifts}
+          editable={editable}
+          onShiftToggle={onShiftToggle}
+        />
       </ScreenScroll>
     </View>
   );
@@ -138,6 +195,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing.lg,
   },
+  statusMessage: {
+    marginTop: spacing.sm,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+  },
   shiftCard: {
     marginTop: spacing.lg,
     backgroundColor: colors.white,
@@ -159,6 +222,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
+  },
+  shiftToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    minHeight: 44,
+  },
+  shiftToggleInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
   },
   shiftDot: {
     width: 10,
