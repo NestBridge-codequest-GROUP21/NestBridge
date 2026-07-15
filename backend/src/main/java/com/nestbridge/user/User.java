@@ -51,7 +51,13 @@ public class User {
     private String bio;
 
     @Column(name = "is_verified")
-    private boolean verified;
+    private boolean identityVerified;
+
+    @Column(name = "email_verified")
+    private boolean emailVerified;
+
+    @Column(name = "email_verified_at")
+    private java.time.OffsetDateTime emailVerifiedAt;
 
     @Column(name = "trust_score")
     private BigDecimal trustScore;

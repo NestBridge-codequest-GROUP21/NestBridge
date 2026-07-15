@@ -9,7 +9,6 @@ import lombok.Data;
 public class PublicUserDto {
     private String userId;
     private String fullName;
-    private String email;
     private String bio;
     private String profilePhotoUrl;
     private PrimaryIntent primaryIntent;
