@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class GuideProfileRequest {
@@ -18,4 +19,5 @@ public class GuideProfileRequest {
     private Boolean active;
     private BigDecimal lat;
     private BigDecimal lng;
+    private Map<String, Object> availabilitySchedule;
 }

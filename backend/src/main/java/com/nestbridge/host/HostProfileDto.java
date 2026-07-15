@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -30,6 +31,7 @@ public class HostProfileDto {
     private boolean active;
     private int reviewCount;
     private BigDecimal averageRating;
+    private Map<String, Object> availabilityCalendar;
     private Integer matchPercentage;
     private List<String> matchReasons;
 }
