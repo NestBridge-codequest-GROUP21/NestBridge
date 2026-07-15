@@ -5,8 +5,15 @@ import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import VerifyEmailScreen from '../screens/auth/VerifyEmailScreen';
 import { welcomeMock, registerMock, loginMock } from '../data/studentOnboardingMock';
-import { DEMO_ACTOR_ACCOUNTS, DEMO_PASSWORD, type DemoAccount } from '../data/demoAccounts';
+import {
+  DEMO_ACTOR_ACCOUNTS,
+  DEMO_PASSWORD,
+  demoPresetForAccount,
+  type DemoAccount,
+} from '../data/demoAccounts';
+import { isDemoQuickLoginEnabled } from '../config/demoMode';
 import { useAuth } from '../context/AuthContext';
+import { useAccountProfile } from '../context/AccountProfileContext';
 import * as api from '../services/api';
 import type { AuthStackParamList } from './types';
 
@@ -14,6 +21,7 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthNavigator() {
   const { register, signIn } = useAuth();
+  const { applyDevPreset, setPrimaryIntent } = useAccountProfile();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,15 +33,20 @@ export default function AuthNavigator() {
   const [verifyError, setVerifyError] = useState('');
   const [resendBusy, setResendBusy] = useState(false);
 
+  const demoAccounts = isDemoQuickLoginEnabled() ? DEMO_ACTOR_ACCOUNTS : [];
+
   const handleDemoLogin = async (account: DemoAccount) => {
     setLoginError('');
+    setRegisterError('');
     setDemoLoginBusy(true);
     try {
       await signIn(account.email, DEMO_PASSWORD, keepSignedIn);
+      await applyDevPreset(demoPresetForAccount(account));
+      await setPrimaryIntent(account.intent);
     } catch {
-      setLoginError(
-        `Could not sign in as ${account.name}. Make sure the backend is running and Flyway seeds have applied.`,
-      );
+      const message = `Could not sign in as ${account.name}. Make sure the backend is running and Flyway seeds have applied.`;
+      setLoginError(message);
+      setRegisterError(message);
     } finally {
       setDemoLoginBusy(false);
     }
@@ -48,6 +61,11 @@ export default function AuthNavigator() {
         {({ navigation }) => (
           <WelcomeScreen
             {...welcomeMock}
+            demoAccounts={demoAccounts}
+            demoLoginBusy={demoLoginBusy}
+            onDemoLogin={(account) => {
+              void handleDemoLogin(account);
+            }}
             onCreateAccount={() => navigation.navigate('Register')}
             onSignIn={() => navigation.navigate('Login')}
           />
@@ -63,6 +81,11 @@ export default function AuthNavigator() {
             password={password}
             keepSignedIn={keepSignedIn}
             errorMessage={registerError}
+            demoAccounts={demoAccounts}
+            demoLoginBusy={demoLoginBusy}
+            onDemoLogin={(account) => {
+              void handleDemoLogin(account);
+            }}
             onFullNameChange={setFullName}
             onEmailChange={setEmail}
             onPasswordChange={setPassword}
@@ -137,7 +160,7 @@ export default function AuthNavigator() {
             password={password}
             keepSignedIn={keepSignedIn}
             errorMessage={loginError}
-            demoAccounts={DEMO_ACTOR_ACCOUNTS}
+            demoAccounts={demoAccounts}
             demoLoginBusy={demoLoginBusy}
             onEmailChange={setEmail}
             onPasswordChange={setPassword}

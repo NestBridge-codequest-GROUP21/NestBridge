@@ -15,16 +15,33 @@ export interface DemoFallbackOptions {
   error?: string | null | undefined;
 }
 
-/** Prefer live rows; otherwise show demo when fallback is enabled. */
+/** Prefer live rows; when demo mode is on, append demo-only rows so every screen stays full. */
 export function withDemoFallback<T>(
   live: T[],
   demo: T[],
-  _options?: DemoFallbackOptions,
+  options?: DemoFallbackOptions & { idKey?: keyof T },
 ): T[] {
   if (!isDemoFallbackEnabled()) {
     return live;
   }
-  return live.length > 0 ? live : demo;
+  if (live.length === 0) {
+    return demo;
+  }
+  const idKey = options?.idKey ?? ('id' as keyof T);
+  const liveIds = new Set(
+    live.map((item) => {
+      const value = item[idKey];
+      return value != null ? String(value) : '';
+    }),
+  );
+  const extras = demo.filter((item) => {
+    const value = item[idKey];
+    if (value == null) {
+      return true;
+    }
+    return !liveIds.has(String(value));
+  });
+  return extras.length > 0 ? [...live, ...extras] : live;
 }
 
 /** Prefer a live value; otherwise show the demo default when fallback is enabled. */
