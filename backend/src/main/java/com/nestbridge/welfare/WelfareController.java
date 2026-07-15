@@ -25,7 +25,21 @@ public class WelfareController {
     }
 
     @GetMapping("/checkins/{bookingId}")
-    public ResponseEntity<ApiResponse<List<SosEventDto>>> getCheckIns(@PathVariable UUID bookingId) {
-        return ResponseEntity.ok(ApiResponse.success("Check-ins retrieved", welfareService.getCheckInsForBooking(bookingId)));
+    public ResponseEntity<ApiResponse<List<WelfareCheckInDto>>> getCheckIns(
+            Authentication authentication,
+            @PathVariable UUID bookingId) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(
+                ApiResponse.success("Check-ins retrieved", welfareService.getCheckInsForBooking(bookingId, userId)));
+    }
+
+    @PostMapping("/checkins/{bookingId}")
+    public ResponseEntity<ApiResponse<WelfareCheckInDto>> submitCheckIn(
+            Authentication authentication,
+            @PathVariable UUID bookingId,
+            @RequestBody SubmitWelfareCheckInRequest request) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(
+                ApiResponse.success("Check-in saved", welfareService.submitCheckIn(userId, bookingId, request)));
     }
 }

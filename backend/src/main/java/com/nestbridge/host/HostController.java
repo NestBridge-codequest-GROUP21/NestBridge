@@ -15,6 +15,29 @@ public class HostController {
 
     private final HostService hostService;
 
+    @GetMapping("/profile/mine")
+    public ResponseEntity<ApiResponse<HostProfileDto>> getMyProfile(Authentication authentication) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(ApiResponse.success("Host profile retrieved", hostService.getMyProfile(userId)));
+    }
+
+    @GetMapping("/profile/mine/calendar")
+    public ResponseEntity<ApiResponse<java.util.List<HostCalendarDayDto>>> getMyCalendar(
+            Authentication authentication,
+            @RequestParam int year,
+            @RequestParam int month) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(ApiResponse.success(
+                "Host calendar retrieved", hostService.getMyCalendar(userId, year, month)));
+    }
+
+    @GetMapping("/profile/mine/active-booking")
+    public ResponseEntity<ApiResponse<HostActiveBookingDto>> getMyActiveBooking(Authentication authentication) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        HostActiveBookingDto booking = hostService.getMyActiveBooking(userId);
+        return ResponseEntity.ok(ApiResponse.success("Active booking retrieved", booking));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<HostProfileDto>> getHost(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success("Host retrieved", hostService.getById(id)));
