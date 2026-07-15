@@ -2,6 +2,8 @@
 
 This guide is for **Group 21 / CodeQuest** and your first real deployment. You do **not** need to understand code — follow the checklist and paste keys where indicated.
 
+**Demo vs production:** See [DEMO_AND_PRODUCTION.md](./DEMO_AND_PRODUCTION.md) for quick-login tiles and how to disable demo before real users (`EXPO_PUBLIC_ENABLE_DEMO_FALLBACK=false`).
+
 ## What “API keys” mean
 
 Services like Paystack, SendGrid, and Smile Identity give you **secret passwords** (API keys) so your server can talk to them securely. You create free/paid accounts, copy the keys once, and paste them into **Railway** (your cloud host). Never commit keys to GitHub.
