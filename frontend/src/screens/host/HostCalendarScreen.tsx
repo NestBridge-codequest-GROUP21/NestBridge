@@ -27,6 +27,9 @@ export interface HostCalendarScreenProps {
   startWeekday: number;
   days: HostCalendarDay[];
   activeBooking: ActiveBookingDetail;
+  editable?: boolean;
+  statusMessage?: string | null;
+  onDayInteract?: (day: number) => void;
   onBack?: () => void;
 }
 
@@ -41,6 +44,9 @@ export default function HostCalendarScreen({
   startWeekday,
   days,
   activeBooking,
+  editable = false,
+  statusMessage,
+  onDayInteract,
   onBack,
 }: HostCalendarScreenProps) {
   const [selectedDay, setSelectedDay] = useState(10);
@@ -49,6 +55,13 @@ export default function HostCalendarScreen({
     () => buildHostCalendarGrid(days, startWeekday),
     [days, startWeekday],
   );
+
+  const handleDayPress = (day: number) => {
+    setSelectedDay(day);
+    if (editable) {
+      onDayInteract?.(day);
+    }
+  };
 
   return (
     <View style={styles.root}>
@@ -64,14 +77,21 @@ export default function HostCalendarScreen({
 
       <ScreenScroll>
         <Text style={styles.screenTitle}>{calendarTitle}</Text>
+        {editable ? (
+          <Text style={styles.screenSubtitle}>
+            Tap an open day to block or unblock it. Booked days cannot be changed.
+          </Text>
+        ) : null}
 
         <MonthCalendarGrid
           monthLabel={monthLabel}
           mode="host"
           hostDays={gridDays}
           selectedDay={selectedDay}
-          onDayPress={setSelectedDay}
+          onDayPress={handleDayPress}
         />
+
+        {statusMessage ? <Text style={styles.statusMessage}>{statusMessage}</Text> : null}
 
         <View style={styles.bookingCard}>
           <Text style={styles.bookingTitle}>Active booking</Text>
@@ -95,7 +115,19 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  screenSubtitle: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textSecondary,
     marginBottom: spacing.lg,
+  },
+  statusMessage: {
+    marginTop: spacing.sm,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
   },
   bookingCard: {
     marginTop: spacing.lg,
