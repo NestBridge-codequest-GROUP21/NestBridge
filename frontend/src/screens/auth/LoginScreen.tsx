@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import {
   colors,
   fontFamilies,
@@ -20,7 +21,6 @@ import {
   fontWeights,
   spacing,
   borderRadius,
-  tints,
 } from '../../constants/theme';
 import type { DemoAccount } from '../../data/demoAccounts';
 
@@ -92,6 +92,18 @@ export default function LoginScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
 
+        {demoAccounts.length > 0 ? (
+          <>
+            <DemoActorQuickLogin
+              accounts={demoAccounts}
+              busy={demoLoginBusy}
+              variant="tabs"
+              onSelect={onDemoLogin}
+            />
+            <Text style={styles.dividerLabel}>or sign in with email</Text>
+          </>
+        ) : null}
+
         <FormTextField
           label="Email"
           value={email}
@@ -125,37 +137,6 @@ export default function LoginScreen({
         <PrimaryButton label="Sign in" onPress={onSubmit} />
         <View style={styles.spacer} />
         <SecondaryButton label="Create an account" onPress={onCreateAccountPress} />
-
-        {demoAccounts.length > 0 ? (
-          <View style={styles.demoSection}>
-            <Text style={styles.demoTitle}>Try a demo account</Text>
-            <Text style={styles.demoHint}>
-              One-tap sign-in as each actor. Password for all: password
-            </Text>
-            {demoAccounts.map((account) => (
-              <Pressable
-                key={account.id}
-                style={({ pressed }) => [
-                  styles.demoCard,
-                  pressed && styles.demoCardPressed,
-                  demoLoginBusy && styles.demoCardDisabled,
-                ]}
-                onPress={() => onDemoLogin?.(account)}
-                disabled={demoLoginBusy}
-                accessibilityRole="button"
-                accessibilityLabel={`Sign in as demo ${account.label}, ${account.name}`}
-              >
-                <View style={styles.demoCardTop}>
-                  <View style={styles.demoRolePill}>
-                    <Text style={styles.demoRoleText}>{account.label}</Text>
-                  </View>
-                  <Text style={styles.demoName}>{account.name}</Text>
-                </View>
-                <Text style={styles.demoDescription}>{account.description}</Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -191,7 +172,14 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     lineHeight: 20,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  dividerLabel: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
   },
   keepSignedInRow: {
     flexDirection: 'row',
@@ -229,72 +217,5 @@ const styles = StyleSheet.create({
   },
   spacer: {
     height: spacing.sm,
-  },
-  demoSection: {
-    marginTop: spacing.xl,
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  demoTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  demoHint: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
-    lineHeight: 18,
-    marginBottom: spacing.md,
-  },
-  demoCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    minHeight: 44,
-  },
-  demoCardPressed: {
-    opacity: 0.94,
-    backgroundColor: tints.teal,
-  },
-  demoCardDisabled: {
-    opacity: 0.6,
-  },
-  demoCardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-    gap: spacing.sm,
-  },
-  demoRolePill: {
-    backgroundColor: colors.navy,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-  },
-  demoRoleText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.white,
-  },
-  demoName: {
-    flex: 1,
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-  },
-  demoDescription: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
-    lineHeight: 18,
   },
 });

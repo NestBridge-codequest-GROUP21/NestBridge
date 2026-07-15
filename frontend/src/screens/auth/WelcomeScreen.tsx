@@ -14,7 +14,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BrandLogoMark from '../../components/BrandLogoMark';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import AppIcon from '../../components/AppIcon';
+import type { DemoAccount } from '../../data/demoAccounts';
 import {
   colors,
   tints,
@@ -42,6 +44,9 @@ export interface WelcomeScreenProps {
   subheadline: string;
   tagline?: string;
   valuePills?: WelcomeValuePill[];
+  demoAccounts?: DemoAccount[];
+  demoLoginBusy?: boolean;
+  onDemoLogin?: (account: DemoAccount) => void;
   onCreateAccount?: () => void;
   onSignIn?: () => void;
 }
@@ -97,6 +102,9 @@ export default function WelcomeScreen({
   subheadline,
   tagline,
   valuePills = [],
+  demoAccounts = [],
+  demoLoginBusy = false,
+  onDemoLogin,
   onCreateAccount,
   onSignIn,
 }: WelcomeScreenProps) {
@@ -186,6 +194,19 @@ export default function WelcomeScreen({
           },
         ]}
       >
+        {demoAccounts.length > 0 ? (
+          <>
+            <DemoActorQuickLogin
+              accounts={demoAccounts}
+              busy={demoLoginBusy}
+              variant="tabs"
+              title="Jump into a demo"
+              hint="Backend + demo data — password: password"
+              onSelect={onDemoLogin}
+            />
+            <Text style={styles.dividerLabel}>or continue with your account</Text>
+          </>
+        ) : null}
         <PrimaryButton label="Create account" onPress={onCreateAccount} />
         <View style={styles.signInSpacer} />
         <SecondaryButton label="Sign in" onPress={onSignIn} />
@@ -294,5 +315,12 @@ const styles = StyleSheet.create({
   },
   signInSpacer: {
     height: spacing.sm,
+  },
+  dividerLabel: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
 });

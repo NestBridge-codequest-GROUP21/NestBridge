@@ -12,6 +12,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
+import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
+import type { DemoAccount } from '../../data/demoAccounts';
 import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
 
 export interface RegisterScreenProps {
@@ -22,6 +24,9 @@ export interface RegisterScreenProps {
   password: string;
   keepSignedIn: boolean;
   errorMessage?: string;
+  demoAccounts?: DemoAccount[];
+  demoLoginBusy?: boolean;
+  onDemoLogin?: (account: DemoAccount) => void;
   onFullNameChange?: (value: string) => void;
   onEmailChange?: (value: string) => void;
   onPasswordChange?: (value: string) => void;
@@ -39,6 +44,9 @@ export default function RegisterScreen({
   password,
   keepSignedIn,
   errorMessage,
+  demoAccounts = [],
+  demoLoginBusy = false,
+  onDemoLogin,
   onFullNameChange,
   onEmailChange,
   onPasswordChange,
@@ -113,6 +121,16 @@ export default function RegisterScreen({
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
         <PrimaryButton label="Create Account" onPress={onSubmit} />
+
+        {demoAccounts.length > 0 ? (
+          <DemoActorQuickLogin
+            accounts={demoAccounts}
+            busy={demoLoginBusy}
+            variant="tabs"
+            title="Or try a demo account"
+            onSelect={onDemoLogin}
+          />
+        ) : null}
 
         <Pressable onPress={onSignInPress} style={styles.footerLink}>
           <Text style={styles.footerText}>
