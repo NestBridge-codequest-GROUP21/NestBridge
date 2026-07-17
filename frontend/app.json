@@ -43,7 +43,11 @@
       "firebaseApiKey": "",
       "firebaseAuthDomain": "",
       "firebaseDatabaseUrl": "",
-      "firebaseProjectId": ""
+      "firebaseProjectId": "",
+      "enableDemoFallback": true,
+      "eas": {
+        "projectId": "05eaad69-0d05-4eb9-b956-028c11e08f92"
+      }
     }
   }
 }
