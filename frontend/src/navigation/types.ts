@@ -18,6 +18,9 @@ export type AppStackParamList = {
   GuideHome: undefined;
   Profile: undefined;
   DevTesting: undefined;
+  StaffUserSearch: undefined;
+  StaffUserDetail: { userId: string };
+  StaffUserActivity: { userId: string; userName: string };
   AccountSetup: undefined;
   UnifiedSearch: undefined;
   Destination: { track: 'SEEKER' };

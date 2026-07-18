@@ -32,6 +32,8 @@ export interface ProfileScreenProps {
   onSignOut?: () => void;
   onResetDemo?: () => void;
   onDevTestingPress?: () => void;
+  showStaffTools?: boolean;
+  onStaffToolsPress?: () => void;
 }
 
 export default function ProfileScreen({
@@ -48,6 +50,8 @@ export default function ProfileScreen({
   onSignOut,
   onResetDemo,
   onDevTestingPress,
+  showStaffTools = false,
+  onStaffToolsPress,
 }: ProfileScreenProps) {
   return (
     <View style={styles.root}>
@@ -127,6 +131,23 @@ export default function ProfileScreen({
               </Text>
             </View>
             <Text style={styles.servicesAction}>Browse</Text>
+          </Pressable>
+        ) : null}
+
+        {showStaffTools ? (
+          <Pressable
+            style={({ pressed }) => [styles.servicesCard, pressed && styles.pressed]}
+            onPress={onStaffToolsPress}
+            accessibilityRole="button"
+            accessibilityLabel="Staff tools"
+          >
+            <View style={styles.servicesText}>
+              <Text style={styles.servicesTitle}>Staff tools</Text>
+              <Text style={styles.servicesSubtitle}>
+                Search users, suspend accounts, and review activity
+              </Text>
+            </View>
+            <Text style={styles.servicesAction}>Open</Text>
           </Pressable>
         ) : null}
 
