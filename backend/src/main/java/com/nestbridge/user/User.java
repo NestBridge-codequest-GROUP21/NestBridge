@@ -74,6 +74,12 @@ public class User {
     @Column(name = "is_active_exchange_student")
     private boolean activeExchangeStudent;
 
+    @Column(name = "is_staff")
+    private boolean staff;
+
+    @Column(name = "is_suspended")
+    private boolean suspended;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

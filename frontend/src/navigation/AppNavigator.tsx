@@ -51,6 +51,11 @@ import BrowseHomeScreen from '../screens/shared/BrowseHomeScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
 import DevTestingScreen from '../screens/shared/DevTestingScreen';
+import {
+  StaffUserActivityRoute,
+  StaffUserDetailRoute,
+  StaffUserSearchRoute,
+} from './staffRoutes';
 import UnifiedSearchScreen from '../screens/shared/UnifiedSearchScreen';
 import ExploreHomeScreen from '../screens/tourist/ExploreHomeScreen';
 import LodgingDirectoryScreen from '../screens/tourist/LodgingDirectoryScreen';
@@ -2320,12 +2325,14 @@ export default function AppNavigator() {
             setupSummary={setupSummary}
             culturalGuidanceItems={profileCulturalItems}
             showTravelBooking={shouldShowTravelBookingEntry(homeRole)}
+            showStaffTools={Boolean(user?.isStaff)}
             onAccountSetupPress={() => navigation.navigate('AccountSetup')}
             onCulturalGuidanceItemPress={(itemId) =>
               handleProfileCulturalItem(navigation, itemId)
             }
             onCoreServicesPress={() => navigation.navigate('UnifiedSearch')}
             onTravelBookingPress={() => navigation.navigate('UnifiedSearch')}
+            onStaffToolsPress={() => navigation.navigate('StaffUserSearch')}
             onSignOut={() => {
               void signOut();
             }}
@@ -2336,6 +2343,39 @@ export default function AppNavigator() {
                 await signOut();
               })();
             }}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="StaffUserSearch">
+        {({ navigation }) => (
+          <StaffUserSearchRoute
+            onSelectUser={(userId) =>
+              navigation.navigate('StaffUserDetail', { userId })
+            }
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="StaffUserDetail">
+        {({ navigation, route }) => (
+          <StaffUserDetailRoute
+            userId={route.params.userId}
+            onViewActivity={(userId, userName) =>
+              navigation.navigate('StaffUserActivity', { userId, userName })
+            }
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="StaffUserActivity">
+        {({ navigation, route }) => (
+          <StaffUserActivityRoute
+            userId={route.params.userId}
+            userName={route.params.userName}
+            onBack={() => navigation.goBack()}
           />
         )}
       </Stack.Screen>

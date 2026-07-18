@@ -44,9 +44,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
     (async () => {
       const session = await loadSession();
-      if (mounted && session?.user) {
-        setUser(session.user);
-        void registerPushTokenIfAvailable();
+      if (!mounted) return;
+      if (session?.user) {
+        // Hydrate staff/ops flags from a fresh token when possible.
+        if (session.refreshToken) {
+          const refreshed = await api.refreshSession();
+          if (mounted && refreshed?.user) {
+            setUser(refreshed.user);
+            void registerPushTokenIfAvailable();
+            setIsLoading(false);
+            return;
+          }
+        }
+        if (mounted) {
+          setUser(session.user);
+          void registerPushTokenIfAvailable();
+        }
       }
       if (mounted) {
         setIsLoading(false);
