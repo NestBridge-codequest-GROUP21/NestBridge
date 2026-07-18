@@ -99,26 +99,30 @@ function migrateFromLegacyCapabilities(
 export async function loadAccountProfile(
   userId: string,
 ): Promise<AccountProfileState> {
-  const raw = await SecureStore.getItemAsync(profileKey(userId));
-  if (raw) {
-    try {
-      return normalizeProfileState(JSON.parse(raw) as AccountProfileState);
-    } catch {
-      return createDefaultAccountProfileState();
+  try {
+    const raw = await SecureStore.getItemAsync(profileKey(userId));
+    if (raw) {
+      try {
+        return normalizeProfileState(JSON.parse(raw) as AccountProfileState);
+      } catch {
+        return createDefaultAccountProfileState();
+      }
     }
-  }
 
-  const legacyRaw = await SecureStore.getItemAsync(legacyKey(userId));
-  if (legacyRaw) {
-    try {
-      const migrated = migrateFromLegacyCapabilities(
-        JSON.parse(legacyRaw) as CapabilitiesState,
-      );
-      await saveAccountProfile(userId, migrated);
-      return migrated;
-    } catch {
-      return createDefaultAccountProfileState();
+    const legacyRaw = await SecureStore.getItemAsync(legacyKey(userId));
+    if (legacyRaw) {
+      try {
+        const migrated = migrateFromLegacyCapabilities(
+          JSON.parse(legacyRaw) as CapabilitiesState,
+        );
+        await saveAccountProfile(userId, migrated);
+        return migrated;
+      } catch {
+        return createDefaultAccountProfileState();
+      }
     }
+  } catch (error) {
+    console.warn('[accountProfileStorage] load failed', error);
   }
 
   return createDefaultAccountProfileState();
@@ -128,10 +132,22 @@ export async function saveAccountProfile(
   userId: string,
   state: AccountProfileState,
 ): Promise<void> {
-  await SecureStore.setItemAsync(profileKey(userId), JSON.stringify(state));
+  try {
+    await SecureStore.setItemAsync(profileKey(userId), JSON.stringify(state));
+  } catch (error) {
+    console.warn('[accountProfileStorage] save failed', error);
+  }
 }
 
 export async function clearAccountProfile(userId: string): Promise<void> {
-  await SecureStore.deleteItemAsync(profileKey(userId));
-  await SecureStore.deleteItemAsync(legacyKey(userId));
+  try {
+    await SecureStore.deleteItemAsync(profileKey(userId));
+  } catch (error) {
+    console.warn('[accountProfileStorage] clear profile failed', error);
+  }
+  try {
+    await SecureStore.deleteItemAsync(legacyKey(userId));
+  } catch (error) {
+    console.warn('[accountProfileStorage] clear legacy failed', error);
+  }
 }
