@@ -23,6 +23,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final int LOGIN_LIMIT = 20;
     private static final int REGISTER_LIMIT = 10;
     private static final int RESEND_LIMIT = 5;
+    private static final int FORGOT_PASSWORD_LIMIT = 5;
+    private static final int RESET_PASSWORD_LIMIT = 10;
     private static final long WINDOW_MS = 60_000;
 
     private final Map<String, Window> windows = new ConcurrentHashMap<>();
@@ -39,7 +41,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
         return !(path.endsWith("/login")
                 || path.endsWith("/register")
-                || path.endsWith("/resend-verification"));
+                || path.endsWith("/resend-verification")
+                || path.endsWith("/forgot-password")
+                || path.endsWith("/reset-password"));
     }
 
     @Override
@@ -50,6 +54,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         int limit = path.endsWith("/register") ? REGISTER_LIMIT
                 : path.endsWith("/resend-verification") ? RESEND_LIMIT
+                : path.endsWith("/forgot-password") ? FORGOT_PASSWORD_LIMIT
+                : path.endsWith("/reset-password") ? RESET_PASSWORD_LIMIT
                 : LOGIN_LIMIT;
 
         String key = clientIp(request) + ":" + path;
