@@ -5,11 +5,11 @@ const SESSION_KEY = 'nestbridge_session';
 const CREDENTIALS_KEY = 'nestbridge_credentials';
 
 export async function loadSession(): Promise<AuthSession | null> {
-  const raw = await SecureStore.getItemAsync(SESSION_KEY);
-  if (!raw) {
-    return null;
-  }
   try {
+    const raw = await SecureStore.getItemAsync(SESSION_KEY);
+    if (!raw) {
+      return null;
+    }
     return JSON.parse(raw) as AuthSession;
   } catch {
     return null;
@@ -17,19 +17,27 @@ export async function loadSession(): Promise<AuthSession | null> {
 }
 
 export async function saveSession(session: AuthSession): Promise<void> {
-  await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(session));
+  try {
+    await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(session));
+  } catch (error) {
+    console.warn('[authStorage] saveSession failed', error);
+  }
 }
 
 export async function clearSession(): Promise<void> {
-  await SecureStore.deleteItemAsync(SESSION_KEY);
+  try {
+    await SecureStore.deleteItemAsync(SESSION_KEY);
+  } catch (error) {
+    console.warn('[authStorage] clearSession failed', error);
+  }
 }
 
 export async function loadCredentials(): Promise<StoredCredential[]> {
-  const raw = await SecureStore.getItemAsync(CREDENTIALS_KEY);
-  if (!raw) {
-    return [];
-  }
   try {
+    const raw = await SecureStore.getItemAsync(CREDENTIALS_KEY);
+    if (!raw) {
+      return [];
+    }
     return JSON.parse(raw) as StoredCredential[];
   } catch {
     return [];
@@ -37,5 +45,9 @@ export async function loadCredentials(): Promise<StoredCredential[]> {
 }
 
 export async function saveCredentials(credentials: StoredCredential[]): Promise<void> {
-  await SecureStore.setItemAsync(CREDENTIALS_KEY, JSON.stringify(credentials));
+  try {
+    await SecureStore.setItemAsync(CREDENTIALS_KEY, JSON.stringify(credentials));
+  } catch (error) {
+    console.warn('[authStorage] saveCredentials failed', error);
+  }
 }

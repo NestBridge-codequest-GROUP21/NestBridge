@@ -48,12 +48,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         // Hydrate staff/ops flags from a fresh token when possible.
         if (session.refreshToken) {
-          const refreshed = await api.refreshSession();
-          if (mounted && refreshed?.user) {
-            setUser(refreshed.user);
-            void registerPushTokenIfAvailable();
-            setIsLoading(false);
-            return;
+          try {
+            const refreshed = await api.refreshSession();
+            if (mounted && refreshed?.user) {
+              setUser(refreshed.user);
+              void registerPushTokenIfAvailable();
+              setIsLoading(false);
+              return;
+            }
+          } catch {
+            // Keep cached session if refresh fails (offline / misconfigured API).
           }
         }
         if (mounted) {

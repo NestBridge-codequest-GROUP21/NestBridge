@@ -1,13 +1,16 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { Linking } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import SplashScreen from '../screens/auth/SplashScreen';
+import BootLoader from '../components/BootLoader';
 import { splashMock } from '../data/studentOnboardingMock';
 import { useAuth } from '../context/AuthContext';
 import { useAccountProfile } from '../context/AccountProfileContext';
 import { parseResetPasswordToken } from '../utils/parseResetPasswordUrl';
 import AuthNavigator from './AuthNavigator';
-import AppNavigator from './AppNavigator';
+
+/** Defer the heavy authenticated navigator (and its native imports) until after splash/auth. */
+const AppNavigator = lazy(() => import('./AppNavigator'));
 
 /**
  * Cold start: branded Splash once per JS session, then Auth or App.
@@ -35,7 +38,7 @@ export default function RootNavigator() {
   );
 
   useEffect(() => {
-    void Linking.getInitialURL().then(handleResetUrl);
+    void Linking.getInitialURL().then(handleResetUrl).catch(() => undefined);
     const subscription = Linking.addEventListener('url', ({ url }) => handleResetUrl(url));
     return () => subscription.remove();
   }, [handleResetUrl]);
@@ -60,7 +63,9 @@ export default function RootNavigator() {
   return (
     <NavigationContainer>
       {user ? (
-        <AppNavigator key={user.userId} />
+        <Suspense fallback={<BootLoader />}>
+          <AppNavigator key={user.userId} />
+        </Suspense>
       ) : (
         <AuthNavigator
           key={passwordResetToken ?? 'auth-default'}
