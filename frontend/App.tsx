@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import BootLoader from './src/components/BootLoader';
+import AppErrorBoundary from './src/components/AppErrorBoundary';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import { AuthProvider } from './src/context/AuthContext';
@@ -12,8 +13,15 @@ export default function App() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+  const [fontWaitTimedOut, setFontWaitTimedOut] = useState(false);
 
-  if (!fontsLoaded) {
+  // Never block forever on font loading in a standalone build.
+  useEffect(() => {
+    const timer = setTimeout(() => setFontWaitTimedOut(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!fontsLoaded && !fontWaitTimedOut) {
     return (
       <SafeAreaProvider>
         <BootLoader />
@@ -22,12 +30,14 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <AccountProfileProvider>
-          <RootNavigator />
-        </AccountProfileProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <AppErrorBoundary>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <AccountProfileProvider>
+            <RootNavigator />
+          </AccountProfileProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </AppErrorBoundary>
   );
 }
