@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
-import { Linking } from 'react-native';
+import { Linking, Text, View, StyleSheet, Pressable } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import SplashScreen from '../screens/auth/SplashScreen';
 import BootLoader from '../components/BootLoader';
@@ -8,9 +8,27 @@ import { useAuth } from '../context/AuthContext';
 import { useAccountProfile } from '../context/AccountProfileContext';
 import { parseResetPasswordToken } from '../utils/parseResetPasswordUrl';
 import AuthNavigator from './AuthNavigator';
+import { registerPushTokenIfAvailable } from '../services/pushRegistration';
+import {
+  clearLastBootError,
+  loadLastBootError,
+  recordBootError,
+  setBootStage,
+} from '../services/bootDiagnostics';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+} from '../constants/theme';
 
 /** Defer the heavy authenticated navigator (and its native imports) until after splash/auth. */
 const AppNavigator = lazy(() => import('./AppNavigator'));
+
+/** If auth/profile never settle, leave splash so the app remains usable. */
+const SPLASH_FORCE_MS = 10000;
 
 /**
  * Cold start: branded Splash once per JS session, then Auth or App.
@@ -21,35 +39,86 @@ export default function RootNavigator() {
   const { isLoading: profileLoading } = useAccountProfile();
   const [splashDismissed, setSplashDismissed] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
+  const [forceBoot, setForceBoot] = useState(false);
   const [passwordResetToken, setPasswordResetToken] = useState<string | undefined>();
+  const [priorBootError, setPriorBootError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setBootStage('splash_waiting');
+    void loadLastBootError().then((record) => {
+      if (record) {
+        setPriorBootError(`${record.stage}: ${record.message}`);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (splashDone) {
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      console.warn('[boot] forcing splash dismiss after timeout');
+      void recordBootError('splash_force', 'Forced splash dismiss after boot timeout');
+      setForceBoot(true);
+      setSplashDismissed(true);
+    }, SPLASH_FORCE_MS);
+    return () => clearTimeout(timer);
+  }, [splashDone]);
 
   const handleResetUrl = useCallback(
     (url: string | null | undefined) => {
-      const token = url ? parseResetPasswordToken(url) : null;
-      if (!token) {
-        return;
-      }
-      setPasswordResetToken(token);
-      if (user) {
-        void signOut();
+      try {
+        const token = url ? parseResetPasswordToken(url) : null;
+        if (!token) {
+          return;
+        }
+        setPasswordResetToken(token);
+        if (user) {
+          void signOut();
+        }
+      } catch (error) {
+        void recordBootError('reset_url', error);
       }
     },
     [user, signOut],
   );
 
   useEffect(() => {
-    void Linking.getInitialURL().then(handleResetUrl).catch(() => undefined);
-    const subscription = Linking.addEventListener('url', ({ url }) => handleResetUrl(url));
-    return () => subscription.remove();
+    try {
+      void Linking.getInitialURL()
+        .then(handleResetUrl)
+        .catch((error) => {
+          void recordBootError('linking_initial', error);
+        });
+      const subscription = Linking.addEventListener('url', ({ url }) =>
+        handleResetUrl(url),
+      );
+      return () => subscription.remove();
+    } catch (error) {
+      void recordBootError('linking_subscribe', error);
+      return undefined;
+    }
   }, [handleResetUrl]);
 
-  const bootReady = !authLoading && !(user && profileLoading);
+  const bootReady = forceBoot || (!authLoading && !(user && profileLoading));
 
   useEffect(() => {
     if (splashDismissed && bootReady) {
       setSplashDone(true);
+      setBootStage('splash_dismissed');
     }
   }, [splashDismissed, bootReady]);
+
+  useEffect(() => {
+    if (!splashDone) {
+      return;
+    }
+    setBootStage('nav_ready');
+    if (user) {
+      setBootStage('push_register');
+      void registerPushTokenIfAvailable();
+    }
+  }, [splashDone, user?.userId]);
 
   if (!splashDone) {
     return (
@@ -61,18 +130,81 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
-      {user ? (
-        <Suspense fallback={<BootLoader />}>
-          <AppNavigator key={user.userId} />
-        </Suspense>
-      ) : (
-        <AuthNavigator
-          key={passwordResetToken ?? 'auth-default'}
-          initialResetToken={passwordResetToken}
-          onResetTokenConsumed={() => setPasswordResetToken(undefined)}
-        />
-      )}
-    </NavigationContainer>
+    <View style={styles.root}>
+      {priorBootError ? (
+        <View style={styles.banner} accessibilityRole="alert">
+          <Text style={styles.bannerTitle}>Previous startup issue</Text>
+          <Text style={styles.bannerBody} numberOfLines={4}>
+            {priorBootError}
+          </Text>
+          <Pressable
+            style={({ pressed }) => [styles.bannerButton, pressed && styles.pressed]}
+            onPress={() => {
+              setPriorBootError(null);
+              void clearLastBootError();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss previous startup error"
+          >
+            <Text style={styles.bannerButtonLabel}>Dismiss</Text>
+          </Pressable>
+        </View>
+      ) : null}
+      <NavigationContainer>
+        {user ? (
+          <Suspense fallback={<BootLoader />}>
+            <AppNavigator key={user.userId} />
+          </Suspense>
+        ) : (
+          <AuthNavigator
+            key={passwordResetToken ?? 'auth-default'}
+            initialResetToken={passwordResetToken}
+            onResetTokenConsumed={() => setPasswordResetToken(undefined)}
+          />
+        )}
+      </NavigationContainer>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  banner: {
+    backgroundColor: colors.warmCream,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.xs,
+  },
+  bannerTitle: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    color: colors.danger,
+  },
+  bannerBody: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+  },
+  bannerButton: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.tealBright,
+  },
+  bannerButtonLabel: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    color: colors.white,
+  },
+  pressed: {
+    opacity: 0.9,
+  },
+});

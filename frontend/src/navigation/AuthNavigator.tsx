@@ -175,6 +175,7 @@ export default function AuthNavigator({
             onBackToSignIn={() => {
               setVerifyStatus('');
               setVerifyError('');
+              setPassword('');
               navigation.navigate('Login');
             }}
           />

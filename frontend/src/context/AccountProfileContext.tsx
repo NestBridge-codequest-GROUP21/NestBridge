@@ -40,6 +40,10 @@ import {
   isSeekerComplete,
 } from '../utils/accountProfile';
 import { useAuth } from './AuthContext';
+import {
+  recordBootError,
+  setBootStage,
+} from '../services/bootDiagnostics';
 
 interface AccountProfileContextValue {
   state: AccountProfileState;
@@ -143,33 +147,58 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
 
   useEffect(() => {
     let mounted = true;
+    const PROFILE_BOOT_TIMEOUT_MS = 8000;
+    const timeout = setTimeout(() => {
+      if (mounted) {
+        console.warn('[profile] hydrate timed out');
+        void recordBootError(
+          'profile_hydrate_timeout',
+          'Account profile hydrate exceeded timeout',
+        );
+        setIsLoading(false);
+      }
+    }, PROFILE_BOOT_TIMEOUT_MS);
+
     (async () => {
       if (!user) {
         if (mounted) {
           setState(createDefaultAccountProfileState());
           setIsLoading(false);
         }
+        clearTimeout(timeout);
         return;
       }
+      setBootStage('profile_hydrate_start');
+      setIsLoading(true);
       try {
         const remote = await api.getMyProfile();
         if (mounted) {
           setState(remote);
         }
         await saveAccountProfile(user.userId, remote);
-      } catch {
-        const saved = await loadAccountProfile(user.userId);
-        if (mounted) {
-          setState(saved);
+      } catch (remoteError) {
+        try {
+          const saved = await loadAccountProfile(user.userId);
+          if (mounted) {
+            setState(saved);
+          }
+        } catch (localError) {
+          await recordBootError('profile_hydrate', localError ?? remoteError);
+          if (mounted) {
+            setState(createDefaultAccountProfileState());
+          }
         }
       } finally {
+        clearTimeout(timeout);
         if (mounted) {
           setIsLoading(false);
+          setBootStage('profile_hydrate_done');
         }
       }
     })();
     return () => {
       mounted = false;
+      clearTimeout(timeout);
     };
   }, [user?.userId]);
 
