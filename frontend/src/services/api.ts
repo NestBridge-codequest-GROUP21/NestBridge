@@ -484,6 +484,21 @@ export async function resendVerificationEmail(email: string): Promise<void> {
   unwrap({ data });
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  const { data } = await api.post<ApiResponse<null>>('/api/auth/forgot-password', {
+    email,
+  });
+  unwrap({ data });
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  const { data } = await api.post<ApiResponse<null>>('/api/auth/reset-password', {
+    token,
+    password,
+  });
+  unwrap({ data });
+}
+
 export async function login(
   email: string,
   password: string,

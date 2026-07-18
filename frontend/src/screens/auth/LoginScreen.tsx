@@ -38,6 +38,7 @@ export interface LoginScreenProps {
   onToggleKeepSignedIn?: () => void;
   onSubmit?: () => void;
   onDemoLogin?: (account: DemoAccount) => void;
+  onForgotPasswordPress?: () => void;
   onCreateAccountPress?: () => void;
   onBack?: () => void;
 }
@@ -56,6 +57,7 @@ export default function LoginScreen({
   onToggleKeepSignedIn,
   onSubmit,
   onDemoLogin,
+  onForgotPasswordPress,
   onCreateAccountPress,
   onBack,
 }: LoginScreenProps) {
@@ -120,6 +122,17 @@ export default function LoginScreen({
           secureTextEntry
         />
 
+        {onForgotPasswordPress ? (
+          <Pressable
+            onPress={onForgotPasswordPress}
+            style={styles.forgotRow}
+            accessibilityRole="button"
+            accessibilityLabel="Forgot password"
+          >
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </Pressable>
+        ) : null}
+
         <Pressable
           onPress={onToggleKeepSignedIn}
           style={styles.keepSignedInRow}
@@ -180,6 +193,17 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
+  },
+  forgotRow: {
+    alignSelf: 'flex-end',
+    minHeight: 44,
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  forgotText: {
+    fontSize: fontSizes.body,
+    color: colors.teal,
+    fontWeight: fontWeights.semibold,
   },
   keepSignedInRow: {
     flexDirection: 'row',

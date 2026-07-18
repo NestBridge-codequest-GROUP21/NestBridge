@@ -25,6 +25,7 @@ const base: ExpoConfig = {
     edgeToEdgeEnabled: true,
     package: 'com.nestbridge.app',
   },
+  scheme: 'nestbridge',
   web: {
     favicon: './assets/favicon.png',
   },
