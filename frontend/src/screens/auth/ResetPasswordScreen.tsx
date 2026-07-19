@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  View,
   Text,
   StyleSheet,
   ScrollView,
@@ -39,7 +38,6 @@ export default function ResetPasswordScreen({
   onBack,
 }: ResetPasswordScreenProps) {
   const insets = useSafeAreaInsets();
-  const [showPassword, setShowPassword] = useState(false);
   const success = !!statusMessage && !errorMessage;
 
   return (
@@ -86,26 +84,23 @@ export default function ResetPasswordScreen({
               value={password}
               placeholder="At least 6 characters"
               onChangeText={onPasswordChange}
-              secureTextEntry={!showPassword}
+              secureTextEntry
+              visibilityToggle
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="newPassword"
             />
             <FormTextField
               label="Confirm password"
               value={confirmPassword}
               placeholder="Re-enter your password"
               onChangeText={onConfirmPasswordChange}
-              secureTextEntry={!showPassword}
+              secureTextEntry
+              visibilityToggle
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="newPassword"
             />
-
-            <Pressable
-              onPress={() => setShowPassword((value) => !value)}
-              style={styles.toggleRow}
-              accessibilityRole="button"
-              accessibilityLabel={showPassword ? 'Hide passwords' : 'Show passwords'}
-            >
-              <Text style={styles.toggleText}>
-                {showPassword ? 'Hide passwords' : 'Show passwords'}
-              </Text>
-            </Pressable>
 
             {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
@@ -152,16 +147,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: spacing.xl,
-  },
-  toggleRow: {
-    minHeight: 44,
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  toggleText: {
-    fontSize: fontSizes.body,
-    color: colors.teal,
-    fontWeight: fontWeights.semibold,
   },
   errorText: {
     fontSize: fontSizes.body,

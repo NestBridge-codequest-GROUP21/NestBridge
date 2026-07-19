@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Constants from 'expo-constants';
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -17,7 +18,11 @@ import { isDemoQuickLoginEnabled } from '../config/demoMode';
 import { useAuth } from '../context/AuthContext';
 import { useAccountProfile } from '../context/AccountProfileContext';
 import * as api from '../services/api';
+import { isUnverifiedEmailError } from '../utils/authErrors';
 import type { AuthStackParamList } from './types';
+
+const APP_VERSION =
+  Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '1.0.1';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
@@ -141,9 +146,14 @@ export default function AuthNavigator({
                   await signIn(email, password, keepSignedIn);
                 }
               } catch (error) {
-                setRegisterError(
-                  error instanceof Error ? error.message : 'Could not create account.',
-                );
+                const message =
+                  error instanceof Error ? error.message : 'Could not create account.';
+                if (isUnverifiedEmailError(message)) {
+                  setRegisterError('');
+                  navigation.navigate('VerifyEmail', { email: email.trim().toLowerCase() });
+                  return;
+                }
+                setRegisterError(message);
               }
             }}
             onSignInPress={() => navigation.navigate('Login')}
@@ -175,7 +185,7 @@ export default function AuthNavigator({
             onBackToSignIn={() => {
               setVerifyStatus('');
               setVerifyError('');
-              setPassword('');
+              setLoginError('');
               navigation.navigate('Login');
             }}
           />
@@ -287,6 +297,7 @@ export default function AuthNavigator({
             password={password}
             keepSignedIn={keepSignedIn}
             errorMessage={loginError}
+            appVersion={APP_VERSION}
             demoAccounts={demoAccounts}
             demoLoginBusy={demoLoginBusy}
             onEmailChange={setEmail}
@@ -294,15 +305,25 @@ export default function AuthNavigator({
             onToggleKeepSignedIn={() => setKeepSignedIn((value) => !value)}
             onSubmit={async () => {
               setLoginError('');
+              if (!email.trim()) {
+                setLoginError('Enter your email address.');
+                return;
+              }
+              if (!password) {
+                setLoginError('Enter your password.');
+                return;
+              }
               try {
                 await signIn(email, password, keepSignedIn);
               } catch (error) {
                 const message =
                   error instanceof Error ? error.message : 'Email or password is incorrect.';
-                setLoginError(message);
-                if (message.toLowerCase().includes('verify your email')) {
-                  navigation.navigate('VerifyEmail', { email: email.trim() });
+                if (isUnverifiedEmailError(message)) {
+                  setLoginError('');
+                  navigation.navigate('VerifyEmail', { email: email.trim().toLowerCase() });
+                  return;
                 }
+                setLoginError(message);
               }
             }}
             onDemoLogin={(account) => {
