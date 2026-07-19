@@ -5,6 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SecondaryButton from '../../components/SecondaryButton';
 import { devTestingCopy } from '../../data/appCopy';
+import type { DemoAccount } from '../../data/demoAccounts';
+import { DEMO_ACTOR_ACCOUNTS, DEMO_PASSWORD } from '../../data/demoAccounts';
 import {
   colors,
   fontFamilies,
@@ -29,6 +31,8 @@ import {
 
 export interface DevTestingScreenProps {
   isActiveExchangeStudent: boolean;
+  demoLoginBusy?: boolean;
+  demoLoginError?: string | null;
   onBack?: () => void;
   onApplyPreset: (options: {
     preset: ReturnType<typeof presetNewUser>;
@@ -37,6 +41,7 @@ export interface DevTestingScreenProps {
   }) => void;
   onToggleExchangeStudent: (active: boolean) => void;
   onResetDemo: () => void;
+  onDemoActorLogin?: (account: DemoAccount) => void;
 }
 
 function DevSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -82,10 +87,13 @@ function DevButton({
 
 export default function DevTestingScreen({
   isActiveExchangeStudent,
+  demoLoginBusy = false,
+  demoLoginError,
   onBack,
   onApplyPreset,
   onToggleExchangeStudent,
   onResetDemo,
+  onDemoActorLogin,
 }: DevTestingScreenProps) {
   const insets = useSafeAreaInsets();
 
@@ -145,6 +153,22 @@ export default function DevTestingScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
+        <DevSection title={devTestingCopy.demoActorsTitle}>
+          <Text style={styles.sectionBody}>{devTestingCopy.demoActorsHint}</Text>
+          {demoLoginError ? (
+            <Text style={styles.demoErrorText}>{demoLoginError}</Text>
+          ) : null}
+          {DEMO_ACTOR_ACCOUNTS.map((account) => (
+            <DevButton
+              key={account.id}
+              label={`${account.label} — ${account.name}`}
+              onPress={
+                demoLoginBusy ? undefined : () => onDemoActorLogin?.(account)
+              }
+            />
+          ))}
+        </DevSection>
+
         <DevSection title={devTestingCopy.homeDashboardsTitle}>
           {DEV_HOME_PRESETS.map((item) => (
             <DevButton
@@ -305,5 +329,11 @@ const styles = StyleSheet.create({
   },
   devButtonTextDanger: {
     color: colors.white,
+  },
+  demoErrorText: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.danger,
+    marginBottom: spacing.md,
   },
 });

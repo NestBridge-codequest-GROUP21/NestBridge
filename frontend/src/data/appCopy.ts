@@ -2,8 +2,10 @@
  * Cross-screen copy — warm Ghana/Accra voice, single source for reusable phrases.
  */
 
-import type { PrimaryIntent } from '../types/accountProfile';
-import { PRIMARY_INTENT_LABELS } from '../types/accountProfile';
+import type { PrimaryIntent, SetupTrack } from '../types/accountProfile';
+import { PRIMARY_INTENT_ICONS } from '../types/accountProfile';
+import type { OnboardingNextStep } from '../components/OnboardingNextStepsCard';
+import { ONBOARDING_HERO_IMAGES } from './onboardingHeroImages';
 
 export const splashCopy = {
   tagline: 'From Arrival to Belonging.',
@@ -13,7 +15,7 @@ export const splashCopy = {
 export const welcomeCopy = {
   headline: 'Host families, local guides, and places to stay — starting in Ghana.',
   subheadline:
-    'Land in Accra with a host family, a local guide, or a room near campus — all from one login.',
+    'Create an account with any email — demo accounts are optional shortcuts only.',
   valuePills: [
     { icon: '🏠', label: 'Homestays near campus and city centres' },
     { icon: '🗺️', label: 'Verified guides for orientation and culture' },
@@ -48,6 +50,31 @@ export const emptyStates = {
     title: 'No session requests yet',
     body: 'When a traveller books a tour with you, it will appear here.',
     tip: 'Tip: add a heritage walk or campus orientation to stand out.',
+  },
+  hostBookings: {
+    title: 'No confirmed stays yet',
+    body: 'When guests pay for an accepted request, their stay will appear here on your calendar.',
+    tip: 'Tip: respond quickly to pending requests to fill your calendar.',
+  },
+  guideBookings: {
+    title: 'No upcoming tours',
+    body: 'Confirmed and paid sessions will show here with date, time, and guest details.',
+    tip: 'Tip: keep your availability updated so travellers can book you.',
+  },
+  guideEarnings: {
+    title: 'No earnings yet',
+    body: 'Completed and confirmed tours will appear here with payout breakdown.',
+    tip: 'Tip: payouts reflect session rate minus the platform fee.',
+  },
+  hostEarnings: {
+    title: 'No payouts yet',
+    body: 'When guests pay for confirmed stays, escrow releases to this screen after check-in.',
+    tip: 'Tip: respond quickly to homestay requests to fill your calendar.',
+  },
+  messages: {
+    title: 'No messages yet',
+    body: 'When you message a host, guide, or guest, conversations will appear here.',
+    tip: 'Tip: open a host or guide profile and tap Message to start chatting.',
   },
   discoveryHosts: (city: string) => ({
     title: `No homestays in ${city} yet`,
@@ -96,6 +123,10 @@ export const devTestingCopy = {
   exchangeStudentTitle: 'Exchange student flag',
   exchangeStudentActive: 'Active exchange student (provider listing blocked)',
   exchangeStudentInactive: 'No longer on exchange (provider listing allowed)',
+  demoActorsTitle: 'Switch demo actor',
+  demoActorsHint:
+    'Signs in as a seeded demo account with real bookings and messages. Password: password',
+  demoActorsLoginError: 'Could not sign in — is the backend running?',
 };
 
 export const validationCopy = {
@@ -104,16 +135,8 @@ export const validationCopy = {
   otherRequired: 'Tell us which one — a few words is enough.',
 };
 
-export function buildMatchHint(university?: string, city?: string): string {
-  const place = university?.trim() || city?.trim() || 'your area';
-  return `We will surface hosts near ${place} who match your diet and quiet-hours answers. Browse freely while we fine-tune suggestions.`;
-}
-
-export function buildOnboardingReadySubtitle(destination: string): string {
-  return `Your answers are in. We will suggest hosts and guides in ${destination}.`;
-}
-
 export interface OnboardingReadyCopyContext {
+  userName?: string;
   destination?: string;
   university?: string;
   city?: string;
@@ -121,9 +144,38 @@ export interface OnboardingReadyCopyContext {
 
 export interface OnboardingReadyCopy {
   subtitle: string;
-  matchHint: string;
+  heroImageUri: string;
+  carouselCards: OnboardingNextStep[];
   ctaLabel: string;
-  roleLabel?: string;
+  roleLabel: string;
+  roleIcon: string;
+}
+
+const ONBOARDING_ROLE_LABELS: Record<PrimaryIntent, string> = {
+  STUDENT: 'Student',
+  TOURIST: 'Tourist',
+  HOST: 'Host',
+  GUIDE: 'Guide',
+};
+
+function onboardingReadySubtitle(intent: PrimaryIntent, userName: string): string {
+  const name = userName.trim() || 'there';
+  if (intent === 'TOURIST') {
+    return `Explore local culture, ${name}!`;
+  }
+  if (intent === 'HOST') {
+    return `Find your ideal guest, ${name}!`;
+  }
+  if (intent === 'GUIDE') {
+    return `Showcase your expertise, ${name}!`;
+  }
+  return `Let's find your perfect home, ${name}!`;
+}
+
+export function trackToIntent(track: SetupTrack): PrimaryIntent {
+  if (track === 'HOST') return 'HOST';
+  if (track === 'GUIDE') return 'GUIDE';
+  return 'STUDENT';
 }
 
 export function onboardingReadyCopy(
@@ -131,31 +183,137 @@ export function onboardingReadyCopy(
   ctx: OnboardingReadyCopyContext = {},
 ): OnboardingReadyCopy {
   const destination = ctx.destination?.trim() || ctx.city?.trim() || 'your destination';
+  const userName = ctx.userName?.trim() || 'there';
+  const subtitle = onboardingReadySubtitle(intent, userName);
 
   if (intent === 'HOST') {
     return {
-      subtitle: 'Your host listing is saved. Students can now discover your home.',
-      matchHint:
-        'Incoming homestay requests will appear on your dashboard. Keep your listing details up to date.',
-      ctaLabel: 'Go to your dashboard',
-      roleLabel: PRIMARY_INTENT_LABELS.HOST,
+      subtitle,
+      heroImageUri: ONBOARDING_HERO_IMAGES.HOST,
+      carouselCards: [
+        {
+          icon: '🔑',
+          title: 'Verified guests',
+          body: 'Connect with matched travelers seeking a home-stay experience.',
+        },
+        {
+          icon: '💬',
+          title: 'Review and connect',
+          body: 'Chat with interested students before you accept a request.',
+        },
+        {
+          icon: '🛡️',
+          title: 'Safe and supported',
+          body: 'Every guest is verified before they can request a stay.',
+        },
+      ],
+      ctaLabel: 'View Guest Matches',
+      roleLabel: ONBOARDING_ROLE_LABELS.HOST,
+      roleIcon: PRIMARY_INTENT_ICONS.HOST,
     };
   }
 
   if (intent === 'GUIDE') {
     return {
-      subtitle: 'Your guide profile is saved. Travellers can book sessions with you.',
-      matchHint:
-        'Session requests will appear on your dashboard. Add tour types to stand out.',
-      ctaLabel: 'Go to your dashboard',
-      roleLabel: PRIMARY_INTENT_LABELS.GUIDE,
+      subtitle,
+      heroImageUri: ONBOARDING_HERO_IMAGES.GUIDE,
+      carouselCards: [
+        {
+          icon: '🗺️',
+          title: 'Book your tour',
+          body: 'Attract and accept bookings from matched tourists.',
+        },
+        {
+          icon: '📆',
+          title: 'Manage availability',
+          body: 'Set prices, tour types, and your weekly schedule.',
+        },
+        {
+          icon: '⭐',
+          title: 'Grow your reputation',
+          body: 'Collect reviews and build trust with every session.',
+        },
+      ],
+      ctaLabel: 'Browse Bookings & Accept Matches',
+      roleLabel: ONBOARDING_ROLE_LABELS.GUIDE,
+      roleIcon: PRIMARY_INTENT_ICONS.GUIDE,
+    };
+  }
+
+  if (intent === 'TOURIST') {
+    return {
+      subtitle,
+      heroImageUri: ONBOARDING_HERO_IMAGES.TOURIST,
+      carouselCards: [
+        {
+          icon: '🏪',
+          title: 'Your authentic guide',
+          body: `Immerse yourself in the heart of ${destination}'s markets and crafts.`,
+        },
+        {
+          icon: '🏠',
+          title: 'Verified homestays',
+          body: 'Book stays with host families reviewed by other travellers.',
+        },
+        {
+          icon: '🛡️',
+          title: 'Safety tips on the go',
+          body: 'SOS help and emergency contacts wherever you explore.',
+        },
+      ],
+      ctaLabel: 'Explore Your Cultural Matches',
+      roleLabel: ONBOARDING_ROLE_LABELS.TOURIST,
+      roleIcon: PRIMARY_INTENT_ICONS.TOURIST,
     };
   }
 
   return {
-    subtitle: buildOnboardingReadySubtitle(destination),
-    matchHint: buildMatchHint(ctx.university, ctx.city),
-    ctaLabel: `Explore ${destination}`,
-    roleLabel: PRIMARY_INTENT_LABELS[intent],
+    subtitle,
+    heroImageUri: ONBOARDING_HERO_IMAGES.STUDENT,
+    carouselCards: [
+      {
+        icon: '📖',
+        title: 'Your new home base',
+        body: 'Connect with warm host families that match your needs.',
+      },
+      {
+        icon: '🎯',
+        title: 'Smart matching',
+        body: `We surface hosts near ${destination} by your lifestyle and study preferences.`,
+      },
+      {
+        icon: '🛡️',
+        title: 'Safe and verified homes',
+        body: 'All host families are verified before listing.',
+      },
+    ],
+    ctaLabel: 'Meet Your Best Matches',
+    roleLabel: ONBOARDING_ROLE_LABELS.STUDENT,
+    roleIcon: PRIMARY_INTENT_ICONS.STUDENT,
   };
+}
+
+export function onboardingReadyCopyByTrack(
+  track: SetupTrack,
+  primaryIntent: PrimaryIntent | null,
+  ctx: OnboardingReadyCopyContext = {},
+): OnboardingReadyCopy {
+  if (track === 'HOST') {
+    return onboardingReadyCopy('HOST', ctx);
+  }
+  if (track === 'GUIDE') {
+    return onboardingReadyCopy('GUIDE', ctx);
+  }
+  return onboardingReadyCopy(primaryIntent ?? 'STUDENT', ctx);
+}
+
+/** @deprecated Use onboardingReadyCopy nextSteps instead */
+export function buildMatchHint(university?: string, city?: string): string {
+  const place = university?.trim() || city?.trim() || 'your area';
+  return `We will surface hosts near ${place} who match your diet and quiet-hours answers. Browse freely while we fine-tune suggestions.`;
+}
+
+/** @deprecated Use onboardingReadyCopy subtitle instead */
+export function buildOnboardingReadySubtitle(destination: string): string {
+  return `Your answers are in. We will suggest hosts and guides in ${destination}.`;
 }

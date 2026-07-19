@@ -72,6 +72,8 @@ export interface AppNotification {
 
 export interface HostProfileSummary {
   id: string;
+  userId?: string;
+  matchId?: string;
   name: string;
   initials: string;
   location: string;
@@ -84,6 +86,8 @@ export interface HostProfileSummary {
 
 export interface GuideProfileSummary {
   id: string;
+  userId?: string;
+  matchId?: string;
   name: string;
   initials: string;
   location: string;

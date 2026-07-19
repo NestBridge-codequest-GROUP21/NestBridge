@@ -14,8 +14,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BrandLogoMark from '../../components/BrandLogoMark';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
+import AppIcon from '../../components/AppIcon';
+import type { DemoAccount } from '../../data/demoAccounts';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -40,6 +44,9 @@ export interface WelcomeScreenProps {
   subheadline: string;
   tagline?: string;
   valuePills?: WelcomeValuePill[];
+  demoAccounts?: DemoAccount[];
+  demoLoginBusy?: boolean;
+  onDemoLogin?: (account: DemoAccount) => void;
   onCreateAccount?: () => void;
   onSignIn?: () => void;
 }
@@ -95,6 +102,9 @@ export default function WelcomeScreen({
   subheadline,
   tagline,
   valuePills = [],
+  demoAccounts = [],
+  demoLoginBusy = false,
+  onDemoLogin,
   onCreateAccount,
   onSignIn,
 }: WelcomeScreenProps) {
@@ -166,7 +176,9 @@ export default function WelcomeScreen({
           <View style={styles.pillsWrap}>
             {valuePills.map((pill) => (
               <View key={pill.label} style={styles.pill}>
-                <Text style={styles.pillIcon}>{pill.icon}</Text>
+                <View style={styles.pillIconTile}>
+                  <AppIcon glyph={pill.icon} size={20} color={colors.tealDeep} />
+                </View>
                 <Text style={styles.pillLabel}>{pill.label}</Text>
               </View>
             ))}
@@ -182,6 +194,19 @@ export default function WelcomeScreen({
           },
         ]}
       >
+        {demoAccounts.length > 0 ? (
+          <>
+            <DemoActorQuickLogin
+              accounts={demoAccounts}
+              busy={demoLoginBusy}
+              variant="tabs"
+              title="Jump into a demo"
+              hint="Backend + demo data — password: password"
+              onSelect={onDemoLogin}
+            />
+            <Text style={styles.dividerLabel}>or continue with your account</Text>
+          </>
+        ) : null}
         <PrimaryButton label="Create account" onPress={onCreateAccount} />
         <View style={styles.signInSpacer} />
         <SecondaryButton label="Sign in" onPress={onSignIn} />
@@ -265,8 +290,13 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     minHeight: 44,
   },
-  pillIcon: {
-    fontSize: fontSizes.subheading,
+  pillIconTile: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pillLabel: {
     flex: 1,
@@ -285,5 +315,12 @@ const styles = StyleSheet.create({
   },
   signInSpacer: {
     height: spacing.sm,
+  },
+  dividerLabel: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
 });

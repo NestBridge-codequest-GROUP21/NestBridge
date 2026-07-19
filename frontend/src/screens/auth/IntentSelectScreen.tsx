@@ -10,8 +10,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -75,7 +77,7 @@ export default function IntentSelectScreen({
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
-            <Text style={styles.backIcon}>←</Text>
+            <AppIcon name="chevron-back" size={24} color={colors.white} />
           </Pressable>
         ) : (
           <View style={styles.backPlaceholder} />
@@ -108,7 +110,9 @@ export default function IntentSelectScreen({
               accessibilityLabel={option.label}
               accessibilityState={{ selected }}
             >
-              <Text style={styles.optionIcon}>{option.icon}</Text>
+              <View style={styles.optionIconTile}>
+                <AppIcon glyph={option.icon} size={24} color={colors.tealDeep} />
+              </View>
               <View style={styles.optionText}>
                 <Text style={styles.optionLabel}>{option.label}</Text>
                 <Text style={styles.optionDescription}>{option.description}</Text>
@@ -210,8 +214,13 @@ const styles = StyleSheet.create({
   optionPressedScale: {
     transform: [{ scale: 0.98 }],
   },
-  optionIcon: {
-    fontSize: fontSizes.heading,
+  optionIconTile: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.md,
   },
   optionText: {

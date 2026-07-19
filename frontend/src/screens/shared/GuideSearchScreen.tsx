@@ -9,6 +9,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontSizes,
@@ -57,7 +58,7 @@ export default function GuideSearchScreen({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Text style={styles.backIcon}>←</Text>
+          <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
         </Pressable>
         <Text style={styles.headerTitle}>{title}</Text>
         <Text style={styles.headerSubtitle}>{subtitle}</Text>
@@ -68,57 +69,49 @@ export default function GuideSearchScreen({
 
       <ScrollView
         style={styles.scroll}
+        horizontal
+        showsHorizontalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: insets.bottom + spacing.xl },
+          { paddingRight: spacing.lg + insets.right },
         ]}
-        showsVerticalScrollIndicator={false}
       >
-        {guides.map((guide, index) => {
-          const isLast = index === guides.length - 1;
-          return (
-            <Pressable
-              key={guide.id}
-              style={({ pressed }) => [
-                styles.card,
-                !isLast && styles.cardSpacing,
-                pressed && styles.pressed,
-              ]}
-              onPress={() => onGuidePress?.(guide.id)}
-              accessibilityRole="button"
-              accessibilityLabel={
-                showMatchScores
-                  ? `${guide.name}, ${guide.matchPercentage} percent match`
-                  : guide.name
-              }
-            >
+        {guides.map((guide) => (
+          <Pressable
+            key={guide.id}
+            style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+            onPress={() => onGuidePress?.(guide.id)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              showMatchScores
+                ? `${guide.name}, ${guide.matchPercentage} percent match`
+                : guide.name
+            }
+          >
+            <View style={styles.topRow}>
               <View style={styles.iconWrap}>
                 <Text style={styles.iconInitials}>{guide.initials}</Text>
               </View>
-              <View style={styles.body}>
-                <View style={styles.topRow}>
-                  <Text style={styles.name} numberOfLines={1}>
-                    {guide.name}
-                  </Text>
-                  {showMatchScores ? (
-                  <View style={styles.matchBadge}>
-                    <Text style={styles.matchText}>{guide.matchPercentage}%</Text>
-                  </View>
-                  ) : null}
+              {showMatchScores ? (
+                <View style={styles.matchBadge}>
+                  <Text style={styles.matchText}>{guide.matchPercentage}%</Text>
                 </View>
-                <Text style={styles.location} numberOfLines={1}>
-                  {guide.location}
-                </Text>
-                <Text style={styles.services} numberOfLines={1}>
-                  {guide.serviceTypes.slice(0, 2).join(' · ')}
-                </Text>
-                <Text style={styles.price}>
-                  {formatCurrency(guide.pricePerSession, guide.currency)} / session
-                </Text>
-              </View>
-            </Pressable>
-          );
-        })}
+              ) : null}
+            </View>
+            <Text style={styles.name} numberOfLines={1}>
+              {guide.name}
+            </Text>
+            <Text style={styles.location} numberOfLines={1}>
+              {guide.location}
+            </Text>
+            <Text style={styles.services} numberOfLines={1}>
+              {guide.serviceTypes.slice(0, 2).join(' · ')}
+            </Text>
+            <Text style={styles.price}>
+              {formatCurrency(guide.pricePerSession, guide.currency)} / session
+            </Text>
+          </Pressable>
+        ))}
       </ScrollView>
     </View>
   );
@@ -177,10 +170,11 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
+    gap: spacing.md,
+    alignItems: 'flex-start',
   },
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: 240,
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
@@ -191,9 +185,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 10,
     elevation: 2,
-  },
-  cardSpacing: {
-    marginBottom: spacing.md,
   },
   pressed: {
     opacity: 0.94,
@@ -206,28 +197,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warmCream,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
   },
   iconInitials: {
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
   },
-  body: {
-    flex: 1,
-  },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.md,
   },
   name: {
-    flex: 1,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
-    marginRight: spacing.sm,
+    marginBottom: spacing.xs,
   },
   matchBadge: {
     backgroundColor: colors.teal,
