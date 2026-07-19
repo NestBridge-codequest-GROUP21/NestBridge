@@ -15,6 +15,7 @@ export const HOST_TAB_ITEMS: TabBarItem[] = [
   { id: 'home', label: 'Home', icon: 'home-outline' },
   { id: 'requests', label: 'Requests', icon: 'documents-outline' },
   { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
+  { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
 ];
 
 export const GUIDE_TAB_ITEMS: TabBarItem[] = [
@@ -42,14 +43,11 @@ export const HOST_QUICK_ACTIONS: QuickActionItem[] = [
   { id: 'listings', label: 'Listings', icon: '🏠' },
   { id: 'earnings', label: 'Earnings', icon: '💰' },
   { id: 'calendar', label: 'Calendar', icon: '📅' },
-  { id: 'sos', label: 'SOS', icon: '🆘' },
 ];
 
 export const GUIDE_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'availability', label: 'Availability', icon: '📆' },
-  { id: 'tour-types', label: 'Tour types', icon: '🎯' },
   { id: 'calendar', label: 'Calendar', icon: '📅' },
-  { id: 'sos', label: 'SOS', icon: '🆘' },
+  { id: 'tour-types', label: 'Tour types', icon: '🎯' },
 ];
 
 export function getTabBarForRole(role: HomeRole): TabBarItem[] {

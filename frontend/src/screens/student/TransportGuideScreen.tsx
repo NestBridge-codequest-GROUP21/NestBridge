@@ -7,7 +7,6 @@ import AppIcon, { type IoniconName } from '../../components/AppIcon';
 import type { TransportTab } from '../../data/featureScreensMock';
 import {
   colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -15,12 +14,11 @@ import {
   borderRadius,
 } from '../../constants/theme';
 
-const TRANSPORT_MODE_ICONS: IoniconName[] = [
-  'bus-outline',
-  'car-outline',
-  'train-outline',
-  'flash-outline',
-];
+const MODE_ICON_BY_TAB: Record<string, IoniconName> = {
+  trotros: 'bus-outline',
+  'shared-taxis': 'car-outline',
+  'ride-hailing': 'flash-outline',
+};
 
 export interface TransportGuideScreenProps {
   greeting: string;
@@ -89,6 +87,7 @@ export default function TransportGuideScreen({
         >
           {tabs.map((tab) => {
             const isActive = tab.id === activeTabId;
+            const iconName = MODE_ICON_BY_TAB[tab.id] ?? 'bus-outline';
             return (
               <Pressable
                 key={tab.id}
@@ -96,7 +95,13 @@ export default function TransportGuideScreen({
                 onPress={() => setActiveTabId(tab.id)}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: isActive }}
+                accessibilityLabel={tab.label}
               >
+                <AppIcon
+                  name={iconName}
+                  size={20}
+                  color={isActive ? colors.white : colors.tealDeep}
+                />
                 <Text
                   style={[styles.tabLabel, isActive && styles.tabLabelActive]}
                 >
@@ -106,14 +111,6 @@ export default function TransportGuideScreen({
             );
           })}
         </ScrollView>
-
-        <View style={styles.modeIcons}>
-          {TRANSPORT_MODE_ICONS.map((iconName) => (
-            <View key={iconName} style={styles.modeIconTile}>
-              <AppIcon name={iconName} size={24} color={colors.tealDeep} />
-            </View>
-          ))}
-        </View>
 
         <View style={styles.routeList}>
           {activeTab?.routes.map((route) => (
@@ -139,9 +136,12 @@ const styles = StyleSheet.create({
   },
   tabRow: {
     gap: spacing.sm,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   tabChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
@@ -162,19 +162,6 @@ const styles = StyleSheet.create({
   },
   tabLabelActive: {
     color: colors.white,
-  },
-  modeIcons: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  modeIconTile: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.md,
-    backgroundColor: tints.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   routeList: {
     gap: spacing.md,

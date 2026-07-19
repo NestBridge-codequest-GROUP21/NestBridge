@@ -101,18 +101,17 @@ export default function LodgingDirectoryScreen({
         </Text>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterRow}
-      >
+      <View style={styles.filterBar}>
         {FILTERS.map((filter) => {
           const isActive = filter.id === activeFilter;
           return (
             <Pressable
               key={filter.id}
-              style={[styles.filterChip, isActive && styles.filterChipActive]}
+              style={[styles.filterTab, isActive && styles.filterTabActive]}
               onPress={() => onFilterChange?.(filter.id)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
+              accessibilityLabel={`Filter ${filter.label}`}
             >
               <Text
                 style={[styles.filterLabel, isActive && styles.filterLabelActive]}
@@ -122,7 +121,7 @@ export default function LodgingDirectoryScreen({
             </Pressable>
           );
         })}
-      </ScrollView>
+      </View>
 
       {savedCount > 0 ? (
         <Text style={styles.savedHint}>{savedCount} saved to My contacts</Text>
@@ -238,32 +237,35 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
   },
-  filterRow: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
+  filterBar: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  filterChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
+  filterTab: {
+    flex: 1,
     minHeight: 44,
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    marginBottom: -1,
   },
-  filterChipActive: {
-    backgroundColor: colors.navy,
-    borderColor: colors.navy,
+  filterTabActive: {
+    borderBottomColor: colors.teal,
   },
   filterLabel: {
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
   },
   filterLabelActive: {
-    color: colors.white,
+    color: colors.teal,
+    fontWeight: fontWeights.bold,
   },
   savedHint: {
     fontSize: fontSizes.caption,

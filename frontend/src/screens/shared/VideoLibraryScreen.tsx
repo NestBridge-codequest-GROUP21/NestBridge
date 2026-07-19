@@ -19,6 +19,7 @@ import {
   borderRadius,
 } from '../../constants/theme';
 import type { VideoResourceApi } from '../../services/api';
+import { isPlayableYoutubeId } from '../../utils/videoPlayback';
 
 export interface VideoLibraryScreenProps {
   cityLabel: string;
@@ -105,7 +106,7 @@ export default function VideoLibraryScreen({
               accessibilityRole="button"
               accessibilityLabel={video.title}
             >
-              {video.thumbnailUrl ? (
+              {video.thumbnailUrl && isPlayableYoutubeId(video.youtubeId) ? (
                 <Image source={{ uri: video.thumbnailUrl }} style={styles.thumbnail} />
               ) : (
                 <View style={styles.thumbnailPlaceholder}>
