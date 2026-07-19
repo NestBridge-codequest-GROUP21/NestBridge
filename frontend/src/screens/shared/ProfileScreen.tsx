@@ -15,7 +15,6 @@ import {
   fontWeights,
   spacing,
   borderRadius,
-  layout,
 } from '../../constants/theme';
 
 export interface ProfileScreenProps {
@@ -34,6 +33,47 @@ export interface ProfileScreenProps {
   onDevTestingPress?: () => void;
   showStaffTools?: boolean;
   onStaffToolsPress?: () => void;
+}
+
+function SectionLabel({ children }: { children: string }) {
+  return <Text style={styles.sectionLabel}>{children}</Text>;
+}
+
+function SettingsRow({
+  title,
+  subtitle,
+  actionLabel,
+  onPress,
+  accessibilityLabel,
+}: {
+  title: string;
+  subtitle: string;
+  actionLabel?: string;
+  onPress?: () => void;
+  accessibilityLabel: string;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.settingsRow, pressed && styles.pressed]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+    >
+      <View style={styles.settingsText}>
+        <Text style={styles.settingsTitle}>{title}</Text>
+        <Text style={styles.settingsSubtitle}>{subtitle}</Text>
+      </View>
+      {actionLabel ? (
+        <Text style={styles.settingsAction}>{actionLabel}</Text>
+      ) : (
+        <AppIcon
+          name="chevron-forward"
+          size={fontSizes.subheading}
+          color={colors.textTertiary}
+        />
+      )}
+    </Pressable>
+  );
 }
 
 export default function ProfileScreen({
@@ -58,32 +98,60 @@ export default function ProfileScreen({
       <StatusBar style="light" />
 
       <ScreenHeader
-        greeting="Account"
+        greeting="Profile"
         userName={userName}
         userInitials={userInitials}
         subtitle={email}
       />
 
       <ScreenScroll>
-        <Pressable
-          style={({ pressed }) => [styles.servicesCard, pressed && styles.pressed]}
-          onPress={onAccountSetupPress}
-          accessibilityRole="button"
-          accessibilityLabel="Account setup"
-        >
-          <View style={styles.servicesText}>
-            <Text style={styles.servicesTitle}>Account setup</Text>
-            <Text style={styles.servicesSubtitle}>{setupSummary}</Text>
+        <View style={styles.identityCard}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{userInitials}</Text>
           </View>
-          <Text style={styles.servicesAction}>Manage</Text>
-        </Pressable>
+          <View style={styles.identityText}>
+            <Text style={styles.identityName}>{userName}</Text>
+            <Text style={styles.identityEmail}>{email}</Text>
+            <Text style={styles.identitySummary}>{setupSummary}</Text>
+          </View>
+        </View>
 
-        {culturalGuidanceItems.length > 0 ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cultural guidance</Text>
-            {culturalGuidanceItems.map((item) => (
+        <SectionLabel>Account</SectionLabel>
+        <View style={styles.groupCard}>
+          <SettingsRow
+            title="Account setup"
+            subtitle={setupSummary}
+            actionLabel="Manage"
+            onPress={onAccountSetupPress}
+            accessibilityLabel="Account setup"
+          />
+          {showTravelBooking ? (
+            <>
+              <View style={styles.rowDivider} />
+              <SettingsRow
+                title="Book as a traveller"
+                subtitle="Find homestays or guides for your own trips"
+                actionLabel="Browse"
+                onPress={onTravelBookingPress}
+                accessibilityLabel="Book travel"
+              />
+            </>
+          ) : null}
+        </View>
+
+        <SectionLabel>Explore</SectionLabel>
+        <View style={styles.groupCard}>
+          <SettingsRow
+            title="Core services"
+            subtitle="Homestays, guides, hotels, and lodging"
+            actionLabel="Search"
+            onPress={onCoreServicesPress}
+            accessibilityLabel="Core services"
+          />
+          {culturalGuidanceItems.map((item) => (
+            <React.Fragment key={item.id}>
+              <View style={styles.rowDivider} />
               <Pressable
-                key={item.id}
                 style={({ pressed }) => [styles.hubRow, pressed && styles.pressed]}
                 onPress={() => onCulturalGuidanceItemPress?.(item.id)}
                 accessibilityRole="button"
@@ -93,95 +161,68 @@ export default function ProfileScreen({
                   <AppIcon glyph={item.icon} size={20} color={colors.tealDeep} />
                 </View>
                 <View style={styles.hubText}>
-                  <Text style={styles.hubLabel}>{item.label}</Text>
-                  <Text style={styles.hubDescription}>{item.description}</Text>
+                  <Text style={styles.settingsTitle}>{item.label}</Text>
+                  <Text style={styles.settingsSubtitle}>{item.description}</Text>
                 </View>
-                <AppIcon name="chevron-forward" size={fontSizes.subheading} color={colors.textTertiary} />
+                <AppIcon
+                  name="chevron-forward"
+                  size={fontSizes.subheading}
+                  color={colors.textTertiary}
+                />
               </Pressable>
-            ))}
-          </View>
-        ) : null}
-
-        <Pressable
-          style={({ pressed }) => [styles.servicesCard, pressed && styles.pressed]}
-          onPress={onCoreServicesPress}
-          accessibilityRole="button"
-          accessibilityLabel="Core services"
-        >
-          <View style={styles.servicesText}>
-            <Text style={styles.servicesTitle}>Core services</Text>
-            <Text style={styles.servicesSubtitle}>
-              Homestays, guides, hotels, and lodging in one search hub
-            </Text>
-          </View>
-          <Text style={styles.servicesAction}>Search</Text>
-        </Pressable>
-
-        {showTravelBooking ? (
-          <Pressable
-            style={({ pressed }) => [styles.servicesCard, pressed && styles.pressed]}
-            onPress={onTravelBookingPress}
-            accessibilityRole="button"
-            accessibilityLabel="Book travel"
-          >
-            <View style={styles.servicesText}>
-              <Text style={styles.servicesTitle}>Book as a traveller</Text>
-              <Text style={styles.servicesSubtitle}>
-                Find homestays or guides for your own trips while you host or guide
-              </Text>
-            </View>
-            <Text style={styles.servicesAction}>Browse</Text>
-          </Pressable>
-        ) : null}
+            </React.Fragment>
+          ))}
+        </View>
 
         {showStaffTools ? (
-          <Pressable
-            style={({ pressed }) => [styles.servicesCard, pressed && styles.pressed]}
-            onPress={onStaffToolsPress}
-            accessibilityRole="button"
-            accessibilityLabel="Staff tools"
-          >
-            <View style={styles.servicesText}>
-              <Text style={styles.servicesTitle}>Staff tools</Text>
-              <Text style={styles.servicesSubtitle}>
-                Search users, suspend accounts, and review activity
-              </Text>
-            </View>
-            <Text style={styles.servicesAction}>Open</Text>
-          </Pressable>
-        ) : null}
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About your account</Text>
-          <Text style={styles.sectionBody}>{profileCopy.aboutAccount}</Text>
-        </View>
-
-        {__DEV__ ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Testing flows</Text>
-          <Text style={styles.sectionBody}>
-            Sign out to return to Welcome and sign in again as a returning user.
-            Reset demo to clear profile progress and test as a new user on this
-            device.
-          </Text>
-          <Pressable
-            style={({ pressed }) => [styles.devMenuButton, pressed && styles.pressed]}
-            onPress={onDevTestingPress}
-            accessibilityRole="button"
-            accessibilityLabel="Developer testing menu"
-          >
-            <Text style={styles.devMenuButtonText}>Developer testing menu</Text>
-          </Pressable>
-        </View>
-        ) : null}
-
-        <SecondaryButton label="Sign out" onPress={onSignOut} />
-        {__DEV__ ? (
           <>
-            <View style={styles.buttonSpacer} />
-            <SecondaryButton label="Reset demo" onPress={onResetDemo} />
+            <SectionLabel>Staff</SectionLabel>
+            <View style={styles.groupCard}>
+              <SettingsRow
+                title="Staff tools"
+                subtitle="Search users, suspend accounts, and review activity"
+                actionLabel="Open"
+                onPress={onStaffToolsPress}
+                accessibilityLabel="Staff tools"
+              />
+            </View>
           </>
         ) : null}
+
+        <SectionLabel>About</SectionLabel>
+        <View style={styles.aboutCard}>
+          <Text style={styles.aboutBody}>{profileCopy.aboutAccount}</Text>
+        </View>
+
+        {__DEV__ ? (
+          <>
+            <SectionLabel>Testing</SectionLabel>
+            <View style={styles.groupCard}>
+              <Text style={styles.devHint}>
+                Sign out to return to Welcome. Reset demo clears profile progress
+                on this device.
+              </Text>
+              <Pressable
+                style={({ pressed }) => [styles.devMenuButton, pressed && styles.pressed]}
+                onPress={onDevTestingPress}
+                accessibilityRole="button"
+                accessibilityLabel="Developer testing menu"
+              >
+                <Text style={styles.devMenuButtonText}>Developer testing menu</Text>
+              </Pressable>
+            </View>
+          </>
+        ) : null}
+
+        <View style={styles.signOutWrap}>
+          <SecondaryButton label="Sign out" onPress={onSignOut} />
+          {__DEV__ ? (
+            <>
+              <View style={styles.buttonSpacer} />
+              <SecondaryButton label="Reset demo" onPress={onResetDemo} />
+            </>
+          ) : null}
+        </View>
       </ScreenScroll>
     </View>
   );
@@ -192,52 +233,113 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  servicesCard: {
+  identityCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: spacing.lg,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.teal,
+    gap: spacing.md,
   },
-  pressed: {
-    opacity: 0.95,
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: borderRadius.pill,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  servicesText: {
+  avatarText: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.bold,
+    color: colors.tealDeep,
+  },
+  identityText: {
     flex: 1,
   },
-  servicesTitle: {
-    fontFamily: fontFamilies.semibold,
+  identityName: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.bold,
     color: colors.textPrimary,
+    marginBottom: spacing.xs / 2,
+  },
+  identityEmail: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
-  servicesSubtitle: {
+  identitySummary: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
+    fontSize: fontSizes.caption,
+    color: colors.teal,
   },
-  servicesAction: {
+  sectionLabel: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
+  },
+  groupCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.lg,
+    overflow: 'hidden',
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    minHeight: 64,
+  },
+  settingsText: {
+    flex: 1,
+    paddingRight: spacing.sm,
+  },
+  settingsTitle: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs / 2,
+  },
+  settingsSubtitle: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  settingsAction: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
     minWidth: 44,
     textAlign: 'right',
   },
+  rowDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginLeft: spacing.lg,
+  },
   hubRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 44,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    minHeight: 64,
   },
   hubIconTile: {
     width: 40,
@@ -252,44 +354,32 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: spacing.sm,
   },
-  hubLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  hubDescription: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
-  section: {
+  aboutCard: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  sectionBody: {
+  aboutBody: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     lineHeight: 24,
   },
+  devHint: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    lineHeight: 18,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+  },
   devMenuButton: {
     minHeight: 44,
     justifyContent: 'center',
-    marginTop: spacing.md,
+    margin: spacing.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
@@ -304,7 +394,14 @@ const styles = StyleSheet.create({
     color: colors.teal,
     textAlign: 'center',
   },
+  signOutWrap: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.lg,
+  },
   buttonSpacer: {
     height: spacing.sm,
+  },
+  pressed: {
+    opacity: 0.92,
   },
 });

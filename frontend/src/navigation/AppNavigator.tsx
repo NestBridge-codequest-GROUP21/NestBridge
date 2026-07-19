@@ -198,12 +198,13 @@ import {
   getUnreadNotificationCount,
   studentBookingsMock,
   incomingBookingRequestsMock,
-  bookingNotificationsMock,
+  notificationsMockForIntent,
 } from '../data/bookingMock';
 import { conversationsMock } from '../data/conversationsMock';
 import { withDemoFallback, withDemoFallbackValue, presentableLoading, presentableError } from '../utils/demoLiveMerge';
 import {
   confirmDemoBooking,
+  isApiBookingId,
   createDemoGuideBookingRequest,
   createDemoHostBookingRequest,
   mergeBookingsWithLocalOverrides,
@@ -362,13 +363,8 @@ function handleProviderQuickAction(
     navigation.navigate(role === 'guide' ? 'GuideAvailability' : 'HostCalendar');
   }
   if (actionId === 'calendar') {
-    // View committed schedule. Distinct from availability: hosts have a stay
-    // calendar; guides see their booked sessions on the bookings tab.
-    if (role === 'guide') {
-      navigation.reset({ index: 0, routes: [{ name: 'GuideBookingsTab' }] });
-    } else {
-      navigation.navigate('HostCalendar');
-    }
+    // Hosts manage stay availability; guides manage open session slots.
+    navigation.navigate(role === 'guide' ? 'GuideAvailability' : 'HostCalendar');
   }
   if (actionId === 'tour-types') {
     navigation.navigate('TourTypesSetup');
@@ -997,6 +993,9 @@ export default function AppNavigator() {
   const [checklistCompleted, setChecklistCompleted] = useState<string[]>(
     profileState.seekerSetup.data.checklistCompleted ?? [],
   );
+  const [checklistRemoved, setChecklistRemoved] = useState<string[]>(
+    profileState.seekerSetup.data.checklistRemoved ?? [],
+  );
   const [tourTypes, setTourTypes] = useState(tourTypesMock);
   const [tourBaseRate, setTourBaseRate] = useState('45');
   const [tourMaxGroupSize, setTourMaxGroupSize] = useState('8');
@@ -1469,12 +1468,14 @@ export default function AppNavigator() {
 
   const checklistTasks = useMemo(
     () =>
-      checklistContentDisplay.map((item) => ({
-        id: item.itemKey,
-        label: item.label,
-        completed: checklistCompleted.includes(item.itemKey),
-      })),
-    [checklistContentDisplay, checklistCompleted],
+      checklistContentDisplay
+        .filter((item) => !checklistRemoved.includes(item.itemKey))
+        .map((item) => ({
+          id: item.itemKey,
+          label: item.label,
+          completed: checklistCompleted.includes(item.itemKey),
+        })),
+    [checklistContentDisplay, checklistCompleted, checklistRemoved],
   );
 
   const sitesDirectoryItems = useMemo(
@@ -1491,39 +1492,53 @@ export default function AppNavigator() {
 
   useEffect(() => {
     setChecklistCompleted(profileState.seekerSetup.data.checklistCompleted ?? []);
-  }, [profileState.seekerSetup.data.checklistCompleted, user?.userId]);
+    setChecklistRemoved(profileState.seekerSetup.data.checklistRemoved ?? []);
+  }, [
+    profileState.seekerSetup.data.checklistCompleted,
+    profileState.seekerSetup.data.checklistRemoved,
+    user?.userId,
+  ]);
   const checkIn = defaultCheckIn(arrivalDate || profileFields.arrivalDate);
   const checkOut = defaultCheckOut(departureDate || profileFields.departureDate);
   const sessionDate = arrivalDate || profileFields.arrivalDate || DEFAULT_SESSION_DATE;
   const setupSummary = getAccountSetupSummary(profileState);
   const showMatchScores = isSeekerComplete(profileState);
 
+  const roleNotificationsMock = useMemo(
+    () => notificationsMockForIntent(primaryIntent),
+    [primaryIntent],
+  );
   const [unreadNotifications, setUnreadNotifications] = useState(
-    getUnreadNotificationCount(),
+    getUnreadNotificationCount(primaryIntent),
   );
-  const [notificationsList, setNotificationsList] = useState(
-    bookingNotificationsMock,
-  );
+  const [notificationsList, setNotificationsList] = useState(roleNotificationsMock);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
 
   const refreshNotificationState = useCallback(async () => {
     if (!user) {
       return;
     }
+    const fallback = notificationsMockForIntent(primaryIntent);
     try {
       const [count, list] = await Promise.all([
         fetchUnreadNotificationCount(),
         fetchNotifications(),
       ]);
-      setUnreadNotifications(count);
-      setNotificationsList(
-        withDemoFallback(list, bookingNotificationsMock),
+      const display = withDemoFallback(list, fallback);
+      setNotificationsList(display);
+      setUnreadNotifications(
+        list.length > 0 ? count : display.filter((n) => !n.read).length,
       );
     } catch {
-      setUnreadNotifications(getUnreadNotificationCount());
-      setNotificationsList(bookingNotificationsMock);
+      setUnreadNotifications(getUnreadNotificationCount(primaryIntent));
+      setNotificationsList(fallback);
     }
-  }, [user]);
+  }, [user, primaryIntent]);
+
+  useEffect(() => {
+    setNotificationsList(roleNotificationsMock);
+    setUnreadNotifications(getUnreadNotificationCount(primaryIntent));
+  }, [primaryIntent, roleNotificationsMock]);
 
   useEffect(() => {
     if (!user) {
@@ -2067,13 +2082,26 @@ export default function AppNavigator() {
 
   const confirmBookingWithDemoFallback = useCallback(
     async (bookingId: string): Promise<BookingListItem | null> => {
+      const booking = mergedBookings.find((item) => item.id === bookingId) ?? null;
+
+      // Mock/demo rows (e.g. booking-1) are not UUIDs — confirm locally only.
+      if (booking && !isApiBookingId(bookingId)) {
+        const confirmed = confirmDemoBooking(booking);
+        upsertLocalBooking(confirmed);
+        return confirmed;
+      }
+
       try {
         await completeBookingPayment(bookingId);
         homeApi.refresh();
-        return mergedBookings.find((item) => item.id === bookingId) ?? null;
+        if (booking) {
+          const confirmed = confirmDemoBooking(booking);
+          upsertLocalBooking(confirmed);
+          return confirmed;
+        }
+        return null;
       } catch (error) {
         const message = getApiErrorMessage(error);
-        const booking = mergedBookings.find((item) => item.id === bookingId);
         if (booking && message.includes('Cannot reach the server')) {
           const confirmed = confirmDemoBooking(booking);
           upsertLocalBooking(confirmed);
@@ -3219,6 +3247,18 @@ export default function AppNavigator() {
                 : [...checklistCompleted, taskId];
               setChecklistCompleted(next);
               void completeStep('SEEKER', 'profile', { checklistCompleted: next });
+            }}
+            onDeleteTask={(taskId) => {
+              const nextRemoved = checklistRemoved.includes(taskId)
+                ? checklistRemoved
+                : [...checklistRemoved, taskId];
+              const nextCompleted = checklistCompleted.filter((id) => id !== taskId);
+              setChecklistRemoved(nextRemoved);
+              setChecklistCompleted(nextCompleted);
+              void completeStep('SEEKER', 'profile', {
+                checklistRemoved: nextRemoved,
+                checklistCompleted: nextCompleted,
+              });
             }}
             onBack={() => navigation.goBack()}
           />

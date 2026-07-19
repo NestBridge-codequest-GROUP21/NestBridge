@@ -80,9 +80,6 @@ export default function SponsorApplicationScreen({
         <Text style={styles.successMessage}>
           Your application to {sponsor.name} has been received. You will be contacted within 5–7 business days.
         </Text>
-        <Text style={styles.demoNote}>
-          Demo only — applications are not sent to real sponsors yet.
-        </Text>
         <Pressable
           style={({ pressed }) => [styles.doneBtn, pressed && styles.pressed]}
           onPress={onReturnToList}
@@ -372,13 +369,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: lineHeights.body,
-    marginBottom: spacing.sm,
-  },
-  demoNote: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption - 1,
-    color: colors.textTertiary,
-    textAlign: 'center',
     marginBottom: spacing.xl,
   },
   doneBtn: {

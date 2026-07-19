@@ -162,7 +162,7 @@ export default function OnboardingReadyScreen({
             <Text style={styles.headline}>ALL SET!</Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
 
-            <View style={styles.carouselOverlap}>
+            <View style={styles.carouselSection}>
               <OnboardingReadyCarousel cards={carouselCards} />
             </View>
 
@@ -299,11 +299,11 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.subheading,
     textAlign: 'center',
     opacity: 0.92,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
     paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  carouselOverlap: {
-    marginTop: -spacing.xl,
+  carouselSection: {
+    marginTop: spacing.sm,
     marginBottom: spacing.lg,
   },
   actions: {

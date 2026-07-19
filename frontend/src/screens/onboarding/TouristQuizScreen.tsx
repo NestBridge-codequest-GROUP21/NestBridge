@@ -3,6 +3,7 @@ import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
 import {
   DIETARY_OPTIONS,
+  GHANA_CITY_OPTIONS,
   LANGUAGE_OPTIONS,
   QUIET_SOCIAL_LABELS,
   QuizPageDefinition,
@@ -72,10 +73,9 @@ const TOURIST_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'destination',
-      question: 'Which city are you visiting and for how long?',
-      type: 'text',
-      placeholder: 'e.g. Kumasi, 10 days (Mar 12–22)',
-      textValidation: 'place',
+      question: 'Which city are you visiting?',
+      type: 'single-select',
+      options: GHANA_CITY_OPTIONS,
       required: true,
     },
   ],

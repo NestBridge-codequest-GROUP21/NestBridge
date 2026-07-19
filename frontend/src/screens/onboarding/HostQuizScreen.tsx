@@ -2,6 +2,7 @@ import React from 'react';
 import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
 import {
+  GHANA_CITY_OPTIONS,
   LANGUAGE_OPTIONS,
   QUIET_SOCIAL_LABELS,
   QuizPageDefinition,
@@ -106,11 +107,17 @@ const HOST_PAGES: QuizPageDefinition[] = [
   ],
   [
     {
+      id: 'city',
+      question: 'Which city is your home in?',
+      type: 'single-select',
+      options: GHANA_CITY_OPTIONS,
+      required: true,
+    },
+    {
       id: 'address',
-      question: "What's your address and city?",
+      question: 'Street address or neighborhood?',
       type: 'text',
-      placeholder: 'Street, neighborhood, and city',
-      textValidation: 'place',
+      placeholder: 'Street, neighborhood',
       required: true,
     },
   ],

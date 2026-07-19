@@ -85,16 +85,6 @@ const STUDENT_PAGES: QuizPageDefinition[] = [
   ],
   [
     {
-      id: 'destination',
-      question: 'Which city and university are you heading to?',
-      type: 'text',
-      placeholder: 'e.g. Accra, University of Ghana',
-      textValidation: 'place',
-      required: true,
-    },
-  ],
-  [
-    {
       id: 'languagePractice',
       question: 'Which language would you like to practice while here?',
       type: 'single-select',

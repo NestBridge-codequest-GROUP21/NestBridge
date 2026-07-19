@@ -144,24 +144,70 @@ public class PaystackService {
             }
             JsonNode data = event.path("data");
             String reference = data.path("reference").asText();
-            PaymentRecord payment = paymentRecordRepository.findByPaystackReference(reference)
-                    .orElseThrow(() -> new IllegalArgumentException("Unknown payment reference."));
-            if ("SUCCESS".equals(payment.getStatus())) {
-                return;
-            }
-
-            payment.setStatus("SUCCESS");
-            payment.setCompletedAt(java.time.OffsetDateTime.now());
-            payment.setRawPayload(objectMapper.convertValue(data, Map.class));
-            paymentRecordRepository.save(payment);
-
-            completeBookingPayment(payment.getBookingId());
+            applySuccessfulCharge(reference, data);
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
             log.error("Paystack webhook error", e);
             throw new IllegalStateException("Webhook processing failed.");
         }
+    }
+
+    /**
+     * Paystack browser redirect lands here after checkout. Verifies the
+     * transaction with Paystack and confirms the booking when paid.
+     */
+    @Transactional
+    public boolean verifyAndCompleteByReference(String reference) {
+        if (reference == null || reference.isBlank()) {
+            return false;
+        }
+        if (!paystackEnabled || secretKey == null || secretKey.isBlank()) {
+            return false;
+        }
+
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.paystack.co/transaction/verify/" + reference))
+                    .header("Authorization", "Bearer " + secretKey)
+                    .GET()
+                    .build();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonNode json = objectMapper.readTree(response.body());
+            if (!json.path("status").asBoolean(false)) {
+                log.warn("Paystack verify failed for {}: {}", reference, response.body());
+                return false;
+            }
+            JsonNode data = json.path("data");
+            if (!"success".equalsIgnoreCase(data.path("status").asText())) {
+                log.info("Paystack verify reference {} status={}", reference, data.path("status").asText());
+                return false;
+            }
+            applySuccessfulCharge(reference, data);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Paystack verify interrupted for {}", reference, e);
+            return false;
+        } catch (Exception e) {
+            log.error("Paystack verify error for {}", reference, e);
+            return false;
+        }
+    }
+
+    private void applySuccessfulCharge(String reference, JsonNode data) {
+        PaymentRecord payment = paymentRecordRepository.findByPaystackReference(reference)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown payment reference."));
+        if ("SUCCESS".equals(payment.getStatus())) {
+            return;
+        }
+
+        payment.setStatus("SUCCESS");
+        payment.setCompletedAt(java.time.OffsetDateTime.now());
+        payment.setRawPayload(objectMapper.convertValue(data, Map.class));
+        paymentRecordRepository.save(payment);
+
+        completeBookingPayment(payment.getBookingId());
     }
 
     @Transactional
