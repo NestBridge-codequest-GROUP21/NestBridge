@@ -5,7 +5,7 @@ import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import * as ImagePicker from 'expo-image-picker';
+import { pickProfileImage } from '../services/imagePicker';
 
 import IntentSelectScreen, {
   intentOptionsFromPrimary,
@@ -51,6 +51,11 @@ import BrowseHomeScreen from '../screens/shared/BrowseHomeScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
 import DevTestingScreen from '../screens/shared/DevTestingScreen';
+import {
+  StaffUserActivityRoute,
+  StaffUserDetailRoute,
+  StaffUserSearchRoute,
+} from './staffRoutes';
 import UnifiedSearchScreen from '../screens/shared/UnifiedSearchScreen';
 import ExploreHomeScreen from '../screens/tourist/ExploreHomeScreen';
 import LodgingDirectoryScreen from '../screens/tourist/LodgingDirectoryScreen';
@@ -948,22 +953,9 @@ export default function AppNavigator() {
   const [bio, setBio] = useState('');
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const handleAddProfilePhoto = useCallback(async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(
-        'Photo access needed',
-        'Allow photo library access to add a profile picture, or skip for now.',
-      );
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-    if (!result.canceled && result.assets.length > 0) {
-      setProfilePhotoUri(result.assets[0].uri);
+    const picked = await pickProfileImage();
+    if (picked?.uri) {
+      setProfilePhotoUri(picked.uri);
     }
   }, []);
 
@@ -2320,12 +2312,14 @@ export default function AppNavigator() {
             setupSummary={setupSummary}
             culturalGuidanceItems={profileCulturalItems}
             showTravelBooking={shouldShowTravelBookingEntry(homeRole)}
+            showStaffTools={Boolean(user?.isStaff)}
             onAccountSetupPress={() => navigation.navigate('AccountSetup')}
             onCulturalGuidanceItemPress={(itemId) =>
               handleProfileCulturalItem(navigation, itemId)
             }
             onCoreServicesPress={() => navigation.navigate('UnifiedSearch')}
             onTravelBookingPress={() => navigation.navigate('UnifiedSearch')}
+            onStaffToolsPress={() => navigation.navigate('StaffUserSearch')}
             onSignOut={() => {
               void signOut();
             }}
@@ -2336,6 +2330,39 @@ export default function AppNavigator() {
                 await signOut();
               })();
             }}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="StaffUserSearch">
+        {({ navigation }) => (
+          <StaffUserSearchRoute
+            onSelectUser={(userId) =>
+              navigation.navigate('StaffUserDetail', { userId })
+            }
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="StaffUserDetail">
+        {({ navigation, route }) => (
+          <StaffUserDetailRoute
+            userId={route.params.userId}
+            onViewActivity={(userId, userName) =>
+              navigation.navigate('StaffUserActivity', { userId, userName })
+            }
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="StaffUserActivity">
+        {({ navigation, route }) => (
+          <StaffUserActivityRoute
+            userId={route.params.userId}
+            userName={route.params.userName}
+            onBack={() => navigation.goBack()}
           />
         )}
       </Stack.Screen>

@@ -14,6 +14,13 @@ import {
 } from '../services/authStorage';
 import * as api from '../services/api';
 import { registerPushTokenIfAvailable } from '../services/pushRegistration';
+import {
+  recordBootError,
+  setBootStage,
+} from '../services/bootDiagnostics';
+
+/** Never leave the branded splash waiting forever on a hung refresh. */
+const AUTH_BOOT_TIMEOUT_MS = 8000;
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -42,18 +49,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
-      const session = await loadSession();
-      if (mounted && session?.user) {
-        setUser(session.user);
-        void registerPushTokenIfAvailable();
-      }
+    setBootStage('auth_hydrate_start');
+
+    const finish = () => {
       if (mounted) {
         setIsLoading(false);
+        setBootStage('auth_hydrate_done');
+      }
+    };
+
+    const timeout = setTimeout(() => {
+      if (!mounted) {
+        return;
+      }
+      console.warn('[auth] hydrate timed out — releasing splash wait');
+      void recordBootError('auth_hydrate_timeout', 'Auth hydrate exceeded timeout');
+      finish();
+    }, AUTH_BOOT_TIMEOUT_MS);
+
+    (async () => {
+      try {
+        const session = await loadSession();
+        if (!mounted) {
+          return;
+        }
+        setBootStage('auth_session_loaded');
+
+        if (session?.user) {
+          if (session.refreshToken) {
+            setBootStage('auth_refresh');
+            try {
+              const refreshed = await api.refreshSession();
+              if (mounted && refreshed?.user) {
+                setUser(refreshed.user);
+                // Push is deferred until after splash — see RootNavigator.
+                return;
+              }
+            } catch (error) {
+              // Keep cached session if refresh fails (offline / misconfigured API).
+              console.warn('[auth] refresh failed, using cached session', error);
+            }
+          }
+          if (mounted) {
+            setUser(session.user);
+          }
+        }
+      } catch (error) {
+        await recordBootError('auth_hydrate', error);
+        try {
+          await clearSession();
+        } catch {
+          // ignore
+        }
+        if (mounted) {
+          setUser(null);
+        }
+      } finally {
+        clearTimeout(timeout);
+        finish();
       }
     })();
+
     return () => {
       mounted = false;
+      clearTimeout(timeout);
     };
   }, []);
 
@@ -61,6 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await saveSession(session);
     setUser(session.user);
     setAuthError(null);
+    // Safe after UI is up; never runs during cold-start hydrate.
     void registerPushTokenIfAvailable();
   }, []);
 
@@ -99,9 +159,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    const session = await loadSession();
-    await api.logout(session?.refreshToken);
-    await clearSession();
+    try {
+      const session = await loadSession();
+      await api.logout(session?.refreshToken);
+    } catch (error) {
+      console.warn('[auth] logout API failed', error);
+    }
+    try {
+      await clearSession();
+    } catch (error) {
+      console.warn('[auth] clearSession failed', error);
+    }
     setUser(null);
     setAuthError(null);
   }, []);

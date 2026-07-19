@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import VerifyEmailScreen from '../screens/auth/VerifyEmailScreen';
+import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import { welcomeMock, registerMock, loginMock } from '../data/studentOnboardingMock';
 import {
   DEMO_ACTOR_ACCOUNTS,
@@ -19,12 +21,22 @@ import type { AuthStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
-export default function AuthNavigator() {
+interface AuthNavigatorProps {
+  initialResetToken?: string;
+  onResetTokenConsumed?: () => void;
+}
+
+export default function AuthNavigator({
+  initialResetToken,
+  onResetTokenConsumed,
+}: AuthNavigatorProps) {
   const { register, signIn } = useAuth();
   const { applyDevPreset, setPrimaryIntent } = useAccountProfile();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [loginError, setLoginError] = useState('');
   const [registerError, setRegisterError] = useState('');
@@ -32,8 +44,23 @@ export default function AuthNavigator() {
   const [verifyStatus, setVerifyStatus] = useState('');
   const [verifyError, setVerifyError] = useState('');
   const [resendBusy, setResendBusy] = useState(false);
+  const [forgotError, setForgotError] = useState('');
+  const [forgotStatus, setForgotStatus] = useState('');
+  const [forgotBusy, setForgotBusy] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetStatus, setResetStatus] = useState('');
+  const [resetBusy, setResetBusy] = useState(false);
 
   const demoAccounts = isDemoQuickLoginEnabled() ? DEMO_ACTOR_ACCOUNTS : [];
+
+  useEffect(() => {
+    if (initialResetToken) {
+      setResetError('');
+      setResetStatus('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+    }
+  }, [initialResetToken]);
 
   const handleDemoLogin = async (account: DemoAccount) => {
     setLoginError('');
@@ -52,9 +79,11 @@ export default function AuthNavigator() {
     }
   };
 
+  const initialRoute = initialResetToken ? 'ResetPassword' : 'Welcome';
+
   return (
     <Stack.Navigator
-      initialRouteName="Welcome"
+      initialRouteName={initialRoute}
       screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
     >
       <Stack.Screen name="Welcome">
@@ -146,10 +175,108 @@ export default function AuthNavigator() {
             onBackToSignIn={() => {
               setVerifyStatus('');
               setVerifyError('');
+              setPassword('');
               navigation.navigate('Login');
             }}
           />
         )}
+      </Stack.Screen>
+
+      <Stack.Screen name="ForgotPassword">
+        {({ navigation }) => (
+          <ForgotPasswordScreen
+            email={email}
+            errorMessage={forgotError}
+            statusMessage={forgotStatus}
+            submitting={forgotBusy}
+            onEmailChange={(value) => {
+              setEmail(value);
+              setForgotError('');
+            }}
+            onSubmit={async () => {
+              setForgotError('');
+              setForgotStatus('');
+              if (!email.trim()) {
+                setForgotError('Please enter your email address.');
+                return;
+              }
+              setForgotBusy(true);
+              try {
+                await api.requestPasswordReset(email.trim());
+                setForgotStatus(
+                  'If an account exists for this email, we sent password reset instructions.',
+                );
+              } catch (error) {
+                setForgotError(api.getApiErrorMessage(error));
+              } finally {
+                setForgotBusy(false);
+              }
+            }}
+            onBack={() => {
+              setForgotError('');
+              setForgotStatus('');
+              navigation.navigate('Login');
+            }}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen
+        name="ResetPassword"
+        initialParams={initialResetToken ? { token: initialResetToken } : undefined}
+      >
+        {({ navigation, route }) => {
+          const token = route.params.token || initialResetToken || '';
+          return (
+            <ResetPasswordScreen
+              password={newPassword}
+              confirmPassword={confirmNewPassword}
+              errorMessage={resetError}
+              statusMessage={resetStatus}
+              submitting={resetBusy}
+              onPasswordChange={(value) => {
+                setNewPassword(value);
+                setResetError('');
+              }}
+              onConfirmPasswordChange={(value) => {
+                setConfirmNewPassword(value);
+                setResetError('');
+              }}
+              onSubmit={async () => {
+                setResetError('');
+                setResetStatus('');
+                if (!token) {
+                  setResetError('Reset link is invalid. Request a new one from sign in.');
+                  return;
+                }
+                if (newPassword.length < 6) {
+                  setResetError('Password must be at least 6 characters.');
+                  return;
+                }
+                if (newPassword !== confirmNewPassword) {
+                  setResetError('Passwords do not match.');
+                  return;
+                }
+                setResetBusy(true);
+                try {
+                  await api.resetPassword(token, newPassword);
+                  setResetStatus('Password updated. You can sign in with your new password.');
+                  onResetTokenConsumed?.();
+                } catch (error) {
+                  setResetError(api.getApiErrorMessage(error));
+                } finally {
+                  setResetBusy(false);
+                }
+              }}
+              onBack={() => {
+                setResetError('');
+                setResetStatus('');
+                onResetTokenConsumed?.();
+                navigation.navigate('Login');
+              }}
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="Login">
@@ -180,6 +307,11 @@ export default function AuthNavigator() {
             }}
             onDemoLogin={(account) => {
               void handleDemoLogin(account);
+            }}
+            onForgotPasswordPress={() => {
+              setForgotError('');
+              setForgotStatus('');
+              navigation.navigate('ForgotPassword');
             }}
             onCreateAccountPress={() => navigation.navigate('Register')}
             onBack={() => navigation.goBack()}

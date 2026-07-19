@@ -31,23 +31,27 @@ function isLoopbackUrl(url: string): boolean {
 }
 
 function resolveApiBaseUrl(): string {
-  const override = Constants.expoConfig?.extra?.apiBaseUrl;
-  const hasOverride = typeof override === 'string' && override.length > 0;
-  const lanHost = devServerHost();
+  try {
+    const override = Constants.expoConfig?.extra?.apiBaseUrl;
+    const hasOverride = typeof override === 'string' && override.length > 0;
+    const lanHost = devServerHost();
 
-  // Explicit non-loopback override always wins (e.g. staging URL or LAN IP).
-  if (hasOverride && !isLoopbackUrl(override)) {
-    return override.replace(/\/$/, '');
-  }
+    // Explicit non-loopback override always wins (e.g. staging URL or LAN IP).
+    if (hasOverride && !isLoopbackUrl(override)) {
+      return override.replace(/\/$/, '');
+    }
 
-  // Physical device / Expo Go: hit the same machine as Metro, not the phone's localhost.
-  if (lanHost) {
-    return `http://${lanHost}:8080`;
-  }
+    // Physical device / Expo Go: hit the same machine as Metro, not the phone's localhost.
+    if (lanHost) {
+      return `http://${lanHost}:8080`;
+    }
 
-  // Loopback override is fine for simulators / web when no LAN host is available.
-  if (hasOverride) {
-    return override.replace(/\/$/, '');
+    // Loopback override is fine for simulators / web when no LAN host is available.
+    if (hasOverride) {
+      return override.replace(/\/$/, '');
+    }
+  } catch {
+    // Constants/extra can be unavailable in odd standalone boot states.
   }
 
   if (Platform.OS === 'android') {

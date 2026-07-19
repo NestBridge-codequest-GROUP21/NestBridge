@@ -5,6 +5,8 @@ export type AuthStackParamList = {
   Register: undefined;
   Login: undefined;
   VerifyEmail: { email: string };
+  ForgotPassword: undefined;
+  ResetPassword: { token: string };
 };
 
 export type AppStackParamList = {
@@ -16,6 +18,9 @@ export type AppStackParamList = {
   GuideHome: undefined;
   Profile: undefined;
   DevTesting: undefined;
+  StaffUserSearch: undefined;
+  StaffUserDetail: { userId: string };
+  StaffUserActivity: { userId: string; userName: string };
   AccountSetup: undefined;
   UnifiedSearch: undefined;
   Destination: { track: 'SEEKER' };

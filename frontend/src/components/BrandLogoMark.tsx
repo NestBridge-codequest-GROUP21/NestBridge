@@ -5,7 +5,9 @@ import { colors, spacing, borderRadius } from '../constants/theme';
 const iconImage = require('../../assets/logo-icon.png');
 const iconAsset = Image.resolveAssetSource(iconImage);
 const iconAspectRatio =
-  iconAsset.width && iconAsset.height ? iconAsset.height / iconAsset.width : 1;
+  iconAsset?.width && iconAsset?.height
+    ? iconAsset.height / iconAsset.width
+    : 1;
 
 const LOGO_MARK_SIZE = spacing.xl * 4;
 

@@ -64,6 +64,9 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid email or password.");
         }
+        if (user.isSuspended()) {
+            throw new IllegalArgumentException("This account has been suspended.");
+        }
         if (verificationEnabled && !user.isEmailVerified()) {
             throw new EmailNotVerifiedException();
         }
@@ -82,6 +85,9 @@ public class AuthService {
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        if (user.isSuspended()) {
+            throw new IllegalArgumentException("This account has been suspended.");
+        }
         return issueTokens(user);
     }
 
@@ -111,6 +117,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .displayName(user.getFullName())
                 .emailVerified(user.isEmailVerified())
+                .staff(user.isStaff())
                 .build();
     }
 }
