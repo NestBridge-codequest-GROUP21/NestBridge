@@ -13,13 +13,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
 } from '../../constants/theme';
+import type { DemoAccount } from '../../data/demoAccounts';
 
 export interface LoginScreenProps {
   title: string;
@@ -28,10 +31,14 @@ export interface LoginScreenProps {
   password: string;
   keepSignedIn: boolean;
   errorMessage?: string;
+  demoAccounts?: DemoAccount[];
+  demoLoginBusy?: boolean;
   onEmailChange?: (value: string) => void;
   onPasswordChange?: (value: string) => void;
   onToggleKeepSignedIn?: () => void;
   onSubmit?: () => void;
+  onDemoLogin?: (account: DemoAccount) => void;
+  onForgotPasswordPress?: () => void;
   onCreateAccountPress?: () => void;
   onBack?: () => void;
 }
@@ -43,10 +50,14 @@ export default function LoginScreen({
   password,
   keepSignedIn,
   errorMessage,
+  demoAccounts = [],
+  demoLoginBusy = false,
   onEmailChange,
   onPasswordChange,
   onToggleKeepSignedIn,
   onSubmit,
+  onDemoLogin,
+  onForgotPasswordPress,
   onCreateAccountPress,
   onBack,
 }: LoginScreenProps) {
@@ -83,6 +94,18 @@ export default function LoginScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
 
+        {demoAccounts.length > 0 ? (
+          <>
+            <DemoActorQuickLogin
+              accounts={demoAccounts}
+              busy={demoLoginBusy}
+              variant="tabs"
+              onSelect={onDemoLogin}
+            />
+            <Text style={styles.dividerLabel}>or sign in with email</Text>
+          </>
+        ) : null}
+
         <FormTextField
           label="Email"
           value={email}
@@ -98,6 +121,17 @@ export default function LoginScreen({
           onChangeText={onPasswordChange}
           secureTextEntry
         />
+
+        {onForgotPasswordPress ? (
+          <Pressable
+            onPress={onForgotPasswordPress}
+            style={styles.forgotRow}
+            accessibilityRole="button"
+            accessibilityLabel="Forgot password"
+          >
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </Pressable>
+        ) : null}
 
         <Pressable
           onPress={onToggleKeepSignedIn}
@@ -151,7 +185,25 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     lineHeight: 20,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  dividerLabel: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  forgotRow: {
+    alignSelf: 'flex-end',
+    minHeight: 44,
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  forgotText: {
+    fontSize: fontSizes.body,
+    color: colors.teal,
+    fontWeight: fontWeights.semibold,
   },
   keepSignedInRow: {
     flexDirection: 'row',

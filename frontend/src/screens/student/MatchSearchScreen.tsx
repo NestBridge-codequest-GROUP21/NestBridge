@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import {
 import MatchResultsScreen, {
   type MatchResultHost,
 } from './MatchResultsScreen';
+import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 
 export interface MatchSearchDefaults {
   destinationCity: string;
@@ -45,10 +46,17 @@ export const matchSearchDefaults: MatchSearchDefaults = {
 
 export interface MatchSearchScreenProps {
   defaults: MatchSearchDefaults;
-  results: MatchResultHost[];
-  onSearch?: (params: MatchSearchDefaults) => void;
+  onSearch: (params: MatchSearchDefaults) => Promise<{
+    results: MatchResultHost[];
+    error?: string;
+  }>;
+  tabBarItems?: TabBarItem[];
+  activeTabId?: string;
+  showSosDock?: boolean;
+  onSosPress?: () => void;
   onBack?: () => void;
   onHostPress?: (hostId: string) => void;
+  onTabPress?: (tabId: string) => void;
 }
 
 function formatDateRangeShort(checkIn: string, checkOut: string): string {
@@ -80,13 +88,17 @@ function buildSummaryLine(params: MatchSearchDefaults): string {
 
 export default function MatchSearchScreen({
   defaults,
-  results,
   onSearch,
+  tabBarItems,
+  activeTabId = 'search',
+  showSosDock = false,
+  onSosPress,
   onBack,
   onHostPress,
+  onTabPress,
 }: MatchSearchScreenProps) {
   const insets = useSafeAreaInsets();
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showTabBar = tabBarItems != null && tabBarItems.length > 0;
 
   const [destinationCity, setDestinationCity] = useState(defaults.destinationCity);
   const [checkIn, setCheckIn] = useState(defaults.checkIn);
@@ -97,6 +109,14 @@ export default function MatchSearchScreen({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [searchResults, setSearchResults] = useState<MatchResultHost[]>([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDestinationCity(defaults.destinationCity);
+    setCheckIn(defaults.checkIn);
+    setCheckOut(defaults.checkOut);
+  }, [defaults.destinationCity, defaults.checkIn, defaults.checkOut]);
 
   const currentParams = useMemo<MatchSearchDefaults>(
     () => ({
@@ -124,27 +144,27 @@ export default function MatchSearchScreen({
 
   const summaryLine = useMemo(() => buildSummaryLine(currentParams), [currentParams]);
 
-  useEffect(() => {
-    return () => {
-      if (searchTimerRef.current) {
-        clearTimeout(searchTimerRef.current);
-      }
-    };
-  }, []);
-
-  const handleFindMatches = useCallback(() => {
+  const handleFindMatches = useCallback(async () => {
     if (isSearching) {
       return;
     }
 
     setIsExpanded(false);
     setIsSearching(true);
-    onSearch?.(currentParams);
+    setSearchError(null);
 
-    searchTimerRef.current = setTimeout(() => {
-      setIsSearching(false);
+    try {
+      const { results, error } = await onSearch(currentParams);
+      setSearchResults(results);
+      setSearchError(error ?? null);
       setShowResults(true);
-    }, 1000);
+    } catch (err) {
+      setSearchResults([]);
+      setSearchError(err instanceof Error ? err.message : 'Something went wrong.');
+      setShowResults(true);
+    } finally {
+      setIsSearching(false);
+    }
   }, [currentParams, isSearching, onSearch]);
 
   const handleBackFromResults = useCallback(() => {
@@ -154,10 +174,16 @@ export default function MatchSearchScreen({
   if (showResults) {
     return (
       <MatchResultsScreen
-        results={results}
+        results={searchResults}
+        errorMessage={searchError}
         destinationLabel={`${currentParams.destinationCity} matches`}
         onBack={handleBackFromResults}
+        onRetry={() => {
+          setShowResults(false);
+          void handleFindMatches();
+        }}
         onHostPress={onHostPress}
+        onSosPress={onSosPress}
       />
     );
   }
@@ -172,7 +198,7 @@ export default function MatchSearchScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
-        {onBack ? (
+        {onBack && !showTabBar ? (
           <Pressable
             onPress={onBack}
             style={styles.backButton}
@@ -195,7 +221,11 @@ export default function MatchSearchScreen({
         style={styles.scroll}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: insets.bottom + spacing.xl },
+          {
+            paddingBottom: showTabBar
+              ? insets.bottom + layout.scrollBottomInset
+              : insets.bottom + spacing.xl,
+          },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -225,7 +255,7 @@ export default function MatchSearchScreen({
                   style={styles.fieldInput}
                   value={destinationCity}
                   onChangeText={setDestinationCity}
-                  placeholder="e.g. Accra"
+                  placeholder="e.g. Accra, Kumasi, Wa, Ho"
                   placeholderTextColor={colors.textTertiary}
                   autoCapitalize="words"
                 />
@@ -333,6 +363,15 @@ export default function MatchSearchScreen({
             <View style={[styles.skeletonBlock, styles.skeletonBlockMedium]} />
           </View>
         </View>
+      ) : null}
+      {showTabBar ? (
+        <AppTabBar
+          items={tabBarItems!}
+          activeTabId={activeTabId}
+          showSosDock={showSosDock}
+          onSosPress={onSosPress}
+          onTabPress={onTabPress}
+        />
       ) : null}
     </View>
   );

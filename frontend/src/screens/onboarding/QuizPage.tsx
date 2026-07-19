@@ -578,10 +578,7 @@ export default function QuizPage({
 
         {visibleQuestions.map((question, index) => (
           <View key={question.id} style={index > 0 ? styles.questionSpacing : undefined}>
-            <Text style={styles.question}>
-              {question.question}
-              {question.required && <Text style={styles.requiredMark}> *</Text>}
-            </Text>
+            <Text style={styles.question}>{question.question}</Text>
             {renderQuestionInput(question)}
             {fieldErrors[question.id] === 'required' && (
               <Text style={styles.fieldError}>This question is required</Text>
@@ -677,10 +674,6 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     lineHeight: 32,
     marginBottom: spacing.md,
-  },
-  requiredMark: {
-    color: colors.danger,
-    fontWeight: fontWeights.bold,
   },
   fieldError: {
     fontSize: fontSizes.caption,

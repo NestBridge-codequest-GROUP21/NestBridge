@@ -1,10 +1,12 @@
 import type { SetupTrack } from '../types/accountProfile';
 
 export type AuthStackParamList = {
-  Splash: undefined;
   Welcome: undefined;
   Register: undefined;
   Login: undefined;
+  VerifyEmail: { email: string };
+  ForgotPassword: undefined;
+  ResetPassword: { token: string };
 };
 
 export type AppStackParamList = {
@@ -16,6 +18,9 @@ export type AppStackParamList = {
   GuideHome: undefined;
   Profile: undefined;
   DevTesting: undefined;
+  StaffUserSearch: undefined;
+  StaffUserDetail: { userId: string };
+  StaffUserActivity: { userId: string; userName: string };
   AccountSetup: undefined;
   UnifiedSearch: undefined;
   Destination: { track: 'SEEKER' };
@@ -24,9 +29,17 @@ export type AppStackParamList = {
   TouristQuiz: { track: 'SEEKER' };
   GuideQuiz: { track: 'GUIDE' };
   ProfileSetup: { track: SetupTrack };
+  KYCPrompt: { track: 'HOST' | 'GUIDE' };
   OnboardingReady: { track: SetupTrack };
   StudentBookings: undefined;
   MatchSearch: undefined;
+  HostRequestsTab: undefined;
+  HostBookingsTab: undefined;
+  HostEarningsTab: undefined;
+  GuideBookingsTab: undefined;
+  GuideEarningsTab: undefined;
+  MessagesTab: undefined;
+  Chat: { conversationId: string };
   HostProfile: { hostId: string };
   Booking: { hostId: string; bookingContext?: import('../types/booking').BookingContext };
   BookingConfirmed: { bookingId: string };
@@ -39,6 +52,28 @@ export type AppStackParamList = {
   IncomingSessionRequests: undefined;
   MatchRequestReview: { requestId: string };
   SessionReview: { requestId: string };
+  SOS: undefined;
+  TouristSiteDetail: { siteId: string };
+  PrepChecklist: undefined;
+  LocalTips: undefined;
+  TransportGuide: undefined;
+  ExploreStays: undefined;
+  OfflineMap: undefined;
+  HostCalendar: undefined;
+  HostListings: undefined;
+  TourTypesSetup: undefined;
+  GuideAvailability: undefined;
+  SitesDirectory: undefined;
+  StudentEvents: undefined;
+  CreateEvent: undefined;
+  VideoLibrary: undefined;
+  VideoDetail: { videoKey: string };
+  SponsorList: undefined;
+  SponsorDetail: { sponsorId: string };
+  SponsorApplication: { sponsorId: string };
+  WelfareCheckIn: { bookingId: string };
+  ReviewPrompt: { bookingId: string; hostName: string };
+  Notifications: undefined;
 };
 
 export type RootStackParamList = {

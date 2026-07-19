@@ -14,6 +14,7 @@ export interface ProfileData {
   displayName?: string;
   bio?: string;
   quizAnswers?: QuizAnswers;
+  checklistCompleted?: string[];
 }
 
 export interface ProfileProgress {

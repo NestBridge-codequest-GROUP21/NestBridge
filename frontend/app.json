@@ -1,33 +1,60 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "NestBridge",
+    "slug": "nestbridge",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0C1735"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nestbridge.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0C1735"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.nestbridge.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store",
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow NestBridge to access your photos for a profile picture."
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#1AA68C"
+        }
+      ]
+    ],
+    "extra": {
+      "apiBaseUrl": "",
+      "firebaseApiKey": "",
+      "firebaseAuthDomain": "",
+      "firebaseDatabaseUrl": "",
+      "firebaseProjectId": "",
+      "enableDemoFallback": true,
+      "eas": {
+        "projectId": "05eaad69-0d05-4eb9-b956-028c11e08f92"
+      }
+    }
   }
 }

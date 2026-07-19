@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontSizes,
@@ -72,7 +73,7 @@ export default function LodgingDetailScreen({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Text style={styles.backIcon}>←</Text>
+          <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
         </Pressable>
 
         <View style={styles.heroContent}>
@@ -86,7 +87,8 @@ export default function LodgingDetailScreen({
             {lodgingCategoryLabel(listing.category)} · {listing.area}, {listing.city}
           </Text>
           <View style={styles.ratingRow}>
-            <Text style={styles.rating}>★ {listing.rating}</Text>
+            <AppIcon name="star" size={fontSizes.body} color={colors.gold} />
+            <Text style={styles.rating}>{listing.rating}</Text>
             <Text style={styles.price}>{listing.priceHint}</Text>
           </View>
         </View>

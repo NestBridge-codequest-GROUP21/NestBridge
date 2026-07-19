@@ -1,9 +1,22 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  Easing,
+  ScrollView,
+  Pressable,
+  Image,
+  Dimensions,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
+import OnboardingReadyCarousel from '../../components/OnboardingReadyCarousel';
+import type { OnboardingNextStep } from '../../components/OnboardingNextStepsCard';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -18,25 +31,34 @@ import {
 } from '../../constants/theme';
 
 export interface OnboardingReadyScreenProps {
-  userName: string;
   subtitle: string;
-  matchHint: string;
+  heroImageUri: string;
+  carouselCards: OnboardingNextStep[];
   ctaLabel: string;
-  roleLabel?: string;
-  onEnterDashboard?: () => void;
+  roleLabel: string;
+  roleIcon?: string;
+  onPrimaryAction?: () => void;
+  onContinueLater?: () => void;
+  onBack?: () => void;
 }
 
+const HERO_HEIGHT_RATIO = 0.38;
+
 export default function OnboardingReadyScreen({
-  userName,
   subtitle,
-  matchHint,
+  heroImageUri,
+  carouselCards,
   ctaLabel,
   roleLabel,
-  onEnterDashboard,
+  roleIcon,
+  onPrimaryAction,
+  onContinueLater,
+  onBack,
 }: OnboardingReadyScreenProps) {
   const insets = useSafeAreaInsets();
-  const firstName = userName.split(' ')[0];
   const entrance = useRef(new Animated.Value(0)).current;
+  const [heroFailed, setHeroFailed] = useState(false);
+  const heroHeight = Dimensions.get('window').height * HERO_HEIGHT_RATIO;
 
   useEffect(() => {
     Animated.timing(entrance, {
@@ -47,10 +69,6 @@ export default function OnboardingReadyScreen({
     }).start();
   }, [entrance]);
 
-  const badgeScale = entrance.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.85, 1],
-  });
   const contentOpacity = entrance;
   const contentTranslateY = entrance.interpolate({
     inputRange: [0, 1],
@@ -58,115 +76,172 @@ export default function OnboardingReadyScreen({
   });
 
   return (
-    <LinearGradient
-      colors={[...gradients.header]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[
-        styles.root,
-        {
-          paddingTop: insets.top + spacing.xl,
-          paddingBottom: insets.bottom + spacing.lg,
-        },
-      ]}
-    >
+    <View style={styles.root}>
       <StatusBar style="light" />
 
-      <View style={styles.content}>
-        <Animated.View
-          style={[
-            styles.badgeRow,
-            {
-              opacity: contentOpacity,
-              transform: [{ scale: badgeScale }],
-            },
-          ]}
-        >
-          <View style={styles.badge}>
-            <Text style={styles.badgeCheck} accessibilityElementsHidden>
-              ✓
-            </Text>
-            <Text style={styles.badgeText}>Profile saved</Text>
-          </View>
-          {roleLabel ? (
-            <View style={styles.roleBadge}>
-              <Text style={styles.roleBadgeText}>{roleLabel}</Text>
-            </View>
+      <View style={[styles.heroWrap, { height: heroHeight }]}>
+        {!heroFailed ? (
+          <Image
+            source={{ uri: heroImageUri }}
+            style={styles.heroImage}
+            resizeMode="cover"
+            accessibilityIgnoresInvertColors
+            onError={() => setHeroFailed(true)}
+          />
+        ) : (
+          <LinearGradient
+            colors={[colors.tealDeep, colors.teal, colors.navyMid]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroFallback}
+          />
+        )}
+        <LinearGradient
+          colors={['transparent', 'rgba(12, 23, 53, 0.55)']}
+          style={styles.heroScrim}
+        />
+
+        <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
+          {onBack ? (
+            <Pressable
+              onPress={onBack}
+              style={styles.topActionButton}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <AppIcon
+                name="chevron-back"
+                size={fontSizes.heading}
+                color={colors.white}
+              />
+            </Pressable>
+          ) : (
+            <View style={styles.topSpacer} />
+          )}
+        </View>
+
+        <View style={styles.roleBadge}>
+          {roleIcon ? (
+            <AppIcon
+              glyph={roleIcon}
+              size={fontSizes.body}
+              color={colors.white}
+              style={styles.roleBadgeIcon}
+            />
           ) : null}
-        </Animated.View>
-
-        <Animated.View
-          style={{
-            opacity: contentOpacity,
-            transform: [{ translateY: contentTranslateY }],
-          }}
-        >
-          <Text style={styles.title}>
-            You are all set,{'\n'}
-            <Text style={styles.titleAccent}>{firstName}</Text>
-          </Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
-
-          <View style={styles.hintCard}>
-            <View style={styles.hintAccent} />
-            <Text style={styles.hintText}>{matchHint}</Text>
-          </View>
-        </Animated.View>
+          <Text style={styles.roleBadgeText}>{roleLabel}</Text>
+        </View>
       </View>
 
-      <PrimaryButton label={ctaLabel} onPress={onEnterDashboard} />
-    </LinearGradient>
+      <LinearGradient
+        colors={[...gradients.header]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.contentGradient}
+      >
+        <View style={styles.decorWrap} pointerEvents="none">
+          <Text style={[styles.decorGlyph, styles.decorTopRight]}>+</Text>
+          <Text style={[styles.decorGlyph, styles.decorMidLeft]}>✦</Text>
+          <Text style={[styles.decorGlyph, styles.decorBottomRight]}>+</Text>
+        </View>
+
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + spacing.lg },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View
+            style={{
+              opacity: contentOpacity,
+              transform: [{ translateY: contentTranslateY }],
+            }}
+          >
+            <Text style={styles.headline}>ALL SET!</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
+
+            <View style={styles.carouselOverlap}>
+              <OnboardingReadyCarousel cards={carouselCards} />
+            </View>
+
+            <View style={styles.actions}>
+              <PrimaryButton label={ctaLabel} onPress={onPrimaryAction} />
+              <Pressable
+                onPress={onContinueLater}
+                style={({ pressed }) => [
+                  styles.continueLaterButton,
+                  pressed && styles.continueLaterPressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Continue Later"
+              >
+                <Text style={styles.continueLaterLabel}>Continue Later</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    justifyContent: 'space-between',
+    backgroundColor: colors.navy,
   },
-  content: {
-    flex: 1,
+  heroWrap: {
+    width: '100%',
+    position: 'relative',
+    backgroundColor: colors.navyMid,
+  },
+  heroImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+  },
+  heroFallback: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  heroScrim: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  topBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    paddingHorizontal: layout.screenPaddingHorizontal,
+    zIndex: 2,
+  },
+  topActionButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: colors.tealBright,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.pill,
-    gap: spacing.sm,
-  },
-  badgeCheck: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  badgeText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    letterSpacing: 0.3,
+  topSpacer: {
+    width: 44,
   },
   roleBadge: {
-    alignSelf: 'flex-start',
+    position: 'absolute',
+    left: layout.screenPaddingHorizontal,
+    bottom: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.navyMid,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
     borderWidth: 1,
     borderColor: colors.tealBright,
+    zIndex: 2,
+  },
+  roleBadgeIcon: {
+    marginRight: spacing.xs,
   },
   roleBadgeText: {
     fontFamily: fontFamilies.semibold,
@@ -174,46 +249,81 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: colors.white,
   },
-  title: {
+  contentGradient: {
+    flex: 1,
+    position: 'relative',
+  },
+  decorWrap: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+  decorGlyph: {
+    position: 'absolute',
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.heading,
+    color: colors.gold,
+    opacity: 0.22,
+  },
+  decorTopRight: {
+    top: spacing.md,
+    right: spacing.xl,
+  },
+  decorMidLeft: {
+    top: spacing.xl * 2,
+    left: spacing.lg,
+  },
+  decorBottomRight: {
+    bottom: spacing.xl,
+    right: spacing.lg,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: spacing.lg,
+  },
+  headline: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
     lineHeight: lineHeights.display,
-    marginBottom: spacing.md,
-  },
-  titleAccent: {
-    color: colors.tealBright,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.regular,
     color: colors.white,
     lineHeight: lineHeights.subheading,
-    marginBottom: spacing.xl,
+    textAlign: 'center',
     opacity: 0.92,
+    marginBottom: spacing.md,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  hintCard: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
+  carouselOverlap: {
+    marginTop: -spacing.xl,
+    marginBottom: spacing.lg,
   },
-  hintAccent: {
-    width: spacing.sm,
-    backgroundColor: colors.teal,
+  actions: {
+    paddingHorizontal: layout.screenPaddingHorizontal,
+    gap: spacing.sm,
   },
-  hintText: {
-    flex: 1,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.regular,
-    color: colors.textPrimary,
-    lineHeight: lineHeights.subheading,
-    padding: spacing.lg,
+  continueLaterButton: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+  },
+  continueLaterPressed: {
+    opacity: 0.75,
+  },
+  continueLaterLabel: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.white,
+    textDecorationLine: 'underline',
   },
 });

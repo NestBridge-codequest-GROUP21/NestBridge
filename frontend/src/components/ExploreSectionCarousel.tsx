@@ -11,8 +11,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ExploreSectionItem } from '../screens/tourist/ExploreHomeScreen';
+import AppIcon from './AppIcon';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -110,12 +112,11 @@ function CarouselCard({
           />
           <View style={styles.cardBody}>
             {item.icon ? (
-              <Animated.Text
-                style={[styles.icon, { transform: [{ scale: iconScale }] }]}
-                accessibilityElementsHidden
+              <Animated.View
+                style={[styles.iconTile, { transform: [{ scale: iconScale }] }]}
               >
-                {item.icon}
-              </Animated.Text>
+                <AppIcon glyph={item.icon} size={26} color={colors.tealDeep} />
+              </Animated.View>
             ) : null}
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.subtitle}>{item.subtitle}</Text>
@@ -270,8 +271,13 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     justifyContent: 'center',
   },
-  icon: {
-    fontSize: 40,
+  iconTile: {
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.lg,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   title: {
