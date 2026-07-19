@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -30,6 +31,8 @@ export interface StudentBookingsScreenProps {
   activeFilter: BookingTabFilter;
   tabBarItems: TabBarItem[];
   activeTabId: string;
+  showSosDock?: boolean;
+  onSosPress?: () => void;
   showHostReviewEntry?: boolean;
   showGuideReviewEntry?: boolean;
   onGuideReviewPress?: () => void;
@@ -126,6 +129,8 @@ export default function StudentBookingsScreen({
   activeFilter,
   tabBarItems,
   activeTabId,
+  showSosDock = false,
+  onSosPress,
   showHostReviewEntry = false,
   showGuideReviewEntry = false,
   onFilterChange,
@@ -287,7 +292,12 @@ export default function StudentBookingsScreen({
 
         {filtered.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📋</Text>
+            <AppIcon
+              name="clipboard-outline"
+              size={fontSizes.display}
+              color={colors.textTertiary}
+              style={styles.emptyIcon}
+            />
             <Text style={styles.emptyTitle}>Nothing here yet</Text>
             <Text style={styles.emptySubtitle}>
               {activeFilter === 'pending'
@@ -350,7 +360,13 @@ export default function StudentBookingsScreen({
         )}
       </ScrollView>
 
-      <AppTabBar items={tabBarItems} activeTabId={activeTabId} onTabPress={onTabPress} />
+      <AppTabBar
+        items={tabBarItems}
+        activeTabId={activeTabId}
+        showSosDock={showSosDock}
+        onSosPress={onSosPress}
+        onTabPress={onTabPress}
+      />
     </View>
   );
 }

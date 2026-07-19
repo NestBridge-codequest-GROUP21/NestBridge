@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OnboardingProgress from '../../components/OnboardingProgress';
@@ -16,6 +16,7 @@ export interface ProfileSetupScreenProps {
   displayName: string;
   bio: string;
   initials: string;
+  photoUri?: string | null;
   onDisplayNameChange?: (value: string) => void;
   onBioChange?: (value: string) => void;
   onAddPhoto?: () => void;
@@ -32,6 +33,7 @@ export default function ProfileSetupScreen({
   displayName,
   bio,
   initials,
+  photoUri,
   onDisplayNameChange,
   onBioChange,
   onAddPhoto,
@@ -69,10 +71,14 @@ export default function ProfileSetupScreen({
         <Text style={styles.subtitle}>{subtitle}</Text>
 
         <Pressable style={styles.avatarSection} onPress={onAddPhoto}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials || '?'}</Text>
-          </View>
-          <Text style={styles.addPhoto}>Add photo</Text>
+          {photoUri ? (
+            <Image source={{ uri: photoUri }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials || '?'}</Text>
+            </View>
+          )}
+          <Text style={styles.addPhoto}>{photoUri ? 'Change photo' : 'Add photo'}</Text>
           <Text style={styles.addPhotoHint}>Optional — helps hosts recognize you</Text>
         </Pressable>
 

@@ -29,6 +29,7 @@ export interface BookingScreenProps {
   priceBreakdown: PriceBreakdown;
   requestBlocked?: boolean;
   requestBlockedMessage?: string;
+  submitErrorMessage?: string | null;
   onSendRequest?: () => void;
   onContinueSetup?: () => void;
   onBack?: () => void;
@@ -69,6 +70,7 @@ export default function BookingScreen({
   priceBreakdown,
   requestBlocked = false,
   requestBlockedMessage = 'Finish your Student or Tourist profile to book.',
+  submitErrorMessage,
   onSendRequest,
   onContinueSetup,
   onBack,
@@ -166,6 +168,18 @@ export default function BookingScreen({
         <View style={styles.policyCard}>
           <Text style={styles.policyText}>{host.cancellationPolicy}</Text>
         </View>
+
+        <View style={styles.escrowCard}>
+          <Text style={styles.escrowTitle}>Held in escrow</Text>
+          <Text style={styles.escrowText}>
+            Payment is held securely until 24 hours after check-in. You are only
+            charged after the host accepts your request.
+          </Text>
+        </View>
+
+        {submitErrorMessage ? (
+          <Text style={styles.submitError}>{submitErrorMessage}</Text>
+        ) : null}
       </ScrollView>
 
       <View
@@ -388,6 +402,25 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 22,
   },
+  escrowCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.lg,
+  },
+  escrowTitle: {
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  escrowText: {
+    fontSize: fontSizes.body,
+    color: colors.textSecondary,
+    lineHeight: 22,
+  },
   footer: {
     position: 'absolute',
     left: 0,
@@ -410,5 +443,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.sm,
     lineHeight: 18,
+  },
+  submitError: {
+    fontSize: fontSizes.caption,
+    color: colors.danger,
+    textAlign: 'center',
+    marginTop: spacing.md,
   },
 });

@@ -9,8 +9,10 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -33,6 +35,8 @@ export interface UnifiedSearchScreenProps {
   categories: SearchCategoryItem[];
   tabBarItems: TabBarItem[];
   activeTabId: string;
+  showSosDock?: boolean;
+  onSosPress?: () => void;
   onCategoryPress?: (categoryId: string) => void;
   onBack?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -45,6 +49,8 @@ export default function UnifiedSearchScreen({
   categories,
   tabBarItems,
   activeTabId,
+  showSosDock = false,
+  onSosPress,
   onCategoryPress,
   onBack,
   onTabPress,
@@ -79,17 +85,25 @@ export default function UnifiedSearchScreen({
             accessibilityRole="button"
             accessibilityLabel={category.label}
           >
-            <Text style={styles.cardIcon}>{category.icon}</Text>
+            <View style={styles.cardIconTile}>
+              <AppIcon glyph={category.icon} size={24} color={colors.tealDeep} />
+            </View>
             <View style={styles.cardText}>
               <Text style={styles.cardTitle}>{category.label}</Text>
               <Text style={styles.cardDescription}>{category.description}</Text>
             </View>
-            <Text style={styles.cardChevron}>›</Text>
+            <AppIcon name="chevron-forward" size={22} color={colors.teal} />
           </Pressable>
         ))}
       </ScrollView>
 
-      <AppTabBar items={tabBarItems} activeTabId={activeTabId} onTabPress={onTabPress} />
+      <AppTabBar
+        items={tabBarItems}
+        activeTabId={activeTabId}
+        showSosDock={showSosDock}
+        onSosPress={onSosPress}
+        onTabPress={onTabPress}
+      />
     </View>
   );
 }
@@ -128,8 +142,13 @@ const styles = StyleSheet.create({
   cardPressed: {
     opacity: 0.95,
   },
-  cardIcon: {
-    fontSize: fontSizes.heading,
+  cardIconTile: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.md,
   },
   cardText: {
@@ -147,10 +166,5 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.caption,
     color: colors.textSecondary,
     lineHeight: 16,
-  },
-  cardChevron: {
-    fontSize: 24,
-    color: colors.teal,
-    marginLeft: spacing.sm,
   },
 });

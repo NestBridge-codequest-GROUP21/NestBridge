@@ -1,5 +1,7 @@
 import type { QuizOption } from '../screens/onboarding/CulturalQuizScreen';
 import { buildMatchHint, splashCopy, welcomeCopy, intentSelectCopy } from './appCopy';
+import { demoStudentFirstName } from './studentHomeMock';
+import { destinationPlaceholderExamples } from './ghanaReference';
 
 export interface RoleOption {
   id: string;
@@ -63,7 +65,7 @@ export const loginMock = {
 export const destinationMock = {
   title: 'Where are you headed?',
   subtitle: 'We use this to show hosts and guides near your campus or city.',
-  cityPlaceholder: 'e.g. Accra, Kumasi, Wa, Ho',
+  cityPlaceholder: `e.g. ${destinationPlaceholderExamples()}, Ho, Wa`,
 };
 
 export const profileSetupMock = {
@@ -72,6 +74,7 @@ export const profileSetupMock = {
 };
 
 export const onboardingReadyMock = {
+  userName: demoStudentFirstName,
   matchHint: buildMatchHint('University of Ghana', 'Accra'),
 };
 

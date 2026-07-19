@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import AppIcon from './AppIcon';
 import {
   colors,
   fontFamilies,
@@ -86,9 +87,12 @@ export function IncomingRequestsEmptyBlock({
 }: IncomingRequestsEmptyBlockProps) {
   return (
     <View style={styles.emptyBlock}>
-      <Text style={styles.emptyIcon} accessibilityElementsHidden>
-        📬
-      </Text>
+      <AppIcon
+        name="mail-open-outline"
+        size={fontSizes.display}
+        color={colors.textTertiary}
+        style={styles.emptyIcon}
+      />
       <Text style={styles.emptyTitle}>{title}</Text>
       <Text style={styles.emptyBody}>{body}</Text>
       {tip ? <Text style={styles.emptyTip}>{tip}</Text> : null}

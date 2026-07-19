@@ -5,17 +5,28 @@ import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../consta
 export interface SecondaryButtonProps {
   label: string;
   onPress?: () => void;
+  disabled?: boolean;
 }
 
-export default function SecondaryButton({ label, onPress }: SecondaryButtonProps) {
+export default function SecondaryButton({
+  label,
+  onPress,
+  disabled = false,
+}: SecondaryButtonProps) {
   return (
     <Pressable
-      style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+      style={({ pressed }) => [
+        styles.button,
+        disabled && styles.buttonDisabled,
+        pressed && !disabled && styles.buttonPressed,
+      ]}
       onPress={onPress}
+      disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled }}
     >
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, disabled && styles.labelDisabled]}>{label}</Text>
     </Pressable>
   );
 }
@@ -32,6 +43,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.white,
   },
+  buttonDisabled: {
+    borderColor: colors.border,
+    opacity: 0.6,
+  },
   buttonPressed: {
     opacity: 0.9,
     backgroundColor: colors.warmCream,
@@ -40,5 +55,8 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
+  },
+  labelDisabled: {
+    color: colors.textTertiary,
   },
 });
