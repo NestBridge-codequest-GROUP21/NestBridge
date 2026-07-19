@@ -41,6 +41,32 @@ public class EmailService {
         sendPlainEmail(toEmail, subject, plainBody, verifyUrl);
     }
 
+    public void sendPasswordResetEmail(
+            String toEmail,
+            String displayName,
+            String webResetUrl,
+            String appResetUrl) {
+        String subject = "Reset your NestBridge password";
+        String plainBody = """
+                Hi %s,
+
+                We received a request to reset your NestBridge password.
+
+                Open this link on your phone to set a new password in the app:
+
+                %s
+
+                Or open the NestBridge app directly:
+
+                %s
+
+                This link expires in 1 hour. If you did not request a reset, you can ignore this email.
+
+                — The NestBridge team
+                """.formatted(displayName, webResetUrl, appResetUrl);
+        sendPlainEmail(toEmail, subject, plainBody, webResetUrl);
+    }
+
     public void sendPlainEmail(String toEmail, String subject, String plainBody) {
         sendPlainEmail(toEmail, subject, plainBody, null);
     }

@@ -32,6 +32,82 @@ export interface AuthTokenPayload {
   userId: string;
   email: string;
   displayName: string;
+  emailVerified?: boolean;
+  staff?: boolean;
+}
+
+export interface AdminUserSummary {
+  userId: string;
+  fullName: string;
+  email: string;
+  primaryIntent?: string | null;
+  identityVerified: boolean;
+  emailVerified: boolean;
+  staff: boolean;
+  suspended: boolean;
+}
+
+export interface AdminListingStatus {
+  type: string;
+  listingId: string;
+  active: boolean;
+  hidden: boolean;
+  setupStatus?: string | null;
+  city?: string | null;
+}
+
+export interface AdminUserDetail {
+  userId: string;
+  fullName: string;
+  email: string;
+  primaryIntent?: string | null;
+  identityVerified: boolean;
+  emailVerified: boolean;
+  staff: boolean;
+  suspended: boolean;
+  nationality?: string | null;
+  seekerSetupStatus?: string | null;
+  listings: AdminListingStatus[];
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface AdminBookingActivity {
+  bookingId: string;
+  bookingType: string;
+  status: string;
+  paymentStatus?: string | null;
+  guestId: string;
+  hostOrGuideId: string;
+  checkIn?: string | null;
+  checkOut?: string | null;
+  sessionDate?: string | null;
+  totalPrice?: number | null;
+  createdAt?: string | null;
+}
+
+export interface AdminSosActivity {
+  sosId: string;
+  triggeredAt?: string | null;
+  locationLat?: number | null;
+  locationLng?: number | null;
+  contactedEmergency: boolean;
+  contactedSupport: boolean;
+}
+
+export interface AdminUserActivity {
+  userId: string;
+  recentBookings: AdminBookingActivity[];
+  recentSosAlerts: AdminSosActivity[];
+}
+
+function authUserFromPayload(payload: AuthTokenPayload): AuthUser {
+  return {
+    userId: payload.userId,
+    email: payload.email,
+    displayName: payload.displayName,
+    isStaff: Boolean(payload.staff),
+  };
 }
 
 export interface MatchResult {
@@ -334,17 +410,18 @@ async function refreshAccessToken(): Promise<AuthSession | null> {
       ...session,
       token: data.data.accessToken,
       refreshToken: data.data.refreshToken,
-      user: {
-        userId: data.data.userId,
-        email: data.data.email,
-        displayName: data.data.displayName,
-      },
+      user: authUserFromPayload(data.data),
     };
     await saveSession(next);
     return next;
   } catch {
     return null;
   }
+}
+
+/** Refresh tokens and hydrate user flags (e.g. isStaff) for an existing session. */
+export async function refreshSession(): Promise<AuthSession | null> {
+  return refreshAccessToken();
 }
 
 function unwrap<T>(response: { data: ApiResponse<T> }): T {
@@ -484,6 +561,21 @@ export async function resendVerificationEmail(email: string): Promise<void> {
   unwrap({ data });
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  const { data } = await api.post<ApiResponse<null>>('/api/auth/forgot-password', {
+    email,
+  });
+  unwrap({ data });
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  const { data } = await api.post<ApiResponse<null>>('/api/auth/reset-password', {
+    token,
+    password,
+  });
+  unwrap({ data });
+}
+
 export async function login(
   email: string,
   password: string,
@@ -496,13 +588,61 @@ export async function login(
   return {
     token: payload.accessToken,
     refreshToken: payload.refreshToken,
-    user: {
-      userId: payload.userId,
-      email: payload.email,
-      displayName: payload.displayName,
-    },
+    user: authUserFromPayload(payload),
     keepSignedIn: true,
   };
+}
+
+export async function searchAdminUsers(query: string): Promise<AdminUserSummary[]> {
+  const { data } = await api.get<ApiResponse<AdminUserSummary[]>>('/api/admin/users/search', {
+    params: { query },
+  });
+  return unwrap({ data });
+}
+
+export async function getAdminUser(userId: string): Promise<AdminUserDetail> {
+  const { data } = await api.get<ApiResponse<AdminUserDetail>>(`/api/admin/users/${userId}`);
+  return unwrap({ data });
+}
+
+export async function setAdminUserSuspended(
+  userId: string,
+  suspended: boolean,
+): Promise<AdminUserDetail> {
+  const { data } = await api.patch<ApiResponse<AdminUserDetail>>(
+    `/api/admin/users/${userId}/suspend`,
+    { suspended },
+  );
+  return unwrap({ data });
+}
+
+export async function setAdminUserKycStatus(
+  userId: string,
+  identityVerified: boolean,
+): Promise<AdminUserDetail> {
+  const { data } = await api.patch<ApiResponse<AdminUserDetail>>(
+    `/api/admin/users/${userId}/kyc-status`,
+    { identityVerified },
+  );
+  return unwrap({ data });
+}
+
+export async function setAdminUserStaffStatus(
+  userId: string,
+  isStaff: boolean,
+): Promise<AdminUserDetail> {
+  const { data } = await api.patch<ApiResponse<AdminUserDetail>>(
+    `/api/admin/users/${userId}/staff-status`,
+    { isStaff },
+  );
+  return unwrap({ data });
+}
+
+export async function getAdminUserActivity(userId: string): Promise<AdminUserActivity> {
+  const { data } = await api.get<ApiResponse<AdminUserActivity>>(
+    `/api/admin/users/${userId}/activity`,
+  );
+  return unwrap({ data });
 }
 
 export async function logout(refreshToken?: string): Promise<void> {

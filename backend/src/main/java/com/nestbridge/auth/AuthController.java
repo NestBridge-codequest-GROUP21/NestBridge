@@ -18,6 +18,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final EmailVerificationService emailVerificationService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(
@@ -78,6 +79,29 @@ public class AuthController {
                 null));
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestPasswordReset(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success(
+                "If an account exists for this email, we sent password reset instructions.",
+                null));
+    }
+
+    @GetMapping(value = "/reset-password", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> resetPasswordLanding(@RequestParam(required = false) String token) {
+        if (token == null || token.isBlank() || !passwordResetService.isTokenValid(token)) {
+            return ResponseEntity.badRequest().body(resetPasswordErrorHtml(
+                    "This reset link is invalid or has expired. Request a new one from the NestBridge app."));
+        }
+        return ResponseEntity.ok(resetPasswordLandingHtml(token.trim()));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request.getToken(), request.getPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password updated. You can sign in with your new password.", null));
+    }
+
     private static String verificationSuccessHtml() {
         return """
                 <!DOCTYPE html>
@@ -109,5 +133,38 @@ public class AuthController {
 
     private static String escapeHtml(String value) {
         return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    private static String resetPasswordLandingHtml(String token) {
+        String appUrl = "nestbridge://reset-password?token=" + token;
+        return """
+                <!DOCTYPE html>
+                <html lang="en">
+                <head><meta charset="UTF-8"><title>Reset password</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>body{font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem;color:#1a2b3c}
+                a.btn{display:inline-block;margin-top:1rem;padding:0.75rem 1.25rem;background:#0d7a6f;color:#fff;text-decoration:none;border-radius:8px}
+                p{line-height:1.5}</style></head>
+                <body>
+                <h1>Reset your password</h1>
+                <p>Open the NestBridge app to choose a new password.</p>
+                <p><a class="btn" href="%s">Open NestBridge</a></p>
+                <p>If the button does not work, return to the app, open <strong>Reset password</strong>, and request a new link.</p>
+                </body></html>
+                """.formatted(escapeHtml(appUrl));
+    }
+
+    private static String resetPasswordErrorHtml(String message) {
+        return """
+                <!DOCTYPE html>
+                <html lang="en">
+                <head><meta charset="UTF-8"><title>Reset failed</title>
+                <style>body{font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem;color:#1a2b3c}
+                h1{color:#c0392b}</style></head>
+                <body>
+                <h1>Reset link unavailable</h1>
+                <p>%s</p>
+                </body></html>
+                """.formatted(escapeHtml(message));
     }
 }
