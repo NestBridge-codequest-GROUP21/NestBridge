@@ -7,6 +7,7 @@ import type {
 } from '@react-navigation/native-stack';
 import { pickProfileImage } from '../services/imagePicker';
 import { colors, spacing } from '../constants/theme';
+
 import IntentSelectScreen, {
   intentOptionsFromPrimary,
 } from '../screens/auth/IntentSelectScreen';
