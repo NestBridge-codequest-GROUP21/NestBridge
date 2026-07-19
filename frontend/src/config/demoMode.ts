@@ -6,9 +6,13 @@ import { DEMO_ACTOR_ACCOUNTS } from '../data/demoAccounts';
  * Set EXPO_PUBLIC_ENABLE_DEMO_FALLBACK=false in EAS production profile before real launch.
  */
 export function isDemoFallbackEnabled(): boolean {
-  const flag = Constants.expoConfig?.extra?.enableDemoFallback;
-  if (flag === false || flag === 'false') {
-    return false;
+  try {
+    const flag = Constants.expoConfig?.extra?.enableDemoFallback;
+    if (flag === false || flag === 'false') {
+      return false;
+    }
+  } catch {
+    // Keep demo fallback on if Constants is unavailable.
   }
   return true;
 }

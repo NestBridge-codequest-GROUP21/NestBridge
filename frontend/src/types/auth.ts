@@ -2,6 +2,8 @@ export interface AuthUser {
   userId: string;
   email: string;
   displayName: string;
+  /** Server-gated ops access; only true for NestBridge staff accounts. */
+  isStaff?: boolean;
 }
 
 export interface StoredCredential {

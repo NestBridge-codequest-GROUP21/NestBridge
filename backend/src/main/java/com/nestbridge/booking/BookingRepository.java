@@ -15,6 +15,16 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     List<Booking> findByGuestIdOrderByCreatedAtDesc(UUID guestId);
 
     @Query("""
+            SELECT b FROM Booking b
+            WHERE b.guestId = :userId
+               OR b.hostOrGuideId IN :providerIds
+            ORDER BY b.createdAt DESC
+            """)
+    List<Booking> findRecentActivityForUser(
+            @Param("userId") UUID userId,
+            @Param("providerIds") List<UUID> providerIds);
+
+    @Query("""
             SELECT b FROM Booking b WHERE b.hostOrGuideId = :hostOrGuideId
             AND b.status = :status ORDER BY b.createdAt DESC
             """)

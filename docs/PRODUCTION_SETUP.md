@@ -52,6 +52,10 @@ Services like Paystack, SendGrid, and Smile Identity give you **secret passwords
 
 New users receive a verification link. Demo accounts (`*@nestbridge.app`) are pre-verified.
 
+**Forgot password** uses the same SendGrid setup. Users tap **Forgot password?** on sign-in, receive a reset link (valid 1 hour), and set a new password in the app. The link opens via `nestbridge://reset-password?token=…` when the app is installed; otherwise the web landing page at `APP_PUBLIC_URL/api/auth/reset-password` explains next steps. Without SendGrid, reset URLs are logged on the Railway backend (same as verification).
+
+Optional: `APP_MOBILE_SCHEME` = `nestbridge` (must match `scheme` in `frontend/app.config.ts`).
+
 ---
 
 ## Step 3 — Payments (Paystack live — Ghana)
@@ -153,6 +157,7 @@ Toggle without code changes: set `EXPO_PUBLIC_ENABLE_DEMO_FALLBACK` in EAS secre
 
 - [ ] Health URL returns UP
 - [ ] Register new email → verification link (check SendGrid or server logs)
+- [ ] Forgot password → reset link → set new password in app
 - [ ] Demo login `akosua.demo@nestbridge.app` / `password`
 - [ ] Book → accept → Pay now (Paystack or mock)
 - [ ] Notification bell → inbox list
