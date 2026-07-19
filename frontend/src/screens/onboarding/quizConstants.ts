@@ -1,4 +1,7 @@
+import { destinationCityOptions } from '../../data/ghanaReference';
 import { QuizQuestion } from './QuizPage';
+
+export const GHANA_CITY_OPTIONS = destinationCityOptions();
 
 export const LANGUAGE_OPTIONS = [
   'English',

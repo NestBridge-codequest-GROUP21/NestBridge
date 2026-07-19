@@ -318,9 +318,9 @@ export const incomingBookingRequestsMock: IncomingBookingRequest[] = [
   },
 ];
 
-export const bookingNotificationsMock: AppNotification[] = [
+export const studentNotificationsMock: AppNotification[] = [
   {
-    id: 'notif-1',
+    id: 'notif-student-1',
     title: 'Host accepted your request',
     body: 'Abena Mensah accepted your stay. Complete payment within 48 hours.',
     read: false,
@@ -328,7 +328,7 @@ export const bookingNotificationsMock: AppNotification[] = [
     relatedBookingId: 'booking-1',
   },
   {
-    id: 'notif-2',
+    id: 'notif-student-2',
     title: 'Booking request sent',
     body: 'Kwame & Grace will review your request for Sep–Nov 2026.',
     read: true,
@@ -337,8 +337,83 @@ export const bookingNotificationsMock: AppNotification[] = [
   },
 ];
 
-export function getUnreadNotificationCount(): number {
-  return bookingNotificationsMock.filter((n) => !n.read).length;
+export const touristNotificationsMock: AppNotification[] = [
+  {
+    id: 'notif-tourist-1',
+    title: 'Guide accepted your session',
+    body: 'Kofi Asante confirmed your city orientation. Complete payment to lock it in.',
+    read: false,
+    createdAt: '2026-06-21',
+    relatedBookingId: 't-booking-1',
+  },
+  {
+    id: 'notif-tourist-2',
+    title: 'Saved lodging tip',
+    body: 'Labadi Beach Hotel is popular this week — check availability before you arrive.',
+    read: true,
+    createdAt: '2026-06-20',
+  },
+];
+
+export const hostNotificationsMock: AppNotification[] = [
+  {
+    id: 'notif-host-1',
+    title: 'New stay request',
+    body: 'Akosua Darko requested a homestay for Sep–Dec 2026. Review it in Requests.',
+    read: false,
+    createdAt: '2026-06-21',
+    relatedBookingId: 'req-1',
+  },
+  {
+    id: 'notif-host-2',
+    title: 'Payment received',
+    body: 'A guest completed payment for an upcoming stay. It now appears under Bookings.',
+    read: true,
+    createdAt: '2026-06-19',
+  },
+];
+
+export const guideNotificationsMock: AppNotification[] = [
+  {
+    id: 'notif-guide-1',
+    title: 'New session request',
+    body: 'A visitor requested a 3-hour city orientation on Sep 5. Review it in Bookings.',
+    read: false,
+    createdAt: '2026-06-21',
+    relatedBookingId: 'req-guide-1',
+  },
+  {
+    id: 'notif-guide-2',
+    title: 'Session confirmed',
+    body: 'A guest paid for your upcoming tour. Check your schedule and meeting point.',
+    read: true,
+    createdAt: '2026-06-18',
+  },
+];
+
+/** @deprecated Prefer notificationsMockForIntent — kept for existing imports. */
+export const bookingNotificationsMock = studentNotificationsMock;
+
+export function notificationsMockForIntent(
+  intent: 'STUDENT' | 'TOURIST' | 'HOST' | 'GUIDE' | null | undefined,
+): AppNotification[] {
+  switch (intent) {
+    case 'HOST':
+      return hostNotificationsMock;
+    case 'GUIDE':
+      return guideNotificationsMock;
+    case 'TOURIST':
+      return touristNotificationsMock;
+    case 'STUDENT':
+    default:
+      return studentNotificationsMock;
+  }
+}
+
+export function getUnreadNotificationCount(
+  intent?: 'STUDENT' | 'TOURIST' | 'HOST' | 'GUIDE' | null,
+): number {
+  return notificationsMockForIntent(intent).filter((n) => !n.read).length;
 }
 
 export function formatBookingDate(isoDate: string): string {

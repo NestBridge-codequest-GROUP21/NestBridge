@@ -45,7 +45,7 @@ function PhraseCard({
       </View>
       <Text style={styles.phraseText}>{phrase.phrase}</Text>
       <Text style={styles.phraseTranslation}>{phrase.translation}</Text>
-      {phrase.hasAudio ? (
+      {phrase.hasAudio && onPlayAudio ? (
         <Pressable
           style={styles.audioButton}
           onPress={onPlayAudio}
@@ -60,26 +60,19 @@ function PhraseCard({
   );
 }
 
-function TopicCard({
-  topic,
-  onPress,
-}: {
-  topic: CulturalTopicCard;
-  onPress?: () => void;
-}) {
+function TopicCard({ topic }: { topic: CulturalTopicCard }) {
   return (
-    <Pressable
+    <View
       style={styles.topicCard}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={topic.title}
+      accessibilityRole="text"
+      accessibilityLabel={`${topic.title}. ${topic.description}`}
     >
       <View style={styles.iconTile}>
         <AppIcon glyph={topic.emoji} size={26} color={colors.tealDeep} />
       </View>
       <Text style={styles.topicTitle}>{topic.title}</Text>
       <Text style={styles.topicDescription}>{topic.description}</Text>
-    </Pressable>
+    </View>
   );
 }
 
@@ -119,11 +112,7 @@ export default function LocalTipsScreen({
             />
           ))}
           {topics.map((topic) => (
-            <TopicCard
-              key={topic.id}
-              topic={topic}
-              onPress={() => onTopicPress?.(topic.id)}
-            />
+            <TopicCard key={topic.id} topic={topic} />
           ))}
         </View>
       </ScreenScroll>

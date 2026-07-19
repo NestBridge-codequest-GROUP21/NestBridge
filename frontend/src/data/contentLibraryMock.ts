@@ -16,6 +16,10 @@ import {
 } from './featureScreensMock';
 import { touristSitesMock } from './touristSitesMock';
 
+function youtubeThumb(youtubeId: string): string {
+  return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+}
+
 export const phrasesApiMock: PhraseApi[] = localTipsPhrasesMock.map((item) => ({
   id: item.id,
   emoji: item.emoji,
@@ -66,46 +70,71 @@ export const landmarksApiMock: MapLandmarkApi[] = offlineMapLandmarksMock.map((l
   leftPercent: landmark.leftPercent,
 }));
 
+/** Ghana relocation / Accra orientation videos (public YouTube embeds). */
 export const videosApiMock: VideoResourceApi[] = [
   {
     id: 'video-arrival',
     videoKey: 'arrival-tips',
     title: 'Arriving in Ghana — What to Expect',
     description:
-      'Orientation for international students and visitors landing at Kotoka International Airport.',
+      'Visa, SIM cards, money, safety, and practical tips before you land at Kotoka.',
     category: 'Orientation',
-    youtubeId: 'dQw4w9WgXcQ',
-    thumbnailUrl: 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+    youtubeId: 'ejJcat0HzQQ',
+    thumbnailUrl: youtubeThumb('ejJcat0HzQQ'),
     city: 'Accra',
   },
   {
     id: 'video-trotro',
     videoKey: 'trotro-safety',
-    title: 'Using Trotros Safely in Accra',
-    description: 'How shared minibuses work, fares, and safety tips for newcomers.',
+    title: 'Getting Around Accra',
+    description:
+      'Neighborhoods, landmarks, and how visitors move through Ghana’s capital.',
     category: 'Transport',
-    youtubeId: 'ScMzIvxBSi4',
-    thumbnailUrl: 'https://img.youtube.com/vi/ScMzIvxBSi4/hqdefault.jpg',
+    youtubeId: '7-VI47c0Q4A',
+    thumbnailUrl: youtubeThumb('7-VI47c0Q4A'),
     city: 'Accra',
   },
   {
     id: 'video-homestay',
     videoKey: 'homestay-etiquette',
-    title: 'Homestay Etiquette in Ghana',
-    description: 'Cultural expectations when living with a host family.',
+    title: 'Accra Culture, Food & Safety Tips',
+    description:
+      'First-trip culture notes, food moments, and safety awareness for visitors.',
     category: 'Culture',
-    youtubeId: 'jNQXAC9IVRw',
-    thumbnailUrl: 'https://img.youtube.com/vi/jNQXAC9IVRw/hqdefault.jpg',
+    youtubeId: 'Gjd_rKh5o64',
+    thumbnailUrl: youtubeThumb('Gjd_rKh5o64'),
     city: 'Accra',
   },
   {
     id: 'video-accra',
     videoKey: 'accra-orientation',
     title: 'Accra Neighborhood Guide',
-    description: 'East Legon, Osu, Labone, and getting oriented in the capital.',
+    description:
+      'Black Star Square, Jamestown, and getting oriented in the capital.',
     category: 'Orientation',
-    youtubeId: 'M7lc1UVf-VE',
-    thumbnailUrl: 'https://img.youtube.com/vi/M7lc1UVf-VE/hqdefault.jpg',
+    youtubeId: '8JLOminF2Do',
+    thumbnailUrl: youtubeThumb('8JLOminF2Do'),
+    city: 'Accra',
+  },
+  {
+    id: 'video-market',
+    videoKey: 'market-tips',
+    title: 'Street Food & Markets in Accra',
+    description:
+      'Chop-bar lunch and West African food markets — useful before you explore with hosts.',
+    category: 'Culture',
+    youtubeId: 'YvlYjLPgrCE',
+    thumbnailUrl: youtubeThumb('YvlYjLPgrCE'),
+    city: 'Accra',
+  },
+  {
+    id: 'video-food',
+    videoKey: 'food-intro',
+    title: 'Introduction to Ghanaian Food',
+    description: 'Must-try Accra dishes — jollof, banku, and local favorites.',
+    category: 'Food',
+    youtubeId: 'Yk4cpG1BOHg',
+    thumbnailUrl: youtubeThumb('Yk4cpG1BOHg'),
     city: 'Accra',
   },
 ];

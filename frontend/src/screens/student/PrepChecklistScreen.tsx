@@ -22,6 +22,7 @@ export interface PrepChecklistScreenProps {
   statusLabel?: string;
   tasks: ChecklistTask[];
   onToggleTask?: (taskId: string) => void;
+  onDeleteTask?: (taskId: string) => void;
   onBack?: () => void;
 }
 
@@ -47,6 +48,7 @@ export default function PrepChecklistScreen({
   statusLabel,
   tasks,
   onToggleTask,
+  onDeleteTask,
   onBack,
 }: PrepChecklistScreenProps) {
   const [customTasks, setCustomTasks] = useState<ChecklistTask[]>([]);
@@ -72,29 +74,47 @@ export default function PrepChecklistScreen({
     );
   };
 
+  const handleDeleteCustom = (taskId: string) => {
+    setCustomTasks((prev) => prev.filter((task) => task.id !== taskId));
+  };
+
   const allTasks = [...tasks, ...customTasks];
   const completedCount = allTasks.filter((t) => t.completed).length;
   const percent =
     allTasks.length > 0 ? Math.round((completedCount / allTasks.length) * 100) : 0;
 
-  const renderTaskRow = (task: ChecklistTask, onToggle: (id: string) => void) => (
-    <Pressable
-      key={task.id}
-      style={styles.taskRow}
-      onPress={() => onToggle(task.id)}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: task.completed }}
-      accessibilityLabel={task.label}
-    >
-      <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
-        {task.completed ? <Text style={styles.checkmark}>✓</Text> : null}
-      </View>
-      <Text
-        style={[styles.taskLabel, task.completed && styles.taskLabelCompleted]}
+  const renderTaskRow = (
+    task: ChecklistTask,
+    onToggle: (id: string) => void,
+    onDelete: (id: string) => void,
+  ) => (
+    <View key={task.id} style={styles.taskRow}>
+      <Pressable
+        style={styles.taskMain}
+        onPress={() => onToggle(task.id)}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: task.completed }}
+        accessibilityLabel={task.label}
       >
-        {task.label}
-      </Text>
-    </Pressable>
+        <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
+          {task.completed ? <Text style={styles.checkmark}>✓</Text> : null}
+        </View>
+        <Text
+          style={[styles.taskLabel, task.completed && styles.taskLabelCompleted]}
+        >
+          {task.label}
+        </Text>
+      </Pressable>
+      <Pressable
+        style={({ pressed }) => [styles.deleteButton, pressed && styles.deletePressed]}
+        onPress={() => onDelete(task.id)}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={`Delete ${task.label}`}
+      >
+        <Text style={styles.deleteIcon}>✕</Text>
+      </Pressable>
+    </View>
   );
 
   return (
@@ -118,8 +138,16 @@ export default function PrepChecklistScreen({
         <ProgressBar percent={percent} style={styles.progressBar} />
 
         <View style={styles.taskList}>
-          {tasks.map((task) => renderTaskRow(task, (id) => onToggleTask?.(id)))}
-          {customTasks.map((task) => renderTaskRow(task, handleToggleCustom))}
+          {tasks.map((task) =>
+            renderTaskRow(
+              task,
+              (id) => onToggleTask?.(id),
+              (id) => onDeleteTask?.(id),
+            ),
+          )}
+          {customTasks.map((task) =>
+            renderTaskRow(task, handleToggleCustom, handleDeleteCustom),
+          )}
         </View>
 
         <View style={styles.addCard}>
@@ -212,9 +240,33 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.sm,
     minHeight: 56,
+    gap: spacing.xs,
+  },
+  taskMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.md,
+    minHeight: 44,
+    paddingVertical: spacing.xs,
+  },
+  deleteButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deletePressed: {
+    opacity: 0.6,
+  },
+  deleteIcon: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    color: colors.textTertiary,
   },
   checkbox: {
     width: 28,

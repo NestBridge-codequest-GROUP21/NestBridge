@@ -1,7 +1,15 @@
 import React from 'react';
 import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
-import { DIETARY_OPTIONS, LANGUAGE_OPTIONS, QuizPageDefinition, RELIGION_OPTIONS, createReligiousAccommodationsFollowUp, createReligionOtherFollowUp } from './quizConstants';
+import {
+  DIETARY_OPTIONS,
+  GHANA_CITY_OPTIONS,
+  LANGUAGE_OPTIONS,
+  QuizPageDefinition,
+  RELIGION_OPTIONS,
+  createReligiousAccommodationsFollowUp,
+  createReligionOtherFollowUp,
+} from './quizConstants';
 import { useQuizNavigation } from './useQuizNavigation';
 
 const GUIDE_PAGES: QuizPageDefinition[] = [
@@ -59,9 +67,9 @@ const GUIDE_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'operatingAreas',
-      question: 'Which city/areas do you operate in?',
-      type: 'text',
-      placeholder: 'e.g. Accra — Osu, Labadi, Airport area',
+      question: 'Which cities do you operate in?',
+      type: 'multi-select',
+      options: GHANA_CITY_OPTIONS,
       required: true,
     },
   ],
