@@ -12,6 +12,7 @@ import {
   borderRadius,
 } from '../../constants/theme';
 import type { VideoResourceApi } from '../../services/api';
+import { isPlayableYoutubeId } from '../../utils/videoPlayback';
 
 export interface VideoDetailScreenProps {
   video: VideoResourceApi | null;
@@ -60,7 +61,25 @@ export default function VideoDetailScreen({
     );
   }
 
-  const embedUrl = `https://www.youtube.com/embed/${video.youtubeId}?playsinline=1`;
+  const canPlay = isPlayableYoutubeId(video.youtubeId);
+  const embedHtml = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <style>
+      html, body { margin: 0; padding: 0; background: #000; height: 100%; overflow: hidden; }
+      iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    </style>
+  </head>
+  <body>
+    <iframe
+      src="https://www.youtube.com/embed/${video.youtubeId}?playsinline=1&rel=0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+      allowfullscreen
+    ></iframe>
+  </body>
+</html>`;
 
   return (
     <View style={styles.root}>
@@ -68,12 +87,27 @@ export default function VideoDetailScreen({
       <ScreenHeader title={video.title} subtitle={video.category} compact onBack={onBack} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.playerWrap}>
-          <WebView
-            source={{ uri: embedUrl }}
-            style={styles.player}
-            allowsFullscreenVideo
-            mediaPlaybackRequiresUserAction={false}
-          />
+          {canPlay ? (
+            <WebView
+              source={{
+                html: embedHtml,
+                baseUrl: 'https://nestbridge.app',
+              }}
+              style={styles.player}
+              allowsFullscreenVideo
+              allowsInlineMediaPlayback
+              mediaPlaybackRequiresUserAction={false}
+              javaScriptEnabled
+              domStorageEnabled
+            />
+          ) : (
+            <View style={styles.comingSoon}>
+              <Text style={styles.comingSoonTitle}>Video unavailable</Text>
+              <Text style={styles.comingSoonBody}>
+                This video could not be loaded. Try another title from the library.
+              </Text>
+            </View>
+          )}
         </View>
         <View style={styles.body}>
           <Text style={styles.description}>{video.description}</Text>
@@ -103,6 +137,28 @@ const styles = StyleSheet.create({
   player: {
     flex: 1,
     backgroundColor: colors.textPrimary,
+  },
+  comingSoon: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.navy,
+    gap: spacing.sm,
+  },
+  comingSoonTitle: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
+    color: colors.white,
+    textAlign: 'center',
+  },
+  comingSoonBody: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.border,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   body: {
     padding: spacing.md,

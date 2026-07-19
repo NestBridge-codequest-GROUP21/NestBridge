@@ -51,7 +51,7 @@ export default function TouristSiteDetailScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.imagePlaceholder} accessibilityLabel="Site photo placeholder" />
+        <View style={styles.imagePlaceholder} accessibilityLabel="Site photo" />
 
         <View style={styles.content}>
           <Text style={styles.name}>{site.name}</Text>

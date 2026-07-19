@@ -139,9 +139,9 @@ function MapPlaceholder() {
           <View style={styles.mapPinDot} />
         </View>
       </LinearGradient>
-      <Text style={styles.mapTitle}>Map view coming soon</Text>
+      <Text style={styles.mapTitle}>Host area overview</Text>
       <Text style={styles.mapSubtitle}>
-        Host locations will appear here in a future update.
+        Browse matched hosts in the list below.
       </Text>
     </View>
   );

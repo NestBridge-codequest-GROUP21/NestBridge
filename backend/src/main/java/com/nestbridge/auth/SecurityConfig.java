@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/webhooks/**").permitAll()
+                        .requestMatchers("GET", "/api/payments/callback").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("GET", "/api/hosts/**").permitAll()
                         .requestMatchers("GET", "/api/guides/**").permitAll()
