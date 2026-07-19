@@ -6,7 +6,7 @@ import type {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { pickProfileImage } from '../services/imagePicker';
-
+import { colors, spacing } from '../constants/theme';
 import IntentSelectScreen, {
   intentOptionsFromPrimary,
 } from '../screens/auth/IntentSelectScreen';
@@ -1604,18 +1604,15 @@ export default function AppNavigator() {
     setDemoLoginError(null);
     setDemoLoginBusy(true);
     try {
-      const ok = await signIn(account.email, DEMO_PASSWORD, true);
-      if (!ok) {
-        setDemoLoginError(devTestingCopy.demoActorsLoginError);
-        return;
-      }
+      await signIn(account.email, DEMO_PASSWORD, true);
       await applyDevPreset(demoPresetForAccount(account));
       await setPrimaryIntent(account.intent);
+    } catch (error) {
+      setDemoLoginError(devTestingCopy.demoActorsLoginError);
     } finally {
       setDemoLoginBusy(false);
     }
   }, [signIn, applyDevPreset, setPrimaryIntent]);
-
   const handleDevPreset = (
     navigation: NativeStackNavigationProp<AppStackParamList>,
     options: {
