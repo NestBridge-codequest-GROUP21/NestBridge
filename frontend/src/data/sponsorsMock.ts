@@ -31,6 +31,12 @@ export const SPONSOR_CATEGORIES: Array<SponsorCategory | 'All'> = [
   'NGO',
 ];
 
+const COMMON_STUDENT_REQUIREMENTS = [
+  'Valid student ID or enrollment letter',
+  'Personal statement (300–500 words)',
+  'Proof of financial need',
+];
+
 export const SPONSORS_MOCK: SponsorListing[] = [
   {
     id: '1',
@@ -46,11 +52,27 @@ export const SPONSORS_MOCK: SponsorListing[] = [
     aboutExtra:
       'This sponsorship helps international students and tourists experience the rich culture, history, and opportunities across the region. Recipients gain access to housing support, cultural immersion programmes, and mentorship networks.',
     requirements: [
-      'Valid student ID or enrollment letter',
+      ...COMMON_STUDENT_REQUIREMENTS,
       'Minimum GPA of 2.5 or equivalent',
-      'Personal statement (500 words)',
       'Two letters of recommendation',
-      'Proof of financial need',
+    ],
+  },
+  {
+    id: 'gov-2',
+    name: 'Ministry of Education Exchange Grant',
+    category: 'Government',
+    description: 'National grant for inbound exchange students.',
+    amountLabel: 'Up to GHS 12,000',
+    logo: '🏛️',
+    eligibility: 'Exchange students at public Ghanaian universities',
+    deadline: 'July 20, 2026',
+    duration: 'One academic semester',
+    location: 'Nationwide',
+    aboutExtra:
+      'Covers part of accommodation and orientation costs for students arriving through formal exchange agreements.',
+    requirements: [
+      ...COMMON_STUDENT_REQUIREMENTS,
+      'Exchange placement letter from host university',
     ],
   },
   {
@@ -73,6 +95,24 @@ export const SPONSORS_MOCK: SponsorListing[] = [
     ],
   },
   {
+    id: 'found-2',
+    name: 'Cape Coast Heritage Trust',
+    category: 'Foundation',
+    description: 'Support for students near historic coastal sites.',
+    amountLabel: 'Up to GHS 8,000',
+    logo: '👑',
+    eligibility: 'Students living or studying in Central Region',
+    deadline: 'August 10, 2026',
+    duration: 'One semester',
+    location: 'Cape Coast & Elmina',
+    aboutExtra:
+      'Helps students engage with coastal heritage programmes while covering homestay deposits.',
+    requirements: [
+      ...COMMON_STUDENT_REQUIREMENTS,
+      'Short reflection on heritage learning goals',
+    ],
+  },
+  {
     id: '3',
     name: 'KNUST Alumni Network',
     category: 'Education',
@@ -89,6 +129,42 @@ export const SPONSORS_MOCK: SponsorListing[] = [
       'Proof of KNUST admission or exchange placement',
       'Personal statement (300 words)',
       'Student ID',
+    ],
+  },
+  {
+    id: 'edu-2',
+    name: 'University of Ghana Partner Fund',
+    category: 'Education',
+    description: 'Campus welcome support for UG inbound students.',
+    amountLabel: 'Up to GHS 7,500',
+    logo: '🎓',
+    eligibility: 'Inbound students at University of Ghana',
+    deadline: 'August 5, 2026',
+    duration: 'First semester',
+    location: 'Accra / Legon',
+    aboutExtra:
+      'Orientation stipends and host-family match support for new arrivals at UG.',
+    requirements: [
+      'UG admission or exchange letter',
+      ...COMMON_STUDENT_REQUIREMENTS,
+    ],
+  },
+  {
+    id: 'edu-3',
+    name: 'UCC International Office Bursary',
+    category: 'Education',
+    description: 'Bursary for Cape Coast campus arrivals.',
+    amountLabel: 'Up to GHS 5,500',
+    logo: '🎓',
+    eligibility: 'International students at University of Cape Coast',
+    deadline: 'July 25, 2026',
+    duration: 'One academic term',
+    location: 'Cape Coast',
+    aboutExtra:
+      'Helps cover transport from Accra and the first month of lodging near campus.',
+    requirements: [
+      'UCC enrollment proof',
+      'Personal statement (300 words)',
     ],
   },
   {
@@ -111,6 +187,25 @@ export const SPONSORS_MOCK: SponsorListing[] = [
     ],
   },
   {
+    id: 'tech-2',
+    name: 'Accra Innovation Hub Scholars',
+    category: 'Technology',
+    description: 'Stipends for tech interns and research visitors.',
+    amountLabel: 'Up to GHS 9,000',
+    logo: '💻',
+    eligibility: 'Students with confirmed Ghana tech internships',
+    deadline: 'September 5, 2026',
+    duration: '8–12 weeks',
+    location: 'Accra',
+    aboutExtra:
+      'Covers coworking access and part of lodging for short tech placements.',
+    requirements: [
+      'Internship offer letter',
+      'STEM enrollment proof',
+      'Short project summary',
+    ],
+  },
+  {
     id: '5',
     name: 'Accra Hospitality Group',
     category: 'Hospitality',
@@ -127,6 +222,24 @@ export const SPONSORS_MOCK: SponsorListing[] = [
       'Proof of Accra enrollment',
       'Arrival dates within sponsor window',
       'Basic financial need statement',
+    ],
+  },
+  {
+    id: 'hosp-2',
+    name: 'Labadi Welcome Stays',
+    category: 'Hospitality',
+    description: 'Partner hotel nights for new arrivals.',
+    amountLabel: 'Up to GHS 4,200',
+    logo: '🏨',
+    eligibility: 'Students landing in Accra within 14 days of term start',
+    deadline: 'Rolling until August 2026',
+    duration: 'Up to 5 nights',
+    location: 'Accra (Labadi / Airport area)',
+    aboutExtra:
+      'Bridge lodging after arrival while NestBridge host matching completes.',
+    requirements: [
+      'Flight itinerary',
+      'University enrollment proof',
     ],
   },
   {
@@ -147,6 +260,24 @@ export const SPONSORS_MOCK: SponsorListing[] = [
       'Enrollment letter',
       'Two references',
       'Financial need documentation',
+    ],
+  },
+  {
+    id: 'ngo-2',
+    name: 'Safe Passage Ghana',
+    category: 'NGO',
+    description: 'Welfare and emergency buffer for new arrivals.',
+    amountLabel: 'Up to GHS 3,500',
+    logo: '🌍',
+    eligibility: 'International students in first 90 days in Ghana',
+    deadline: 'Open year-round',
+    duration: 'One-time support',
+    location: 'Nationwide',
+    aboutExtra:
+      'Small grants for emergency transport, SIM setup, and early welfare needs.',
+    requirements: [
+      'Enrollment letter',
+      'Brief need statement',
     ],
   },
 ];

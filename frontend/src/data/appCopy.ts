@@ -14,8 +14,7 @@ export const splashCopy = {
 
 export const welcomeCopy = {
   headline: 'Host families, local guides, and places to stay — starting in Ghana.',
-  subheadline:
-    'Create an account with any email — demo accounts are optional shortcuts only.',
+  subheadline: 'Create an account to find homestays, guides, and lodging in Ghana.',
   valuePills: [
     { icon: '🏠', label: 'Homestays near campus and city centres' },
     { icon: '🗺️', label: 'Verified guides for orientation and culture' },
@@ -44,37 +43,30 @@ export const emptyStates = {
   hostRequests: {
     title: 'No requests yet',
     body: 'When a student matches your home, they will show up here. Keep your listing details fresh so matches find you.',
-    tip: 'Tip: hosts in East Legon often get the first inquiries before semester starts.',
   },
   guideRequests: {
     title: 'No session requests yet',
     body: 'When a traveller books a tour with you, it will appear here.',
-    tip: 'Tip: add a heritage walk or campus orientation to stand out.',
   },
   hostBookings: {
     title: 'No confirmed stays yet',
     body: 'When guests pay for an accepted request, their stay will appear here on your calendar.',
-    tip: 'Tip: respond quickly to pending requests to fill your calendar.',
   },
   guideBookings: {
     title: 'No upcoming tours',
     body: 'Confirmed and paid sessions will show here with date, time, and guest details.',
-    tip: 'Tip: keep your availability updated so travellers can book you.',
   },
   guideEarnings: {
     title: 'No earnings yet',
     body: 'Completed and confirmed tours will appear here with payout breakdown.',
-    tip: 'Tip: payouts reflect session rate minus the platform fee.',
   },
   hostEarnings: {
     title: 'No payouts yet',
     body: 'When guests pay for confirmed stays, escrow releases to this screen after check-in.',
-    tip: 'Tip: respond quickly to homestay requests to fill your calendar.',
   },
   messages: {
     title: 'No messages yet',
     body: 'When you message a host, guide, or guest, conversations will appear here.',
-    tip: 'Tip: open a host or guide profile and tap Message to start chatting.',
   },
   discoveryHosts: (city: string) => ({
     title: `No homestays in ${city} yet`,
@@ -248,7 +240,7 @@ export function onboardingReadyCopy(
         {
           icon: '🏪',
           title: 'Your authentic guide',
-          body: `Immerse yourself in the heart of ${destination}'s markets and crafts.`,
+          body: `Explore markets and crafts around ${destination} with a local guide.`,
         },
         {
           icon: '🏠',

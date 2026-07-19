@@ -9,6 +9,14 @@ import { computeSessionPrice } from '../data/guideSessionMock';
 
 let demoBookingCounter = 0;
 
+const API_BOOKING_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** Live API bookings use UUIDs; mock/demo rows use string ids like `booking-1`. */
+export function isApiBookingId(bookingId: string): boolean {
+  return API_BOOKING_ID_RE.test(bookingId);
+}
+
 function nextDemoBookingId(prefix: string): string {
   demoBookingCounter += 1;
   return `${prefix}-${Date.now()}-${demoBookingCounter}`;

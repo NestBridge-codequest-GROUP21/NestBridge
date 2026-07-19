@@ -1,4 +1,4 @@
-import { Linking, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 import {
   confirmBooking,
   getBookingById,
@@ -7,6 +7,23 @@ import {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function waitUntilBookingConfirmed(
+  bookingId: string,
+  maxAttempts = 45,
+): Promise<boolean> {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const booking = await getBookingById(bookingId);
+    if (booking.status === 'CONFIRMED') {
+      return true;
+    }
+    // Pause longer while the app is backgrounded (user is in Paystack browser).
+    const delay = AppState.currentState === 'active' ? 2000 : 3000;
+    await sleep(delay);
+  }
+  const finalCheck = await getBookingById(bookingId);
+  return finalCheck.status === 'CONFIRMED';
 }
 
 /**
@@ -31,12 +48,9 @@ export async function completeBookingPayment(bookingId: string): Promise<void> {
   }
   await Linking.openURL(init.authorizationUrl);
 
-  for (let attempt = 0; attempt < 30; attempt += 1) {
-    await sleep(2000);
-    const booking = await getBookingById(bookingId);
-    if (booking.status === 'CONFIRMED') {
-      return;
-    }
+  const confirmed = await waitUntilBookingConfirmed(bookingId);
+  if (confirmed) {
+    return;
   }
 
   throw new Error(
