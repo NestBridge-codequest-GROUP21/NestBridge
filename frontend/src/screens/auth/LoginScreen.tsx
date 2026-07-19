@@ -31,6 +31,8 @@ export interface LoginScreenProps {
   password: string;
   keepSignedIn: boolean;
   errorMessage?: string;
+  /** Shown as muted footer text so installs can be verified (e.g. APK builds). */
+  appVersion?: string;
   demoAccounts?: DemoAccount[];
   demoLoginBusy?: boolean;
   onEmailChange?: (value: string) => void;
@@ -50,6 +52,7 @@ export default function LoginScreen({
   password,
   keepSignedIn,
   errorMessage,
+  appVersion,
   demoAccounts = [],
   demoLoginBusy = false,
   onEmailChange,
@@ -120,6 +123,10 @@ export default function LoginScreen({
           placeholder="Enter your password..."
           onChangeText={onPasswordChange}
           secureTextEntry
+          visibilityToggle
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="password"
         />
 
         {onForgotPasswordPress ? (
@@ -145,11 +152,18 @@ export default function LoginScreen({
           <Text style={styles.keepSignedInText}>Keep me signed in</Text>
         </Pressable>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <View style={styles.errorBanner} accessibilityLiveRegion="polite">
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        ) : null}
 
         <PrimaryButton label="Sign in" onPress={onSubmit} />
         <View style={styles.spacer} />
         <SecondaryButton label="Create an account" onPress={onCreateAccountPress} />
+        {appVersion ? (
+          <Text style={styles.versionText}>NestBridge {appVersion}</Text>
+        ) : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -234,12 +248,28 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     color: colors.textPrimary,
   },
+  errorBanner: {
+    backgroundColor: colors.warmCream,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+  },
   errorText: {
     fontSize: fontSizes.body,
     color: colors.danger,
-    marginBottom: spacing.md,
+    lineHeight: 20,
   },
   spacer: {
     height: spacing.sm,
+  },
+  versionText: {
+    marginTop: spacing.lg,
+    textAlign: 'center',
+    fontSize: fontSizes.caption,
+    fontFamily: fontFamilies.regular,
+    color: colors.textTertiary,
   },
 });

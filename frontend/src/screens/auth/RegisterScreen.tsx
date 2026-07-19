@@ -103,6 +103,10 @@ export default function RegisterScreen({
             placeholder="Create a password..."
             onChangeText={onPasswordChange}
             secureTextEntry
+            visibilityToggle
+            autoCapitalize="none"
+            autoCorrect={false}
+            textContentType="newPassword"
           />
 
           <Pressable
@@ -118,7 +122,11 @@ export default function RegisterScreen({
           </Pressable>
         </View>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <View style={styles.errorBanner} accessibilityLiveRegion="polite">
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        ) : null}
 
         <PrimaryButton label="Create Account" onPress={onSubmit} />
 
@@ -212,10 +220,19 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
+  errorBanner: {
+    backgroundColor: colors.warmCream,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+  },
   errorText: {
     fontSize: fontSizes.body,
     color: colors.danger,
-    marginBottom: spacing.md,
+    lineHeight: 20,
   },
   footerLink: {
     alignItems: 'center',

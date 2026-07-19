@@ -28,8 +28,14 @@ public class AuthService {
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
         String email = request.getEmail().trim().toLowerCase();
-        if (userRepository.existsByEmailIgnoreCase(email)) {
-            throw new IllegalArgumentException("An account with this email already exists.");
+        var existing = userRepository.findByEmailIgnoreCase(email);
+        if (existing.isPresent()) {
+            User user = existing.get();
+            if (verificationEnabled && !user.isEmailVerified()) {
+                throw new IllegalArgumentException(
+                        "You already started signup with this email. Check your inbox to verify, or sign in and resend the link.");
+            }
+            throw new IllegalArgumentException("An account with this email already exists. Try signing in.");
         }
         User user = User.builder()
                 .fullName(request.getFullName().trim())

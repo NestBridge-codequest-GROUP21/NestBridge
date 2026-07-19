@@ -10,7 +10,7 @@ import type { ExpoConfig, ConfigContext } from 'expo/config';
 const base: ExpoConfig = {
   name: 'NestBridge',
   slug: 'nestbridge',
-  version: '1.0.0',
+  version: '1.0.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',

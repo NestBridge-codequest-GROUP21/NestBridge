@@ -28,7 +28,7 @@ export interface VerifyEmailScreenProps {
 export default function VerifyEmailScreen({
   email,
   title = 'Check your inbox',
-  subtitle = 'We sent a verification link to your email. Open it on this device, then return here to sign in.',
+  subtitle = 'Open the verification link we sent, then come back and sign in.',
   statusMessage,
   errorMessage,
   resendBusy = false,
@@ -51,7 +51,7 @@ export default function VerifyEmailScreen({
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.iconCircle}>
-          <Text style={styles.iconText}>✉️</Text>
+          <Text style={styles.iconText}>@</Text>
         </View>
 
         <Text style={styles.title}>{title}</Text>
