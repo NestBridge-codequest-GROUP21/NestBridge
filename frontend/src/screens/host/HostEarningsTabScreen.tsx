@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
 import {
   colors,
   fontFamilies,
@@ -11,6 +13,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
 import type { EarningsLineItem, EarningsSummary } from '../../types/providerBooking';
@@ -65,9 +69,19 @@ export default function HostEarningsTabScreen({
           </Text>
         </View>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <InlineBanner message={errorMessage} tone="error" />
+        ) : null}
         {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
+          <View
+            style={styles.loadingWrap}
+            accessibilityRole="progressbar"
+            accessibilityLabel="Loading earnings"
+          >
+            <View style={styles.loadingTile}>
+              <ActivityIndicator size="large" color={colors.teal} />
+            </View>
+          </View>
         ) : null}
 
         {!isLoading && hasEarnings ? (
@@ -98,13 +112,12 @@ export default function HostEarningsTabScreen({
         ) : null}
 
         {!isLoading && !hasEarnings ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>{emptyState.title}</Text>
-            <Text style={styles.emptyBody}>{emptyState.body}</Text>
-            {emptyState.tip ? (
-              <Text style={styles.emptyTip}>{emptyState.tip}</Text>
-            ) : null}
-          </View>
+          <EmptyState
+            title={emptyState.title}
+            body={emptyState.body}
+            tip={emptyState.tip}
+            iconName="cash-outline"
+          />
         ) : null}
 
         {lineItems.map((item) => (
@@ -157,17 +170,23 @@ const styles = StyleSheet.create({
   escrowBody: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
+  loadingWrap: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
   },
-  loader: {
-    marginVertical: spacing.xl,
+  loadingTile: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   summaryCard: {
     backgroundColor: colors.white,
@@ -176,10 +195,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.lg,
+    ...shadows.card,
   },
   summaryLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -202,6 +223,7 @@ const styles = StyleSheet.create({
   metaLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
@@ -211,33 +233,6 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
-  emptyCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  emptyTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptyBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    lineHeight: 22,
-    marginBottom: spacing.sm,
-  },
-  emptyTip: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textTertiary,
-    lineHeight: 18,
-  },
   lineItem: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -245,6 +240,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.md,
+    ...shadows.card,
   },
   lineItemHeader: {
     flexDirection: 'row',
@@ -269,12 +265,15 @@ const styles = StyleSheet.create({
   lineLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
   lineMeta: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
+    lineHeight: lineHeights.caption,
   },
 });

@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 import OnboardingReadyCarousel from '../../components/OnboardingReadyCarousel';
 import type { OnboardingNextStep } from '../../components/OnboardingNextStepsCard';
 import AppIcon from '../../components/AppIcon';
@@ -28,6 +29,8 @@ import {
   lineHeights,
   layout,
   motion,
+  overlays,
+  shadows,
 } from '../../constants/theme';
 
 export interface OnboardingReadyScreenProps {
@@ -97,24 +100,13 @@ export default function OnboardingReadyScreen({
           />
         )}
         <LinearGradient
-          colors={['transparent', 'rgba(12, 23, 53, 0.55)']}
+          colors={['transparent', overlays.scrimStrong]}
           style={styles.heroScrim}
         />
 
         <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
           {onBack ? (
-            <Pressable
-              onPress={onBack}
-              style={styles.topActionButton}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-            >
-              <AppIcon
-                name="chevron-back"
-                size={fontSizes.heading}
-                color={colors.white}
-              />
-            </Pressable>
+            <BackButton onPress={onBack} color={colors.white} />
           ) : (
             <View style={styles.topSpacer} />
           )}
@@ -159,7 +151,7 @@ export default function OnboardingReadyScreen({
               transform: [{ translateY: contentTranslateY }],
             }}
           >
-            <Text style={styles.headline}>ALL SET!</Text>
+            <Text style={styles.headline}>You're all set</Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
 
             <View style={styles.carouselSection}>
@@ -217,12 +209,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPaddingHorizontal,
     zIndex: 2,
   },
-  topActionButton: {
-    minWidth: 44,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   topSpacer: {
     width: 44,
   },
@@ -239,6 +225,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.tealBright,
     zIndex: 2,
+    ...shadows.card,
   },
   roleBadgeIcon: {
     marginRight: spacing.xs,

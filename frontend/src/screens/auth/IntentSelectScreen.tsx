@@ -22,6 +22,7 @@ import {
   gradients,
   lineHeights,
   layout,
+  shadows,
 } from '../../constants/theme';
 import type { PrimaryIntent } from '../../types/accountProfile';
 import {
@@ -203,6 +204,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   optionCardSelected: {
     borderColor: colors.teal,
@@ -246,6 +248,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   noteTitle: {
     fontFamily: fontFamilies.semibold,

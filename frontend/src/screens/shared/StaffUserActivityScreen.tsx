@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
 import type { AdminBookingActivity, AdminSosActivity } from '../../services/api';
 import {
   colors,
@@ -11,6 +13,7 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  shadows,
 } from '../../constants/theme';
 
 export interface StaffUserActivityScreenProps {
@@ -54,14 +57,19 @@ export default function StaffUserActivityScreen({
         {isLoading ? (
           <ActivityIndicator color={colors.teal} style={styles.loader} />
         ) : null}
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
 
         {!isLoading ? (
           <>
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>Recent bookings</Text>
               {bookings.length === 0 ? (
-                <Text style={styles.emptyText}>No recent bookings.</Text>
+                <EmptyState
+                  title="No recent bookings"
+                  body="This user has no booking activity to show yet."
+                  iconName="calendar-outline"
+                  carded={false}
+                />
               ) : (
                 bookings.map((booking) => (
                   <View key={booking.bookingId} style={styles.item}>
@@ -71,7 +79,7 @@ export default function StaffUserActivityScreen({
                     <Text style={styles.itemMeta}>
                       {[
                         booking.checkIn
-                          ? `${formatDate(booking.checkIn)} → ${formatDate(booking.checkOut)}`
+                          ? `${formatDate(booking.checkIn)} – ${formatDate(booking.checkOut)}`
                           : null,
                         booking.sessionDate
                           ? `Session ${formatDate(booking.sessionDate)}`
@@ -95,7 +103,12 @@ export default function StaffUserActivityScreen({
             <View style={styles.card}>
               <Text style={styles.sectionTitle}>SOS alerts</Text>
               {sosAlerts.length === 0 ? (
-                <Text style={styles.emptyText}>No SOS alerts for this user.</Text>
+                <EmptyState
+                  title="No SOS alerts"
+                  body="This user has not triggered emergency help recently."
+                  iconName="shield-checkmark-outline"
+                  carded={false}
+                />
               ) : (
                 sosAlerts.map((alert) => (
                   <View key={alert.sosId} style={styles.item}>
@@ -132,12 +145,6 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: spacing.xl,
   },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
-  },
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -145,6 +152,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.lg,
     marginBottom: spacing.lg,
+    ...shadows.card,
   },
   sectionTitle: {
     fontFamily: fontFamilies.semibold,
@@ -152,11 +160,6 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.md,
-  },
-  emptyText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
   },
   item: {
     paddingVertical: spacing.sm,

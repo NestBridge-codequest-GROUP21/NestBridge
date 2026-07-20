@@ -4,21 +4,24 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import SecondaryButton from '../../components/SecondaryButton';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -79,9 +82,11 @@ export default function SessionReviewScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton
+          onPress={onBack}
+          color={colors.white}
+          style={styles.backButton}
+        />
         <Text style={styles.headerTitle}>Session request</Text>
         <Text style={styles.headerSubtitle}>Review before accepting</Text>
       </LinearGradient>
@@ -120,7 +125,7 @@ export default function SessionReviewScreen({
 
         <Text style={styles.sectionLabel}>Session time</Text>
         <View style={styles.datesCard}>
-          <Text style={styles.datesValue}>{sessionLine ?? '—'}</Text>
+          <Text style={styles.datesValue}>{sessionLine ?? 'Schedule pending'}</Text>
           <Text style={styles.datesPeriod}>{capacity.periodLabel}</Text>
         </View>
 
@@ -187,13 +192,37 @@ export default function SessionReviewScreen({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  header: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
-  backButton: { width: 44, height: 44, justifyContent: 'center', marginBottom: spacing.sm },
-  backIcon: { fontSize: fontSizes.heading, color: colors.white, fontWeight: fontWeights.bold },
-  headerTitle: { fontSize: fontSizes.display, fontWeight: fontWeights.bold, color: colors.white, marginBottom: spacing.xs },
-  headerSubtitle: { fontSize: fontSizes.body, color: colors.white, opacity: 0.88 },
-  scrollContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  backButton: {
+    marginBottom: spacing.sm,
+    marginLeft: -spacing.sm,
+  },
+  headerTitle: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.display,
+    fontWeight: fontWeights.bold,
+    color: colors.white,
+    marginBottom: spacing.xs,
+  },
+  headerSubtitle: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    color: colors.white,
+    opacity: 0.88,
+    lineHeight: lineHeights.body,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+  },
   hero: {
     alignItems: 'center',
     backgroundColor: colors.white,
@@ -202,6 +231,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   avatar: {
     width: 72,
@@ -212,9 +242,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  avatarText: { fontSize: fontSizes.heading, fontWeight: fontWeights.bold, color: colors.tealDeep },
-  name: { fontSize: fontSizes.heading, fontWeight: fontWeights.bold, color: colors.textPrimary, marginBottom: spacing.xs },
-  meta: { fontSize: fontSizes.body, color: colors.textSecondary, textAlign: 'center', marginBottom: spacing.sm },
+  avatarText: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.bold,
+    color: colors.tealDeep,
+  },
+  name: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  meta: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+    lineHeight: lineHeights.body,
+  },
   roleBadge: {
     backgroundColor: colors.warmCream,
     paddingHorizontal: spacing.md,
@@ -222,30 +271,171 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     marginBottom: spacing.sm,
   },
-  roleBadgeText: { fontSize: fontSizes.caption, fontWeight: fontWeights.bold, color: colors.tealDeep },
-  compatBadge: { backgroundColor: colors.teal, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.pill },
-  compatText: { fontSize: fontSizes.caption, fontWeight: fontWeights.bold, color: colors.white },
-  messageCard: { backgroundColor: colors.warmCream, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border },
-  messageLabel: { fontSize: fontSizes.caption, fontWeight: fontWeights.bold, color: colors.textSecondary, marginBottom: spacing.sm, textTransform: 'uppercase' },
-  messageText: { fontSize: fontSizes.body, color: colors.textPrimary, lineHeight: 24, fontStyle: 'italic' },
-  sectionLabel: { fontSize: fontSizes.caption, fontWeight: fontWeights.bold, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: spacing.sm },
-  datesCard: { backgroundColor: colors.white, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border },
-  datesValue: { fontSize: fontSizes.subheading, fontWeight: fontWeights.bold, color: colors.textPrimary, marginBottom: spacing.xs },
-  datesPeriod: { fontSize: fontSizes.body, color: colors.textSecondary },
-  capacityCard: { backgroundColor: colors.white, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border },
-  capacityWarning: { borderColor: colors.warning, backgroundColor: colors.warmCream },
-  dotsRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
-  dot: { width: 16, height: 16, borderRadius: borderRadius.pill },
-  dotFilled: { backgroundColor: colors.tealBright },
-  dotEmpty: { backgroundColor: colors.border },
-  capacityTitle: { fontSize: fontSizes.subheading, fontWeight: fontWeights.bold, color: colors.textPrimary, marginBottom: spacing.sm },
-  capacityHint: { fontSize: fontSizes.body, color: colors.textSecondary, lineHeight: 22 },
-  earningsCard: { backgroundColor: colors.warmCream, borderRadius: borderRadius.lg, padding: spacing.lg, borderWidth: 1, borderColor: colors.border },
-  earningsRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm },
-  earningsLabel: { fontSize: fontSizes.body, color: colors.textSecondary, flex: 1 },
-  earningsValue: { fontSize: fontSizes.body, fontWeight: fontWeights.semibold, color: colors.textPrimary },
-  earningsHighlight: { color: colors.tealDeep, fontWeight: fontWeights.bold },
-  divider: { height: 1, backgroundColor: colors.border, opacity: 0.6 },
-  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: colors.white, paddingHorizontal: spacing.lg, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
-  declineWrap: { marginTop: spacing.sm },
+  roleBadgeText: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.bold,
+    color: colors.tealDeep,
+  },
+  compatBadge: {
+    backgroundColor: colors.teal,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.pill,
+  },
+  compatText: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.bold,
+    color: colors.white,
+  },
+  messageCard: {
+    backgroundColor: colors.warmCream,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  messageLabel: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.bold,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  messageText: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    color: colors.textPrimary,
+    lineHeight: lineHeights.body,
+    fontStyle: 'italic',
+  },
+  sectionLabel: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.bold,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: spacing.sm,
+  },
+  datesCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.card,
+  },
+  datesValue: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  datesPeriod: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+  },
+  capacityCard: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.card,
+  },
+  capacityWarning: {
+    borderColor: colors.warning,
+    backgroundColor: colors.warmCream,
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  dot: {
+    width: 16,
+    height: 16,
+    borderRadius: borderRadius.pill,
+  },
+  dotFilled: {
+    backgroundColor: colors.tealBright,
+  },
+  dotEmpty: {
+    backgroundColor: colors.border,
+  },
+  capacityTitle: {
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  capacityHint: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.body,
+  },
+  earningsCard: {
+    backgroundColor: colors.warmCream,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  earningsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+  },
+  earningsLabel: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  earningsValue: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+  },
+  earningsHighlight: {
+    fontFamily: fontFamilies.bold,
+    color: colors.tealDeep,
+    fontWeight: fontWeights.bold,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    opacity: 0.6,
+  },
+  footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    ...shadows.raised,
+  },
+  declineWrap: {
+    marginTop: spacing.sm,
+  },
 });

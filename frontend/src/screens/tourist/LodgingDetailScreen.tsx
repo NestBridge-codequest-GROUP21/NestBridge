@@ -3,23 +3,28 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
   Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
+import ScreenScroll from '../../components/ScreenScroll';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import type { LodgingListing } from '../../types/lodging';
 import { lodgingCategoryLabel } from '../../data/lodgingDirectoryMock';
@@ -67,14 +72,7 @@ export default function LodgingDetailScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
 
         <View style={styles.heroContent}>
           <View style={styles.heroAvatar}>
@@ -94,19 +92,15 @@ export default function LodgingDetailScreen({
         </View>
       </LinearGradient>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 200 },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <ScreenScroll
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + 200,
+        }}
       >
-        <View style={styles.disclaimer}>
-          <Text style={styles.disclaimerText}>
-            Booking happens on the provider site or by phone — not inside NestBridge.
-          </Text>
-        </View>
+        <InlineBanner
+          tone="info"
+          message="Book on the provider’s site or by phone — not inside NestBridge."
+        />
 
         <Text style={styles.sectionTitle}>About</Text>
         <Text style={styles.description}>{listing.description}</Text>
@@ -124,7 +118,7 @@ export default function LodgingDetailScreen({
             <Text style={styles.contactValue}>{listing.email}</Text>
           </View>
         ) : null}
-      </ScrollView>
+      </ScreenScroll>
 
       <View
         style={[
@@ -153,6 +147,11 @@ export default function LodgingDetailScreen({
           accessibilityRole="button"
           accessibilityLabel={isSaved ? 'Saved to contacts' : 'Save to My contacts'}
         >
+          <AppIcon
+            name={isSaved ? 'checkmark-circle' : 'bookmark-outline'}
+            size={fontSizes.body}
+            color={colors.teal}
+          />
           <Text style={styles.saveButtonText}>
             {isSaved ? 'Saved to My contacts' : 'Save to My contacts'}
           </Text>
@@ -172,16 +171,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     marginBottom: spacing.md,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
   },
   heroContent: {
     alignItems: 'center',
@@ -194,13 +185,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
+    ...shadows.card,
   },
   heroInitials: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
   },
   name: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
@@ -208,10 +202,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   meta: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.white,
     opacity: 0.9,
     marginBottom: spacing.md,
+    textAlign: 'center',
   },
   ratingRow: {
     flexDirection: 'row',
@@ -219,46 +215,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rating: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.bold,
     color: colors.gold,
   },
   price: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.white,
     opacity: 0.92,
   },
-  scroll: {
-    flex: 1,
-    marginTop: -spacing.lg,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-  },
-  disclaimer: {
-    backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  disclaimerText: {
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
   sectionTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   description: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 24,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
   },
   contactRow: {
@@ -268,13 +247,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   contactLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
   contactValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
@@ -290,6 +272,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     gap: spacing.sm,
+    ...shadows.raised,
   },
   actionRow: {
     flexDirection: 'row',
@@ -300,11 +283,14 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     minHeight: 44,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.sm,
     paddingVertical: spacing.sm,
   },
   saveButtonText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.teal,

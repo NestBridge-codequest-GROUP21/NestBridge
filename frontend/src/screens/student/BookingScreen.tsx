@@ -4,19 +4,26 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GatedPrimaryButton } from '../../components/ProfileIncompleteBanner';
+import BackButton from '../../components/BackButton';
+import InlineBanner from '../../components/InlineBanner';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
+  lineHeights,
+  shadows,
+  layout,
+  tints,
 } from '../../constants/theme';
 import type { HostProfileSummary, PriceBreakdown } from '../../types/booking';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
@@ -89,17 +96,10 @@ export default function BookingScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.white} style={styles.back} />
         <Text style={styles.headerTitle}>Request to book</Text>
         <Text style={styles.headerSubtitle}>
-          Review your stay details before sending
+          Review your stay details before sending a request to the host
         </Text>
       </LinearGradient>
 
@@ -119,11 +119,11 @@ export default function BookingScreen({
             <Text style={styles.hostName}>{host.name}</Text>
             <Text style={styles.hostLocation}>{host.location}</Text>
             {showMatchScores ? (
-            <View style={styles.matchRow}>
-              <View style={styles.matchBadge}>
-                <Text style={styles.matchBadgeText}>{host.matchPercentage}% match</Text>
+              <View style={styles.matchRow}>
+                <View style={styles.matchBadge}>
+                  <Text style={styles.matchBadgeText}>{host.matchPercentage}% match</Text>
+                </View>
               </View>
-            </View>
             ) : null}
           </View>
         </View>
@@ -166,11 +166,24 @@ export default function BookingScreen({
 
         <Text style={styles.sectionLabel}>Cancellation policy</Text>
         <View style={styles.policyCard}>
+          <AppIcon
+            name="document-text-outline"
+            size={fontSizes.subheading}
+            color={colors.tealDeep}
+            style={styles.policyIcon}
+          />
           <Text style={styles.policyText}>{host.cancellationPolicy}</Text>
         </View>
 
         <View style={styles.escrowCard}>
-          <Text style={styles.escrowTitle}>Held in escrow</Text>
+          <View style={styles.escrowTitleRow}>
+            <AppIcon
+              name="shield-checkmark-outline"
+              size={fontSizes.subheading}
+              color={colors.tealDeep}
+            />
+            <Text style={styles.escrowTitle}>Held in escrow</Text>
+          </View>
           <Text style={styles.escrowText}>
             Payment is held securely until 24 hours after check-in. You are only
             charged after the host accepts your request.
@@ -178,7 +191,7 @@ export default function BookingScreen({
         </View>
 
         {submitErrorMessage ? (
-          <Text style={styles.submitError}>{submitErrorMessage}</Text>
+          <InlineBanner message={submitErrorMessage} tone="error" style={styles.errorBanner} />
         ) : null}
       </ScrollView>
 
@@ -209,39 +222,35 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingBottom: spacing.lg,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
+    marginLeft: -spacing.sm,
   },
   headerTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.display,
   },
   headerSubtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.white,
     opacity: 0.88,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   scroll: {
     flex: 1,
     marginTop: -spacing.sm,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
   },
   hostCard: {
@@ -253,22 +262,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
+    ...shadows.card,
   },
   hostIconWrap: {
     width: 64,
     height: 64,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.warmCream,
+    backgroundColor: tints.cream,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
   hostInitials: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
@@ -277,15 +283,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   hostName: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
+    lineHeight: lineHeights.heading,
   },
   hostLocation: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.body,
   },
   matchRow: {
     flexDirection: 'row',
@@ -297,11 +308,13 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
   matchBadgeText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.white,
   },
   sectionLabel: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.textSecondary,
@@ -317,19 +330,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.sm,
+    ...shadows.card,
   },
   dateBlock: {
     flex: 1,
   },
   dateLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
+    lineHeight: lineHeights.caption,
   },
   dateValue: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
+    lineHeight: lineHeights.subheading,
   },
   dateDivider: {
     width: 1,
@@ -337,10 +356,12 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.md,
   },
   nightsHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.xl,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   priceCard: {
     backgroundColor: colors.warmCream,
@@ -358,19 +379,25 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     flex: 1,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     paddingRight: spacing.md,
   },
   priceLabelBold: {
+    fontFamily: fontFamilies.bold,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
   },
   priceValue: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
   },
   priceValueBold: {
+    fontFamily: fontFamilies.bold,
     fontWeight: fontWeights.bold,
     fontSize: fontSizes.subheading,
   },
@@ -390,17 +417,19 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   policyIcon: {
-    fontSize: 20,
     marginRight: spacing.md,
     marginTop: spacing.xs,
   },
   policyText: {
     flex: 1,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   escrowCard: {
     backgroundColor: colors.white,
@@ -409,17 +438,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginTop: spacing.lg,
+    ...shadows.card,
+  },
+  escrowTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   escrowTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
+    lineHeight: lineHeights.subheading,
   },
   escrowText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
+  },
+  errorBanner: {
+    marginTop: spacing.lg,
+    marginBottom: 0,
   },
   footer: {
     position: 'absolute',
@@ -427,27 +470,19 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 8,
+    ...shadows.raised,
   },
   footerHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     textAlign: 'center',
     marginTop: spacing.sm,
-    lineHeight: 18,
-  },
-  submitError: {
-    fontSize: fontSizes.caption,
-    color: colors.danger,
-    textAlign: 'center',
-    marginTop: spacing.md,
+    lineHeight: lineHeights.caption,
   },
 });

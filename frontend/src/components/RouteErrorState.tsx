@@ -1,12 +1,9 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  Pressable,
-} from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AppIcon from './AppIcon';
+import PrimaryButton from './PrimaryButton';
+import SecondaryButton from './SecondaryButton';
 import {
   colors,
   fontFamilies,
@@ -16,12 +13,14 @@ import {
   borderRadius,
   layout,
   lineHeights,
+  tints,
 } from '../constants/theme';
 
 export interface RouteErrorStateProps {
   message: string;
   title?: string;
   isLoading?: boolean;
+  loadingLabel?: string;
   onBack?: () => void;
   onRetry?: () => void;
 }
@@ -30,6 +29,7 @@ export default function RouteErrorState({
   message,
   title = 'Something went wrong',
   isLoading = false,
+  loadingLabel = 'Loading…',
   onBack,
   onRetry,
 }: RouteErrorStateProps) {
@@ -37,8 +37,11 @@ export default function RouteErrorState({
 
   if (isLoading) {
     return (
-      <View style={styles.root}>
-        <ActivityIndicator size="large" color={colors.teal} />
+      <View style={styles.root} accessibilityRole="progressbar" accessibilityLabel={loadingLabel}>
+        <View style={styles.loadingTile}>
+          <ActivityIndicator size="large" color={colors.teal} />
+        </View>
+        <Text style={styles.loadingLabel}>{loadingLabel}</Text>
       </View>
     );
   }
@@ -53,35 +56,15 @@ export default function RouteErrorState({
         },
       ]}
     >
+      <View style={styles.iconTile}>
+        <AppIcon name="cloud-offline-outline" size={28} color={colors.tealDeep} />
+      </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
       <View style={styles.actions}>
-        {onBack ? (
-          <Pressable
-            style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-            onPress={onBack}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.buttonText}>Go back</Text>
-          </Pressable>
-        ) : null}
-        {onRetry ? (
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              styles.buttonSecondary,
-              pressed && styles.pressed,
-            ]}
-            onPress={onRetry}
-            accessibilityRole="button"
-            accessibilityLabel="Try again"
-          >
-            <Text style={[styles.buttonText, styles.buttonTextSecondary]}>
-              Try again
-            </Text>
-          </Pressable>
-        ) : null}
+        {onRetry ? <PrimaryButton label="Try again" onPress={onRetry} /> : null}
+        {onRetry && onBack ? <View style={styles.actionGap} /> : null}
+        {onBack ? <SecondaryButton label="Go back" onPress={onBack} /> : null}
       </View>
     </View>
   );
@@ -94,6 +77,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.background,
     paddingHorizontal: layout.screenPaddingHorizontal,
+  },
+  loadingTile: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  loadingLabel: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textSecondary,
+  },
+  iconTile: {
+    width: 64,
+    height: 64,
+    borderRadius: borderRadius.pill,
+    backgroundColor: tints.cream,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   title: {
     fontFamily: fontFamilies.bold,
@@ -113,32 +121,8 @@ const styles = StyleSheet.create({
   },
   actions: {
     width: '100%',
-    gap: spacing.sm,
   },
-  button: {
-    minHeight: 44,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  buttonSecondary: {
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.teal,
-  },
-  buttonText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  buttonTextSecondary: {
-    color: colors.teal,
-  },
-  pressed: {
-    opacity: 0.88,
+  actionGap: {
+    height: spacing.sm,
   },
 });

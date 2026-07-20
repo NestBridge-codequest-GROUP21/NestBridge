@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -12,7 +11,20 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import InlineBanner from '../../components/InlineBanner';
+import AppIcon from '../../components/AppIcon';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  lineHeights,
+  layout,
+  shadows,
+  tints,
+} from '../../constants/theme';
 
 export interface VerifyEmailScreenProps {
   email: string;
@@ -28,7 +40,7 @@ export interface VerifyEmailScreenProps {
 export default function VerifyEmailScreen({
   email,
   title = 'Check your inbox',
-  subtitle = 'Open the verification link we sent, then come back and sign in.',
+  subtitle = 'Open the verification link we sent, then come back and sign in to NestBridge.',
   statusMessage,
   errorMessage,
   resendBusy = false,
@@ -51,7 +63,7 @@ export default function VerifyEmailScreen({
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.iconCircle}>
-          <Text style={styles.iconText}>@</Text>
+          <AppIcon name="mail-outline" size={32} color={colors.tealDeep} />
         </View>
 
         <Text style={styles.title}>{title}</Text>
@@ -62,20 +74,11 @@ export default function VerifyEmailScreen({
           <Text style={styles.emailValue}>{email}</Text>
         </View>
 
-        {statusMessage ? (
-          <View style={styles.statusBanner}>
-            <Text style={styles.statusText}>{statusMessage}</Text>
-          </View>
-        ) : null}
-
-        {errorMessage ? (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          </View>
-        ) : null}
+        {statusMessage ? <InlineBanner message={statusMessage} tone="success" /> : null}
+        {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
         <Text style={styles.hint}>
-          Did not receive it? Check spam, or resend the link below.
+          Didn’t get it? Check spam, or resend the verification email below.
         </Text>
 
         <PrimaryButton
@@ -99,33 +102,32 @@ const styles = StyleSheet.create({
   },
   container: {
     flexGrow: 1,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     gap: spacing.md,
   },
   iconCircle: {
     width: 72,
     height: 72,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
+    backgroundColor: tints.teal,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     marginBottom: spacing.sm,
   },
-  iconText: {
-    fontSize: fontSizes.display,
-  },
   title: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     textAlign: 'center',
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   emailCard: {
     backgroundColor: colors.white,
@@ -134,41 +136,26 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     marginTop: spacing.sm,
+    ...shadows.card,
   },
   emailLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
   emailValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
-  statusBanner: {
-    backgroundColor: colors.success + '18',
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-  },
-  statusText: {
-    color: colors.success,
-    fontSize: fontSizes.caption,
-    textAlign: 'center',
-  },
-  errorBanner: {
-    backgroundColor: colors.danger + '14',
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: fontSizes.caption,
-    textAlign: 'center',
-  },
   hint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     textAlign: 'center',
+    lineHeight: lineHeights.caption,
     marginTop: spacing.sm,
   },
   secondaryWrap: {

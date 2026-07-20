@@ -19,6 +19,8 @@ import {
   spacing,
   borderRadius,
   layout,
+  shadows,
+  lineHeights,
 } from '../../constants/theme';
 
 export interface SearchCategoryItem {
@@ -63,7 +65,7 @@ export default function UnifiedSearchScreen({
         greeting="Search"
         userName={userName}
         userInitials={userInitials}
-        subtitle={`Explore options in ${cityLabel}`}
+        subtitle={`Find stays and guides in ${cityLabel}`}
         onBack={onBack}
       />
 
@@ -73,8 +75,8 @@ export default function UnifiedSearchScreen({
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.lead}>
-          Homestays near campus, verified local guides, and hotels when you want
-          your own space — search by what you need today.
+          Homestays near campus, verified Ghanaian guides, and hotels when you
+          want your own space — start with what you need today.
         </Text>
 
         {categories.map((category) => (
@@ -125,7 +127,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
   },
   card: {
@@ -138,6 +140,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     minHeight: 72,
+    ...shadows.card,
   },
   cardPressed: {
     opacity: 0.95,
@@ -165,6 +168,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textSecondary,
-    lineHeight: 16,
+    lineHeight: lineHeights.caption,
   },
 });

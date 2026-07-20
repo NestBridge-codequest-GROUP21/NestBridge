@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import EmptyState from '../../components/EmptyState';
 import PrimaryButton from '../../components/PrimaryButton';
 import AppIcon from '../../components/AppIcon';
 import type { StayListing } from '../../data/featureScreensMock';
@@ -14,6 +15,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  shadows,
+  lineHeights,
 } from '../../constants/theme';
 
 export interface ExploreStaysScreenProps {
@@ -110,7 +113,7 @@ export default function ExploreStaysScreen({
 
       <ScreenScroll>
         <View style={styles.titleRow}>
-          <Text style={styles.screenTitle}>Explore Stays</Text>
+          <Text style={styles.screenTitle}>Homestays nearby</Text>
           <Pressable
             onPress={onFilterPress}
             style={styles.filterButton}
@@ -121,19 +124,28 @@ export default function ExploreStaysScreen({
           </Pressable>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.list}
-        >
-          {listings.map((listing) => (
-            <StayCard
-              key={listing.id}
-              listing={listing}
-              onBookPress={() => onBookPress?.(listing.id)}
-            />
-          ))}
-        </ScrollView>
+        {listings.length === 0 ? (
+          <EmptyState
+            title="No stays to show"
+            body="Host families in this area are still joining NestBridge. Try Accra or Kumasi, or check back soon."
+            tip="Finish your profile to see better matches."
+            iconName="home-outline"
+          />
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.list}
+          >
+            {listings.map((listing) => (
+              <StayCard
+                key={listing.id}
+                listing={listing}
+                onBookPress={() => onBookPress?.(listing.id)}
+              />
+            ))}
+          </ScrollView>
+        )}
       </ScreenScroll>
     </View>
   );
@@ -173,6 +185,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
+    ...shadows.card,
   },
   imageTile: {
     height: 120,
@@ -206,6 +219,7 @@ const styles = StyleSheet.create({
   stayLocation: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
   },
   starRow: {

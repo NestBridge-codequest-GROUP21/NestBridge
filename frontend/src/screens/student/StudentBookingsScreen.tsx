@@ -11,6 +11,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import AppIcon from '../../components/AppIcon';
+import BackButton from '../../components/BackButton';
+import EmptyState from '../../components/EmptyState';
 import {
   colors,
   fontFamilies,
@@ -20,6 +22,9 @@ import {
   borderRadius,
   gradients,
   layout,
+  lineHeights,
+  shadows,
+  tints,
 } from '../../constants/theme';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import type { BookingListItem, BookingStatus, BookingTabFilter, BookingType } from '../../types/booking';
@@ -160,18 +165,11 @@ export default function StudentBookingsScreen({
       >
         <View style={styles.headerTop}>
           {onBack ? (
-            <Pressable
-              onPress={onBack}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-            >
-              <Text style={styles.backIcon}>←</Text>
-            </Pressable>
+            <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
           ) : (
             <View style={styles.backPlaceholder} />
           )}
-          <Text style={styles.headerTitle}>My Bookings</Text>
+          <Text style={styles.headerTitle}>My bookings</Text>
           <View style={styles.backPlaceholder} />
         </View>
         <Text style={styles.headerSubtitle}>
@@ -218,7 +216,7 @@ export default function StudentBookingsScreen({
             accessibilityLabel="Review incoming session requests"
           >
             <View style={styles.hostEntryIconWrap}>
-              <Text style={styles.hostEntryInitial}>G</Text>
+              <AppIcon name="map-outline" size={fontSizes.subheading} color={colors.tealDeep} />
             </View>
             <View style={styles.hostEntryText}>
               <Text style={styles.hostEntryTitle}>Session requests</Text>
@@ -227,6 +225,7 @@ export default function StudentBookingsScreen({
               </Text>
             </View>
             <Text style={styles.hostEntryAction}>Review</Text>
+            <AppIcon name="chevron-forward" size={fontSizes.body} color={colors.teal} />
           </Pressable>
         ) : null}
 
@@ -238,7 +237,7 @@ export default function StudentBookingsScreen({
             accessibilityLabel="Review incoming booking requests"
           >
             <View style={styles.hostEntryIconWrap}>
-              <Text style={styles.hostEntryInitial}>H</Text>
+              <AppIcon name="home-outline" size={fontSizes.subheading} color={colors.tealDeep} />
             </View>
             <View style={styles.hostEntryText}>
               <Text style={styles.hostEntryTitle}>Incoming requests</Text>
@@ -247,6 +246,7 @@ export default function StudentBookingsScreen({
               </Text>
             </View>
             <Text style={styles.hostEntryAction}>Review</Text>
+            <AppIcon name="chevron-forward" size={fontSizes.body} color={colors.teal} />
           </Pressable>
         ) : null}
 
@@ -291,22 +291,22 @@ export default function StudentBookingsScreen({
         ) : null}
 
         {filtered.length === 0 ? (
-          <View style={styles.emptyState}>
-            <AppIcon
-              name="clipboard-outline"
-              size={fontSizes.display}
-              color={colors.textTertiary}
-              style={styles.emptyIcon}
-            />
-            <Text style={styles.emptyTitle}>Nothing here yet</Text>
-            <Text style={styles.emptySubtitle}>
-              {activeFilter === 'pending'
+          <EmptyState
+            iconName="clipboard-outline"
+            title="Nothing here yet"
+            body={
+              activeFilter === 'pending'
                 ? 'Send a request to a host — it will show here while they review it.'
                 : activeFilter === 'past'
                   ? 'Completed stays and declined requests land here.'
-                  : 'Confirmed stays and payment-ready bookings show up here.'}
-            </Text>
-          </View>
+                  : 'Confirmed stays and payment-ready bookings show up here.'
+            }
+            tip={
+              activeFilter === 'active'
+                ? 'Search hosts in Accra, Kumasi, or your campus city to get started.'
+                : undefined
+            }
+          />
         ) : (
           filtered.map((booking, index) => {
             const meta = statusMeta(booking.status, booking.bookingType);
@@ -387,34 +387,29 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginLeft: -spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
   },
   backPlaceholder: {
     width: 44,
   },
   headerTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.white,
+    lineHeight: lineHeights.heading,
   },
   headerSubtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.white,
     opacity: 0.85,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   segmentWrap: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     marginTop: -spacing.md,
     marginBottom: spacing.md,
   },
@@ -425,11 +420,7 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   segmentItem: {
     flex: 1,
@@ -442,6 +433,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.navy,
   },
   segmentLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
@@ -453,7 +445,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
   hostEntryCard: {
     flexDirection: 'row',
@@ -464,60 +456,46 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    gap: spacing.sm,
+    ...shadows.card,
   },
   hostEntryIconWrap: {
     width: 48,
     height: 48,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.warmCream,
+    backgroundColor: tints.cream,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  hostEntryIcon: {
-    fontSize: 22,
-  },
-  hostEntryInitial: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
   },
   hostEntryAction: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
-    marginLeft: spacing.sm,
   },
   hostEntryText: {
     flex: 1,
   },
   hostEntryTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
+    lineHeight: lineHeights.subheading,
   },
   hostEntrySubtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 18,
-  },
-  hostEntryArrow: {
-    fontSize: fontSizes.heading,
-    color: colors.teal,
-    marginLeft: spacing.sm,
+    lineHeight: lineHeights.caption,
   },
   heroCard: {
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
     marginBottom: spacing.lg,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 4,
+    ...shadows.raised,
   },
   heroGradient: {
     padding: spacing.lg,
@@ -526,6 +504,7 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   heroEyebrow: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.white,
@@ -535,17 +514,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   heroTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.white,
-    lineHeight: 28,
+    lineHeight: lineHeights.heading,
     marginBottom: spacing.sm,
   },
   heroDates: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.white,
     opacity: 0.92,
     marginBottom: spacing.md,
+    lineHeight: lineHeights.body,
   },
   heroCta: {
     flexDirection: 'row',
@@ -558,36 +541,10 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   heroCtaText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.bold,
     color: colors.teal,
-    marginRight: spacing.xs,
-  },
-  heroCtaArrow: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.teal,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl * 2,
-    paddingHorizontal: spacing.lg,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptySubtitle: {
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
   },
   bookingCard: {
     flexDirection: 'row',
@@ -596,11 +553,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   bookingCardSpacing: {
     marginBottom: spacing.md,
@@ -609,12 +562,13 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
+    backgroundColor: tints.cream,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
   hostAvatarText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
@@ -635,6 +589,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   typeChipText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
@@ -648,9 +603,11 @@ const styles = StyleSheet.create({
   },
   hostName: {
     flex: 1,
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
+    lineHeight: lineHeights.subheading,
   },
   statusPill: {
     paddingHorizontal: spacing.sm,
@@ -658,20 +615,28 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
   statusText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
   },
   location: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.caption,
   },
   dates: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.body,
   },
   total: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
@@ -679,61 +644,5 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.94,
     transform: [{ scale: 0.995 }],
-  },
-  tabBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    backgroundColor: colors.navy,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.navyMid,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingVertical: spacing.xs,
-  },
-  tabIconWrap: {
-    position: 'relative',
-    marginBottom: spacing.xs,
-  },
-  tabIcon: {
-    fontSize: 18,
-    opacity: 0.55,
-  },
-  tabBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -10,
-    minWidth: 18,
-    height: 18,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.danger,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-  },
-  tabBadgeText: {
-    fontSize: 10,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  tabIconActive: {
-    opacity: 1,
-  },
-  tabLabel: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.regular,
-    color: colors.white,
-    opacity: 0.55,
-  },
-  tabLabelActive: {
-    fontWeight: fontWeights.semibold,
-    opacity: 1,
   },
 });

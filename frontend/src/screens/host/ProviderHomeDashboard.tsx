@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import AppIcon from '../../components/AppIcon';
 import FeaturedHomeCard, {
   type FeaturedHomeCardProps,
 } from '../../components/FeaturedHomeCard';
@@ -151,10 +152,19 @@ export default function ProviderHomeDashboard({
               <Pressable
                 onPress={onSeeAllRequestsPress}
                 hitSlop={12}
+                style={({ pressed }) => [
+                  styles.seeAllButton,
+                  pressed && styles.seeAllPressed,
+                ]}
                 accessibilityRole="button"
                 accessibilityLabel="See all requests"
               >
                 <Text style={styles.seeAll}>View all</Text>
+                <AppIcon
+                  name="chevron-forward"
+                  size={fontSizes.body}
+                  color={colors.teal}
+                />
               </Pressable>
             </View>
             {secondaryRequests.map((request, index) => (
@@ -217,6 +227,16 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
   },
+  seeAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 44,
+    paddingHorizontal: spacing.xs,
+    gap: spacing.xs,
+  },
+  seeAllPressed: {
+    opacity: 0.7,
+  },
   seeAll: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
@@ -224,3 +244,4 @@ const styles = StyleSheet.create({
     color: colors.teal,
   },
 });
+

@@ -11,6 +11,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -22,6 +24,7 @@ import {
   lineHeights,
   layout,
   motion,
+  shadows,
 } from '../../constants/theme';
 import { accountSetupCopy } from '../../data/appCopy';
 import {
@@ -115,14 +118,7 @@ export default function AccountSetupScreen({
       >
         <View style={styles.headerTop}>
           {onBack ? (
-            <Pressable
-              onPress={onBack}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-            >
-              <Text style={styles.backIcon}>←</Text>
-            </Pressable>
+            <BackButton onPress={onBack} color={colors.white} />
           ) : (
             <View style={styles.backPlaceholder} />
           )}
@@ -213,7 +209,11 @@ export default function AccountSetupScreen({
               <View style={styles.cardTop}>
                 <View style={styles.cardLeading}>
                   <View style={styles.cardAccent} />
-                  <Text style={styles.cardIcon}>{SETUP_TRACK_ICONS[item.track]}</Text>
+                  <AppIcon
+                    glyph={SETUP_TRACK_ICONS[item.track]}
+                    size={fontSizes.heading}
+                    color={colors.tealDeep}
+                  />
                 </View>
                 <View style={styles.cardText}>
                   <Text style={styles.cardTitle}>{SETUP_TRACK_LABELS[item.track]}</Text>
@@ -272,16 +272,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.sm,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 24,
-    color: colors.white,
   },
   backPlaceholder: {
     width: 44,
@@ -364,6 +354,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     minHeight: 44,
+    ...shadows.card,
   },
   exchangeCheckbox: {
     width: 24,
@@ -407,6 +398,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   cardDisabled: {
     opacity: 0.65,
@@ -430,9 +422,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     backgroundColor: colors.teal,
     marginRight: spacing.sm,
-  },
-  cardIcon: {
-    fontSize: fontSizes.heading,
   },
   cardText: {
     flex: 1,

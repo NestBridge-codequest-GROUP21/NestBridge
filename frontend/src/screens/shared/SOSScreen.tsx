@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import EmptyState from '../../components/EmptyState';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -12,6 +14,8 @@ import {
   borderRadius,
   lineHeights,
   layout,
+  shadows,
+  tints,
 } from '../../constants/theme';
 
 export interface EmergencyContact {
@@ -38,7 +42,7 @@ export default function SOSScreen({
 
       <ScreenHeader
         title="Emergency help"
-        subtitle="Help is available whenever you need it."
+        subtitle="Local numbers and trusted contacts — ready when you need them."
         compact
         onBack={onBack}
       />
@@ -54,51 +58,66 @@ export default function SOSScreen({
           accessibilityLabel="Call emergency services"
         >
           <View style={styles.emergencyIconWrap}>
-            <Text style={styles.emergencyIcon}>!</Text>
+            <AppIcon name="call" size={26} color={colors.white} />
           </View>
           <View style={styles.emergencyTextBlock}>
             <Text style={styles.emergencyTitle}>Call emergency services</Text>
             <Text style={styles.emergencySubtitle}>
-              Connect with local emergency responders
+              Reach Ghana’s national emergency line (112)
             </Text>
           </View>
+          <AppIcon name="chevron-forward" size={22} color={colors.white} />
         </Pressable>
 
-        <Text style={styles.listHeading}>Emergency contacts</Text>
+        <Text style={styles.listHeading}>Your emergency contacts</Text>
 
-        <View style={styles.contactList}>
-          {emergencyContacts.map((contact, index) => {
-            const isLast = index === emergencyContacts.length - 1;
+        {emergencyContacts.length === 0 ? (
+          <EmptyState
+            title="No contacts saved yet"
+            body="Add trusted contacts from your profile so you can reach them quickly in an emergency."
+            tip="Campus security and your host family are good starting points."
+            iconName="people-outline"
+          />
+        ) : (
+          <View style={styles.contactList}>
+            {emergencyContacts.map((contact, index) => {
+              const isLast = index === emergencyContacts.length - 1;
 
-            return (
-              <View
-                key={`${contact.label}-${contact.number}`}
-                style={[styles.contactRow, !isLast && styles.contactRowBorder]}
-              >
-                <View style={styles.contactInfo}>
-                  <Text style={styles.contactLabel}>{contact.label}</Text>
-                  <Text style={styles.contactNumber}>{contact.number}</Text>
-                </View>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.callAction,
-                    pressed && styles.pressed,
-                  ]}
-                  onPress={() => onContactCallPress?.(contact)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Call ${contact.label}`}
+              return (
+                <View
+                  key={`${contact.label}-${contact.number}`}
+                  style={[styles.contactRow, !isLast && styles.contactRowBorder]}
                 >
-                  <Text style={styles.callActionText}>Call</Text>
-                </Pressable>
-              </View>
-            );
-          })}
-        </View>
+                  <View style={styles.contactAvatar}>
+                    <AppIcon name="person-outline" size={20} color={colors.tealDeep} />
+                  </View>
+                  <View style={styles.contactInfo}>
+                    <Text style={styles.contactLabel}>{contact.label}</Text>
+                    <Text style={styles.contactNumber}>{contact.number}</Text>
+                  </View>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.callAction,
+                      pressed && styles.callPressed,
+                    ]}
+                    onPress={() => onContactCallPress?.(contact)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Call ${contact.label}`}
+                  >
+                    <AppIcon name="call-outline" size={18} color={colors.white} />
+                    <Text style={styles.callActionText}>Call</Text>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         <View style={styles.footerSpacer} />
 
         <Text style={styles.footerNote}>
-          Your location can be shared with your trusted contacts.
+          In a real emergency, call local services first. NestBridge contacts are
+          a backup — not a replacement for 112.
         </Text>
       </ScreenScroll>
     </View>
@@ -117,50 +136,43 @@ const styles = StyleSheet.create({
   emergencyButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.danger,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: layout.sectionGap,
-    borderWidth: 1,
-    borderColor: colors.border,
     minHeight: 88,
+    ...shadows.raised,
   },
   pressed: {
-    opacity: 0.95,
+    opacity: 0.92,
+    transform: [{ scale: 0.99 }],
   },
   emergencyIconWrap: {
-    width: 48,
-    height: 48,
+    width: 52,
+    height: 52,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
-    borderWidth: 2,
-    borderColor: colors.danger,
+    backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
-  emergencyIcon: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.danger,
-    lineHeight: lineHeights.heading,
-  },
   emergencyTextBlock: {
     flex: 1,
+    paddingRight: spacing.sm,
   },
   emergencyTitle: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
-    color: colors.danger,
+    color: colors.white,
     marginBottom: spacing.xs,
   },
   emergencySubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     lineHeight: lineHeights.body,
-    color: colors.textSecondary,
+    color: colors.white,
+    opacity: 0.9,
   },
   listHeading: {
     fontFamily: fontFamilies.semibold,
@@ -175,21 +187,31 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',
+    ...shadows.card,
   },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     minHeight: 72,
   },
   contactRowBorder: {
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  contactAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.pill,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
   contactInfo: {
     flex: 1,
-    paddingRight: spacing.md,
+    paddingRight: spacing.sm,
   },
   contactLabel: {
     fontFamily: fontFamilies.semibold,
@@ -205,17 +227,23 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   callAction: {
-    minWidth: 44,
-    minHeight: 44,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
+    gap: spacing.xs,
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.tealBright,
+  },
+  callPressed: {
+    opacity: 0.9,
   },
   callActionText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
-    color: colors.teal,
+    color: colors.white,
   },
   footerSpacer: {
     flex: 1,

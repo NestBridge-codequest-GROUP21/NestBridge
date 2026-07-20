@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -13,7 +12,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import InlineBanner from '../../components/InlineBanner';
+import AppIcon from '../../components/AppIcon';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  lineHeights,
+  layout,
+  shadows,
+  tints,
+} from '../../constants/theme';
 
 export interface ForgotPasswordScreenProps {
   email: string;
@@ -54,22 +67,19 @@ export default function ForgotPasswordScreen({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {onBack ? (
-          <Pressable
-            onPress={onBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
+
+        {sent ? (
+          <View style={styles.iconTile}>
+            <AppIcon name="mail-open-outline" size={28} color={colors.tealDeep} />
+          </View>
         ) : null}
 
         <Text style={styles.title}>{sent ? 'Check your inbox' : 'Forgot password?'}</Text>
         <Text style={styles.subtitle}>
           {sent
             ? 'If an account exists for this email, we sent a reset link. Open it on this device, then set a new password in the app.'
-            : 'Enter your email and we will send a link to reset your password.'}
+            : 'Enter the email on your NestBridge account and we will send a reset link.'}
         </Text>
 
         {sent ? (
@@ -81,15 +91,15 @@ export default function ForgotPasswordScreen({
           <FormTextField
             label="Email"
             value={email}
-            placeholder="Enter email address..."
+            placeholder="you@example.com"
             onChangeText={onEmailChange}
             keyboardType="email-address"
             autoCapitalize="none"
           />
         )}
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-        {statusMessage ? <Text style={styles.statusText}>{statusMessage}</Text> : null}
+        {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
+        {statusMessage ? <InlineBanner message={statusMessage} tone="success" /> : null}
 
         {sent ? (
           <SecondaryButton label="Back to sign in" onPress={onBack} />
@@ -111,30 +121,33 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backIcon: {
-    fontSize: 24,
-    color: colors.textPrimary,
+  iconTile: {
+    width: 64,
+    height: 64,
+    borderRadius: borderRadius.pill,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   title: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.xl,
   },
   emailCard: {
@@ -144,25 +157,18 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.lg,
+    ...shadows.card,
   },
   emailLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
   emailValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-  },
-  errorText: {
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
-  },
-  statusText: {
-    fontSize: fontSizes.body,
-    color: colors.success,
-    marginBottom: spacing.md,
   },
 });

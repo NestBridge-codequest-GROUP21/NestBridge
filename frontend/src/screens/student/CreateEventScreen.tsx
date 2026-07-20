@@ -5,6 +5,7 @@ import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import PrimaryButton from '../../components/PrimaryButton';
 import AppIcon from '../../components/AppIcon';
+import InlineBanner from '../../components/InlineBanner';
 import {
   colors,
   fontFamilies,
@@ -12,6 +13,7 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  lineHeights,
 } from '../../constants/theme';
 import {
   EVENT_ORGANIZER_META,
@@ -84,7 +86,7 @@ export default function CreateEventScreen({
       <StatusBar style="light" />
       <ScreenHeader
         title="Host an event"
-        subtitle="Set up a party, trip, or hangout for other students"
+        subtitle="Invite other students to a meetup, trip, or hangout around campus"
         onBack={onBack}
       />
 
@@ -161,7 +163,7 @@ export default function CreateEventScreen({
         <Text style={styles.label}>Location</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g. Campus common room, Block C"
+          placeholder="e.g. UG common room, Legon"
           placeholderTextColor={colors.textTertiary}
           value={location}
           onChangeText={setLocation}
@@ -192,7 +194,7 @@ export default function CreateEventScreen({
           accessibilityLabel="Description"
         />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? <InlineBanner message={error} tone="error" style={styles.errorBanner} /> : null}
 
         <PrimaryButton
           label={submitting ? 'Posting…' : 'Post event'}
@@ -201,7 +203,7 @@ export default function CreateEventScreen({
           style={styles.submit}
         />
         <Text style={styles.helper}>
-          Your event appears in the Student events feed for others to join.
+          Your event appears in the Student events feed for others nearby to join.
         </Text>
       </ScreenScroll>
     </View>
@@ -220,6 +222,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: spacing.sm,
     marginTop: spacing.md,
+    lineHeight: lineHeights.body,
   },
   input: {
     backgroundColor: colors.white,
@@ -232,6 +235,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textPrimary,
+    lineHeight: lineHeights.body,
   },
   textArea: {
     minHeight: 108,
@@ -257,9 +261,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.teal,
     borderColor: colors.teal,
   },
-  chipIcon: {
-    fontSize: fontSizes.caption,
-  },
   chipText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
@@ -269,11 +270,9 @@ const styles = StyleSheet.create({
   chipTextActive: {
     color: colors.white,
   },
-  error: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.danger,
+  errorBanner: {
     marginTop: spacing.md,
+    marginBottom: 0,
   },
   submit: {
     marginTop: spacing.lg,
@@ -281,8 +280,10 @@ const styles = StyleSheet.create({
   helper: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     textAlign: 'center',
     marginTop: spacing.md,
+    lineHeight: lineHeights.caption,
   },
 });

@@ -8,6 +8,7 @@ import {
   borderRadius,
   spacing,
   layout,
+  shadows,
 } from '../constants/theme';
 
 export interface SosCircleButtonProps {
@@ -45,11 +46,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: spacing.xs,
     borderColor: colors.white,
-    shadowColor: colors.navy,
-    shadowOpacity: 0.22,
-    shadowRadius: spacing.sm,
-    shadowOffset: { width: 0, height: spacing.xs },
-    elevation: 6,
+    ...shadows.floating,
   },
   pressed: {
     opacity: 0.88,

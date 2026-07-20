@@ -10,16 +10,21 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import InlineBanner from '../../components/InlineBanner';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
   layout,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import type { WelfareCheckInQuestion } from '../../data/welfareMock';
 import { welfareCheckInIntro } from '../../data/welfareMock';
@@ -64,14 +69,7 @@ export default function WelfareCheckInScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
         <Text style={styles.headerTitle}>Welfare check-in</Text>
         <Text style={styles.headerSubtitle}>
           Stay with {hostName} · {checkIn} – {checkOut}
@@ -88,7 +86,7 @@ export default function WelfareCheckInScreen({
       >
         <Text style={styles.intro}>{welfareCheckInIntro}</Text>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
         {isLoading ? (
           <ActivityIndicator color={colors.teal} style={styles.loader} />
         ) : null}
@@ -187,24 +185,18 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     marginBottom: spacing.sm,
   },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
-  },
   headerTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
     marginBottom: spacing.sm,
   },
   headerSubtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.white,
     opacity: 0.88,
@@ -218,15 +210,11 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   intro: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
-  },
-  errorText: {
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
   },
   loader: {
     marginVertical: spacing.lg,
@@ -237,17 +225,20 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   doneTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   doneBody: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   questionCard: {
     backgroundColor: colors.white,
@@ -256,13 +247,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   questionText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.md,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   answerRow: {
     flexDirection: 'row',
@@ -286,6 +279,7 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   answerLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     fontWeight: fontWeights.semibold,
@@ -299,6 +293,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   sosLinkText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     color: colors.danger,
     fontWeight: fontWeights.semibold,

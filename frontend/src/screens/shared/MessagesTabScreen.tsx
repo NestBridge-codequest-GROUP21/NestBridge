@@ -10,6 +10,8 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
 import {
   colors,
   fontFamilies,
@@ -17,6 +19,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  shadows,
+  lineHeights,
 } from '../../constants/theme';
 import type { ConversationListItem } from '../../types/messaging';
 
@@ -79,20 +83,21 @@ export default function MessagesTabScreen({
         greeting="Messages"
         userName={userName}
         userInitials={userInitials}
-        subtitle="Chat with hosts, guides, and guests"
+        subtitle="Hosts, guides, and guests in Ghana"
         compact
       />
       <ScreenScroll withTabBar withSosDock={showSosDock}>
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
         {isLoading ? (
           <ActivityIndicator color={colors.teal} style={styles.loader} />
         ) : null}
         {!isLoading && conversations.length === 0 ? (
-          <View style={styles.emptyBlock}>
-            <Text style={styles.emptyTitle}>{emptyState.title}</Text>
-            <Text style={styles.emptyBody}>{emptyState.body}</Text>
-            {emptyState.tip ? <Text style={styles.emptyTip}>{emptyState.tip}</Text> : null}
-          </View>
+          <EmptyState
+            title={emptyState.title}
+            body={emptyState.body}
+            tip={emptyState.tip}
+            iconName="chatbubble-ellipses-outline"
+          />
         ) : null}
         {conversations.map((conversation, index) => (
           <Pressable
@@ -152,35 +157,6 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: spacing.xl,
   },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.danger,
-    marginBottom: spacing.md,
-  },
-  emptyBlock: {
-    backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-  },
-  emptyTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptyBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  emptyTip: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textTertiary,
-  },
   row: {
     flexDirection: 'row',
     backgroundColor: colors.white,
@@ -190,6 +166,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     minHeight: 44,
+    ...shadows.card,
   },
   rowBorder: {},
   pressed: {
@@ -247,7 +224,7 @@ const styles = StyleSheet.create({
   unreadBadge: {
     minWidth: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: borderRadius.pill,
     backgroundColor: colors.danger,
     alignItems: 'center',
     justifyContent: 'center',
@@ -255,7 +232,8 @@ const styles = StyleSheet.create({
   },
   unreadText: {
     fontFamily: fontFamilies.bold,
-    fontSize: 10,
+    fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.white,
   },
   role: {

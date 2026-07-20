@@ -4,11 +4,11 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import IncomingRequestCard, {
   IncomingRequestsEmptyBlock,
 } from '../../components/IncomingRequestCard';
@@ -18,7 +18,6 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
   gradients,
   lineHeights,
 } from '../../constants/theme';
@@ -63,14 +62,11 @@ export default function IncomingRequestsScreen({
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
         {onBack ? (
-          <Pressable
+          <BackButton
             onPress={onBack}
+            color={colors.white}
             style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
+          />
         ) : (
           <View style={styles.backPlaceholder} />
         )}
@@ -117,21 +113,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
     marginBottom: spacing.sm,
+    marginLeft: -spacing.sm,
   },
   backPlaceholder: {
     height: spacing.sm,
     marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
   },
   headerTitle: {
     fontFamily: fontFamilies.bold,

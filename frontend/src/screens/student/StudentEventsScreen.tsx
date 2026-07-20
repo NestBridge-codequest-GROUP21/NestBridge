@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppIcon from '../../components/AppIcon';
+import EmptyState from '../../components/EmptyState';
 import {
   colors,
   fontFamilies,
@@ -11,6 +12,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import {
   EVENT_ORGANIZER_META,
@@ -108,7 +111,7 @@ function EventCard({
             <Text
               style={[styles.joinButtonText, joined && styles.joinButtonTextJoined]}
             >
-              {joined ? 'Joined ✓' : isFull ? 'Full' : 'Join'}
+              {joined ? 'Joined' : isFull ? 'Full' : 'Join'}
             </Text>
           </Pressable>
         )}
@@ -135,7 +138,7 @@ export default function StudentEventsScreen({
       <StatusBar style="light" />
       <ScreenHeader
         title="Student events"
-        subtitle="Meetups, trips & get-togethers for exchange students"
+        subtitle="Meetups, campus trips, and get-togethers for students in Ghana"
         onBack={onBack}
       />
 
@@ -152,9 +155,10 @@ export default function StudentEventsScreen({
           <View style={styles.createTextWrap}>
             <Text style={styles.createTitle}>Host your own</Text>
             <Text style={styles.createSubtitle}>
-              Post a party, trip, or hangout for other students to join
+              Post a cook-out, trip, or hangout for other students to join
             </Text>
           </View>
+          <AppIcon name="chevron-forward" size={fontSizes.body} color={colors.teal} />
         </Pressable>
 
         {showLoading ? (
@@ -163,27 +167,20 @@ export default function StudentEventsScreen({
             <Text style={styles.stateText}>Loading events…</Text>
           </View>
         ) : showError ? (
-          <View style={styles.emptyBlock}>
-            <Text style={styles.emptyTitle}>Couldn't load events</Text>
-            <Text style={styles.emptyBody}>{error}</Text>
-            {onRetry ? (
-              <Pressable
-                style={({ pressed }) => [styles.retryButton, pressed && styles.retryPressed]}
-                onPress={onRetry}
-                accessibilityRole="button"
-                accessibilityLabel="Try again"
-              >
-                <Text style={styles.retryText}>Try again</Text>
-              </Pressable>
-            ) : null}
-          </View>
+          <EmptyState
+            iconName="cloud-offline-outline"
+            title="Couldn't load events"
+            body={error ?? 'Something went wrong. Please try again.'}
+            primaryActionLabel={onRetry ? 'Try again' : undefined}
+            onPrimaryAction={onRetry}
+          />
         ) : events.length === 0 ? (
-          <View style={styles.emptyBlock}>
-            <Text style={styles.emptyTitle}>No events yet</Text>
-            <Text style={styles.emptyBody}>
-              Be the first to bring students together — tap “Host your own” above.
-            </Text>
-          </View>
+          <EmptyState
+            iconName="balloon-outline"
+            title="No events yet"
+            body="Be the first to bring students together — tap Host your own above."
+            tip="Cook-outs, market walks, and weekend trips fill up fast near campus."
+          />
         ) : (
           events.map((event) => (
             <EventCard
@@ -214,6 +211,8 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.lg,
     gap: spacing.md,
+    minHeight: 72,
+    ...shadows.card,
   },
   createCardPressed: {
     opacity: 0.92,
@@ -226,11 +225,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  createIcon: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    color: colors.white,
-  },
   createTextWrap: {
     flex: 1,
   },
@@ -240,11 +234,14 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
+    lineHeight: lineHeights.subheading,
   },
   createSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
   },
   card: {
     backgroundColor: colors.white,
@@ -253,6 +250,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.lg,
     marginBottom: spacing.md,
+    ...shadows.card,
   },
   tagRow: {
     flexDirection: 'row',
@@ -270,9 +268,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     gap: spacing.xs,
   },
-  typeTagIcon: {
-    fontSize: fontSizes.caption,
-  },
   typeTagText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
@@ -288,6 +283,7 @@ const styles = StyleSheet.create({
   organizerTagText: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
   yoursTag: {
@@ -308,6 +304,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.subheading,
   },
   organizerRow: {
     flexDirection: 'row',
@@ -326,11 +323,13 @@ const styles = StyleSheet.create({
   avatarText: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.bold,
     color: colors.white,
   },
   organizerName: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
   metaRow: {
@@ -339,21 +338,22 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
-  metaIcon: {
-    fontSize: fontSizes.caption,
-  },
   metaText: {
     flex: 1,
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
   },
   description: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
     marginTop: spacing.sm,
     marginBottom: spacing.md,
+    lineHeight: lineHeights.body,
   },
   footer: {
     flexDirection: 'row',
@@ -421,42 +421,8 @@ const styles = StyleSheet.create({
   stateText: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-  },
-  emptyBlock: {
-    backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-  },
-  retryButton: {
-    marginTop: spacing.md,
-    alignSelf: 'flex-start',
-    minHeight: 44,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.tealBright,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  retryPressed: {
-    opacity: 0.9,
-  },
-  retryText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  emptyTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptyBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
+    lineHeight: lineHeights.body,
   },
 });

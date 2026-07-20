@@ -19,7 +19,14 @@ import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
 import ReminderBanner from '../../components/ReminderBanner';
-import { colors, fontFamilies, fontSizes, fontWeights, spacing } from '../../constants/theme';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  lineHeights,
+} from '../../constants/theme';
 import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
 
 export interface ExploreSectionItem {
@@ -116,7 +123,7 @@ export default function ExploreHomeScreen({
       <ScreenScroll withTabBar withSosDock={showSosDock}>
         {showSetupBanner ? (
           <ProfileIncompleteBanner
-            message="Add your travel details to unlock booking."
+            message="Add your travel dates and city to unlock booking in Ghana."
             onContinueSetup={onSetupPress}
           />
         ) : null}
@@ -185,6 +192,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
+    lineHeight: lineHeights.heading,
     marginBottom: spacing.md,
     paddingHorizontal: spacing.lg,
   },

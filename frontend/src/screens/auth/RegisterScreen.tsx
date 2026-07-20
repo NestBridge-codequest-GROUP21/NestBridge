@@ -13,8 +13,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
+import BackButton from '../../components/BackButton';
+import InlineBanner from '../../components/InlineBanner';
+import AppIcon from '../../components/AppIcon';
 import type { DemoAccount } from '../../data/demoAccounts';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  lineHeights,
+  layout,
+  shadows,
+} from '../../constants/theme';
 
 export interface RegisterScreenProps {
   title: string;
@@ -72,11 +85,7 @@ export default function RegisterScreen({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {onBack && (
-          <Pressable onPress={onBack} style={styles.backBtn} accessibilityRole="button">
-            <Text style={styles.backText}>← Back</Text>
-          </Pressable>
-        )}
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
@@ -92,7 +101,7 @@ export default function RegisterScreen({
           <FormTextField
             label="Email address"
             value={email}
-            placeholder="Enter email address..."
+            placeholder="you@example.com"
             onChangeText={onEmailChange}
             keyboardType="email-address"
             autoCapitalize="none"
@@ -100,7 +109,7 @@ export default function RegisterScreen({
           <FormTextField
             label="Password"
             value={password}
-            placeholder="Create a password..."
+            placeholder="At least 6 characters"
             onChangeText={onPasswordChange}
             secureTextEntry
             visibilityToggle
@@ -116,33 +125,33 @@ export default function RegisterScreen({
             accessibilityState={{ checked: keepSignedIn }}
           >
             <View style={[styles.checkbox, keepSignedIn && styles.checkboxChecked]}>
-              {keepSignedIn && <Text style={styles.checkmark}>✓</Text>}
+              {keepSignedIn ? (
+                <AppIcon name="checkmark" size={14} color={colors.white} />
+              ) : null}
             </View>
             <Text style={styles.checkboxLabel}>Keep me signed in on this device</Text>
           </Pressable>
         </View>
 
-        {errorMessage ? (
-          <View style={styles.errorBanner} accessibilityLiveRegion="polite">
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          </View>
-        ) : null}
+        {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
-        <PrimaryButton label="Create Account" onPress={onSubmit} />
+        <PrimaryButton label="Create account" onPress={onSubmit} />
 
         {demoAccounts.length > 0 ? (
-          <DemoActorQuickLogin
-            accounts={demoAccounts}
-            busy={demoLoginBusy}
-            variant="tabs"
-            title="Or try a demo account"
-            onSelect={onDemoLogin}
-          />
+          <View style={styles.demoWrap}>
+            <DemoActorQuickLogin
+              accounts={demoAccounts}
+              busy={demoLoginBusy}
+              variant="tabs"
+              title="Or use quick sign-in"
+              onSelect={onDemoLogin}
+            />
+          </View>
         ) : null}
 
         <Pressable onPress={onSignInPress} style={styles.footerLink}>
           <Text style={styles.footerText}>
-            Already have an account? <Text style={styles.footerLinkBold}>Sign In</Text>
+            Already have an account? <Text style={styles.footerLinkBold}>Sign in</Text>
           </Text>
         </Pressable>
       </ScrollView>
@@ -156,30 +165,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backBtn: {
-    minHeight: 44,
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backText: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
   title: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
   },
   formCard: {
     backgroundColor: colors.white,
@@ -188,6 +192,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   checkboxRow: {
     flexDirection: 'row',
@@ -209,30 +214,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.teal,
     borderColor: colors.teal,
   },
-  checkmark: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
   checkboxLabel: {
     flex: 1,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
-  errorBanner: {
-    backgroundColor: colors.warmCream,
-    borderWidth: 1,
-    borderColor: colors.danger,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    lineHeight: 20,
+  demoWrap: {
+    marginTop: spacing.lg,
   },
   footerLink: {
     alignItems: 'center',
@@ -241,10 +231,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   footerText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
   },
   footerLinkBold: {
+    fontFamily: fontFamilies.bold,
     fontWeight: fontWeights.bold,
     color: colors.teal,
   },

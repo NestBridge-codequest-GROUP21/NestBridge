@@ -72,7 +72,7 @@ const STUDENT_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'budget',
-      question: "What's your budget range per night?",
+      question: "What's your nightly budget in Ghana?",
       type: 'single-select',
       options: [
         'Under GHS 100',
@@ -86,7 +86,7 @@ const STUDENT_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'languagePractice',
-      question: 'Which language would you like to practice while here?',
+      question: 'Which language would you like to practice while in Ghana?',
       type: 'single-select',
       options: [...LANGUAGE_OPTIONS, 'None'],
       required: false,
@@ -112,7 +112,7 @@ const STUDENT_PAGES: QuizPageDefinition[] = [
       id: 'additionalNotes',
       question: 'Anything else important for your host to know?',
       type: 'text',
-      placeholder: 'Share anything that helps your host welcome you',
+      placeholder: 'Routines, access needs, or welcome tips for your stay',
       required: false,
     },
   ],

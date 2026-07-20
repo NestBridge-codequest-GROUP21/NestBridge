@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import ProgressBar from '../../components/ProgressBar';
+import AppIcon from '../../components/AppIcon';
+import EmptyState from '../../components/EmptyState';
 import type { ChecklistTask } from '../../data/featureScreensMock';
 import {
   colors,
@@ -12,6 +14,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 
 export interface PrepChecklistScreenProps {
@@ -34,7 +38,7 @@ function ProgressRing({ completed, total }: { completed: number; total: number }
       <Text style={styles.progressCount}>
         {completed}/{total}
       </Text>
-      <Text style={styles.progressLabel}>Completed</Text>
+      <Text style={styles.progressLabel}>Done</Text>
       <Text style={styles.progressPercent}>{percent}%</Text>
     </View>
   );
@@ -97,7 +101,9 @@ export default function PrepChecklistScreen({
         accessibilityLabel={task.label}
       >
         <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
-          {task.completed ? <Text style={styles.checkmark}>✓</Text> : null}
+          {task.completed ? (
+            <AppIcon name="checkmark" size={fontSizes.caption} color={colors.white} />
+          ) : null}
         </View>
         <Text
           style={[styles.taskLabel, task.completed && styles.taskLabelCompleted]}
@@ -108,11 +114,11 @@ export default function PrepChecklistScreen({
       <Pressable
         style={({ pressed }) => [styles.deleteButton, pressed && styles.deletePressed]}
         onPress={() => onDelete(task.id)}
-        hitSlop={8}
+        hitSlop={spacing.sm}
         accessibilityRole="button"
         accessibilityLabel={`Delete ${task.label}`}
       >
-        <Text style={styles.deleteIcon}>✕</Text>
+        <AppIcon name="close" size={fontSizes.body} color={colors.textTertiary} />
       </Pressable>
     </View>
   );
@@ -131,24 +137,39 @@ export default function PrepChecklistScreen({
 
       <ScreenScroll keyboardShouldPersistTaps="handled">
         <View style={styles.titleRow}>
-          <Text style={styles.screenTitle}>Prep & Packing Checklist</Text>
+          <View style={styles.titleTextWrap}>
+            <Text style={styles.screenTitle}>Prep & packing</Text>
+            <Text style={styles.screenSubtitle}>
+              Get ready for your stay — adapters, documents, and local essentials.
+            </Text>
+          </View>
           <ProgressRing completed={completedCount} total={allTasks.length} />
         </View>
 
         <ProgressBar percent={percent} style={styles.progressBar} />
 
-        <View style={styles.taskList}>
-          {tasks.map((task) =>
-            renderTaskRow(
-              task,
-              (id) => onToggleTask?.(id),
-              (id) => onDeleteTask?.(id),
-            ),
-          )}
-          {customTasks.map((task) =>
-            renderTaskRow(task, handleToggleCustom, handleDeleteCustom),
-          )}
-        </View>
+        {allTasks.length === 0 ? (
+          <EmptyState
+            iconName="clipboard-outline"
+            title="Your checklist is empty"
+            body="Add items you need before arrival — travel adapter, MoMo float, and copies of your documents."
+            tip="Use the field below to add anything you don't want to forget."
+            style={styles.emptyState}
+          />
+        ) : (
+          <View style={styles.taskList}>
+            {tasks.map((task) =>
+              renderTaskRow(
+                task,
+                (id) => onToggleTask?.(id),
+                (id) => onDeleteTask?.(id),
+              ),
+            )}
+            {customTasks.map((task) =>
+              renderTaskRow(task, handleToggleCustom, handleDeleteCustom),
+            )}
+          </View>
+        )}
 
         <View style={styles.addCard}>
           <Text style={styles.addTitle}>Add your own item</Text>
@@ -157,7 +178,7 @@ export default function PrepChecklistScreen({
               style={styles.addInput}
               value={newItemLabel}
               onChangeText={setNewItemLabel}
-              placeholder="e.g. Travel adapter"
+              placeholder="e.g. UK plug adapter / MoMo float"
               placeholderTextColor={colors.textTertiary}
               onSubmitEditing={handleAddItem}
               returnKeyType="done"
@@ -192,14 +213,25 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: spacing.lg,
+    gap: spacing.md,
+  },
+  titleTextWrap: {
+    flex: 1,
   },
   screenTitle: {
-    flex: 1,
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
-    paddingRight: spacing.md,
+    lineHeight: lineHeights.heading,
+    marginBottom: spacing.xs,
+  },
+  screenSubtitle: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
   },
   progressRing: {
     alignItems: 'center',
@@ -209,25 +241,35 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     minWidth: 88,
+    ...shadows.card,
   },
   progressCount: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
     color: colors.teal,
+    lineHeight: lineHeights.subheading,
   },
   progressLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+    lineHeight: lineHeights.caption,
   },
   progressPercent: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.success,
     marginTop: spacing.xs,
+    lineHeight: lineHeights.caption,
   },
   progressBar: {
+    marginBottom: spacing.lg,
+  },
+  emptyState: {
     marginBottom: spacing.lg,
   },
   taskList: {
@@ -245,6 +287,7 @@ const styles = StyleSheet.create({
     paddingRight: spacing.sm,
     minHeight: 56,
     gap: spacing.xs,
+    ...shadows.card,
   },
   taskMain: {
     flex: 1,
@@ -263,11 +306,6 @@ const styles = StyleSheet.create({
   deletePressed: {
     opacity: 0.6,
   },
-  deleteIcon: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    color: colors.textTertiary,
-  },
   checkbox: {
     width: 28,
     height: 28,
@@ -281,16 +319,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
     borderColor: colors.success,
   },
-  checkmark: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    color: colors.white,
-  },
   taskLabel: {
     flex: 1,
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
+    lineHeight: lineHeights.body,
   },
   taskLabelCompleted: {
     color: colors.textSecondary,
@@ -303,6 +338,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
+    ...shadows.card,
   },
   addTitle: {
     fontFamily: fontFamilies.semibold,

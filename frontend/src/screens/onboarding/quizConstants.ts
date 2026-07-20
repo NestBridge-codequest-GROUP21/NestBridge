@@ -49,7 +49,7 @@ export const RELIGION_ACCOMMODATION_OPTIONS = [
 export function createReligiousAccommodationsFollowUp(): QuizQuestion {
   return {
     id: 'religiousAccommodations',
-    question: 'Which accommodations matter to you?',
+    question: 'Which religious accommodations matter for your stay?',
     type: 'multi-select',
     options: RELIGION_ACCOMMODATION_OPTIONS,
     required: true,
@@ -66,7 +66,7 @@ export function createReligionOtherFollowUp(fieldId = 'religion'): QuizQuestion 
     id: 'religionOther',
     question: 'Which religion or tradition?',
     type: 'text',
-    placeholder: 'Tell us which tradition',
+    placeholder: 'e.g. Traditional African, Hindu, Baháʼí',
     required: true,
     showWhen: {
       fieldId,

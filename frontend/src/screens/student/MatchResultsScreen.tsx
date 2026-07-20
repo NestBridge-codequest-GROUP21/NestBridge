@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppIcon from '../../components/AppIcon';
+import EmptyState from '../../components/EmptyState';
 import {
   colors,
   fontFamilies,
@@ -19,6 +20,8 @@ import {
   borderRadius,
   gradients,
   layout,
+  shadows,
+  lineHeights,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
 export { sampleMatchResults } from '../../data/matchResultsMock';
@@ -123,26 +126,16 @@ function HostMatchCard({
   );
 }
 
-function MapPlaceholder() {
+function MapComingSoon() {
   return (
     <View style={styles.mapPlaceholder}>
-      <LinearGradient
-        colors={[colors.warmCream, colors.background]}
-        style={styles.mapSurface}
-      >
-        <View style={styles.mapGridLineHorizontal} />
-        <View style={styles.mapGridLineVertical} />
-        <View style={styles.mapPin}>
-          <View style={styles.mapPinDot} />
-        </View>
-        <View style={[styles.mapPin, styles.mapPinSecondary]}>
-          <View style={styles.mapPinDot} />
-        </View>
-      </LinearGradient>
-      <Text style={styles.mapTitle}>Host area overview</Text>
-      <Text style={styles.mapSubtitle}>
-        Browse matched hosts in the list below.
-      </Text>
+      <EmptyState
+        title="Map view unavailable"
+        body="Browse matched hosts in the list for now. Map pins will appear here once location view is ready."
+        tip="List order is still your best-to-least match ranking."
+        iconName="map-outline"
+        carded
+      />
     </View>
   );
 }
@@ -186,13 +179,13 @@ export default function MatchResultsScreen({
           <Text style={styles.headerTitle}>{destinationLabel}</Text>
         </LinearGradient>
         <View style={styles.errorWrap}>
-          <Text style={styles.errorTitle}>Could not load matches</Text>
-          <Text style={styles.errorBody}>{errorMessage}</Text>
-          {onRetry ? (
-            <Pressable onPress={onRetry} style={styles.retryButton} accessibilityRole="button" accessibilityLabel="Try again">
-              <Text style={styles.retryLabel}>Try again</Text>
-            </Pressable>
-          ) : null}
+          <EmptyState
+            title="Could not load matches"
+            body={errorMessage}
+            iconName="cloud-offline-outline"
+            primaryActionLabel={onRetry ? 'Try again' : undefined}
+            onPrimaryAction={onRetry}
+          />
         </View>
       </View>
     );
@@ -219,13 +212,14 @@ export default function MatchResultsScreen({
           <Text style={styles.headerSubtitle}>No hosts matched your search yet</Text>
         </LinearGradient>
         <View style={styles.errorWrap}>
-          <Text style={styles.errorTitle}>No matches found</Text>
-          <Text style={styles.errorBody}>Try widening your budget or adjusting your dates, then search again.</Text>
-          {onBack ? (
-            <Pressable onPress={onBack} style={styles.retryButton} accessibilityRole="button" accessibilityLabel="Edit search">
-              <Text style={styles.retryLabel}>Edit search</Text>
-            </Pressable>
-          ) : null}
+          <EmptyState
+            title="No matches found"
+            body="Try widening your budget or adjusting your dates, then search again."
+            tip="Hosts near campus in Accra and Kumasi fill up fast — a flexible date range helps."
+            iconName="search-outline"
+            primaryActionLabel={onBack ? 'Edit search' : undefined}
+            onPrimaryAction={onBack}
+          />
         </View>
       </View>
     );
@@ -307,7 +301,7 @@ export default function MatchResultsScreen({
         </ScrollView>
       ) : (
         <View style={[styles.mapContainer, { paddingBottom: insets.bottom + spacing.lg }]}>
-          <MapPlaceholder />
+          <MapComingSoon />
         </View>
       )}
     </View>
@@ -394,17 +388,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   hostCard: {
-    width: 300,
+    width: layout.listingCardWidth + spacing.xl,
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    ...shadows.raised,
   },
   hostCardPressed: {
     opacity: 0.96,
@@ -509,7 +499,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textPrimary,
-    lineHeight: fontSizes.body + 6,
+    lineHeight: lineHeights.body,
   },
   priceRow: {
     flexDirection: 'row',
@@ -544,113 +534,11 @@ const styles = StyleSheet.create({
   },
   mapPlaceholder: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-  },
-  mapSurface: {
-    width: '100%',
-    height: 280,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    marginBottom: spacing.lg,
-  },
-  mapGridLineHorizontal: {
-    position: 'absolute',
-    top: '45%',
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: colors.border,
-    opacity: 0.7,
-  },
-  mapGridLineVertical: {
-    position: 'absolute',
-    left: '55%',
-    top: 0,
-    bottom: 0,
-    width: 1,
-    backgroundColor: colors.border,
-    opacity: 0.7,
-  },
-  mapPin: {
-    position: 'absolute',
-    top: '38%',
-    left: '48%',
-    width: 28,
-    height: 28,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  mapPinSecondary: {
-    top: '58%',
-    left: '62%',
-    borderColor: colors.tealBright,
-  },
-  mapPinDot: {
-    width: 8,
-    height: 8,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.teal,
-  },
-  mapTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  mapSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    paddingHorizontal: spacing.lg,
   },
   errorWrap: {
     flex: 1,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.xl,
-    alignItems: 'center',
-  },
-  errorTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  errorBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  retryButton: {
-    minHeight: 44,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.tealBright,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  retryLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    color: colors.white,
   },
 });

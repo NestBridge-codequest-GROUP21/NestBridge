@@ -8,6 +8,7 @@ import {
   spacing,
   borderRadius,
   lineHeights,
+  shadows,
 } from '../constants/theme';
 
 export interface FeaturedHomeCardProps {
@@ -84,11 +85,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    ...shadows.raised,
   },
   pressed: {
     opacity: 0.94,

@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import InlineBanner from '../../components/InlineBanner';
 import { devTestingCopy } from '../../data/appCopy';
 import type { DemoAccount } from '../../data/demoAccounts';
 import { DEMO_ACTOR_ACCOUNTS, DEMO_PASSWORD } from '../../data/demoAccounts';
@@ -128,14 +130,7 @@ export default function DevTestingScreen({
       >
         <View style={styles.headerTop}>
           {onBack ? (
-            <Pressable
-              onPress={onBack}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-            >
-              <Text style={styles.backIcon}>←</Text>
-            </Pressable>
+            <BackButton onPress={onBack} color={colors.white} />
           ) : (
             <View style={styles.backPlaceholder} />
           )}
@@ -156,7 +151,7 @@ export default function DevTestingScreen({
         <DevSection title={devTestingCopy.demoActorsTitle}>
           <Text style={styles.sectionBody}>{devTestingCopy.demoActorsHint}</Text>
           {demoLoginError ? (
-            <Text style={styles.demoErrorText}>{demoLoginError}</Text>
+            <InlineBanner tone="error" message={demoLoginError} />
           ) : null}
           {DEMO_ACTOR_ACCOUNTS.map((account) => (
             <DevButton
@@ -249,16 +244,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.sm,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 24,
-    color: colors.white,
-  },
   backPlaceholder: {
     width: 44,
     height: 44,
@@ -329,11 +314,5 @@ const styles = StyleSheet.create({
   },
   devButtonTextDanger: {
     color: colors.white,
-  },
-  demoErrorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
   },
 });

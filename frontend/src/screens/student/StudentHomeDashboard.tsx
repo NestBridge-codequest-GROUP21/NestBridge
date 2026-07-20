@@ -18,8 +18,16 @@ import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
 import ReminderBanner from '../../components/ReminderBanner';
+import InlineBanner from '../../components/InlineBanner';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
-import { colors, spacing, fontFamilies, fontSizes, fontWeights } from '../../constants/theme';
+import {
+  colors,
+  spacing,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  lineHeights,
+} from '../../constants/theme';
 import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 
 export type { TabBarItem } from '../../components/AppTabBar';
@@ -122,8 +130,9 @@ export default function StudentHomeDashboard({
         ) : null}
 
         {isHomeLoading ? (
-          <View style={styles.loadingWrap}>
+          <View style={styles.loadingWrap} accessibilityRole="progressbar" accessibilityLabel="Loading your home">
             <ActivityIndicator size="large" color={colors.teal} />
+            <Text style={styles.loadingLabel}>Loading your home…</Text>
           </View>
         ) : null}
 
@@ -172,12 +181,12 @@ export default function StudentHomeDashboard({
 
         <RecentActivityList items={recentActivity} />
 
-        {homeDataError || reminder ? (
-          <ReminderBanner
-            icon={homeDataError ? '⚠️' : '🔔'}
-            message={homeDataError ?? reminder ?? ''}
-            onPress={onReminderPress}
-          />
+        {homeDataError ? (
+          <View style={styles.bannerPad}>
+            <InlineBanner message={homeDataError} tone="error" />
+          </View>
+        ) : reminder ? (
+          <ReminderBanner icon="🔔" message={reminder} onPress={onReminderPress} />
         ) : null}
       </ScreenScroll>
 
@@ -212,5 +221,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xl,
     marginBottom: spacing.lg,
+    gap: spacing.md,
+  },
+  loadingLabel: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.body,
+  },
+  bannerPad: {
+    paddingHorizontal: spacing.lg,
   },
 });

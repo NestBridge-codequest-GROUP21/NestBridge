@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import InlineBanner from '../../components/InlineBanner';
 import MonthCalendarGrid, {
   buildGuideCalendarGrid,
 } from '../../components/MonthCalendarGrid';
@@ -15,6 +16,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 
 export interface GuideAvailabilityScreenProps {
@@ -50,7 +53,7 @@ function ShiftDetailCard({
       return (
         <View style={styles.shiftCard}>
           <Text style={styles.shiftTitle}>No shifts scheduled</Text>
-          <Text style={styles.shiftDetail}>Tap a day to manage availability</Text>
+          <Text style={styles.shiftDetailMuted}>Tap a day to manage availability</Text>
         </View>
       );
     }
@@ -165,7 +168,9 @@ export default function GuideAvailabilityScreen({
           onDayPress={handleDayPress}
         />
 
-        {statusMessage ? <Text style={styles.statusMessage}>{statusMessage}</Text> : null}
+        {statusMessage ? (
+          <InlineBanner message={statusMessage} tone="info" style={styles.statusBanner} />
+        ) : null}
 
         <ShiftDetailCard
           shifts={selectedShifts}
@@ -192,14 +197,13 @@ const styles = StyleSheet.create({
   screenSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
+    lineHeight: lineHeights.body,
   },
-  statusMessage: {
-    marginTop: spacing.sm,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
+  statusBanner: {
+    marginTop: spacing.md,
   },
   shiftCard: {
     marginTop: spacing.lg,
@@ -207,11 +211,13 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: spacing.md,
+    padding: spacing.lg,
+    ...shadows.card,
   },
   shiftTitle: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -222,6 +228,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
+    minHeight: 44,
   },
   shiftToggleRow: {
     flexDirection: 'row',
@@ -245,6 +252,14 @@ const styles = StyleSheet.create({
   shiftDetail: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
+  },
+  shiftDetailMuted: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.body,
   },
 });

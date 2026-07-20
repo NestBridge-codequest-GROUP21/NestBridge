@@ -9,6 +9,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeader from '../../components/ScreenHeader';
+import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import type { MapLandmark } from '../../data/featureScreensMock';
 import {
@@ -19,6 +20,8 @@ import {
   spacing,
   borderRadius,
   layout,
+  shadows,
+  lineHeights,
 } from '../../constants/theme';
 
 export interface OfflineMapScreenProps {
@@ -67,7 +70,7 @@ export default function OfflineMapScreen({
       <View style={styles.mapArea}>
         <View style={styles.offlineBanner}>
           <Text style={styles.bannerText}>
-            OFFLINE MODE ACTIVE — {regionLabel} ({downloadSize})
+            Offline map · {regionLabel} ({downloadSize})
           </Text>
         </View>
 
@@ -117,18 +120,24 @@ export default function OfflineMapScreen({
       </View>
 
       <View style={[styles.searchPanel, { paddingBottom: insets.bottom + spacing.md }]}>
+        <InlineBanner
+          tone="info"
+          message="Works without data — useful for first days in Accra or Kumasi."
+          style={styles.infoBanner}
+        />
+
         <View style={styles.searchBar}>
           <AppIcon name="search" size={fontSizes.body} color={colors.textTertiary} />
-          <Text style={styles.searchPlaceholder}>Search</Text>
+          <Text style={styles.searchPlaceholder}>Search landmarks</Text>
         </View>
 
-        <Text style={styles.routingLabel}>Offline routing between points</Text>
+        <Text style={styles.routingLabel}>Plan a route offline</Text>
 
         <View style={styles.routeInputRow}>
           <AppIcon name="location-outline" size={fontSizes.body} color={colors.textSecondary} />
           <TextInput
             style={styles.routeInput}
-            placeholder="Route point A"
+            placeholder="Starting point"
             placeholderTextColor={colors.textTertiary}
             value={routeFrom}
             onChangeText={setRouteFrom}
@@ -136,10 +145,10 @@ export default function OfflineMapScreen({
         </View>
 
         <View style={styles.routeInputRow}>
-          <AppIcon name="location-outline" size={fontSizes.body} color={colors.textSecondary} />
+          <AppIcon name="flag-outline" size={fontSizes.body} color={colors.textSecondary} />
           <TextInput
             style={styles.routeInput}
-            placeholder="Route point B"
+            placeholder="Destination"
             placeholderTextColor={colors.textTertiary}
             value={routeTo}
             onChangeText={setRouteTo}
@@ -185,6 +194,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     overflow: 'hidden',
     position: 'relative',
+    ...shadows.card,
+  },
+  infoBanner: {
+    marginBottom: spacing.md,
   },
   mapGrid: {
     ...StyleSheet.absoluteFillObject,
@@ -227,7 +240,8 @@ const styles = StyleSheet.create({
   },
   landmarkName: {
     fontFamily: fontFamilies.semibold,
-    fontSize: 10,
+    fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textPrimary,
     flexShrink: 1,
   },
@@ -257,6 +271,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+    ...shadows.floating,
   },
   locateIcon: {
     fontFamily: fontFamilies.bold,
@@ -271,6 +286,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
   searchBar: {
     flexDirection: 'row',

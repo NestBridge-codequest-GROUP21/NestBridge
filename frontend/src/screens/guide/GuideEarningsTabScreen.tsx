@@ -4,7 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
-import { ProviderBookingsEmptyBlock } from '../../components/ProviderBookingCard';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
 import {
   colors,
   fontFamilies,
@@ -12,6 +13,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
 import type { EarningsLineItem, EarningsSummary } from '../../types/providerBooking';
@@ -58,9 +61,19 @@ export default function GuideEarningsTabScreen({
         compact
       />
       <ScreenScroll withTabBar withSosDock={showSosDock}>
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <InlineBanner message={errorMessage} tone="error" />
+        ) : null}
         {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
+          <View
+            style={styles.loadingWrap}
+            accessibilityRole="progressbar"
+            accessibilityLabel="Loading earnings"
+          >
+            <View style={styles.loadingTile}>
+              <ActivityIndicator size="large" color={colors.teal} />
+            </View>
+          </View>
         ) : null}
         {!isLoading && hasEarnings ? (
           <View style={styles.summaryCard}>
@@ -89,22 +102,25 @@ export default function GuideEarningsTabScreen({
           </View>
         ) : null}
         {!isLoading && !hasEarnings ? (
-          <ProviderBookingsEmptyBlock
+          <EmptyState
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
+            iconName="cash-outline"
           />
         ) : null}
         {lineItems.map((item) => (
           <View key={item.id} style={styles.lineItem}>
             <View style={styles.lineTop}>
               <Text style={styles.lineGuest}>{item.guestName}</Text>
-              <Text style={styles.lineNet}>{formatCurrency(item.net, item.currency)}</Text>
+              <Text style={styles.lineNet}>
+                {formatCurrency(item.net, item.currency)}
+              </Text>
             </View>
             <Text style={styles.lineLabel}>{item.label}</Text>
             <Text style={styles.lineFee}>
-              Fee {formatCurrency(item.fee, item.currency)} · Gross{' '}
-              {formatCurrency(item.gross, item.currency)}
+              Gross {formatCurrency(item.gross, item.currency)} · Fee{' '}
+              {formatCurrency(item.fee, item.currency)}
             </Text>
           </View>
         ))}
@@ -125,14 +141,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loader: {
-    marginVertical: spacing.xl,
+  loadingWrap: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
   },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.danger,
-    marginBottom: spacing.md,
+  loadingTile: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   summaryCard: {
     backgroundColor: colors.white,
@@ -141,18 +162,22 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   summaryLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    color: colors.textSecondary,
+    fontWeight: fontWeights.regular,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
     marginBottom: spacing.xs,
   },
   summaryValue: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.teal,
+    color: colors.tealDeep,
     marginBottom: spacing.md,
   },
   summaryRow: {
@@ -165,6 +190,7 @@ const styles = StyleSheet.create({
   metaLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
@@ -181,6 +207,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   lineTop: {
     flexDirection: 'row',
@@ -190,26 +217,30 @@ const styles = StyleSheet.create({
   },
   lineGuest: {
     fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     flex: 1,
+    paddingRight: spacing.md,
   },
   lineNet: {
     fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.teal,
   },
   lineLabel: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
   lineFee: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
+    lineHeight: lineHeights.caption,
   },
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet } from 'react-native';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../constants/theme';
+import { colors, fontFamilies, fontSizes, fontWeights, spacing, borderRadius } from '../constants/theme';
 
 export interface SecondaryButtonProps {
   label: string;
@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warmCream,
   },
   label: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.teal,

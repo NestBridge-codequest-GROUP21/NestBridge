@@ -6,7 +6,7 @@ export type HomeRole = PrimaryIntent | 'BROWSE';
 
 export const SEEKER_TAB_ITEMS: TabBarItem[] = [
   { id: 'home', label: 'Home', icon: 'home-outline' },
-  { id: 'search', label: 'Search', icon: 'search-outline' },
+  { id: 'explore', label: 'Explore', icon: 'compass-outline' },
   { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
 ];
@@ -25,28 +25,33 @@ export const GUIDE_TAB_ITEMS: TabBarItem[] = [
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
 ];
 
+/** Home shortcuts only — never duplicate tab-bar items (Explore/SOS live in the bar). */
 export const STUDENT_QUICK_ACTIONS: QuickActionItem[] = [
   { id: 'checklist', label: 'Checklist', icon: '✅' },
   { id: 'cultural-tips', label: 'Local tips', icon: '👋' },
+  { id: 'sponsors', label: 'Sponsors', icon: '🎓' },
   { id: 'transport', label: 'Transport', icon: '🚌' },
-  { id: 'sos', label: 'SOS', icon: '🆘' },
 ];
 
 export const TOURIST_QUICK_ACTIONS: QuickActionItem[] = [
   { id: 'book-guide', label: 'Book guide', icon: '🗺️' },
-  { id: 'explore-stays', label: 'Explore stays', icon: '🏡' },
+  { id: 'explore-stays', label: 'Stays', icon: '🏡' },
   { id: 'offline-map', label: 'Offline map', icon: '📍' },
-  { id: 'sos', label: 'SOS', icon: '🆘' },
+  { id: 'cultural-tips', label: 'Local tips', icon: '👋' },
 ];
 
+/** Hosts/guides have no Explore tab — quick action is the entry. No SOS tile (SOS stays on home dock). */
 export const HOST_QUICK_ACTIONS: QuickActionItem[] = [
+  { id: 'book-travel', label: 'Book a trip', icon: '🧳' },
   { id: 'listings', label: 'Listings', icon: '🏠' },
-  { id: 'earnings', label: 'Earnings', icon: '💰' },
+  { id: 'explore', label: 'Explore', icon: '🧭' },
   { id: 'calendar', label: 'Calendar', icon: '📅' },
 ];
 
 export const GUIDE_QUICK_ACTIONS: QuickActionItem[] = [
+  { id: 'book-travel', label: 'Book a trip', icon: '🧳' },
   { id: 'calendar', label: 'Calendar', icon: '📅' },
+  { id: 'explore', label: 'Explore', icon: '🧭' },
   { id: 'tour-types', label: 'Tour types', icon: '🎯' },
 ];
 
