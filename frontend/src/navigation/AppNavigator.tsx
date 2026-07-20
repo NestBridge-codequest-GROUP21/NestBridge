@@ -164,6 +164,8 @@ import {
   hostProfileToListing,
   mergeTourTypesFromProfile,
   tourTypesToServiceTypes,
+  createTourTypeOption,
+  isDuplicateTourTypeLabel,
   buildGuideSchedulePatch,
   readMaxGroupSize,
   mapHostCalendarDays,
@@ -222,7 +224,11 @@ import {
   createDemoHostBookingRequest,
   mergeBookingsWithLocalOverrides,
 } from '../utils/demoBookingFlow';
-import { emergencyContactsMock, localEmergencyNumber } from '../data/sosMock';
+import {
+  emergencyContactsMock,
+  enrichEmergencyContact,
+  localEmergencyNumber,
+} from '../data/sosMock';
 import {
   hostConfirmedStaysMock,
   guideUpcomingToursMock,
@@ -357,7 +363,7 @@ function handleTouristQuickAction(
   actionId: string,
 ) {
   if (actionId === 'book-guide') {
-    navigation.navigate('GuideSearch');
+    navigation.navigate('GuideSearch', { mode: 'book' });
   }
   if (actionId === 'explore-stays') {
     navigation.navigate('ExploreStays');
@@ -389,7 +395,7 @@ function handleRecommendationItemPress(
       navigation.navigate('LodgingDetail', { listingId: targetId });
       return;
     case 'GuideSearch':
-      navigation.navigate('GuideSearch');
+      navigation.navigate('GuideSearch', { mode: 'book' });
       return;
     case 'ExploreStays':
       navigation.navigate('ExploreStays');
@@ -838,6 +844,39 @@ function TourTypesStackScreen({
           prev.map((tour) => (tour.id === tourTypeId ? { ...tour, enabled } : tour)),
         );
       }}
+      onAddTourType={(label, description) => {
+        if (!label.trim()) {
+          return 'Enter a tour type name.';
+        }
+        if (isDuplicateTourTypeLabel(tourTypes, label)) {
+          return 'That tour type already exists.';
+        }
+        setTourTypes((prev) => [...prev, createTourTypeOption(label, description)]);
+        return null;
+      }}
+      onUpdateTourType={(tourTypeId, label, description) => {
+        if (!label.trim()) {
+          return 'Enter a tour type name.';
+        }
+        if (isDuplicateTourTypeLabel(tourTypes, label, tourTypeId)) {
+          return 'That tour type already exists.';
+        }
+        setTourTypes((prev) =>
+          prev.map((tour) =>
+            tour.id === tourTypeId
+              ? {
+                  ...tour,
+                  label: label.trim(),
+                  description: description.trim() || tour.description,
+                }
+              : tour,
+          ),
+        );
+        return null;
+      }}
+      onRemoveTourType={(tourTypeId) => {
+        setTourTypes((prev) => prev.filter((tour) => tour.id !== tourTypeId));
+      }}
       onBaseRateChange={setBaseRate}
       onMaxGroupSizeChange={setMaxGroupSize}
       onSavePress={() => {
@@ -859,6 +898,7 @@ function TourTypesStackScreen({
           )
           .then(() => {
             onProfileSaved?.(tourTypes, baseRate, maxGroupSize);
+            setSaving(false);
             navigation.goBack();
           })
           .catch((error) => {
@@ -1622,24 +1662,25 @@ export default function AppNavigator() {
   const contentLandmarks = useMapLandmarks(cityLabel, !!user);
   const contentVideos = useVideos(cityLabel, undefined, !!user);
 
-  const emergencyContactsDisplay = useMemo(
-    () =>
-      uniqueByContactNumber(
-        withDemoFallback(contentEmergency.data, emergencyContactsMock, {
-          isLoading: contentEmergency.isLoading,
-          error: contentEmergency.error,
-          matchKey: (item) =>
-            normalizeContactNumber(
-              String((item as { number?: string }).number ?? ''),
-            ),
-        }),
-      ).filter(
-        (contact) =>
-          normalizeContactNumber(contact.number) !==
-          normalizeContactNumber(localEmergencyNumber),
-      ),
-    [contentEmergency.data, contentEmergency.isLoading, contentEmergency.error],
-  );
+  const emergencyContactsDisplay = useMemo(() => {
+    const liveContacts = contentEmergency.data.map((contact) =>
+      enrichEmergencyContact(contact),
+    );
+    return uniqueByContactNumber(
+      withDemoFallback(liveContacts, emergencyContactsMock, {
+        isLoading: contentEmergency.isLoading,
+        error: contentEmergency.error,
+        matchKey: (item) =>
+          normalizeContactNumber(
+            String((item as { number?: string }).number ?? ''),
+          ),
+      }),
+    ).filter(
+      (contact) =>
+        normalizeContactNumber(contact.number) !==
+        normalizeContactNumber(localEmergencyNumber),
+    );
+  }, [contentEmergency.data, contentEmergency.isLoading, contentEmergency.error]);
 
   const lodgingListingsDisplay = useMemo(
     () =>
@@ -2139,35 +2180,53 @@ export default function AppNavigator() {
         bookings: mergedBookings,
         milestones: journeyMilestones,
         destinationLabel: cityLabel,
+        preferStayCatalogue:
+          homeRole === 'TOURIST' || homeRole === 'BROWSE',
       }),
-    [profileState, mergedBookings, journeyMilestones, cityLabel],
+    [profileState, mergedBookings, journeyMilestones, cityLabel, homeRole],
   );
   const handleJourneyStepPress = useCallback(
     (
       navigation: NativeStackNavigationProp<AppStackParamList>,
       step: JourneyStep,
     ) => {
-      switch (step.routeHint) {
-        case 'AccountSetup':
+      // Prefer step id so culture vs language can share LocalTips with focus.
+      switch (step.id) {
+        case 'profile':
           navigation.navigate('AccountSetup');
           return;
-        case 'MatchSearch':
+        case 'accommodation':
+          if (step.completed || step.routeHint === 'StudentBookings') {
+            navigation.navigate('StudentBookings');
+            return;
+          }
+          if (step.routeHint === 'ExploreStays' || homeRole !== 'STUDENT') {
+            navigation.navigate('ExploreStays');
+            return;
+          }
           navigation.navigate('MatchSearch');
           return;
-        case 'GuideSearch':
-          navigation.navigate('GuideSearch');
+        case 'guide':
+          if (step.completed || step.routeHint === 'StudentBookings') {
+            navigation.navigate('StudentBookings');
+            return;
+          }
+          navigation.navigate('GuideSearch', { mode: 'nearby' });
           return;
-        case 'SOS':
+        case 'emergency':
           navigation.navigate('SOS');
           return;
-        case 'LocalTips':
-          navigation.navigate('LocalTips');
+        case 'culture':
+          navigation.navigate('LocalTips', { focus: 'culture' });
+          return;
+        case 'language':
+          navigation.navigate('LocalTips', { focus: 'language' });
           return;
         default:
           break;
       }
     },
-    [],
+    [homeRole],
   );
   const hostLive = buildHostHomeStatus(
     hostIncoming,
@@ -2595,15 +2654,21 @@ export default function AppNavigator() {
             {...homeTabSosProps(navigation)}
             notificationCount={unreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
-            onFeaturedGuidePress={() => navigation.navigate('GuideSearch')}
+            onFeaturedGuidePress={() =>
+              navigation.navigate('GuideProfile', { guideId: displayTopGuideId })
+            }
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
             }
-            onGuidesEmptyPrimaryAction={() => navigation.navigate('GuideSearch')}
+            onGuidesEmptyPrimaryAction={() =>
+              navigation.navigate('GuideSearch', { mode: 'nearby' })
+            }
             onRecommendationItemPress={(item) =>
               handleRecommendationItemPress(navigation, item)
             }
-            onRecommendationsEmptyPress={() => navigation.navigate('GuideSearch')}
+            onRecommendationsEmptyPress={() =>
+              navigation.navigate('GuideSearch', { mode: 'nearby' })
+            }
             onJourneyStepPress={(step) => handleJourneyStepPress(navigation, step)}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'BrowseHome')}
@@ -2630,7 +2695,7 @@ export default function AppNavigator() {
                 return;
               }
               if (primaryIntent === 'TOURIST' || homeRole === 'BROWSE') {
-                navigation.navigate('GuideSearch');
+                navigation.navigate('GuideSearch', { mode: 'book' });
                 return;
               }
               navigation.navigate('MatchSearch');
@@ -2888,6 +2953,13 @@ export default function AppNavigator() {
             setupSummary={setupSummary}
             showTravelBooking={shouldShowTravelBookingEntry(homeRole)}
             showStaffTools={Boolean(user?.isStaff)}
+            onBack={() => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+                return;
+              }
+              navigateToHome(navigation, homeRouteKey);
+            }}
             onAccountSetupPress={() => navigation.navigate('AccountSetup')}
             onTravelBookingPress={() => navigation.navigate('UnifiedSearch')}
             onStaffToolsPress={() => navigation.navigate('StaffUserSearch')}
@@ -2915,6 +2987,8 @@ export default function AppNavigator() {
               : isTouristBrowse
                 ? 'Book a trip'
                 : 'Browse stays & guides';
+          const showStayShortcut =
+            homeRole === 'STUDENT' || isTouristBrowse || homeRole === 'HOST';
           return (
             <ExploreHubScreen
               title="Explore"
@@ -2934,10 +3008,14 @@ export default function AppNavigator() {
                     : 'Homestays, local guides, hotels, and lodging across Ghana'
               }
               travelBookingLabel={
-                isTouristBrowse ? 'Find stays & lodging' : undefined
+                showStayShortcut
+                  ? homeRole === 'STUDENT'
+                    ? 'Browse homestays'
+                    : 'Find stays & lodging'
+                  : undefined
               }
               travelBookingHint={
-                isTouristBrowse
+                showStayShortcut
                   ? 'Homestays, hotels, and hostels across Ghana'
                   : undefined
               }
@@ -2952,14 +3030,20 @@ export default function AppNavigator() {
                 }
                 if (isTouristBrowse) {
                   // Trip booking = guide sessions (tours / experiences).
-                  navigation.navigate('GuideSearch');
+                  navigation.navigate('GuideSearch', { mode: 'book' });
                   return;
                 }
                 navigation.navigate('UnifiedSearch');
               }}
               onTravelBookingPress={
-                isTouristBrowse
-                  ? () => navigation.navigate('UnifiedSearch')
+                showStayShortcut
+                  ? () => {
+                      if (homeRole === 'STUDENT' || isTouristBrowse) {
+                        navigation.navigate('ExploreStays');
+                        return;
+                      }
+                      navigation.navigate('UnifiedSearch');
+                    }
                   : undefined
               }
               onHubItemPress={(itemId) =>
@@ -3089,14 +3173,16 @@ export default function AppNavigator() {
             onBack={() => navigation.goBack()}
             onCategoryPress={(categoryId) => {
               if (categoryId === 'homestays') {
-                if (primaryIntent === 'STUDENT') {
+                // Use active home role, not primaryIntent — dual-track accounts
+                // (e.g. host who started as student) must still open the catalogue.
+                if (homeRole === 'STUDENT') {
                   navigateToMatchSearch(navigation);
                   return;
                 }
                 navigation.navigate('ExploreStays');
               }
               if (categoryId === 'guides') {
-                navigation.navigate('GuideSearch');
+                navigation.navigate('GuideSearch', { mode: 'book' });
               }
               if (categoryId === 'lodging') {
                 navigation.navigate('LodgingDirectory');
@@ -3370,11 +3456,11 @@ export default function AppNavigator() {
             onSuggestedHostPress={(hostId) =>
               navigation.navigate('HostProfile', { hostId })
             }
-            onHostsEmptyPrimaryAction={() => navigation.navigate('MatchSearch')}
+            onHostsEmptyPrimaryAction={() => navigation.navigate('ExploreStays')}
             onRecommendationItemPress={(item) =>
               handleRecommendationItemPress(navigation, item)
             }
-            onRecommendationsEmptyPress={() => navigation.navigate('MatchSearch')}
+            onRecommendationsEmptyPress={() => navigation.navigate('ExploreStays')}
             onJourneyStepPress={(step) => handleJourneyStepPress(navigation, step)}
             onQuickActionPress={(actionId) =>
               handleStudentQuickAction(navigation, actionId)
@@ -3393,15 +3479,21 @@ export default function AppNavigator() {
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
-            onFeaturedGuidePress={() => navigation.navigate('GuideSearch')}
+            onFeaturedGuidePress={() =>
+              navigation.navigate('GuideProfile', { guideId: displayTopGuideId })
+            }
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
             }
-            onGuidesEmptyPrimaryAction={() => navigation.navigate('GuideSearch')}
+            onGuidesEmptyPrimaryAction={() =>
+              navigation.navigate('GuideSearch', { mode: 'nearby' })
+            }
             onRecommendationItemPress={(item) =>
               handleRecommendationItemPress(navigation, item)
             }
-            onRecommendationsEmptyPress={() => navigation.navigate('GuideSearch')}
+            onRecommendationsEmptyPress={() =>
+              navigation.navigate('GuideSearch', { mode: 'nearby' })
+            }
             onJourneyStepPress={(step) => handleJourneyStepPress(navigation, step)}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'ExploreHome')}
@@ -3510,7 +3602,7 @@ export default function AppNavigator() {
               statusLabel={guideLive.statusLabel}
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('GUIDE')}
-              tourSuggestions={[]}
+              tourSuggestions={guideTourSections}
               recommendationSections={dashboardRecommendations.sections}
               recommendationHeadline={dashboardRecommendations.headline}
               recommendationCity={cityLabel}
@@ -3627,7 +3719,7 @@ export default function AppNavigator() {
                   navigation.navigate('MatchSearch');
                   return;
                 }
-                navigation.navigate('GuideSearch');
+                navigation.navigate('GuideSearch', { mode: 'book' });
                 return;
               }
               navigation.navigate('MatchSearch');
@@ -3736,6 +3828,7 @@ export default function AppNavigator() {
         {({ navigation, route }) => {
           const siteId = route.params?.siteId;
           const siteName = route.params?.siteName;
+          const mode = route.params?.mode ?? 'book';
           const site = siteId ? touristSiteSummaryFromId(siteId) : null;
           const attractionGuides = siteId
             ? guidesForAttraction(
@@ -3745,14 +3838,23 @@ export default function AppNavigator() {
                 site?.guideKeywords ?? [],
               )
             : guideListForSearch;
+          const isNearby = mode === 'nearby';
 
           return (
             <GuideSearchScreen
-              title={siteName ? `Guides for ${siteName}` : 'Book a trip'}
+              title={
+                siteName
+                  ? `Guides for ${siteName}`
+                  : isNearby
+                    ? 'Guides nearby'
+                    : 'Book a trip'
+              }
               subtitle={
                 siteName
                   ? `Local guides who know ${siteName}`
-                  : 'Tours, orientation, and cultural experiences'
+                  : isNearby
+                    ? `Verified guides near ${cityLabel}`
+                    : 'Tours, orientation, and cultural experiences'
               }
               cityLabel={site?.city ?? cityLabel}
               guides={attractionGuides}
@@ -3761,7 +3863,7 @@ export default function AppNavigator() {
               onGuidePress={(guideId) =>
                 navigation.navigate('GuideProfile', { guideId })
               }
-              onEmptyPrimaryAction={() => navigation.navigate('ExploreStays')}
+              onEmptyPrimaryAction={() => navigation.navigate('SitesDirectory')}
             />
           );
         }}
@@ -3857,7 +3959,9 @@ export default function AppNavigator() {
             onSitePress={(siteId) =>
               navigation.navigate('TouristSiteDetail', { siteId })
             }
-            onEmptyPrimaryAction={() => navigation.navigate('GuideSearch')}
+            onEmptyPrimaryAction={() =>
+              navigation.navigate('GuideSearch', { mode: 'nearby' })
+            }
           />
         )}
       </Stack.Screen>
@@ -3887,10 +3991,7 @@ export default function AppNavigator() {
       <Stack.Screen name="SOS">
         {({ navigation }) => (
           <SOSScreen
-            emergencyContacts={emergencyContactsDisplay.map((contact) => ({
-              label: contact.label,
-              number: contact.number,
-            }))}
+            emergencyContacts={emergencyContactsDisplay}
             onBack={() => navigation.goBack()}
             onCallEmergencyServices={() => {
               void logSos({ contactedEmergency: true });
@@ -3993,13 +4094,14 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="LocalTips">
-        {({ navigation }) => (
+        {({ navigation, route }) => (
           <LocalTipsScreen
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
             statusIcon={studentHomeMockData.statusIcon}
             statusLabel={studentLive.statusLabel}
+            focus={route.params?.focus}
             phrases={phrasesDisplay.map((phrase) => ({
               id: phrase.id,
               emoji: phrase.emoji,

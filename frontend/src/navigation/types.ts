@@ -44,7 +44,14 @@ export type AppStackParamList = {
   HostProfile: { hostId: string };
   Booking: { hostId: string; bookingContext?: import('../types/booking').BookingContext };
   BookingConfirmed: { bookingId: string };
-  GuideSearch: { siteId?: string; siteName?: string } | undefined;
+  GuideSearch:
+    | {
+        siteId?: string;
+        siteName?: string;
+        /** nearby = Guides Nearby; book = Book a Trip */
+        mode?: 'nearby' | 'book';
+      }
+    | undefined;
   GuideProfile: { guideId: string };
   SessionBooking: { guideId: string; bookingContext?: import('../types/booking').BookingContext };
   LodgingDirectory: undefined;
@@ -56,7 +63,7 @@ export type AppStackParamList = {
   SOS: undefined;
   TouristSiteDetail: { siteId: string };
   PrepChecklist: undefined;
-  LocalTips: undefined;
+  LocalTips: { focus?: 'culture' | 'language' } | undefined;
   TransportGuide: undefined;
   ExploreStays: undefined;
   OfflineMap: undefined;

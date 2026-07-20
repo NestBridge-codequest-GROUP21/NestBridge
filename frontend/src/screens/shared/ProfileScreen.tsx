@@ -34,6 +34,7 @@ export interface ProfileScreenProps {
   email: string;
   setupSummary: string;
   showTravelBooking?: boolean;
+  onBack?: () => void;
   onAccountSetupPress?: () => void;
   onTravelBookingPress?: () => void;
   onSignOut?: () => void;
@@ -75,6 +76,7 @@ export default function ProfileScreen({
   email,
   setupSummary,
   showTravelBooking = false,
+  onBack,
   onAccountSetupPress,
   onTravelBookingPress,
   onSignOut,
@@ -95,6 +97,7 @@ export default function ProfileScreen({
         userName={userName}
         userInitials={userInitials}
         subtitle="Account and setup"
+        onBack={onBack}
       />
 
       <ScreenScroll>

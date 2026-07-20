@@ -22,6 +22,12 @@ export function handleProfileCulturalItem(
   navigation: NativeStackNavigationProp<AppStackParamList>,
   itemId: string,
 ) {
+  if (itemId === 'homestays') {
+    // Full homestay catalogue. Students still use Explore primary "Find a host"
+    // for MatchSearch; this hub row is the browseable listing.
+    navigation.navigate('ExploreStays');
+    return;
+  }
   if (itemId === 'video-library') {
     navigation.navigate('VideoLibrary');
     return;

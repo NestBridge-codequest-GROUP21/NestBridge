@@ -16,7 +16,9 @@ export interface JourneyStep {
   routeHint?:
     | 'AccountSetup'
     | 'MatchSearch'
+    | 'ExploreStays'
     | 'GuideSearch'
+    | 'StudentBookings'
     | 'SOS'
     | 'LocalTips';
 }

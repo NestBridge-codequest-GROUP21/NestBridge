@@ -33,6 +33,8 @@ export interface LocalTipsScreenProps {
   statusLabel?: string;
   phrases: CulturalPhraseCard[];
   topics: CulturalTopicCard[];
+  /** Prefer phrases (language) or topics (culture) at the top. */
+  focus?: 'culture' | 'language';
   onPhrasePress?: (phraseId: string) => void;
   onTopicPress?: (topicId: string) => void;
   onEmptyPrimaryAction?: () => void;
@@ -106,6 +108,7 @@ export default function LocalTipsScreen({
   statusLabel,
   phrases,
   topics,
+  focus,
   onPhrasePress,
   onTopicPress,
   onEmptyPrimaryAction,
@@ -118,6 +121,46 @@ export default function LocalTipsScreen({
   const phraseCardWidth = Math.floor((contentWidth - spacing.md) / 2);
 
   const isEmpty = phrases.length === 0 && topics.length === 0;
+  const showPhrasesFirst = focus !== 'culture';
+
+  const phrasesBlock =
+    phrases.length > 0 ? (
+      <>
+        <SectionHeader
+          title="Useful phrases"
+          style={showPhrasesFirst ? styles.sectionTight : styles.sectionSpacer}
+        />
+        <View style={styles.grid}>
+          {phrases.map((phrase) => (
+            <PhraseCard
+              key={phrase.id}
+              phrase={phrase}
+              cardWidth={phraseCardWidth}
+              onPress={() => onPhrasePress?.(phrase.id)}
+            />
+          ))}
+        </View>
+      </>
+    ) : null;
+
+  const topicsBlock =
+    topics.length > 0 ? (
+      <>
+        <SectionHeader
+          title="Settling into Ghana"
+          style={showPhrasesFirst ? styles.sectionSpacer : styles.sectionTight}
+        />
+        <View style={styles.topicList}>
+          {topics.map((topic) => (
+            <TopicCard
+              key={topic.id}
+              topic={topic}
+              onPress={() => onTopicPress?.(topic.id)}
+            />
+          ))}
+        </View>
+      </>
+    ) : null;
 
   return (
     <View style={styles.root}>
@@ -146,40 +189,15 @@ export default function LocalTipsScreen({
             primaryActionLabel={empty.primaryActionLabel}
             onPrimaryAction={onEmptyPrimaryAction}
           />
+        ) : showPhrasesFirst ? (
+          <>
+            {phrasesBlock}
+            {topicsBlock}
+          </>
         ) : (
           <>
-            {phrases.length > 0 ? (
-              <>
-                <SectionHeader title="Useful phrases" style={styles.sectionTight} />
-                <View style={styles.grid}>
-                  {phrases.map((phrase) => (
-                    <PhraseCard
-                      key={phrase.id}
-                      phrase={phrase}
-                      cardWidth={phraseCardWidth}
-                      onPress={() => onPhrasePress?.(phrase.id)}
-                    />
-                  ))}
-                </View>
-              </>
-            ) : null}
-            {topics.length > 0 ? (
-              <>
-                <SectionHeader
-                  title="Settling into Ghana"
-                  style={styles.sectionSpacer}
-                />
-                <View style={styles.topicList}>
-                  {topics.map((topic) => (
-                    <TopicCard
-                      key={topic.id}
-                      topic={topic}
-                      onPress={() => onTopicPress?.(topic.id)}
-                    />
-                  ))}
-                </View>
-              </>
-            ) : null}
+            {topicsBlock}
+            {phrasesBlock}
           </>
         )}
       </ScreenScroll>
