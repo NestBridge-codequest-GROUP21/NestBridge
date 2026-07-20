@@ -18,6 +18,7 @@ import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
 import RecommendedForYou from '../../components/RecommendedForYou';
+import JourneyProgressCard from '../../components/JourneyProgressCard';
 import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
@@ -30,6 +31,7 @@ import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
 import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 import type { EmptyStateContent } from '../../data/appCopy';
 import { emptyStates } from '../../data/appCopy';
+import type { JourneyProgress, JourneyStep } from '../../types/journeyProgress';
 
 export interface ExploreSectionItem {
   id: string;
@@ -58,6 +60,7 @@ export interface ExploreHomeScreenProps {
   showMatchScores?: boolean;
   recommendationSections?: RecommendationSection[];
   recommendationHeadline?: string;
+  journeyProgress?: JourneyProgress | null;
   recentActivity?: RecentActivityItem[];
   reminder?: string;
   tabBarItems: TabBarItem[];
@@ -73,6 +76,7 @@ export interface ExploreHomeScreenProps {
   onSectionPress?: (sectionId: string) => void;
   onRecommendationItemPress?: (item: RecommendationItem) => void;
   onRecommendationsEmptyPress?: () => void;
+  onJourneyStepPress?: (step: JourneyStep) => void;
   onQuickActionPress?: (actionId: string) => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -97,6 +101,7 @@ export default function ExploreHomeScreen({
   showMatchScores = false,
   recommendationSections = [],
   recommendationHeadline = 'Recommended for you',
+  journeyProgress = null,
   recentActivity = [],
   reminder,
   tabBarItems,
@@ -112,6 +117,7 @@ export default function ExploreHomeScreen({
   onSectionPress,
   onRecommendationItemPress,
   onRecommendationsEmptyPress,
+  onJourneyStepPress,
   onQuickActionPress,
   onReminderPress,
   onTabPress,
@@ -155,6 +161,13 @@ export default function ExploreHomeScreen({
           actions={quickActions}
           onActionPress={onQuickActionPress}
         />
+
+        {journeyProgress ? (
+          <JourneyProgressCard
+            journey={journeyProgress}
+            onStepPress={onJourneyStepPress}
+          />
+        ) : null}
 
         <DiscoveryListingSection
           title={suggestedGuidesTitle}
