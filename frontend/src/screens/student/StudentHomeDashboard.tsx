@@ -61,6 +61,7 @@ export interface StudentHomeDashboardProps {
   /** Personalized destination-aware recommendations. */
   recommendationSections?: RecommendationSection[];
   recommendationHeadline?: string;
+  recommendationCity?: string;
   suggestedHosts?: SuggestedHostItem[];
   suggestedHostsTitle?: string;
   hostsEmptyState?: EmptyStateContent;
@@ -99,11 +100,12 @@ export default function StudentHomeDashboard({
   featuredMatch,
   quickActions,
   recommendedSections = [],
-  recommendedSectionTitle = 'Prep before you arrive',
+  recommendedSectionTitle = 'Prepare for arrival',
   recommendationSections = [],
   recommendationHeadline = 'Recommended for you',
+  recommendationCity,
   suggestedHosts = [],
-  suggestedHostsTitle = 'Suggested hosts',
+  suggestedHostsTitle = 'Recommended nearby',
   hostsEmptyState,
   showMatchScores = false,
   journeyProgress = null,
@@ -206,6 +208,7 @@ export default function StudentHomeDashboard({
 
         <RecommendedForYou
           headline={recommendationHeadline}
+          city={recommendationCity}
           sections={recommendationSections}
           emptyState={emptyStates.recommendations}
           onEmptyPrimaryAction={onRecommendationsEmptyPress}

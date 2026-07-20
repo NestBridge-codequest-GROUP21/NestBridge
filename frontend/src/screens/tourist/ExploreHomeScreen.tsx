@@ -96,7 +96,7 @@ export default function ExploreHomeScreen({
   sections,
   exploreSectionTitle = 'Explore Accra',
   suggestedGuides = [],
-  suggestedGuidesTitle = 'Top guides near you',
+  suggestedGuidesTitle = 'Recommended nearby',
   guidesEmptyState,
   showMatchScores = false,
   recommendationSections = [],
@@ -180,6 +180,7 @@ export default function ExploreHomeScreen({
 
         <RecommendedForYou
           headline={recommendationHeadline}
+          city={cityLabel}
           sections={recommendationSections}
           emptyState={emptyStates.recommendations}
           onEmptyPrimaryAction={onRecommendationsEmptyPress}
@@ -194,6 +195,7 @@ export default function ExploreHomeScreen({
             />
             <ExploreSectionList
               sections={sections}
+              variant="grid"
               onSectionPress={onSectionPress}
             />
           </View>

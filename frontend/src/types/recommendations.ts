@@ -14,7 +14,7 @@ export type RecommendationItemType =
   | 'PROFILE_TIP'
   | 'OPPORTUNITY';
 
-export type RecommendationLayout = 'list' | 'grid';
+export type RecommendationLayout = 'list' | 'grid' | 'featured';
 
 export interface RecommendationItem {
   id: string;
@@ -23,6 +23,10 @@ export interface RecommendationItem {
   subtitle: string;
   icon?: string;
   reason?: string;
+  /** City / region line shown under the title. */
+  location?: string;
+  /** CTA label on recommendation cards (e.g. Explore). */
+  actionLabel?: string;
   targetId?: string;
   routeHint?: string;
   matchPercentage?: number;

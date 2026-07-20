@@ -2171,9 +2171,11 @@ export default function AppNavigator() {
       suggestedHosts: suggestedHostsDisplay.filter(
         (host) => host.id !== displayTopMatchHostId,
       ),
-      recommendedSectionTitle: 'Prep before you arrive',
+      recommendedSectionTitle: 'Prepare for arrival',
       recommendationSections: homeRecommendations.sections,
       recommendationHeadline: homeRecommendations.headline,
+      recommendationCity: cityLabel,
+      suggestedHostsTitle: 'Recommended nearby',
       journeyProgress,
       showMatchScores,
       isHomeLoading,
@@ -2253,6 +2255,7 @@ export default function AppNavigator() {
       suggestedGuides: suggestedGuidesDisplay.filter(
         (guide) => guide.id !== displayTopGuideId,
       ),
+      suggestedGuidesTitle: 'Recommended nearby',
       showMatchScores,
       recommendationSections: homeRecommendations.sections,
       recommendationHeadline: homeRecommendations.headline,
@@ -2277,6 +2280,7 @@ export default function AppNavigator() {
       suggestedGuides: suggestedGuidesDisplay.filter(
         (guide) => guide.id !== displayTopGuideId,
       ),
+      suggestedGuidesTitle: 'Recommended nearby',
       showMatchScores,
       isHomeLoading,
       recommendationSections: homeRecommendations.sections,
@@ -3349,6 +3353,7 @@ export default function AppNavigator() {
               performanceStats={hostPerformanceMock}
               recommendationSections={homeRecommendations.sections}
               recommendationHeadline={homeRecommendations.headline}
+              recommendationCity={cityLabel}
               requests={hostIncoming}
               emptyState={emptyStates.hostRequests}
               onEmptyPrimaryAction={() => navigation.navigate('HostListings')}
@@ -3424,6 +3429,7 @@ export default function AppNavigator() {
               tourSuggestionsTitle="Your tour types"
               recommendationSections={homeRecommendations.sections}
               recommendationHeadline={homeRecommendations.headline}
+              recommendationCity={cityLabel}
               requests={guideIncoming}
               emptyState={emptyStates.guideRequests}
               onEmptyPrimaryAction={() => navigation.navigate('TourTypesSetup')}

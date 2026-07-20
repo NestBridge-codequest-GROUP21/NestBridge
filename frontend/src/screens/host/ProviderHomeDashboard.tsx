@@ -51,6 +51,7 @@ export interface ProviderHomeDashboardProps {
   tourSuggestionsTitle?: string;
   recommendationSections?: RecommendationSection[];
   recommendationHeadline?: string;
+  recommendationCity?: string;
   requests: IncomingBookingRequest[];
   emptyState?: IncomingRequestsEmptyState;
   onEmptyPrimaryAction?: () => void;
@@ -88,6 +89,7 @@ export default function ProviderHomeDashboard({
   tourSuggestionsTitle = 'Suggested tour requests',
   recommendationSections = [],
   recommendationHeadline = 'Recommended for you',
+  recommendationCity,
   requests,
   emptyState,
   onEmptyPrimaryAction,
@@ -149,6 +151,7 @@ export default function ProviderHomeDashboard({
 
         <RecommendedForYou
           headline={recommendationHeadline}
+          city={recommendationCity}
           sections={recommendationSections}
           emptyState={emptyStates.recommendations}
           onEmptyPrimaryAction={onRecommendationsEmptyPress}
@@ -164,6 +167,7 @@ export default function ProviderHomeDashboard({
             <SectionHeader title={tourSuggestionsTitle} />
             <ExploreSectionList
               sections={tourSuggestions}
+              variant="grid"
               onSectionPress={onTourSuggestionPress}
             />
           </View>
