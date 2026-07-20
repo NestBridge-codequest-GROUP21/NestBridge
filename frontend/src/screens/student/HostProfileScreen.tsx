@@ -70,7 +70,7 @@ export default function HostProfileScreen({
 
         <View style={styles.heroContent}>
           <View style={styles.avatarRing}>
-            <Avatar initials={host.initials} size="lg" style={styles.heroAvatar} />
+            <Avatar initials={host.initials} size="xl" />
           </View>
           <Text style={styles.hostName}>{host.name}</Text>
           <Text style={styles.hostLocation}>{host.location}</Text>
@@ -95,7 +95,7 @@ export default function HostProfileScreen({
         style={styles.scroll}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: insets.bottom + spacing.xl * 4 },
+          { paddingBottom: insets.bottom + layout.scrollBottomInset },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -185,15 +185,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     backgroundColor: tints.cream,
   },
-  heroAvatar: {
-    width: 88,
-    height: 88,
-    borderRadius: borderRadius.pill,
-  },
   hostName: {
     fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display,
+    fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.heading,
     color: colors.white,
     marginBottom: spacing.xs,
     textAlign: 'center',
@@ -201,6 +197,7 @@ const styles = StyleSheet.create({
   hostLocation: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    lineHeight: lineHeights.body,
     color: colors.white,
     opacity: 0.9,
     marginBottom: spacing.md,
@@ -211,9 +208,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
   matchBadgeText: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.caption,
     color: colors.white,
   },
   matchHint: {

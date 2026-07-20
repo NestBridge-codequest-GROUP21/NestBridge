@@ -26,6 +26,7 @@ import {
   controlHeights,
   iconSizes,
   touchTarget,
+  lineHeights,
   layout,
   shadows,
 } from '../../constants/theme';
@@ -191,11 +192,13 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.body,
     color: colors.white,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.white,
     opacity: 0.8,
   },
@@ -236,6 +239,7 @@ const styles = StyleSheet.create({
   bubbleText: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    lineHeight: lineHeights.body,
   },
   bubbleTextOwn: {
     color: colors.white,
@@ -246,6 +250,7 @@ const styles = StyleSheet.create({
   timestamp: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textTertiary,
     marginTop: spacing.xs,
   },

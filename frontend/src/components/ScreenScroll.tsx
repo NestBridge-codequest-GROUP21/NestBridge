@@ -21,6 +21,8 @@ export default function ScreenScroll({
   withSosDock = false,
   children,
   contentContainerStyle,
+  style,
+  keyboardShouldPersistTaps = 'handled',
   ...rest
 }: ScreenScrollProps) {
   const insets = useSafeAreaInsets();
@@ -31,7 +33,10 @@ export default function ScreenScroll({
 
   return (
     <ScrollView
+      style={[styles.scroll, style]}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps={keyboardShouldPersistTaps}
+      keyboardDismissMode="on-drag"
       contentContainerStyle={[
         styles.content,
         { paddingBottom: bottomPad },
@@ -45,6 +50,9 @@ export default function ScreenScroll({
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,

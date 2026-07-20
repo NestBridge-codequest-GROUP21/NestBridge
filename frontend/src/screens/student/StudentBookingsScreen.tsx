@@ -48,6 +48,8 @@ export interface StudentBookingsScreenProps {
   onFilterChange?: (filter: BookingTabFilter) => void;
   onBookingPress?: (bookingId: string) => void;
   onPayPress?: (bookingId: string) => void;
+  /** True while Paystack / mock confirm is in flight. */
+  payLoading?: boolean;
   payBlocked?: boolean;
   payBlockedMessage?: string;
   onContinueSetupPay?: () => void;
@@ -143,6 +145,7 @@ export default function StudentBookingsScreen({
   onFilterChange,
   onBookingPress,
   onPayPress,
+  payLoading = false,
   payBlocked = false,
   payBlockedMessage = 'Finish your Student or Tourist profile to complete payment.',
   onContinueSetupPay,
@@ -240,21 +243,27 @@ export default function StudentBookingsScreen({
               />
             ) : null}
             <Pressable
-              style={({ pressed }) => [styles.heroCard, pressed && !payBlocked && styles.pressed]}
+              style={({ pressed }) => [
+                styles.heroCard,
+                pressed && !payBlocked && !payLoading && styles.pressed,
+              ]}
               onPress={() => {
-                if (!payBlocked) {
+                if (!payBlocked && !payLoading) {
                   onPayPress?.(payNowBooking.id);
                 }
               }}
               accessibilityRole="button"
               accessibilityLabel={`Complete payment for ${payNowBooking.hostName}`}
-              accessibilityState={{ disabled: payBlocked }}
+              accessibilityState={{ disabled: payBlocked || payLoading, busy: payLoading }}
             >
               <LinearGradient
                 colors={[...gradients.accent]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[styles.heroGradient, payBlocked && styles.heroGradientDisabled]}
+                style={[
+                  styles.heroGradient,
+                  (payBlocked || payLoading) && styles.heroGradientDisabled,
+                ]}
               >
                 <Text style={styles.heroEyebrow}>Action needed</Text>
                 <Text style={styles.heroTitle}>
@@ -264,7 +273,9 @@ export default function StudentBookingsScreen({
                   {bookingScheduleLine(payNowBooking)}
                 </Text>
                 <View style={styles.heroCta}>
-                  <Text style={styles.heroCtaText}>Pay now</Text>
+                  <Text style={styles.heroCtaText}>
+                    {payLoading ? 'Processing…' : 'Pay now'}
+                  </Text>
                 </View>
               </LinearGradient>
             </Pressable>
@@ -372,9 +383,9 @@ const styles = StyleSheet.create({
     width: touchTarget,
   },
   headerTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
     lineHeight: lineHeights.heading,
   },

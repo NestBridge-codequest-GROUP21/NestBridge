@@ -182,9 +182,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   name: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },

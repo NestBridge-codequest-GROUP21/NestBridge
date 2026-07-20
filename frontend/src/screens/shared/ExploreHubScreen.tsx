@@ -145,13 +145,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   heroCard: {
-    marginBottom: spacing.lg,
+    marginBottom: layout.sectionGap,
     gap: spacing.md,
   },
   heroTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.heading,
     color: colors.textPrimary,
   },
   heroHint: {
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   travelCardOuter: {
-    marginBottom: spacing.lg,
+    marginBottom: layout.sectionGap,
     backgroundColor: tints.gold,
     borderColor: colors.gold,
     overflow: 'hidden',

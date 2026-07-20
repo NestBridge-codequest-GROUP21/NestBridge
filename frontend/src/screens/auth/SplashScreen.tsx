@@ -23,6 +23,7 @@ import {
   borderWidths,
   motion,
   layout,
+  lineHeights,
 } from '../../constants/theme';
 import { splashCopy } from '../../data/appCopy';
 
@@ -387,6 +388,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
@@ -395,17 +397,20 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
   },
   appNameBridge: {
     fontFamily: fontFamilies.bold,
     color: colors.tealBright,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
   },
   appNameSingle: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
     color: colors.white,
     textAlign: 'center',
   },
@@ -441,6 +446,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
+    lineHeight: lineHeights.caption,
     color: colors.white,
     opacity: 0.55,
     textAlign: 'center',

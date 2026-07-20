@@ -165,9 +165,10 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   amount: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.heading,
     color: colors.gold,
     marginTop: spacing.sm,
   },

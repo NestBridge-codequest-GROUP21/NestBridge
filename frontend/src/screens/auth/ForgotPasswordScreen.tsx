@@ -54,7 +54,7 @@ export default function ForgotPasswordScreen({
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar style="dark" />
       <ScrollView
@@ -128,8 +128,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   iconTile: {
-    width: spacing.xl * 2,
-    height: spacing.xl * 2,
+    width: layout.iconTileSize,
+    height: layout.iconTileSize,
     borderRadius: borderRadius.pill,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },

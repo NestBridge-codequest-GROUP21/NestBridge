@@ -15,6 +15,7 @@ import {
   iconSizes,
   tints,
   borderWidths,
+  layout,
 } from '../constants/theme';
 
 export interface EmptyStateProps {
@@ -92,8 +93,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
   },
   iconTile: {
-    width: 56,
-    height: 56,
+    width: layout.iconTileSize,
+    height: layout.iconTileSize,
     borderRadius: borderRadius.pill,
     backgroundColor: tints.cream,
     alignItems: 'center',
@@ -107,6 +108,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.subheading,
   },
   body: {
     fontFamily: fontFamilies.regular,
@@ -115,6 +117,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: lineHeights.body,
+    maxWidth: 320,
   },
   tip: {
     fontFamily: fontFamilies.regular,

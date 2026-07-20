@@ -12,6 +12,7 @@ import {
   tints,
   shadows,
   lineHeights,
+  iconSizes,
 } from '../constants/theme';
 
 const ROLE_GLYPHS: Record<string, string> = {
@@ -65,7 +66,7 @@ export default function DemoActorQuickLogin({
               <View style={styles.tabIconTile}>
                 <AppIcon
                   glyph={ROLE_GLYPHS[account.id] ?? '👤'}
-                  size={20}
+                  size={iconSizes.md}
                   color={colors.tealDeep}
                 />
               </View>

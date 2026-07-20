@@ -22,6 +22,7 @@ import {
   iconSizes,
   controlHeights,
   touchTarget,
+  tints,
 } from '../../constants/theme';
 
 export interface EmergencyContact {
@@ -112,7 +113,7 @@ export default function SOSScreen({
                     accessibilityRole="button"
                     accessibilityLabel={`Call ${contact.label}`}
                   >
-                    <AppIcon name="call-outline" size={iconSizes.sm} color={colors.white} />
+                    <AppIcon name="call-outline" size={iconSizes.sm} color={colors.danger} />
                     <Text style={styles.callActionText}>Call</Text>
                   </Pressable>
                 </View>
@@ -209,16 +210,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.tealBright,
+    borderWidth: borderWidths.strong,
+    borderColor: colors.danger,
+    backgroundColor: colors.white,
   },
   callPressed: {
     opacity: 0.9,
+    backgroundColor: tints.terracotta,
   },
   callActionText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.danger,
   },
   footerSpacer: {
     flex: 1,

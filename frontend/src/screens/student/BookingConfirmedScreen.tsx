@@ -20,6 +20,7 @@ import {
   shadows,
   layout,
   iconSizes,
+  avatarSizes,
 } from '../../constants/theme';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
 
@@ -144,8 +145,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconCircle: {
-    width: 88,
-    height: 88,
+    width: avatarSizes.xl + spacing.md,
+    height: avatarSizes.xl + spacing.md,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.tealBright,
     alignItems: 'center',
@@ -200,9 +201,9 @@ const styles = StyleSheet.create({
     marginLeft: spacing.md,
   },
   summaryHighlight: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     color: colors.tealDeep,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
   },
   summaryDivider: {
     height: borderWidths.hairline,

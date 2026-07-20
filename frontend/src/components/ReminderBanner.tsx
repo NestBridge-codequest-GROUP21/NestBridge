@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import AppIcon from './AppIcon';
+import AppIcon, { type IoniconName } from './AppIcon';
 import {
   colors,
   fontFamilies,
@@ -8,22 +8,31 @@ import {
   spacing,
   borderRadius,
   lineHeights,
+  iconSizes,
 } from '../constants/theme';
 
 export interface ReminderBannerProps {
+  /** Legacy emoji glyph key (mapped via AppIcon). Prefer iconName. */
   icon?: string;
+  iconName?: IoniconName;
   message: string;
   onPress?: () => void;
 }
 
 export default function ReminderBanner({
-  icon = '🔔',
+  icon,
+  iconName = 'notifications-outline',
   message,
   onPress,
 }: ReminderBannerProps) {
   const content = (
     <>
-      <AppIcon glyph={icon} size={fontSizes.subheading} color={colors.warning} />
+      <AppIcon
+        name={icon ? undefined : iconName}
+        glyph={icon}
+        size={iconSizes.md}
+        color={colors.warning}
+      />
       <Text style={styles.message}>{message}</Text>
     </>
   );

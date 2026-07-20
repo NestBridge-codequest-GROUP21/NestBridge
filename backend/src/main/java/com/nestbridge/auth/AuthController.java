@@ -23,9 +23,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponse>> register(
             @Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(
-                "Account created. Check your email to verify before signing in.",
-                authService.register(request)));
+        RegisterResponse result = authService.register(request);
+        String message = result.isRequiresEmailVerification()
+                ? "Account created. Check your email to verify before signing in."
+                : "Account created. You can sign in now.";
+        return ResponseEntity.ok(ApiResponse.success(message, result));
     }
 
     @PostMapping("/login")

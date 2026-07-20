@@ -90,9 +90,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   heading: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -111,8 +111,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconTile: {
-    width: spacing.xxl * 3,
-    height: spacing.xxl * 3,
+    width: layout.iconTileSize + avatarSizes.xl,
+    height: layout.iconTileSize + avatarSizes.xl,
     borderRadius: borderRadius.lg,
     backgroundColor: tints.teal,
     alignItems: 'center',

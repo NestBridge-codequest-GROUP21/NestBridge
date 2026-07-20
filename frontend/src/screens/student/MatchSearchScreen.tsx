@@ -15,12 +15,10 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
   borderWidths,
   gradients,
   layout,
   lineHeights,
-  shadows,
   touchTarget,
 } from '../../constants/theme';
 import MatchResultsScreen, {
@@ -212,10 +210,9 @@ export default function MatchSearchScreen({
           <View style={styles.backButtonSpacer} />
         )}
         <Text style={styles.headerEyebrow}>Host search</Text>
-        <Text style={styles.headerTitle}>Find your perfect host</Text>
+        <Text style={styles.headerTitle}>Find your host</Text>
         <Text style={styles.headerSubtitle}>
-          We match you with verified Ghana host families based on lifestyle, diet,
-          language, and budget.
+          Matched to verified Ghana host families by lifestyle, diet, language, and budget.
         </Text>
       </LinearGradient>
 
@@ -306,13 +303,13 @@ export default function MatchSearchScreen({
           ) : null}
         </Card>
 
-        <View style={styles.heroCard}>
-          <Text style={styles.heroCardTitle}>Why matching matters</Text>
+        <Card padding="lg" elevation="card" style={styles.heroCard}>
+          <Text style={styles.heroCardTitle}>Why you will see match reasons</Text>
           <Text style={styles.heroCardBody}>
-            Every result shows exactly why a host fits you — diet, quiet hours, languages,
-            and neighbourhood — so you can choose with confidence before you message anyone.
+            Each result explains the fit — diet, quiet hours, languages, and neighbourhood —
+            before you message anyone.
           </Text>
-        </View>
+        </Card>
 
         <PrimaryButton
           label="Find my matches"
@@ -325,12 +322,12 @@ export default function MatchSearchScreen({
       {isSearching ? (
         <View style={styles.loadingOverlay} pointerEvents="none">
           <View style={styles.loadingOverlayBackdrop} />
-          <View style={styles.loadingCard}>
+          <Card padding="lg" elevation="raised" style={styles.loadingCard}>
             <Text style={styles.loadingTitle}>Matching hosts to your profile</Text>
             <SkeletonLoader lines={2} style={styles.loadingSkeleton} />
             <SkeletonBlock width="72%" height={12} style={styles.skeletonGap} />
             <SkeletonBlock width="88%" height={12} style={styles.skeletonGap} />
-          </View>
+          </Card>
         </View>
       ) : null}
       {showTabBar ? (
@@ -360,7 +357,7 @@ const styles = StyleSheet.create({
     marginLeft: -spacing.sm,
   },
   backButtonSpacer: {
-    height: spacing.sm,
+    height: touchTarget,
   },
   headerEyebrow: {
     fontFamily: fontFamilies.semibold,
@@ -452,26 +449,24 @@ const styles = StyleSheet.create({
   },
   heroCard: {
     backgroundColor: colors.navyMid,
-    borderRadius: borderRadius.lg,
-    padding: layout.cardPaddingLarge,
+    borderColor: colors.navyMid,
     marginBottom: spacing.xl,
-    ...shadows.card,
   },
   heroCardTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
     marginBottom: spacing.sm,
     lineHeight: lineHeights.subheading,
   },
   heroCardBody: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
     color: colors.white,
     opacity: 0.9,
-    lineHeight: lineHeights.body,
+    lineHeight: lineHeights.caption,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -486,12 +481,6 @@ const styles = StyleSheet.create({
   },
   loadingCard: {
     width: '100%',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: layout.cardPaddingLarge,
-    borderWidth: borderWidths.hairline,
-    borderColor: colors.border,
-    ...shadows.floating,
   },
   loadingTitle: {
     fontFamily: fontFamilies.semibold,

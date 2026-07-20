@@ -173,6 +173,9 @@ import {
   mergeHostAvailabilityCalendar,
   toggleGuideShift,
   mergeGuideAvailabilitySchedule,
+  getProviderCalendarMonth,
+  buildEmptyHostMonthDays,
+  buildEmptyGuideMonthDays,
 } from '../services/providerProfile';
 import { completeBookingPayment } from '../services/paymentFlow';
 import { uploadProfilePhotoIfConfigured } from '../services/mediaUpload';
@@ -276,13 +279,6 @@ import {
 import { DEMO_PASSWORD, DEMO_ACTOR_ACCOUNTS, demoPresetForAccount, type DemoAccount } from '../data/demoAccounts';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
-
-const PROVIDER_CALENDAR = {
-  year: 2026,
-  month: 7,
-  monthLabel: 'July 2026',
-  startWeekday: 3,
-};
 
 type ProviderScreenHeaderProps = {
   greeting: string;
@@ -585,27 +581,36 @@ function HostCalendarStackScreen({
   fallbackActiveBooking,
 }: ProviderScreenHeaderProps & { fallbackActiveBooking: ActiveBookingDetail }) {
   const { user } = useAuth();
-  const [days, setDays] = useState(hostCalendarDaysMock);
+  const calendarMonth = useMemo(() => getProviderCalendarMonth(), []);
+  const [days, setDays] = useState(() =>
+    buildEmptyHostMonthDays(calendarMonth.year, calendarMonth.month),
+  );
   const [activeBooking, setActiveBooking] = useState(fallbackActiveBooking);
   const [loadedFromApi, setLoadedFromApi] = useState(false);
-  const [providerReady, setProviderReady] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    void getMyHostProfile()
-      .then(() => setProviderReady(true))
-      .catch(() => setProviderReady(false));
-
-    void getMyHostCalendar(PROVIDER_CALENDAR.year, PROVIDER_CALENDAR.month)
+  const reloadCalendar = useCallback(() => {
+    void getMyHostCalendar(calendarMonth.year, calendarMonth.month)
       .then((rows) => {
         const mapped = mapHostCalendarDays(rows);
-        if (mapped.length > 0) {
-          setDays(mapped);
-          setLoadedFromApi(true);
-        }
+        setDays(
+          mapped.length > 0
+            ? mapped
+            : buildEmptyHostMonthDays(calendarMonth.year, calendarMonth.month),
+        );
+        setLoadedFromApi(true);
+        setLoadError(null);
       })
-      .catch(() => undefined);
+      .catch((error) => {
+        setLoadedFromApi(false);
+        setLoadError(getApiErrorMessage(error));
+      });
+  }, [calendarMonth.month, calendarMonth.year]);
+
+  useEffect(() => {
+    reloadCalendar();
 
     void getMyHostActiveBooking()
       .then((booking) => {
@@ -615,13 +620,22 @@ function HostCalendarStackScreen({
         }
       })
       .catch(() => undefined);
-  }, [fallbackActiveBooking, user?.userId]);
+  }, [fallbackActiveBooking, reloadCalendar, user?.userId]);
 
-  const canEdit = (loadedFromApi || providerReady) && !saving;
-  const displayDays = loadedFromApi || providerReady ? days : withDemoFallback(days, hostCalendarDaysMock);
+  const canEdit = loadedFromApi && !saving;
+  const displayDays = loadedFromApi
+    ? days
+    : withDemoFallback(days, hostCalendarDaysMock);
   const displayBooking = withDemoFallbackValue(activeBooking, hostActiveBookingMock);
 
   const persistHostCalendar = (nextDays: typeof days) => {
+    if (!loadedFromApi) {
+      Alert.alert(
+        'Calendar not ready',
+        loadError ?? 'Load your calendar from the server before editing.',
+      );
+      return;
+    }
     setSaving(true);
     setStatusMessage('Saving…');
     void getMyHostProfile()
@@ -633,10 +647,14 @@ function HostCalendarStackScreen({
           ),
         }),
       )
-      .then(() => setStatusMessage('Calendar saved'))
+      .then(() => {
+        setStatusMessage('Calendar saved');
+        reloadCalendar();
+      })
       .catch((error) => {
         setStatusMessage(null);
         Alert.alert('Could not save calendar', getApiErrorMessage(error));
+        reloadCalendar();
       })
       .finally(() => setSaving(false));
   };
@@ -649,12 +667,12 @@ function HostCalendarStackScreen({
       statusIcon="📅"
       statusLabel="Host"
       calendarTitle={`${userName}'s Calendar`}
-      monthLabel={PROVIDER_CALENDAR.monthLabel}
-      startWeekday={PROVIDER_CALENDAR.startWeekday}
+      monthLabel={calendarMonth.monthLabel}
+      startWeekday={calendarMonth.startWeekday}
       days={displayDays}
       activeBooking={displayBooking}
       editable={canEdit}
-      statusMessage={statusMessage}
+      statusMessage={statusMessage ?? loadError}
       onDayInteract={(dayNumber) => {
         const nextDays = toggleHostDayBlocked(days, dayNumber);
         if (!nextDays) {
@@ -751,34 +769,51 @@ function GuideAvailabilityStackScreen({
   navigation,
 }: ProviderScreenHeaderProps) {
   const { user } = useAuth();
-  const [days, setDays] = useState(guideCalendarDaysMock);
+  const calendarMonth = useMemo(() => getProviderCalendarMonth(), []);
+  const [days, setDays] = useState(() =>
+    buildEmptyGuideMonthDays(calendarMonth.year, calendarMonth.month),
+  );
   const [loadedFromApi, setLoadedFromApi] = useState(false);
-  const [providerReady, setProviderReady] = useState(false);
-  const [selectedDay, setSelectedDay] = useState(11);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState(1);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    void getMyGuideProfile()
-      .then(() => setProviderReady(true))
-      .catch(() => setProviderReady(false));
-
-    void getMyGuideCalendar(PROVIDER_CALENDAR.year, PROVIDER_CALENDAR.month)
+  const reloadCalendar = useCallback(() => {
+    void getMyGuideCalendar(calendarMonth.year, calendarMonth.month)
       .then((rows) => {
         const mapped = mapGuideCalendarDays(rows);
-        if (mapped.length > 0) {
-          setDays(mapped);
-          setLoadedFromApi(true);
-        }
+        setDays(
+          mapped.length > 0
+            ? mapped
+            : buildEmptyGuideMonthDays(calendarMonth.year, calendarMonth.month),
+        );
+        setLoadedFromApi(true);
+        setLoadError(null);
       })
-      .catch(() => undefined);
-  }, [user?.userId]);
+      .catch((error) => {
+        setLoadedFromApi(false);
+        setLoadError(getApiErrorMessage(error));
+      });
+  }, [calendarMonth.month, calendarMonth.year]);
 
-  const canEdit = (loadedFromApi || providerReady) && !saving;
-  const displayDays =
-    loadedFromApi || providerReady ? days : withDemoFallback(days, guideCalendarDaysMock);
+  useEffect(() => {
+    reloadCalendar();
+  }, [reloadCalendar, user?.userId]);
+
+  const canEdit = loadedFromApi && !saving;
+  const displayDays = loadedFromApi
+    ? days
+    : withDemoFallback(days, guideCalendarDaysMock);
 
   const persistGuideSchedule = (nextDays: typeof days) => {
+    if (!loadedFromApi) {
+      Alert.alert(
+        'Availability not ready',
+        loadError ?? 'Load your availability from the server before editing.',
+      );
+      return;
+    }
     setSaving(true);
     setStatusMessage('Saving…');
     void getMyGuideProfile()
@@ -790,10 +825,14 @@ function GuideAvailabilityStackScreen({
           ),
         }),
       )
-      .then(() => setStatusMessage('Availability saved'))
+      .then(() => {
+        setStatusMessage('Availability saved');
+        reloadCalendar();
+      })
       .catch((error) => {
         setStatusMessage(null);
         Alert.alert('Could not save availability', getApiErrorMessage(error));
+        reloadCalendar();
       })
       .finally(() => setSaving(false));
   };
@@ -806,11 +845,11 @@ function GuideAvailabilityStackScreen({
       statusIcon="🗺️"
       statusLabel="Guide"
       calendarTitle={`${userName}'s Availability`}
-      monthLabel={PROVIDER_CALENDAR.monthLabel}
-      startWeekday={PROVIDER_CALENDAR.startWeekday}
+      monthLabel={calendarMonth.monthLabel}
+      startWeekday={calendarMonth.startWeekday}
       days={displayDays}
       editable={canEdit}
-      statusMessage={statusMessage}
+      statusMessage={statusMessage ?? loadError}
       onSelectedDayChange={setSelectedDay}
       onShiftToggle={(shift: GuideShiftBlock, enabled: boolean) => {
         const current = days.find((day) => day.day === selectedDay);
@@ -994,6 +1033,7 @@ export default function AppNavigator() {
   const [localBookings, setLocalBookings] = useState<BookingListItem[]>([]);
   const demoProfileSyncedForUser = useRef<string | null>(null);
   const [bookingFilter, setBookingFilter] = useState<BookingTabFilter>('active');
+  const [payLoading, setPayLoading] = useState(false);
   const [lodgingFilter, setLodgingFilter] = useState<LodgingCategoryFilter>('ALL');
   const [savedLodgingIds, setSavedLodgingIds] = useState<string[]>([]);
   const [checklistCompleted, setChecklistCompleted] = useState<string[]>(
@@ -2104,21 +2144,37 @@ export default function AppNavigator() {
       }
 
       try {
-        await completeBookingPayment(bookingId);
+        const payment = await completeBookingPayment(bookingId);
         homeApi.refresh();
-        if (booking) {
-          const confirmed = confirmDemoBooking(booking);
-          upsertLocalBooking(confirmed);
-          return confirmed;
-        }
-        return null;
+        const confirmed = confirmDemoBooking(
+          booking ?? {
+            id: payment.booking.bookingId,
+            bookingType: payment.booking.bookingType,
+            hostId: payment.booking.hostOrGuideId,
+            hostName: payment.booking.providerName ?? 'Host',
+            hostInitials: (payment.booking.providerName ?? 'HO').slice(0, 2).toUpperCase(),
+            hostLocation: '',
+            checkIn: payment.booking.checkIn ?? '',
+            checkOut: payment.booking.checkOut ?? payment.booking.sessionDate ?? '',
+            status: 'ACCEPTED',
+            priceBreakdown: {
+              nightlyRate: 0,
+              currency: 'GHS',
+              nights: 1,
+              subtotal: payment.booking.totalPrice ?? 0,
+              platformFee: payment.booking.platformFee ?? 0,
+              total: payment.booking.totalPrice ?? 0,
+            },
+            cancellationPolicy: 'Flexible',
+            createdAt: new Date().toISOString(),
+            seekerRole: 'STUDENT',
+            bookingContext: 'STUDENT',
+          },
+        );
+        upsertLocalBooking(confirmed);
+        return confirmed;
       } catch (error) {
         const message = getApiErrorMessage(error);
-        if (booking && message.includes('Cannot reach the server')) {
-          const confirmed = confirmDemoBooking(booking);
-          upsertLocalBooking(confirmed);
-          return confirmed;
-        }
         if (error instanceof Error) {
           throw error;
         }
@@ -2970,10 +3026,12 @@ export default function AppNavigator() {
             payBlocked={!canBookHomestay && !canBookGuideSession}
             payBlockedMessage="Complete your travel profile to pay for bookings."
             onContinueSetupPay={() => continueSeekerSetup(navigation)}
+            payLoading={payLoading}
             onPayPress={async (bookingId) => {
-              if (!canBookHomestay && !canBookGuideSession) {
+              if (!canBookHomestay && !canBookGuideSession || payLoading) {
                 return;
               }
+              setPayLoading(true);
               try {
                 const confirmed = await confirmBookingWithDemoFallback(bookingId);
                 if (!confirmed) {
@@ -2988,6 +3046,8 @@ export default function AppNavigator() {
                     ? error.message
                     : 'Payment could not be completed.',
                 );
+              } finally {
+                setPayLoading(false);
               }
             }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}

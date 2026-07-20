@@ -26,6 +26,7 @@ import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 import {
   colors,
   spacing,
+  layout,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
 
@@ -184,9 +185,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   carouselWrap: {
-    marginBottom: spacing.lg,
+    marginBottom: layout.sectionGap,
   },
   requestsSection: {
-    marginBottom: spacing.lg,
+    marginBottom: layout.sectionGap,
   },
 });

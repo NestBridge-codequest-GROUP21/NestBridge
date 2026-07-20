@@ -108,7 +108,7 @@ export default function ExploreHomeScreen({
         greeting={greeting}
         userName={userName}
         userInitials={userInitials}
-        statusIcon={statusIcon ?? (variant === 'browse' ? '🔍' : '📍')}
+        statusIcon={statusIcon ?? (variant === 'browse' ? 'search-outline' : 'location-outline')}
         statusLabel={resolvedStatus}
         notificationCount={notificationCount}
         onNotificationPress={onNotificationPress}

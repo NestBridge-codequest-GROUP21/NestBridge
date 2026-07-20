@@ -3,9 +3,11 @@ import { View, StyleSheet, Animated, ViewStyle } from 'react-native';
 import {
   colors,
   borderRadius,
+  borderWidths,
   spacing,
   motion,
   tints,
+  avatarSizes,
 } from '../constants/theme';
 
 export interface SkeletonLoaderProps {
@@ -76,15 +78,15 @@ export default function SkeletonLoader({ style, lines = 3 }: SkeletonCardProps) 
     >
       <View style={styles.headerRow}>
         <SkeletonBlock
-          width={48}
-          height={48}
+          width={avatarSizes.lg}
+          height={avatarSizes.lg}
           borderRadius={borderRadius.pill}
         />
         <View style={styles.headerText}>
-          <SkeletonBlock width="70%" height={14} />
+          <SkeletonBlock width="70%" height={spacing.md} />
           <SkeletonBlock
             width="45%"
-            height={12}
+            height={spacing.sm + spacing.xs}
             style={styles.lineGap}
           />
         </View>
@@ -108,7 +110,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     padding: spacing.md,
   },

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Avatar from './Avatar';
+import Card from './Card';
 import StatusBadge from './StatusBadge';
 import {
   colors,
@@ -8,11 +9,7 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
-  borderWidths,
   lineHeights,
-  shadows,
-  layout,
 } from '../constants/theme';
 
 export interface FeaturedHomeCardProps {
@@ -40,51 +37,48 @@ export default function FeaturedHomeCard({
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${sectionLabel}. ${name}. ${details}`}
     >
-      <Text style={styles.sectionLabel}>{sectionLabel}</Text>
+      <Card padding="lg" elevation="card" style={styles.card}>
+        <Text style={styles.sectionLabel}>{sectionLabel}</Text>
 
-      <View style={styles.body}>
-        <Avatar initials={avatarText} size="lg" style={styles.avatar} />
+        <View style={styles.body}>
+          <Avatar initials={avatarText} size="lg" style={styles.avatar} />
 
-        <View style={styles.content}>
-          <View style={styles.titleRow}>
-            <Text style={styles.name} numberOfLines={1}>
-              {name}
-            </Text>
-            {badge ? <StatusBadge label={badge} tone="info" /> : null}
-          </View>
-          <Text style={styles.details}>{details}</Text>
-          {matchReasons && matchReasons.length > 0 ? (
-            <View style={styles.reasons}>
-              {matchReasons.map((reason) => (
-                <Text key={reason} style={styles.reason}>
-                  {reason}
-                </Text>
-              ))}
+          <View style={styles.content}>
+            <View style={styles.titleRow}>
+              <Text style={styles.name} numberOfLines={1}>
+                {name}
+              </Text>
+              {badge ? <StatusBadge label={badge} tone="info" /> : null}
             </View>
-          ) : null}
+            <Text style={styles.details}>{details}</Text>
+            {matchReasons && matchReasons.length > 0 ? (
+              <View style={styles.reasons}>
+                {matchReasons.map((reason) => (
+                  <Text key={reason} style={styles.reason}>
+                    {reason}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
+          </View>
         </View>
-      </View>
 
-      <Text style={styles.cta}>{ctaLabel}</Text>
+        <Text style={styles.cta}>{ctaLabel}</Text>
+      </Card>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: layout.cardPaddingLarge,
+  pressable: {
     marginBottom: spacing.lg,
-    borderWidth: borderWidths.hairline,
-    borderColor: colors.border,
-    ...shadows.card,
   },
+  card: {},
   pressed: {
     opacity: 0.94,
   },

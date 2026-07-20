@@ -18,6 +18,7 @@ import {
   borderWidths,
   controlHeights,
   iconSizes,
+  lineHeights,
 } from '../constants/theme';
 
 export interface SecondaryButtonProps {
@@ -106,6 +107,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.teal,
   },
   labelDisabled: {

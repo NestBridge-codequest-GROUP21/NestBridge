@@ -256,9 +256,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   headline: {
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.bold,
     color: colors.white,
     lineHeight: lineHeights.heading,
     marginTop: spacing.sm,

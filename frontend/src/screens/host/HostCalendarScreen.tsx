@@ -141,9 +141,10 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   bookingTotal: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.teal,
   },
 });

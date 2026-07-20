@@ -32,7 +32,6 @@ import {
   layout,
   iconSizes,
   touchTarget,
-  avatarSizes,
 } from '../../constants/theme';
 import type { LodgingListing } from '../../types/lodging';
 import { lodgingCategoryLabel } from '../../data/lodgingDirectoryMock';
@@ -83,11 +82,9 @@ export default function LodgingDetailScreen({
         <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
 
         <View style={styles.heroContent}>
-          <Avatar
-            initials={listing.name.slice(0, 2)}
-            size="lg"
-            style={styles.heroAvatar}
-          />
+          <View style={styles.heroAvatarWrap}>
+            <Avatar initials={listing.name.slice(0, 2)} size="xl" />
+          </View>
           <Text style={styles.name}>{listing.name}</Text>
           <Text style={styles.meta}>
             {lodgingCategoryLabel(listing.category)} · {listing.area}, {listing.city}
@@ -110,22 +107,32 @@ export default function LodgingDetailScreen({
           message="Book on the provider’s site or by phone — not inside NestBridge."
         />
 
-        <SectionHeader title="About" />
-        <Text style={styles.description}>{listing.description}</Text>
+        <Card padding="lg" elevation="card" style={styles.detailCard}>
+          <SectionHeader title="About" style={styles.aboutHeader} />
+          <Text style={styles.description}>{listing.description}</Text>
 
-        {listing.phone ? (
-          <Card padding="md" elevation="card" style={styles.contactCard}>
-            <Text style={styles.contactLabel}>Phone</Text>
-            <Text style={styles.contactValue}>{listing.phone}</Text>
-          </Card>
-        ) : null}
-
-        {listing.email ? (
-          <Card padding="md" elevation="card" style={styles.contactCard}>
-            <Text style={styles.contactLabel}>Email</Text>
-            <Text style={styles.contactValue}>{listing.email}</Text>
-          </Card>
-        ) : null}
+          {listing.phone || listing.email ? (
+            <View style={styles.contactBlock}>
+              {listing.phone ? (
+                <View style={styles.contactRow}>
+                  <Text style={styles.contactLabel}>Phone</Text>
+                  <Text style={styles.contactValue}>{listing.phone}</Text>
+                </View>
+              ) : null}
+              {listing.email ? (
+                <View
+                  style={[
+                    styles.contactRow,
+                    listing.phone ? styles.contactRowBorder : null,
+                  ]}
+                >
+                  <Text style={styles.contactLabel}>Email</Text>
+                  <Text style={styles.contactValue}>{listing.email}</Text>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+        </Card>
       </ScreenScroll>
 
       <View
@@ -169,8 +176,6 @@ export default function LodgingDetailScreen({
   );
 }
 
-const HERO_AVATAR = avatarSizes.lg + spacing.lg;
-
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -187,17 +192,15 @@ const styles = StyleSheet.create({
   heroContent: {
     alignItems: 'center',
   },
-  heroAvatar: {
-    width: HERO_AVATAR,
-    height: HERO_AVATAR,
-    borderRadius: borderRadius.pill,
+  heroAvatarWrap: {
     marginBottom: spacing.md,
     ...shadows.card,
   },
   name: {
     fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display,
+    fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.heading,
     color: colors.white,
     textAlign: 'center',
     marginBottom: spacing.sm,
@@ -205,6 +208,7 @@ const styles = StyleSheet.create({
   meta: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    lineHeight: lineHeights.body,
     color: colors.white,
     opacity: 0.9,
     marginBottom: spacing.md,
@@ -216,9 +220,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rating: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.gold,
   },
   price: {
@@ -227,19 +231,35 @@ const styles = StyleSheet.create({
     color: colors.white,
     opacity: 0.92,
   },
+  detailCard: {
+    marginBottom: spacing.md,
+  },
+  aboutHeader: {
+    marginBottom: spacing.sm,
+  },
   description: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     lineHeight: lineHeights.body,
-    marginBottom: spacing.lg,
   },
-  contactCard: {
-    marginBottom: spacing.sm,
+  contactBlock: {
+    marginTop: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: borderWidths.hairline,
+    borderTopColor: colors.border,
+  },
+  contactRow: {
+    paddingVertical: spacing.sm,
+  },
+  contactRowBorder: {
+    borderTopWidth: borderWidths.hairline,
+    borderTopColor: colors.border,
   },
   contactLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
@@ -247,6 +267,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.body,
     color: colors.textPrimary,
   },
   footer: {

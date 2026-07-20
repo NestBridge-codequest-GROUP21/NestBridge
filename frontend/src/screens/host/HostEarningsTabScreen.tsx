@@ -159,9 +159,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   escrowTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
@@ -191,6 +192,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
     color: colors.tealDeep,
     marginBottom: spacing.md,
   },
@@ -232,9 +234,10 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
   },
   lineNet: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.teal,
   },
   lineLabel: {

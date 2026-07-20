@@ -240,9 +240,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   hostName: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
     lineHeight: lineHeights.heading,
@@ -276,9 +276,9 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
   dateValue: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     lineHeight: lineHeights.subheading,
   },
@@ -314,8 +314,8 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
   },
   priceLabelBold: {
-    fontFamily: fontFamilies.bold,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
   priceValue: {
@@ -325,9 +325,10 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   priceValueBold: {
-    fontFamily: fontFamilies.bold,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
     fontSize: fontSizes.subheading,
+    lineHeight: lineHeights.subheading,
   },
   priceValueAccent: {
     color: colors.tealDeep,
@@ -363,9 +364,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   escrowTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     lineHeight: lineHeights.subheading,
   },

@@ -109,7 +109,7 @@ export default function FormTextField({
             style={styles.toggleButton}
             accessibilityRole="button"
             accessibilityLabel={visible ? 'Hide password' : 'Show password'}
-            hitSlop={8}
+            hitSlop={spacing.sm}
           >
             <Text style={styles.toggleText}>{visible ? 'Hide' : 'Show'}</Text>
           </Pressable>
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   },
   input: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md - 2,
+    paddingVertical: spacing.sm + spacing.xs,
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,

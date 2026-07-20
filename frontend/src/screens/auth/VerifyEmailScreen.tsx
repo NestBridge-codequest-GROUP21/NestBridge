@@ -53,7 +53,7 @@ export default function VerifyEmailScreen({
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar style="dark" />
       <ScrollView
@@ -107,8 +107,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   iconCircle: {
-    width: spacing.xxl + spacing.xl,
-    height: spacing.xxl + spacing.xl,
+    width: layout.iconTileSize,
+    height: layout.iconTileSize,
     borderRadius: borderRadius.pill,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -120,6 +120,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.heading,
     color: colors.textPrimary,
     textAlign: 'center',
   },

@@ -13,6 +13,7 @@ import {
   touchTarget,
   tints,
   borderRadius,
+  layout,
 } from '../constants/theme';
 
 export interface ListRowProps {
@@ -102,8 +103,8 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   iconTile: {
-    width: touchTarget,
-    height: touchTarget,
+    width: layout.iconTileSize,
+    height: layout.iconTileSize,
     borderRadius: borderRadius.md,
     backgroundColor: tints.teal,
     alignItems: 'center',
