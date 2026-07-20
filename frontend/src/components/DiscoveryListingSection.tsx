@@ -70,13 +70,13 @@ export default function DiscoveryListingSection({
           <Card style={styles.card}>
             <Avatar initials={item.initials} size="md" />
             <View style={styles.body}>
-              <Text style={styles.name} numberOfLines={1}>
+              <Text style={styles.name} numberOfLines={2}>
                 {item.name}
               </Text>
-              <Text style={styles.subtitle} numberOfLines={1}>
+              <Text style={styles.subtitle} numberOfLines={2}>
                 {item.subtitle}
               </Text>
-              <Text style={styles.price} numberOfLines={1}>
+              <Text style={styles.price} numberOfLines={2}>
                 {item.priceLabel}
               </Text>
             </View>

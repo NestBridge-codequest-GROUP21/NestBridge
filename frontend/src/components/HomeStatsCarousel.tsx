@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
 } from 'react-native';
 import SectionHeader from './SectionHeader';
@@ -17,6 +16,8 @@ import {
   borderWidths,
   layout,
   shadows,
+  lineHeights,
+  touchTarget,
 } from '../constants/theme';
 
 export interface HomeStatItem {
@@ -32,6 +33,7 @@ export interface HomeStatsCarouselProps {
   onItemPress?: (itemId: string) => void;
 }
 
+/** Compact KPI tiles in a wrapping 2-column grid (not a swipe carousel). */
 export default function HomeStatsCarousel({
   title,
   items,
@@ -40,32 +42,28 @@ export default function HomeStatsCarousel({
   return (
     <View style={styles.wrap}>
       <SectionHeader title={title} />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-        nestedScrollEnabled
-      >
-        {items.map((item, index) => (
+      <View style={styles.grid}>
+        {items.map((item) => (
           <Pressable
             key={item.id}
             style={({ pressed }) => [
-              styles.card,
-              index < items.length - 1 && styles.cardSpacing,
+              styles.cardOuter,
               pressed && styles.pressed,
             ]}
             onPress={() => onItemPress?.(item.id)}
             accessibilityRole="button"
             accessibilityLabel={`${item.value} ${item.label}`}
           >
-            <Text style={styles.value}>{item.value}</Text>
-            <Text style={styles.label}>{item.label}</Text>
-            {item.subtitle ? (
-              <Text style={styles.subtitle}>{item.subtitle}</Text>
-            ) : null}
+            <View style={styles.card}>
+              <Text style={styles.value}>{item.value}</Text>
+              <Text style={styles.label}>{item.label}</Text>
+              {item.subtitle ? (
+                <Text style={styles.subtitle}>{item.subtitle}</Text>
+              ) : null}
+            </View>
           </Pressable>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 }
@@ -74,43 +72,49 @@ const styles = StyleSheet.create({
   wrap: {
     marginBottom: layout.sectionGap,
   },
-  listContent: {
-    paddingRight: spacing.lg,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -spacing.xs,
+  },
+  cardOuter: {
+    width: '50%',
+    paddingHorizontal: spacing.xs,
+    marginBottom: spacing.sm,
   },
   card: {
-    width: layout.listingCardWidth * 0.65,
-    minHeight: layout.carouselMinHeight * 0.65,
+    minHeight: touchTarget * 2,
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
-    padding: layout.cardPaddingLarge,
+    padding: layout.cardPadding,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     justifyContent: 'center',
     ...shadows.card,
-  },
-  cardSpacing: {
-    marginRight: spacing.md,
   },
   pressed: {
     opacity: 0.94,
   },
   value: {
     fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display,
+    fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.heading,
     color: colors.tealDeep,
     marginBottom: spacing.xs,
   },
   label: {
     fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
+    fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.caption,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
   },
 });

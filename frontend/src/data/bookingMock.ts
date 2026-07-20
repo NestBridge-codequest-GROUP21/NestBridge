@@ -52,7 +52,7 @@ export const studentBookingsMock: BookingListItem[] = [
     bookingType: 'HOST',
     seekerRole: 'STUDENT',
     hostId: 'host-2',
-    hostName: 'Kwame & Grace',
+    hostName: 'Kwame & Grace Asante',
     hostInitials: 'KG',
     hostLocation: 'Cantonments, Accra',
     hostIcon: '🏡',
@@ -330,7 +330,7 @@ export const studentNotificationsMock: AppNotification[] = [
   {
     id: 'notif-student-2',
     title: 'Booking request sent',
-    body: 'Kwame & Grace will review your request for Sep–Nov 2026.',
+    body: 'Kwame & Grace Asante will review your request for Sep–Nov 2026.',
     read: true,
     createdAt: '2026-06-22',
     relatedBookingId: 'booking-2',

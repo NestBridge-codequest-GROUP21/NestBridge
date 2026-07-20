@@ -69,13 +69,8 @@ export const studentRecentActivityMock: RecentActivityItem[] = [
   },
 ];
 
+/** Prep shortcuts — excludes Transport (already in student quick actions). */
 export const studentRecommendedMock: ExploreSectionItem[] = [
-  {
-    id: 'transport',
-    title: 'Transport guide',
-    subtitle: 'Getting around Accra safely',
-    icon: '🚌',
-  },
   {
     id: 'greetings',
     title: 'Local greetings',

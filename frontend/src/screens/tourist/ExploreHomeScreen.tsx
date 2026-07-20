@@ -12,7 +12,7 @@ import FeaturedHomeCard, {
 import QuickActionsGrid, {
   type QuickActionItem,
 } from '../../components/QuickActionsGrid';
-import ExploreSectionCarousel from '../../components/ExploreSectionCarousel';
+import ExploreSectionList from '../../components/ExploreSectionList';
 import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
@@ -144,12 +144,12 @@ export default function ExploreHomeScreen({
         ) : null}
 
         {sections.length > 0 ? (
-          <View style={styles.carouselWrap}>
+          <View style={styles.sectionWrap}>
             <SectionHeader
               title={exploreSectionTitle}
               style={styles.sectionHeader}
             />
-            <ExploreSectionCarousel
+            <ExploreSectionList
               sections={sections}
               onSectionPress={onSectionPress}
             />
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  carouselWrap: {
+  sectionWrap: {
     marginBottom: layout.sectionGap,
   },
   sectionHeader: {

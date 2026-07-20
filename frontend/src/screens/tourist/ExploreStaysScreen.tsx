@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -152,11 +152,7 @@ export default function ExploreStaysScreen({
             iconName="home-outline"
           />
         ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.list}
-          >
+          <View style={styles.list}>
             {listings.map((listing) => (
               <StayCard
                 key={listing.id}
@@ -164,7 +160,7 @@ export default function ExploreStaysScreen({
                 onBookPress={() => onBookPress?.(listing.id)}
               />
             ))}
-          </ScrollView>
+          </View>
         )}
       </ScreenScroll>
     </View>
@@ -194,15 +190,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   list: {
-    gap: spacing.lg,
+    gap: spacing.md,
     paddingBottom: spacing.sm,
   },
   stayCard: {
-    width: layout.listingCardWidth,
+    width: '100%',
     overflow: 'hidden',
   },
   imageTile: {
-    height: layout.carouselMinHeight - spacing.xl,
+    height: layout.carouselMinHeight - spacing.xl * 2,
     margin: spacing.sm,
     backgroundColor: tints.teal,
     borderRadius: borderRadius.md,

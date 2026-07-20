@@ -10,7 +10,7 @@ import FeaturedHomeCard, {
 import QuickActionsGrid, {
   type QuickActionItem,
 } from '../../components/QuickActionsGrid';
-import ExploreSectionCarousel from '../../components/ExploreSectionCarousel';
+import ExploreSectionList from '../../components/ExploreSectionList';
 import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
@@ -173,13 +173,14 @@ export default function StudentHomeDashboard({
         ) : null}
 
         {recommendedSections.length > 0 ? (
-          <View style={styles.carouselSection}>
+          <View style={styles.sectionBlock}>
             <SectionHeader
               title={recommendedSectionTitle}
               style={styles.sectionHeader}
             />
-            <ExploreSectionCarousel
+            <ExploreSectionList
               sections={recommendedSections}
+              variant="grid"
               onSectionPress={onRecommendedSectionPress}
             />
           </View>
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  carouselSection: {
+  sectionBlock: {
     marginBottom: layout.sectionGap,
   },
   sectionHeader: {

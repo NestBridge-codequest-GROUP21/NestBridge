@@ -13,6 +13,7 @@ import EmptyState from '../../components/EmptyState';
 import Card from '../../components/Card';
 import Avatar from '../../components/Avatar';
 import StatusBadge from '../../components/StatusBadge';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -24,6 +25,7 @@ import {
   touchTarget,
   lineHeights,
   layout,
+  iconSizes,
 } from '../../constants/theme';
 import type { GuideProfileSummary } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -78,11 +80,10 @@ export default function GuideSearchScreen({
       ) : (
         <ScrollView
           style={styles.scroll}
-          horizontal
-          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingRight: spacing.lg + insets.right },
+            { paddingBottom: insets.bottom + spacing.xl },
           ]}
         >
           {guides.map((guide) => (
@@ -98,27 +99,34 @@ export default function GuideSearchScreen({
               }
             >
               <Card style={styles.card} padding="lg">
-                <View style={styles.topRow}>
-                  <Avatar initials={guide.initials} size="lg" />
-                  {showMatchScores ? (
-                    <StatusBadge
-                      label={`${guide.matchPercentage}%`}
-                      tone="success"
-                    />
-                  ) : null}
+                <Avatar initials={guide.initials} size="lg" style={styles.avatar} />
+                <View style={styles.cardBody}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.name} numberOfLines={2}>
+                      {guide.name}
+                    </Text>
+                    {showMatchScores ? (
+                      <StatusBadge
+                        label={`${guide.matchPercentage}%`}
+                        tone="success"
+                      />
+                    ) : null}
+                  </View>
+                  <Text style={styles.location} numberOfLines={2}>
+                    {guide.location}
+                  </Text>
+                  <Text style={styles.services} numberOfLines={2}>
+                    {guide.serviceTypes.slice(0, 3).join(' · ')}
+                  </Text>
+                  <Text style={styles.price}>
+                    {formatCurrency(guide.pricePerSession, guide.currency)} / session
+                  </Text>
                 </View>
-                <Text style={styles.name} numberOfLines={1}>
-                  {guide.name}
-                </Text>
-                <Text style={styles.location} numberOfLines={1}>
-                  {guide.location}
-                </Text>
-                <Text style={styles.services} numberOfLines={1}>
-                  {guide.serviceTypes.slice(0, 2).join(' · ')}
-                </Text>
-                <Text style={styles.price}>
-                  {formatCurrency(guide.pricePerSession, guide.currency)} / session
-                </Text>
+                <AppIcon
+                  name="chevron-forward"
+                  size={iconSizes.md}
+                  color={colors.teal}
+                />
               </Card>
             </Pressable>
           ))}
@@ -165,29 +173,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
     gap: spacing.md,
-    alignItems: 'flex-start',
   },
-  cardPress: {},
+  cardPress: {
+    minHeight: touchTarget,
+  },
   card: {
-    width: layout.listingCardWidth - spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
   },
   pressed: {
     opacity: 0.94,
-    transform: [{ scale: 0.995 }],
   },
-  topRow: {
+  avatar: {
+    marginRight: spacing.md,
+  },
+  cardBody: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
   },
   name: {
+    flex: 1,
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
   },
   location: {
     fontFamily: fontFamilies.regular,

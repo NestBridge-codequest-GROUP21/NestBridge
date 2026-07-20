@@ -37,12 +37,28 @@ export interface SOSScreenProps {
   onContactCallPress?: (contact: EmergencyContact) => void;
 }
 
+function uniqueContacts(contacts: EmergencyContact[]): EmergencyContact[] {
+  const seen = new Set<string>();
+  const unique: EmergencyContact[] = [];
+  for (const contact of contacts) {
+    const key = contact.number.replace(/[^\d+]/g, '');
+    if (!key || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    unique.push(contact);
+  }
+  return unique;
+}
+
 export default function SOSScreen({
   emergencyContacts,
   onBack,
   onCallEmergencyServices,
   onContactCallPress,
 }: SOSScreenProps) {
+  const contacts = uniqueContacts(emergencyContacts);
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -79,7 +95,7 @@ export default function SOSScreen({
 
         <SectionHeader title="Your emergency contacts" />
 
-        {emergencyContacts.length === 0 ? (
+        {contacts.length === 0 ? (
           <EmptyState
             title="No contacts saved yet"
             body="Add trusted contacts from your profile so you can reach them quickly in an emergency."
@@ -88,8 +104,8 @@ export default function SOSScreen({
           />
         ) : (
           <Card padding="none" elevation="card">
-            {emergencyContacts.map((contact, index) => {
-              const isLast = index === emergencyContacts.length - 1;
+            {contacts.map((contact, index) => {
+              const isLast = index === contacts.length - 1;
 
               return (
                 <View
