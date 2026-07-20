@@ -135,7 +135,7 @@ function createStyles({ colors, overlays }: AppTheme) {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
@@ -162,7 +162,7 @@ function createStyles({ colors, overlays }: AppTheme) {
     paddingHorizontal: spacing.lg,
   },
   sheet: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     maxHeight: '70%',

@@ -75,7 +75,7 @@ export default function WelfareCheckInScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
-        <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
+        <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backButton} />
         <Text style={styles.headerTitle}>Welfare check-in</Text>
         <Text style={styles.headerSubtitle}>
           Stay with {hostName} · {checkIn} – {checkOut}
@@ -197,14 +197,14 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.sm,
     lineHeight: lineHeights.heading,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     lineHeight: lineHeights.body,
   },
@@ -302,7 +302,7 @@ function createStyles({ colors }: AppTheme) {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
     borderTopWidth: borderWidths.hairline,

@@ -251,7 +251,7 @@ function createStyles({ colors }: AppTheme) {
     color: colors.textSecondary,
   },
   chipTextActive: {
-    color: colors.white,
+    color: colors.onPrimary,
   },
   errorBanner: {
     marginTop: spacing.sm,

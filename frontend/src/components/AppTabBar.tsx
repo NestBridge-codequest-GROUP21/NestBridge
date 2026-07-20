@@ -111,7 +111,7 @@ export default function AppTabBar({
 function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
   wrapper: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingTop: spacing.sm,
@@ -167,7 +167,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.micro,
     lineHeight: lineHeights.micro,
-    color: colors.white,
+    color: colors.onPrimary,
   },
 });
 }

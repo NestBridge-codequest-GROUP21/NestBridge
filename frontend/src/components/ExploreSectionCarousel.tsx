@@ -264,7 +264,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
   },
   cardPressable: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
     borderWidth: borderWidths.hairline,

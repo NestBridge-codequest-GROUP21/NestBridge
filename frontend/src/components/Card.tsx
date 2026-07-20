@@ -46,7 +46,7 @@ export default function Card({
 function createStyles({ colors, shadows }: AppTheme) {
   return StyleSheet.create({
     base: {
-      backgroundColor: colors.white,
+      backgroundColor: colors.surface,
       borderRadius: borderRadius.lg,
       borderWidth: borderWidths.hairline,
       borderColor: colors.border,

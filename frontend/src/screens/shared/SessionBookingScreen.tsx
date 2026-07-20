@@ -342,7 +342,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
     borderTopWidth: borderWidths.hairline,

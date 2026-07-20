@@ -46,7 +46,7 @@ function createStyles({ colors }: AppTheme) {
     width: spacing.sm,
     height: spacing.sm,
     borderRadius: spacing.sm,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     opacity: 0.35,
   },
   dotAccent: {

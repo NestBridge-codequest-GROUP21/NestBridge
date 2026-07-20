@@ -88,7 +88,7 @@ function createStyles({ colors, tints }: AppTheme) {
     width: 56,
     height: 56,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     alignItems: 'center',

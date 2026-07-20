@@ -350,7 +350,7 @@ function createStyles({ colors, shadows, overlays }: AppTheme) {
   },
   dateField: {
     justifyContent: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
@@ -373,7 +373,7 @@ function createStyles({ colors, shadows, overlays }: AppTheme) {
     justifyContent: 'flex-end',
   },
   pickerSheet: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,
     padding: spacing.md,

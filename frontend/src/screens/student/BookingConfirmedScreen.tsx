@@ -91,7 +91,7 @@ export default function BookingConfirmedScreen({
             },
           ]}
         >
-          <AppIcon name="checkmark" size={iconSizes.xl} color={colors.white} />
+          <AppIcon name="checkmark" size={iconSizes.xl} color={colors.onPrimary} />
         </Animated.View>
 
         <Animated.View
@@ -164,7 +164,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     textAlign: 'center',
     marginBottom: spacing.md,
     lineHeight: lineHeights.display,
@@ -173,7 +173,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.92,
     textAlign: 'center',
     lineHeight: lineHeights.subheading,

@@ -71,7 +71,7 @@ function createStyles({ colors, tints }: AppTheme) {
   highlighted: {
     borderWidth: borderWidths.strong,
     borderColor: colors.gold,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
   },
   text: {
     fontFamily: fontFamilies.bold,

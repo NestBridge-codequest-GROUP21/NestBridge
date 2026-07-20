@@ -61,7 +61,7 @@ export default function OnboardingNextStepsCard({
 function createStyles({ colors, shadows }: AppTheme) {
   return StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     borderWidth: borderWidths.hairline,

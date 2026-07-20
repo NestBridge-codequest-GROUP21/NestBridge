@@ -84,7 +84,7 @@ export default function ScreenHeader({
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
-              <AppIcon name="chevron-back" size={iconSizes.lg} color={colors.white} />
+              <AppIcon name="chevron-back" size={iconSizes.lg} color={colors.onPrimary} />
             </Pressable>
           ) : (
             <View style={styles.actionSpacer} />
@@ -96,7 +96,7 @@ export default function ScreenHeader({
               accessibilityRole="button"
               accessibilityLabel="Help"
             >
-              <AppIcon name="help-circle-outline" size={iconSizes.lg} color={colors.white} />
+              <AppIcon name="help-circle-outline" size={iconSizes.lg} color={colors.onPrimary} />
             </Pressable>
           ) : (
             <View style={styles.actionSpacer} />
@@ -131,7 +131,7 @@ export default function ScreenHeader({
                   <AppIcon
                     name="notifications-outline"
                     size={iconSizes.md}
-                    color={colors.white}
+                    color={colors.onPrimary}
                   />
                   {notificationCount > 0 ? (
                     <View style={styles.notificationBadge}>
@@ -156,7 +156,7 @@ export default function ScreenHeader({
                 >
                   <Text style={styles.avatarText}>{userInitials}</Text>
                   <View style={styles.avatarBadge}>
-                    <AppIcon name="person" size={fontSizes.micro} color={colors.white} />
+                    <AppIcon name="person" size={fontSizes.micro} color={colors.onPrimary} />
                   </View>
                 </Pressable>
               ) : null}
@@ -205,7 +205,7 @@ function createStyles({ colors }: AppTheme) {
   actionText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   titleRow: {
     flexDirection: 'row',
@@ -218,14 +218,14 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.heading,
     lineHeight: lineHeights.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     textAlign: 'center',
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     lineHeight: lineHeights.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     marginTop: spacing.sm,
   },
@@ -241,7 +241,7 @@ function createStyles({ colors }: AppTheme) {
   greeting: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     marginBottom: spacing.xs,
   },
@@ -250,7 +250,7 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.heading,
     lineHeight: lineHeights.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.xs,
   },
   subtitleInline: {
@@ -289,13 +289,13 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.micro,
     lineHeight: lineHeights.micro,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   avatar: {
     width: avatarSizes.lg,
     height: avatarSizes.lg,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,

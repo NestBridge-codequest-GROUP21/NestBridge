@@ -411,7 +411,7 @@ function createStyles({ colors }: AppTheme) {
   },
   appNameNest: {
     fontFamily: fontFamilies.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     lineHeight: lineHeights.display,
@@ -428,7 +428,7 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     lineHeight: lineHeights.display,
-    color: colors.white,
+    color: colors.onPrimary,
     textAlign: 'center',
   },
   tagline: {
@@ -449,7 +449,7 @@ function createStyles({ colors }: AppTheme) {
     width: spacing.sm,
     height: spacing.sm,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     opacity: 0.3,
   },
   dotAccent: {
@@ -464,7 +464,7 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
     lineHeight: lineHeights.caption,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.55,
     textAlign: 'center',
   },

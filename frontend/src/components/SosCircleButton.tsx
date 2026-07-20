@@ -58,7 +58,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     letterSpacing: 0.5,
   },
 });

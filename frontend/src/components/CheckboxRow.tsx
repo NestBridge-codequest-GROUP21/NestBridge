@@ -41,7 +41,7 @@ export default function CheckboxRow({
     >
       <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
         {checked ? (
-          <AppIcon name="checkmark" size={iconSizes.sm} color={colors.white} />
+          <AppIcon name="checkmark" size={iconSizes.sm} color={colors.onPrimary} />
         ) : null}
       </View>
       <Text style={styles.label}>{label}</Text>

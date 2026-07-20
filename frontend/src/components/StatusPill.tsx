@@ -26,7 +26,7 @@ export default function StatusPill({
   return (
     <View style={styles.pill} accessibilityRole="text">
       {icon ? (
-        <AppIcon glyph={icon} size={iconSizes.sm} color={colors.white} />
+        <AppIcon glyph={icon} size={iconSizes.sm} color={colors.onPrimary} />
       ) : null}
       <Text style={styles.label}>{label}</Text>
     </View>
@@ -54,7 +54,7 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.caption,
-    color: colors.white,
+    color: colors.onPrimary,
   },
 });
 }

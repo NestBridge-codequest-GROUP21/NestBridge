@@ -217,7 +217,7 @@ export default function OfflineMapScreen({
               <AppIcon
                 name="arrow-forward"
                 size={iconSizes.md}
-                color={colors.white}
+                color={colors.onPrimary}
               />
             </Pressable>
           </View>
@@ -246,7 +246,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     textAlign: 'center',
   },
   mapCanvas: {
@@ -285,7 +285,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   landmarkCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
@@ -329,7 +329,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     width: touchTarget,
     height: touchTarget,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     alignItems: 'center',
@@ -337,7 +337,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     ...shadows.floating,
   },
   searchPanel: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,
     borderTopWidth: borderWidths.hairline,

@@ -142,7 +142,7 @@ export default function AccountSetupScreen({
       >
         <View style={styles.headerTop}>
           {onBack ? (
-            <BackButton onPress={onBack} color={colors.white} />
+            <BackButton onPress={onBack} color={colors.onPrimary} />
           ) : (
             <View style={styles.backPlaceholder} />
           )}
@@ -195,7 +195,7 @@ export default function AccountSetupScreen({
                 ]}
               >
                 {isNoLongerExchangeStudent ? (
-                  <AppIcon name="checkmark" size={iconSizes.sm} color={colors.white} />
+                  <AppIcon name="checkmark" size={iconSizes.sm} color={colors.onPrimary} />
                 ) : null}
               </View>
               <View style={styles.exchangeToggleText}>
@@ -297,13 +297,13 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.heading,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     lineHeight: lineHeights.body,
   },

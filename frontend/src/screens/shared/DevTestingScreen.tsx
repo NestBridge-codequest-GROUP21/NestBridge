@@ -141,7 +141,7 @@ export default function DevTestingScreen({
       >
         <View style={styles.headerTop}>
           {onBack ? (
-            <BackButton onPress={onBack} color={colors.white} />
+            <BackButton onPress={onBack} color={colors.onPrimary} />
           ) : (
             <View style={styles.backPlaceholder} />
           )}
@@ -264,12 +264,12 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     lineHeight: lineHeights.body,
   },
@@ -323,7 +323,7 @@ function createStyles({ colors }: AppTheme) {
     color: colors.textPrimary,
   },
   devButtonTextDanger: {
-    color: colors.white,
+    color: colors.onPrimary,
   },
 });
 }

@@ -69,7 +69,7 @@ export default function HostProfileScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}
       >
-        <BackButton onPress={onBack} color={colors.white} style={styles.back} />
+        <BackButton onPress={onBack} color={colors.onPrimary} style={styles.back} />
 
         <View style={styles.heroContent}>
           <View style={styles.avatarRing}>
@@ -200,7 +200,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     lineHeight: lineHeights.heading,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
@@ -208,7 +208,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     lineHeight: lineHeights.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.9,
     marginBottom: spacing.sm,
   },
@@ -225,12 +225,12 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.caption,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   matchHint: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     textAlign: 'center',
   },
@@ -286,7 +286,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
   highlightChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -314,7 +314,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
     borderTopWidth: borderWidths.hairline,

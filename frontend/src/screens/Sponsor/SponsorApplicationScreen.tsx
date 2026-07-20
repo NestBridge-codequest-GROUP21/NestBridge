@@ -122,12 +122,12 @@ export default function SponsorApplicationScreen({
           end={{ x: 1, y: 1 }}
           style={[styles.header, { paddingTop: insets.top + spacing.md }]}
         >
-          <BackButton onPress={onBack} color={colors.white} style={styles.backBtn} />
+          <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backBtn} />
           <View style={styles.logoTile}>
             <AppIcon
               glyph={sponsor.logo}
               size={iconSizes.xl}
-              color={colors.white}
+              color={colors.onPrimary}
             />
           </View>
           <Text style={styles.headerTitle}>Apply for sponsorship</Text>
@@ -244,7 +244,7 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.heading,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
