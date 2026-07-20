@@ -7,7 +7,6 @@ import ScreenScroll from '../../components/ScreenScroll';
 import EmptyState from '../../components/EmptyState';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
-import ListRow from '../../components/ListRow';
 import SectionHeader from '../../components/SectionHeader';
 import {
   fontFamilies,
@@ -25,8 +24,17 @@ import {
 import { emptyStates } from '../../data/appCopy';
 
 export interface EmergencyContact {
-  label: string;
+  /** Organisation or agency name (e.g. Ghana Police Service). */
+  organisation: string;
+  /** Responsible office / department when known. */
+  department?: string;
+  /** Role or desk title (e.g. Emergency Dispatch) — not a personal name. */
+  contactTitle?: string;
   number: string;
+  description?: string;
+  /** Saved name for user-added personal contacts only. */
+  contactName?: string;
+  isUserContact?: boolean;
 }
 
 export interface SOSScreenProps {
@@ -51,6 +59,35 @@ function uniqueContacts(contacts: EmergencyContact[]): EmergencyContact[] {
     unique.push(contact);
   }
   return unique;
+}
+
+function contactHeading(contact: EmergencyContact): string {
+  if (contact.isUserContact && contact.contactName?.trim()) {
+    return contact.contactName.trim();
+  }
+  return contact.organisation;
+}
+
+function contactContextLines(contact: EmergencyContact): string[] {
+  const lines: string[] = [];
+  const office =
+    contact.contactTitle?.trim() || contact.department?.trim() || '';
+  if (office) {
+    lines.push(office);
+  }
+  if (
+    contact.department?.trim() &&
+    contact.contactTitle?.trim() &&
+    contact.department.trim().toLowerCase() !==
+      contact.contactTitle.trim().toLowerCase()
+  ) {
+    lines.unshift(contact.department.trim());
+  }
+  lines.push(contact.number);
+  if (contact.description?.trim()) {
+    lines.push(contact.description.trim());
+  }
+  return lines;
 }
 
 export default function SOSScreen({
@@ -122,20 +159,41 @@ export default function SOSScreen({
           <Card padding="none" elevation="card">
             {contacts.map((contact, index) => {
               const isLast = index === contacts.length - 1;
+              const heading = contactHeading(contact);
+              const contextLines = contactContextLines(contact);
 
               return (
                 <View
-                  key={`${contact.label}-${contact.number}`}
+                  key={`${heading}-${contact.number}`}
                   style={[styles.contactRow, !isLast && styles.contactRowBorder]}
                 >
-                  <ListRow
-                    title={contact.label}
-                    subtitle={contact.number}
-                    iconName="person-outline"
-                    showChevron={false}
-                    bordered={false}
-                    style={styles.contactListRow}
-                  />
+                  <View style={styles.contactBody}>
+                    <View style={styles.iconTile}>
+                      <AppIcon
+                        name="person-outline"
+                        size={iconSizes.md}
+                        color={colors.tealDeep}
+                      />
+                    </View>
+                    <View style={styles.contactText}>
+                      <Text style={styles.contactOrg} numberOfLines={2}>
+                        {heading}
+                      </Text>
+                      {contextLines.map((line) => (
+                        <Text
+                          key={`${heading}-${line}`}
+                          style={
+                            line === contact.number
+                              ? styles.contactNumber
+                              : styles.contactMeta
+                          }
+                          numberOfLines={2}
+                        >
+                          {line}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
                   <Pressable
                     style={({ pressed }) => [
                       styles.callAction,
@@ -143,7 +201,7 @@ export default function SOSScreen({
                     ]}
                     onPress={() => onContactCallPress?.(contact)}
                     accessibilityRole="button"
-                    accessibilityLabel={`Call ${contact.label}`}
+                    accessibilityLabel={`Call ${heading}`}
                   >
                     <AppIcon name="call-outline" size={iconSizes.sm} color={colors.danger} />
                     <Text style={styles.callActionText}>Call</Text>
@@ -231,9 +289,43 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     borderBottomWidth: borderWidths.hairline,
     borderBottomColor: colors.border,
   },
-  contactListRow: {
+  contactBody: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
+  },
+  iconTile: {
+    width: touchTarget,
+    height: touchTarget,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contactText: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  contactOrg: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+  },
+  contactMeta: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
+  },
+  contactNumber: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.teal,
   },
   callAction: {
     flexDirection: 'row',
@@ -272,4 +364,3 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
   },
 });
 }
-

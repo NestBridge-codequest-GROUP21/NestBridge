@@ -7,7 +7,15 @@ export interface ProfileHubItem {
   icon: string;
 }
 
+const HOMESTAYS_HUB_ITEM: ProfileHubItem = {
+  id: 'homestays',
+  label: 'Homestays',
+  description: 'Browse verified host family stays near your destination',
+  icon: '🏠',
+};
+
 const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
+  HOMESTAYS_HUB_ITEM,
   {
     id: 'video-library',
     label: 'Video library',
@@ -47,6 +55,7 @@ const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
 ];
 
 const TOURIST_CULTURAL_ITEMS: ProfileHubItem[] = [
+  HOMESTAYS_HUB_ITEM,
   {
     id: 'video-library',
     label: 'Video library',
@@ -93,9 +102,20 @@ export function culturalGuidanceItemsForRole(role: HomeRole): ProfileHubItem[] {
     case 'STUDENT':
       return STUDENT_CULTURAL_ITEMS;
     case 'HOST':
-    case 'GUIDE':
+      // Homestays hub row + student cultural tools + offline map.
       return [
         ...STUDENT_CULTURAL_ITEMS,
+        {
+          id: 'offline-map',
+          label: 'Offline map',
+          description: 'Useful when hosting or touring off-grid',
+          icon: '📍',
+        },
+      ];
+    case 'GUIDE':
+      // Guides already reach Homestays via Explore primary → UnifiedSearch.
+      return [
+        ...STUDENT_CULTURAL_ITEMS.filter((item) => item.id !== 'homestays'),
         {
           id: 'offline-map',
           label: 'Offline map',

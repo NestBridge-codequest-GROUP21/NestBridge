@@ -26,25 +26,85 @@ export function hostProfileToListing(profile: HostProfileApi): HostListingItem {
   };
 }
 
+function slugTourTypeId(label: string): string {
+  const slug = label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug ? `custom-${slug}` : `custom-${Date.now()}`;
+}
+
 export function mergeTourTypesFromProfile(
   serviceTypes: string[] | undefined,
   pricePerSession?: number,
 ): { tourTypes: TourTypeOption[]; baseRate: string; maxGroupSize: string } {
+  const hasServiceTypes = Array.isArray(serviceTypes);
   const enabledSet = new Set((serviceTypes ?? []).map((value) => value.toLowerCase()));
-  const tourTypes = tourTypesMock.map((option) => ({
+  const tourTypes: TourTypeOption[] = tourTypesMock.map((option) => ({
     ...option,
-    enabled:
-      enabledSet.has(option.label.toLowerCase()) ||
-      enabledSet.has(option.id.toLowerCase()) ||
-      (serviceTypes ?? []).some((type) =>
-        option.label.toLowerCase().includes(type.toLowerCase()),
-      ),
+    enabled: !hasServiceTypes
+      ? option.enabled
+      : enabledSet.has(option.label.toLowerCase()) ||
+        enabledSet.has(option.id.toLowerCase()) ||
+        (serviceTypes ?? []).some((type) =>
+          option.label.toLowerCase().includes(type.toLowerCase()),
+        ),
   }));
+
+  for (const serviceType of serviceTypes ?? []) {
+    const label = serviceType.trim();
+    if (!label) {
+      continue;
+    }
+    const exists = tourTypes.some(
+      (option) =>
+        option.label.toLowerCase() === label.toLowerCase() ||
+        option.id.toLowerCase() === label.toLowerCase(),
+    );
+    if (!exists) {
+      tourTypes.push({
+        id: slugTourTypeId(label),
+        label,
+        description: 'Custom tour type',
+        enabled: true,
+      });
+    }
+  }
 
   return {
     tourTypes,
     baseRate: pricePerSession != null ? String(Math.round(pricePerSession)) : '45',
     maxGroupSize: '8',
+  };
+}
+
+export function isDuplicateTourTypeLabel(
+  tourTypes: TourTypeOption[],
+  label: string,
+  excludeId?: string,
+): boolean {
+  const normalized = label.trim().toLowerCase();
+  if (!normalized) {
+    return false;
+  }
+  return tourTypes.some(
+    (option) =>
+      option.id !== excludeId &&
+      option.label.trim().toLowerCase() === normalized,
+  );
+}
+
+export function createTourTypeOption(
+  label: string,
+  description: string,
+): TourTypeOption {
+  const trimmedLabel = label.trim();
+  return {
+    id: slugTourTypeId(trimmedLabel),
+    label: trimmedLabel,
+    description: description.trim() || 'Custom tour type',
+    enabled: true,
   };
 }
 

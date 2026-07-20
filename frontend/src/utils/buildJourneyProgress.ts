@@ -40,11 +40,24 @@ export function buildJourneyProgress(input: {
   bookings: BookingListItem[];
   milestones: JourneyMilestones;
   destinationLabel?: string;
+  /** When true, accommodation CTA prefers ExploreStays over MatchSearch. */
+  preferStayCatalogue?: boolean;
 }): JourneyProgress {
   const place =
     input.destinationLabel?.trim() ||
     input.profileState.seekerSetup.data.city?.trim() ||
     'Ghana';
+
+  const accommodationFound = hasBooking(
+    input.bookings,
+    'HOST',
+    STAY_FOUND_STATUSES,
+  );
+  const guideConnected = hasBooking(
+    input.bookings,
+    'GUIDE',
+    GUIDE_CONNECTED_STATUSES,
+  );
 
   const steps: JourneyStep[] = [
     {
@@ -58,18 +71,26 @@ export function buildJourneyProgress(input: {
     {
       id: 'accommodation',
       title: 'Accommodation found',
-      subtitle: 'Host stay accepted or confirmed',
+      subtitle: accommodationFound
+        ? 'Open your stay booking'
+        : 'Browse or match with a host stay',
       iconGlyph: '🏡',
-      completed: hasBooking(input.bookings, 'HOST', STAY_FOUND_STATUSES),
-      routeHint: 'MatchSearch',
+      completed: accommodationFound,
+      routeHint: accommodationFound
+        ? 'StudentBookings'
+        : input.preferStayCatalogue
+          ? 'ExploreStays'
+          : 'MatchSearch',
     },
     {
       id: 'guide',
       title: 'Guide connected',
-      subtitle: 'Tour or orientation session booked',
+      subtitle: guideConnected
+        ? 'Open your guide session'
+        : 'Find a local guide near you',
       iconGlyph: '🗺️',
-      completed: hasBooking(input.bookings, 'GUIDE', GUIDE_CONNECTED_STATUSES),
-      routeHint: 'GuideSearch',
+      completed: guideConnected,
+      routeHint: guideConnected ? 'StudentBookings' : 'GuideSearch',
     },
     {
       id: 'emergency',
