@@ -2502,19 +2502,38 @@ export default function AppNavigator() {
       <Stack.Screen name="ExploreHub">
         {({ navigation }) => {
           const isProvider = homeRole === 'HOST' || homeRole === 'GUIDE';
+          const isTouristBrowse = homeRole === 'TOURIST' || homeRole === 'BROWSE';
           const primaryLabel =
             homeRole === 'STUDENT'
               ? 'Find a host'
-              : homeRole === 'TOURIST' || homeRole === 'BROWSE'
-                ? 'Find stays & guides'
+              : isTouristBrowse
+                ? 'Book a trip'
                 : 'Browse stays & guides';
           return (
             <ExploreHubScreen
+              title="Explore"
+              subtitle={
+                isTouristBrowse
+                  ? 'Book guided trips, find stays, and explore culture in Ghana'
+                  : homeRole === 'STUDENT'
+                    ? 'Find a host family, guides, and support for life in Ghana'
+                    : 'Homestays, guides, culture, and support for life in Ghana'
+              }
               primaryActionLabel={primaryLabel}
               primaryActionHint={
                 homeRole === 'STUDENT'
                   ? 'Match with verified host families near campus in Ghana'
-                  : 'Homestays, local guides, hotels, and lodging across Ghana'
+                  : isTouristBrowse
+                    ? 'Book local guides for tours, orientation, and cultural experiences'
+                    : 'Homestays, local guides, hotels, and lodging across Ghana'
+              }
+              travelBookingLabel={
+                isTouristBrowse ? 'Find stays & lodging' : undefined
+              }
+              travelBookingHint={
+                isTouristBrowse
+                  ? 'Homestays, hotels, and hostels across Ghana'
+                  : undefined
               }
               hubItems={profileCulturalItems}
               tabBarItems={getTabBarForRole(homeRole)}
@@ -2524,8 +2543,18 @@ export default function AppNavigator() {
                   navigation.navigate('MatchSearch');
                   return;
                 }
+                if (isTouristBrowse) {
+                  // Trip booking = guide sessions (tours / experiences).
+                  navigation.navigate('GuideSearch');
+                  return;
+                }
                 navigation.navigate('UnifiedSearch');
               }}
+              onTravelBookingPress={
+                isTouristBrowse
+                  ? () => navigation.navigate('UnifiedSearch')
+                  : undefined
+              }
               onHubItemPress={(itemId) =>
                 handleProfileCulturalItem(navigation, itemId)
               }
@@ -3251,7 +3280,7 @@ export default function AppNavigator() {
 
           return (
             <GuideSearchScreen
-              title={siteName ? `Guides for ${siteName}` : 'Find a guide'}
+              title={siteName ? `Guides for ${siteName}` : 'Book a trip'}
               subtitle={
                 siteName
                   ? `Local guides who know ${siteName}`
