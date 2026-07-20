@@ -28,6 +28,7 @@ import {
   touchTarget,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
+import type { ProviderVerification } from '../../types/verification';
 export { sampleMatchResults } from '../../data/matchResultsMock';
 export interface MatchResultHost {
   id: string;
@@ -40,6 +41,7 @@ export interface MatchResultHost {
   pricePerNight: number;
   currency: string;
   location: string;
+  verification?: ProviderVerification;
 }
 
 export interface MatchResultsScreenProps {
@@ -122,10 +124,12 @@ function HostMatchCard({
             </Text>
           </LinearGradient>
 
-          <StatusBadge
-            label={trustBadgeLabel(host.trustBadge)}
-            tone={trustBadgeTone(host.trustBadge)}
-          />
+          {host.trustBadge && host.trustBadge !== 'NEW' ? (
+            <StatusBadge
+              label={trustBadgeLabel(host.trustBadge)}
+              tone={trustBadgeTone(host.trustBadge)}
+            />
+          ) : null}
         </View>
 
         <View style={styles.reasonsBlock}>

@@ -5,6 +5,7 @@ import type {
   SessionPriceBreakdown,
 } from '../types/booking';
 import { FLEXIBLE_POLICY } from './bookingMock';
+import { guideVerification, EMPTY_VERIFICATION } from '../types/verification';
 
 export { FLEXIBLE_POLICY };
 
@@ -22,6 +23,7 @@ export const suggestedGuidesMock: GuideProfileSummary[] = [
     languages: ['English', 'Twi'],
     cancellationPolicy: FLEXIBLE_POLICY,
     icon: '🗺️',
+    verification: guideVerification(),
   },
   {
     id: 'guide-2',
@@ -36,6 +38,7 @@ export const suggestedGuidesMock: GuideProfileSummary[] = [
     languages: ['English', 'French'],
     cancellationPolicy: FLEXIBLE_POLICY,
     icon: '🏛️',
+    verification: guideVerification({ experienceVerified: false }),
   },
   {
     id: 'guide-3',
@@ -50,6 +53,7 @@ export const suggestedGuidesMock: GuideProfileSummary[] = [
     languages: ['English', 'Hausa'],
     cancellationPolicy: FLEXIBLE_POLICY,
     icon: '✈️',
+    verification: { ...EMPTY_VERIFICATION },
   },
   {
     id: 'guide-4',
@@ -64,6 +68,7 @@ export const suggestedGuidesMock: GuideProfileSummary[] = [
     languages: ['English', 'Fante'],
     cancellationPolicy: FLEXIBLE_POLICY,
     icon: '🏰',
+    verification: guideVerification(),
   },
 ];
 

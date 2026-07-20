@@ -4,6 +4,7 @@ import com.nestbridge.booking.Booking;
 import com.nestbridge.booking.BookingRepository;
 import com.nestbridge.common.BookingStatus;
 import com.nestbridge.common.BookingType;
+import com.nestbridge.common.ProviderVerificationDto;
 import com.nestbridge.user.User;
 import com.nestbridge.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -142,6 +143,10 @@ public class HostService {
                 .availabilityCalendar(host.getAvailabilityCalendar())
                 .matchPercentage(matchPct)
                 .matchReasons(reasons)
+                .verification(ProviderVerificationDto.forHost(
+                        user != null && user.isIdentityVerified(),
+                        user != null && user.isPhoneVerified(),
+                        host.isLocationVerified()))
                 .build();
     }
 

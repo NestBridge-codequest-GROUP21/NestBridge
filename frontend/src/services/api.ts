@@ -12,6 +12,7 @@ import type {
 } from '../types/booking';
 import type { AuthSession, AuthUser } from '../types/auth';
 import type { LodgingCategory, LodgingListing } from '../types/lodging';
+import { normalizeVerification } from '../types/verification';
 import type {
   StudentEvent,
   StudentEventDraft,
@@ -119,6 +120,13 @@ export interface MatchResult {
   compatibilityScore: number;
   matchReasons: string[];
   trustBadge?: string;
+  verification?: {
+    providerVerified?: boolean;
+    identityVerified?: boolean;
+    phoneVerified?: boolean;
+    locationVerified?: boolean;
+    experienceVerified?: boolean;
+  };
   pricePerNight?: number;
   distanceKm?: number;
   location?: string;
@@ -321,6 +329,13 @@ export interface HostProfileApi {
   reviewCount?: number;
   active?: boolean;
   availabilityCalendar?: Record<string, unknown>;
+  verification?: {
+    providerVerified?: boolean;
+    identityVerified?: boolean;
+    phoneVerified?: boolean;
+    locationVerified?: boolean;
+    experienceVerified?: boolean;
+  };
 }
 
 export interface GuideProfileApi {
@@ -340,6 +355,13 @@ export interface GuideProfileApi {
   reviewCount?: number;
   active?: boolean;
   availabilitySchedule?: Record<string, unknown>;
+  verification?: {
+    providerVerified?: boolean;
+    identityVerified?: boolean;
+    phoneVerified?: boolean;
+    locationVerified?: boolean;
+    experienceVerified?: boolean;
+  };
 }
 
 export interface HostCalendarDayApi {
@@ -682,6 +704,7 @@ export function mapHostProfileApi(dto: HostProfileApi): HostProfileSummary {
     currency: 'GHS',
     cancellationPolicy: dto.cancellationPolicy ?? 'FLEXIBLE',
     icon: '🏡',
+    verification: normalizeVerification(dto.verification),
   };
 }
 
@@ -701,6 +724,7 @@ export function mapGuideProfileApi(dto: GuideProfileApi): GuideProfileSummary {
     languages: dto.languagesOffered ?? ['English'],
     cancellationPolicy: 'FLEXIBLE',
     icon: '🗺️',
+    verification: normalizeVerification(dto.verification),
   };
 }
 
