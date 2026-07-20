@@ -114,7 +114,7 @@ export default function VideoLibraryScreen({
           <EmptyState
             title="No videos in this category"
             body={`Try another topic, or check back for new orientation clips about ${cityLabel}.`}
-            tip="Short videos cover markets, transport, and settling in."
+            tip="Browse culture, transport, visas, Mobile Money, festivals, and safety."
             iconName="film-outline"
           />
         </View>

@@ -62,6 +62,50 @@ export function sanitizeVideoResource(video: VideoResourceApi): VideoResourceApi
   };
 }
 
+/**
+ * Sanitize, drop non-playable placeholders, and keep one entry per YouTube ID
+ * (and per videoKey) so API + demo merge never shows the same clip twice.
+ */
 export function sanitizeVideoResources(videos: VideoResourceApi[]): VideoResourceApi[] {
-  return videos.map(sanitizeVideoResource);
+  const seenYoutubeIds = new Set<string>();
+  const seenKeys = new Set<string>();
+  const unique: VideoResourceApi[] = [];
+
+  for (const raw of videos) {
+    const video = sanitizeVideoResource(raw);
+    if (!isPlayableYoutubeId(video.youtubeId)) {
+      continue;
+    }
+    const yt = video.youtubeId.trim();
+    const key = video.videoKey.trim().toLowerCase();
+    if (seenYoutubeIds.has(yt) || (key && seenKeys.has(key))) {
+      continue;
+    }
+    seenYoutubeIds.add(yt);
+    if (key) {
+      seenKeys.add(key);
+    }
+    unique.push(video);
+  }
+
+  // Prefer curated order when present, then any remaining API-only rows.
+  const curatedOrder = new Map(
+    videosApiMock.map((item, index) => [item.videoKey, index] as const),
+  );
+  unique.sort((a, b) => {
+    const ai = curatedOrder.get(a.videoKey);
+    const bi = curatedOrder.get(b.videoKey);
+    if (ai != null && bi != null) {
+      return ai - bi;
+    }
+    if (ai != null) {
+      return -1;
+    }
+    if (bi != null) {
+      return 1;
+    }
+    return a.title.localeCompare(b.title);
+  });
+
+  return unique;
 }
