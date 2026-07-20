@@ -107,7 +107,7 @@ export const accountSetupCopy = {
 
 export const devTestingCopy = {
   title: 'Developer testing',
-  subtitle: 'Jump into flows without completing real onboarding. Dev builds only.',
+  subtitle: 'Open app flows without finishing onboarding. Development builds only.',
   resetLabel: 'Reset to brand-new user',
   resetHint: 'Clears profile progress and signs you out.',
   homeDashboardsTitle: 'Jump to home dashboard',
@@ -185,21 +185,21 @@ export function onboardingReadyCopy(
       carouselCards: [
         {
           icon: '🔑',
-          title: 'Verified guests',
-          body: 'Connect with matched travelers seeking a home-stay experience.',
+          title: 'Matched guests',
+          body: 'See students and travellers looking for a homestay with your household.',
         },
         {
           icon: '💬',
-          title: 'Review and connect',
-          body: 'Chat with interested students before you accept a request.',
+          title: 'Review requests',
+          body: 'Message guests and accept stays on your own schedule.',
         },
         {
           icon: '🛡️',
-          title: 'Safe and supported',
-          body: 'Every guest is verified before they can request a stay.',
+          title: 'Verified guests',
+          body: 'Guests complete NestBridge checks before they can request a stay.',
         },
       ],
-      ctaLabel: 'View Guest Matches',
+      ctaLabel: 'Go to requests',
       roleLabel: ONBOARDING_ROLE_LABELS.HOST,
       roleIcon: PRIMARY_INTENT_ICONS.HOST,
     };
@@ -212,21 +212,21 @@ export function onboardingReadyCopy(
       carouselCards: [
         {
           icon: '🗺️',
-          title: 'Book your tour',
-          body: 'Attract and accept bookings from matched tourists.',
+          title: 'Session bookings',
+          body: 'Accept tour and orientation sessions from travellers who match your offer.',
         },
         {
           icon: '📆',
-          title: 'Manage availability',
-          body: 'Set prices, tour types, and your weekly schedule.',
+          title: 'Your availability',
+          body: 'Set tour types, prices, and open time slots.',
         },
         {
           icon: '⭐',
-          title: 'Grow your reputation',
-          body: 'Collect reviews and build trust with every session.',
+          title: 'Reviews',
+          body: 'Build trust with feedback after each completed session.',
         },
       ],
-      ctaLabel: 'Browse Bookings & Accept Matches',
+      ctaLabel: 'Go to bookings',
       roleLabel: ONBOARDING_ROLE_LABELS.GUIDE,
       roleIcon: PRIMARY_INTENT_ICONS.GUIDE,
     };
@@ -239,21 +239,21 @@ export function onboardingReadyCopy(
       carouselCards: [
         {
           icon: '🏪',
-          title: 'Your authentic guide',
-          body: `Explore markets and crafts around ${destination} with a local guide.`,
+          title: 'Local guides',
+          body: `Book someone who knows the markets and neighbourhoods around ${destination}.`,
         },
         {
           icon: '🏠',
           title: 'Verified homestays',
-          body: 'Book stays with host families reviewed by other travellers.',
+          body: 'Stay with host families reviewed by other travellers.',
         },
         {
           icon: '🛡️',
-          title: 'Safety tips on the go',
-          body: 'SOS help and emergency contacts wherever you explore.',
+          title: 'Help when you need it',
+          body: 'Emergency contacts and SOS stay within reach during your trip.',
         },
       ],
-      ctaLabel: 'Explore Your Cultural Matches',
+      ctaLabel: 'See your matches',
       roleLabel: ONBOARDING_ROLE_LABELS.TOURIST,
       roleIcon: PRIMARY_INTENT_ICONS.TOURIST,
     };
@@ -265,21 +265,21 @@ export function onboardingReadyCopy(
     carouselCards: [
       {
         icon: '📖',
-        title: 'Your new home base',
-        body: 'Connect with warm host families that match your needs.',
+        title: 'A place to settle',
+        body: 'Find host families that fit your study routine and lifestyle.',
       },
       {
         icon: '🎯',
-        title: 'Smart matching',
-        body: `We surface hosts near ${destination} by your lifestyle and study preferences.`,
+        title: 'Matched to you',
+        body: `See hosts near ${destination} ranked by what matters for your move.`,
       },
       {
         icon: '🛡️',
-        title: 'Safe and verified homes',
-        body: 'All host families are verified before listing.',
+        title: 'Verified hosts',
+        body: 'Host families are checked before they appear in NestBridge.',
       },
     ],
-    ctaLabel: 'Meet Your Best Matches',
+    ctaLabel: 'See your matches',
     roleLabel: ONBOARDING_ROLE_LABELS.STUDENT,
     roleIcon: PRIMARY_INTENT_ICONS.STUDENT,
   };
