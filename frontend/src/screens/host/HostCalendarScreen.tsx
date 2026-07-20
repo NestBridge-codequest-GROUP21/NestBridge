@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import InlineBanner from '../../components/InlineBanner';
 import MonthCalendarGrid, {
   buildHostCalendarGrid,
 } from '../../components/MonthCalendarGrid';
@@ -14,6 +15,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 
 export interface HostCalendarScreenProps {
@@ -91,7 +94,9 @@ export default function HostCalendarScreen({
           onDayPress={handleDayPress}
         />
 
-        {statusMessage ? <Text style={styles.statusMessage}>{statusMessage}</Text> : null}
+        {statusMessage ? (
+          <InlineBanner message={statusMessage} tone="info" style={styles.statusBanner} />
+        ) : null}
 
         <View style={styles.bookingCard}>
           <Text style={styles.bookingTitle}>Active booking</Text>
@@ -120,14 +125,13 @@ const styles = StyleSheet.create({
   screenSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
+    lineHeight: lineHeights.body,
   },
-  statusMessage: {
-    marginTop: spacing.sm,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
+  statusBanner: {
+    marginTop: spacing.md,
   },
   bookingCard: {
     marginTop: spacing.lg,
@@ -135,11 +139,13 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: spacing.md,
+    padding: spacing.lg,
+    ...shadows.card,
   },
   bookingTitle: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -148,12 +154,15 @@ const styles = StyleSheet.create({
   bookingDetail: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
+    lineHeight: lineHeights.body,
   },
   bookingTotal: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
     color: colors.teal,
   },
 });

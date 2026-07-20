@@ -6,17 +6,19 @@ import {
   ScrollView,
   Pressable,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AppIcon from '../../components/AppIcon';
+import ScreenHeader from '../../components/ScreenHeader';
+import EmptyState from '../../components/EmptyState';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
-  gradients,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import type { GuideProfileSummary } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -46,73 +48,76 @@ export default function GuideSearchScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.headerCompact]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-      >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
-        </Pressable>
-        <Text style={styles.headerTitle}>{title}</Text>
-        <Text style={styles.headerSubtitle}>{subtitle}</Text>
+      <ScreenHeader
+        title={title}
+        subtitle={subtitle}
+        compact
+        onBack={onBack}
+      />
+
+      <View style={styles.cityRow}>
         <View style={styles.cityPill}>
           <Text style={styles.cityPillText}>{cityLabel}</Text>
         </View>
-      </LinearGradient>
+      </View>
 
-      <ScrollView
-        style={styles.scroll}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingRight: spacing.lg + insets.right },
-        ]}
-      >
-        {guides.map((guide) => (
-          <Pressable
-            key={guide.id}
-            style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-            onPress={() => onGuidePress?.(guide.id)}
-            accessibilityRole="button"
-            accessibilityLabel={
-              showMatchScores
-                ? `${guide.name}, ${guide.matchPercentage} percent match`
-                : guide.name
-            }
-          >
-            <View style={styles.topRow}>
-              <View style={styles.iconWrap}>
-                <Text style={styles.iconInitials}>{guide.initials}</Text>
-              </View>
-              {showMatchScores ? (
-                <View style={styles.matchBadge}>
-                  <Text style={styles.matchText}>{guide.matchPercentage}%</Text>
+      {guides.length === 0 ? (
+        <View style={styles.emptyWrap}>
+          <EmptyState
+            title="No guides nearby yet"
+            body={`We are onboarding more local guides around ${cityLabel}. Try Accra or check back soon.`}
+            tip="Guides help with markets, transport, and settling in."
+            iconName="people-outline"
+          />
+        </View>
+      ) : (
+        <ScrollView
+          style={styles.scroll}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingRight: spacing.lg + insets.right },
+          ]}
+        >
+          {guides.map((guide) => (
+            <Pressable
+              key={guide.id}
+              style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+              onPress={() => onGuidePress?.(guide.id)}
+              accessibilityRole="button"
+              accessibilityLabel={
+                showMatchScores
+                  ? `${guide.name}, ${guide.matchPercentage} percent match`
+                  : guide.name
+              }
+            >
+              <View style={styles.topRow}>
+                <View style={styles.iconWrap}>
+                  <Text style={styles.iconInitials}>{guide.initials}</Text>
                 </View>
-              ) : null}
-            </View>
-            <Text style={styles.name} numberOfLines={1}>
-              {guide.name}
-            </Text>
-            <Text style={styles.location} numberOfLines={1}>
-              {guide.location}
-            </Text>
-            <Text style={styles.services} numberOfLines={1}>
-              {guide.serviceTypes.slice(0, 2).join(' · ')}
-            </Text>
-            <Text style={styles.price}>
-              {formatCurrency(guide.pricePerSession, guide.currency)} / session
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+                {showMatchScores ? (
+                  <View style={styles.matchBadge}>
+                    <Text style={styles.matchText}>{guide.matchPercentage}%</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.name} numberOfLines={1}>
+                {guide.name}
+              </Text>
+              <Text style={styles.location} numberOfLines={1}>
+                {guide.location}
+              </Text>
+              <Text style={styles.services} numberOfLines={1}>
+                {guide.serviceTypes.slice(0, 2).join(' · ')}
+              </Text>
+              <Text style={styles.price}>
+                {formatCurrency(guide.pricePerSession, guide.currency)} / session
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -122,34 +127,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  cityRow: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
-  },
-  headerTitle: {
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    marginBottom: spacing.sm,
-  },
-  headerSubtitle: {
-    fontSize: fontSizes.body,
-    color: colors.white,
-    opacity: 0.88,
-    lineHeight: 22,
-    marginBottom: spacing.md,
+    paddingTop: spacing.md,
   },
   cityPill: {
     alignSelf: 'flex-start',
@@ -157,15 +137,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.card,
   },
   cityPillText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
   },
+  emptyWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+  },
   scroll: {
     flex: 1,
-    marginTop: -spacing.sm,
   },
   scrollContent: {
     paddingHorizontal: spacing.lg,
@@ -180,11 +167,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
+    ...shadows.card,
   },
   pressed: {
     opacity: 0.94,
@@ -199,6 +182,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconInitials: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
@@ -210,6 +194,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   name: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
@@ -222,28 +207,29 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
   matchText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.white,
   },
   location: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
   services: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textTertiary,
     marginBottom: spacing.sm,
   },
   price: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
-  },
-  arrow: {
-    fontSize: fontSizes.heading,
-    color: colors.teal,
-    marginLeft: spacing.sm,
   },
 });

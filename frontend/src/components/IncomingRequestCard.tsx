@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import AppIcon from './AppIcon';
+import EmptyState from './EmptyState';
 import {
   colors,
   fontFamilies,
@@ -8,6 +9,7 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  shadows,
 } from '../constants/theme';
 import type { IncomingBookingRequest } from '../types/booking';
 import { formatBookingDate } from '../data/bookingMock';
@@ -86,17 +88,12 @@ export function IncomingRequestsEmptyBlock({
   tip,
 }: IncomingRequestsEmptyBlockProps) {
   return (
-    <View style={styles.emptyBlock}>
-      <AppIcon
-        name="mail-open-outline"
-        size={fontSizes.display}
-        color={colors.textTertiary}
-        style={styles.emptyIcon}
-      />
-      <Text style={styles.emptyTitle}>{title}</Text>
-      <Text style={styles.emptyBody}>{body}</Text>
-      {tip ? <Text style={styles.emptyTip}>{tip}</Text> : null}
-    </View>
+    <EmptyState
+      title={title}
+      body={body}
+      tip={tip}
+      iconName="mail-open-outline"
+    />
   );
 }
 
@@ -109,11 +106,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   requestCardSpacing: {
     marginBottom: spacing.md,
@@ -182,42 +175,5 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: colors.teal,
     marginLeft: spacing.sm,
-  },
-  emptyBlock: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  emptyIcon: {
-    fontSize: fontSizes.display,
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  emptyBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  emptyTip: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.regular,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    marginTop: spacing.md,
-    lineHeight: 18,
   },
 });

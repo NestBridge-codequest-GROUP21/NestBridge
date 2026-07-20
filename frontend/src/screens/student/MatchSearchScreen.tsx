@@ -20,11 +20,14 @@ import {
   borderRadius,
   gradients,
   layout,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import MatchResultsScreen, {
   type MatchResultHost,
 } from './MatchResultsScreen';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import BackButton from '../../components/BackButton';
 
 export interface MatchSearchDefaults {
   destinationCity: string;
@@ -90,7 +93,7 @@ export default function MatchSearchScreen({
   defaults,
   onSearch,
   tabBarItems,
-  activeTabId = 'search',
+  activeTabId = 'explore',
   showSosDock = false,
   onSosPress,
   onBack,
@@ -199,21 +202,15 @@ export default function MatchSearchScreen({
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
         {onBack && !showTabBar ? (
-          <Pressable
-            onPress={onBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
+          <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
         ) : (
           <View style={styles.backButtonSpacer} />
         )}
-        <Text style={styles.headerEyebrow}>Smart matching</Text>
+        <Text style={styles.headerEyebrow}>Host search</Text>
         <Text style={styles.headerTitle}>Find your perfect host</Text>
         <Text style={styles.headerSubtitle}>
-          We match you with verified families based on lifestyle, diet, language, and budget.
+          We match you with verified Ghana host families based on lifestyle, diet,
+          language, and budget.
         </Text>
       </LinearGradient>
 
@@ -317,8 +314,8 @@ export default function MatchSearchScreen({
         <View style={styles.heroCard}>
           <Text style={styles.heroCardTitle}>Why matching matters</Text>
           <Text style={styles.heroCardBody}>
-            Every result shows exactly why a host fits you — diet, quiet hours, languages, and
-            location — so you can choose with confidence before you message anyone.
+            Every result shows exactly why a host fits you — diet, quiet hours, languages,
+            and neighbourhood — so you can choose with confidence before you message anyone.
           </Text>
         </View>
 
@@ -387,19 +384,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
     marginBottom: spacing.xs,
+    marginLeft: -spacing.sm,
   },
   backButtonSpacer: {
     height: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
   },
   headerEyebrow: {
     fontFamily: fontFamilies.semibold,
@@ -417,6 +406,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: colors.white,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.display,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
@@ -424,7 +414,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.white,
     opacity: 0.9,
-    lineHeight: fontSizes.body + 6,
+    lineHeight: lineHeights.body,
   },
   scroll: {
     flex: 1,
@@ -440,11 +430,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
+    ...shadows.raised,
     marginBottom: spacing.lg,
   },
   summaryTopRow: {
@@ -469,7 +455,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-    lineHeight: fontSizes.subheading + 6,
+    lineHeight: lineHeights.subheading,
   },
   editButton: {
     minHeight: 44,
@@ -529,6 +515,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.xl,
+    ...shadows.card,
   },
   heroCardTitle: {
     fontFamily: fontFamilies.bold,
@@ -536,6 +523,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: colors.white,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.subheading,
   },
   heroCardBody: {
     fontFamily: fontFamilies.regular,
@@ -543,20 +531,15 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.white,
     opacity: 0.9,
-    lineHeight: fontSizes.body + 6,
+    lineHeight: lineHeights.body,
   },
   findButton: {
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    shadowColor: colors.tealDeep,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
-    elevation: 6,
+    ...shadows.floating,
   },
   findButtonDisabled: {
-    shadowOpacity: 0,
-    elevation: 0,
+    ...shadows.none,
   },
   findButtonPressed: {
     opacity: 0.96,
@@ -605,11 +588,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 8,
+    ...shadows.floating,
   },
   loadingTitle: {
     fontFamily: fontFamilies.semibold,
@@ -619,6 +598,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     marginBottom: spacing.lg,
     textAlign: 'center',
+    lineHeight: lineHeights.body,
   },
   skeletonBlock: {
     width: '100%',

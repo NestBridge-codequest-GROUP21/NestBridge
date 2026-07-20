@@ -7,6 +7,7 @@ import {
   Modal,
   ScrollView,
 } from 'react-native';
+import AppIcon from './AppIcon';
 import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../constants/theme';
 
 export interface SelectFieldProps {
@@ -78,7 +79,9 @@ export default function SelectField({
                     >
                       {option}
                     </Text>
-                    {selected && <Text style={styles.optionCheck}>✓</Text>}
+                    {selected ? (
+                      <AppIcon name="checkmark" size={18} color={colors.teal} />
+                    ) : null}
                   </Pressable>
                 );
               })}
@@ -173,11 +176,5 @@ const styles = StyleSheet.create({
   optionTextSelected: {
     fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
-  },
-  optionCheck: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.teal,
-    marginLeft: spacing.sm,
   },
 });

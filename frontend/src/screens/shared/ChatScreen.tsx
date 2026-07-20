@@ -11,6 +11,9 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
+import EmptyState from '../../components/EmptyState';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -19,6 +22,7 @@ import {
   spacing,
   borderRadius,
   layout,
+  shadows,
 } from '../../constants/theme';
 import type { ChatMessage } from '../../types/messaging';
 
@@ -71,14 +75,7 @@ export default function ChatScreen({
       <StatusBar style="light" />
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
         {onBack ? (
-          <Pressable
-            onPress={onBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
+          <BackButton onPress={onBack} color={colors.white} />
         ) : (
           <View style={styles.backPlaceholder} />
         )}
@@ -87,7 +84,7 @@ export default function ChatScreen({
         </View>
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>{participantName}</Text>
-          <Text style={styles.headerSubtitle}>Direct message</Text>
+          <Text style={styles.headerSubtitle}>NestBridge message</Text>
         </View>
       </View>
 
@@ -99,6 +96,15 @@ export default function ChatScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
+        {messages.length === 0 ? (
+          <EmptyState
+            title="Start the conversation"
+            body={`Say hello to ${participantName}. Clear plans help hosts and guides prepare for your stay.`}
+            tip="Share arrival times, dietary needs, or questions about Accra."
+            iconName="chatbubble-ellipses-outline"
+            carded={false}
+          />
+        ) : null}
         {messages.map((message) => (
           <View
             key={message.id}
@@ -137,7 +143,7 @@ export default function ChatScreen({
           style={styles.input}
           value={draft}
           onChangeText={setDraft}
-          placeholder="Type a message…"
+          placeholder="Write a message…"
           placeholderTextColor={colors.textTertiary}
           multiline
           maxLength={500}
@@ -152,7 +158,7 @@ export default function ChatScreen({
           accessibilityRole="button"
           accessibilityLabel="Send message"
         >
-          <Text style={styles.sendLabel}>Send</Text>
+          <AppIcon name="send" size={fontSizes.body} color={colors.white} />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -172,20 +178,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     gap: spacing.md,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   backPlaceholder: {
     width: 44,
-  },
-  backIcon: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
   },
   headerAvatar: {
     width: 40,
@@ -242,11 +236,13 @@ const styles = StyleSheet.create({
   },
   bubbleOwn: {
     backgroundColor: colors.teal,
+    ...shadows.card,
   },
   bubbleOther: {
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   bubbleText: {
     fontFamily: fontFamilies.regular,
@@ -299,11 +295,5 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     opacity: 0.5,
-  },
-  sendLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.white,
   },
 });

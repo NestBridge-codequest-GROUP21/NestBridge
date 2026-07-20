@@ -139,12 +139,19 @@ export default function ScreenHeader({
               {userInitials ? (
                 <Pressable
                   onPress={() => navigation.navigate('Profile')}
-                  style={styles.avatar}
+                  style={({ pressed }) => [
+                    styles.avatar,
+                    pressed && styles.avatarPressed,
+                  ]}
                   accessibilityRole="button"
                   accessibilityLabel="Open profile"
+                  accessibilityHint="Opens your account and settings"
                   hitSlop={spacing.sm}
                 >
                   <Text style={styles.avatarText}>{userInitials}</Text>
+                  <View style={styles.avatarBadge}>
+                    <AppIcon name="person" size={10} color={colors.white} />
+                  </View>
                 </Pressable>
               ) : null}
             </View>
@@ -283,10 +290,29 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.gold,
+  },
+  avatarPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.96 }],
   },
   avatarText: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     color: colors.tealDeep,
+  },
+  avatarBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 18,
+    height: 18,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.tealBright,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.navy,
   },
 });

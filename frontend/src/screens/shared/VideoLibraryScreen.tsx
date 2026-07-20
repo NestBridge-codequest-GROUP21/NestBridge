@@ -10,6 +10,9 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -17,6 +20,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  shadows,
+  lineHeights,
 } from '../../constants/theme';
 import type { VideoResourceApi } from '../../services/api';
 import { isPlayableYoutubeId } from '../../utils/videoPlayback';
@@ -57,7 +62,7 @@ export default function VideoLibraryScreen({
       <StatusBar style="light" />
       <ScreenHeader
         title="Video library"
-        subtitle={`Orientation and culture for ${cityLabel}`}
+        subtitle={`Orientation and culture for life in ${cityLabel}`}
         compact
         onBack={onBack}
       />
@@ -75,6 +80,8 @@ export default function VideoLibraryScreen({
               activeCategory === category && styles.filterChipActive,
             ]}
             onPress={() => setActiveCategory(category)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeCategory === category }}
           >
             <Text
               style={[
@@ -94,7 +101,16 @@ export default function VideoLibraryScreen({
         </View>
       ) : errorMessage ? (
         <View style={styles.centered}>
-          <Text style={styles.errorText}>{errorMessage}</Text>
+          <InlineBanner tone="error" message={errorMessage} style={styles.errorBanner} />
+        </View>
+      ) : filtered.length === 0 ? (
+        <View style={styles.emptyWrap}>
+          <EmptyState
+            title="No videos in this category"
+            body={`Try another topic, or check back for new orientation clips about ${cityLabel}.`}
+            tip="Short videos cover markets, transport, and settling in."
+            iconName="film-outline"
+          />
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.listContent}>
@@ -110,7 +126,7 @@ export default function VideoLibraryScreen({
                 <Image source={{ uri: video.thumbnailUrl }} style={styles.thumbnail} />
               ) : (
                 <View style={styles.thumbnailPlaceholder}>
-                  <Text style={styles.playIcon}>▶</Text>
+                  <AppIcon name="play-circle" size={40} color={colors.teal} />
                 </View>
               )}
               <View style={styles.cardBody}>
@@ -170,6 +186,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     overflow: 'hidden',
     marginBottom: spacing.md,
+    ...shadows.card,
   },
   pressed: { opacity: 0.92 },
   thumbnail: {
@@ -184,10 +201,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  playIcon: {
-    fontSize: fontSizes.display,
-    color: colors.teal,
-  },
   cardBody: {
     padding: spacing.md,
     gap: spacing.xs,
@@ -200,12 +213,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSizes.heading,
+    lineHeight: lineHeights.heading,
     color: colors.textPrimary,
     fontWeight: fontWeights.bold,
     fontFamily: fontFamilies.bold,
   },
   description: {
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
     fontFamily: fontFamilies.regular,
   },
@@ -215,9 +230,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-  errorText: {
-    color: colors.danger,
-    fontSize: fontSizes.body,
-    textAlign: 'center',
+  emptyWrap: {
+    flex: 1,
+    padding: spacing.lg,
+  },
+  errorBanner: {
+    alignSelf: 'stretch',
   },
 });

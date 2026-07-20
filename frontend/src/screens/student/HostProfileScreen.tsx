@@ -4,20 +4,24 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import BackButton from '../../components/BackButton';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
+  lineHeights,
+  layout,
+  shadows,
 } from '../../constants/theme';
 import type { HostProfileSummary } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -25,6 +29,10 @@ import { formatCurrency } from '../../data/bookingMock';
 export interface HostProfileScreenProps {
   host: HostProfileSummary;
   showMatchScores?: boolean;
+  /** Host bio — pass from parent/API; omit to hide the About section. */
+  about?: string;
+  /** Amenity / lifestyle chips — pass from parent/API. */
+  highlights?: string[];
   onMessagePress?: () => void;
   onBookPress?: () => void;
   onBack?: () => void;
@@ -33,6 +41,8 @@ export interface HostProfileScreenProps {
 export default function HostProfileScreen({
   host,
   showMatchScores = false,
+  about,
+  highlights = [],
   onMessagePress,
   onBookPress,
   onBack,
@@ -49,14 +59,7 @@ export default function HostProfileScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.white} style={styles.back} />
 
         <View style={styles.heroContent}>
           <View style={styles.avatarRing}>
@@ -67,13 +70,18 @@ export default function HostProfileScreen({
           <Text style={styles.hostName}>{host.name}</Text>
           <Text style={styles.hostLocation}>{host.location}</Text>
           {showMatchScores ? (
-          <View style={styles.matchBadge}>
-            <Text style={styles.matchBadgeText}>{host.matchPercentage}% match</Text>
-          </View>
+            <LinearGradient
+              colors={[...gradients.accent]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.matchBadge}
+            >
+              <Text style={styles.matchBadgeText}>{host.matchPercentage}% match</Text>
+            </LinearGradient>
           ) : (
-          <Text style={styles.matchHint}>
-            Complete your profile to see compatibility
-          </Text>
+            <Text style={styles.matchHint}>
+              Complete your profile to see compatibility
+            </Text>
           )}
         </View>
       </LinearGradient>
@@ -82,7 +90,7 @@ export default function HostProfileScreen({
         style={styles.scroll}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: insets.bottom + 140 },
+          { paddingBottom: insets.bottom + spacing.xl * 4 },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -94,20 +102,29 @@ export default function HostProfileScreen({
           </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>About this host</Text>
-        <Text style={styles.aboutText}>
-          A welcoming family home with quiet study space, home-cooked meals, and
-          a short commute to campus. Verified host with strong reviews from
-          international students.
-        </Text>
+        {about ? (
+          <>
+            <Text style={styles.sectionTitle}>About this host</Text>
+            <Text style={styles.aboutText}>{about}</Text>
+          </>
+        ) : null}
 
-        <View style={styles.highlights}>
-          {['Meals included', 'Study-friendly', 'Near campus'].map((label) => (
-            <View key={label} style={styles.highlightChip}>
-              <Text style={styles.highlightLabel}>{label}</Text>
-            </View>
-          ))}
-        </View>
+        {highlights.length > 0 ? (
+          <View style={styles.highlights}>
+            {highlights.map((label) => (
+              <View key={label} style={styles.highlightChip}>
+                <Text style={styles.highlightLabel}>{label}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {host.cancellationPolicy ? (
+          <View style={styles.policyCard}>
+            <Text style={styles.policyTitle}>Cancellation</Text>
+            <Text style={styles.policyBody}>{host.cancellationPolicy}</Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       <View
@@ -135,20 +152,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   hero: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingBottom: spacing.xl,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.md,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
+    alignSelf: 'flex-start',
   },
   heroContent: {
     alignItems: 'center',
@@ -169,11 +178,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarInitials: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
   },
   hostName: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
@@ -181,23 +192,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   hostLocation: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.white,
     opacity: 0.9,
     marginBottom: spacing.md,
   },
   matchBadge: {
-    backgroundColor: colors.tealBright,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
   },
   matchBadgeText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.white,
   },
   matchHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.white,
     opacity: 0.88,
@@ -208,7 +221,7 @@ const styles = StyleSheet.create({
     marginTop: -spacing.lg,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
   priceCard: {
     backgroundColor: colors.white,
@@ -217,43 +230,45 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
+    ...shadows.card,
   },
   priceLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
   priceValue: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
   },
   priceUnit: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
   sectionTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   aboutText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 24,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
   },
   highlights: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   highlightChip: {
     flexDirection: 'row',
@@ -266,14 +281,31 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     minHeight: 44,
   },
-  highlightIcon: {
-    fontSize: fontSizes.body,
-    marginRight: spacing.sm,
-  },
   highlightLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
+  },
+  policyCard: {
+    backgroundColor: colors.warmCream,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  policyTitle: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  policyBody: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
   },
   footer: {
     position: 'absolute',
@@ -281,10 +313,11 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
   footerRow: {
     flexDirection: 'row',

@@ -2,7 +2,7 @@
  * NestBridge design tokens — single source of truth for all visual styling.
  *
  * Usage:
- *   import { colors, fontSizes, fontFamilies, lineHeights, spacing, borderRadius, gradients, layout } from '../constants/theme';
+ *   import { colors, fontSizes, fontFamilies, lineHeights, spacing, borderRadius, gradients, layout, shadows } from '../constants/theme';
  *
  * Do NOT hardcode hex values, font sizes, or spacing in components.
  * If a token is missing, add it here first.
@@ -45,9 +45,9 @@ export const tints = {
 export type TintToken = keyof typeof tints;
 
 export const fontFamilies = {
-  regular: 'Inter_400Regular',
-  semibold: 'Inter_600SemiBold',
-  bold: 'Inter_700Bold',
+  regular: 'Poppins_400Regular',
+  semibold: 'Poppins_600SemiBold',
+  bold: 'Poppins_700Bold',
 } as const;
 
 export type FontFamilyToken = keyof typeof fontFamilies;
@@ -124,6 +124,46 @@ export const motion = {
   durationNormal: 400,
 } as const;
 
+/**
+ * Elevation recipes — spread into StyleSheet entries (`...shadows.card`).
+ * Prefer these over inventing per-screen shadowOpacity / elevation values.
+ */
+export const shadows = {
+  none: {
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  card: {
+    shadowColor: colors.navy,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  raised: {
+    shadowColor: colors.navy,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  floating: {
+    shadowColor: colors.navy,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+} as const;
+
+export const overlays = {
+  scrim: 'rgba(12, 23, 53, 0.45)',
+  scrimStrong: 'rgba(12, 23, 53, 0.6)',
+} as const;
+
 const theme = {
   colors,
   tints,
@@ -136,6 +176,8 @@ const theme = {
   layout,
   gradients,
   motion,
+  shadows,
+  overlays,
 };
 
 export default theme;

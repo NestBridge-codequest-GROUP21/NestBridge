@@ -8,7 +8,19 @@ import DateTimePicker, {
 import OnboardingProgress from '../../components/OnboardingProgress';
 import SelectField from '../../components/SelectField';
 import PrimaryButton from '../../components/PrimaryButton';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  lineHeights,
+  layout,
+  shadows,
+  overlays,
+} from '../../constants/theme';
 import { isLikelyValidPlaceName } from '../../utils/textValidation';
 import { validationCopy } from '../../data/appCopy';
 import {
@@ -196,16 +208,15 @@ export default function DestinationSetupScreen({
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg },
+          {
+            paddingTop: insets.top + spacing.lg,
+            paddingBottom: insets.bottom + spacing.lg,
+          },
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {onBack && (
-          <Pressable onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Back</Text>
-          </Pressable>
-        )}
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
         <OnboardingProgress
           currentStep={currentStep}
@@ -218,14 +229,14 @@ export default function DestinationSetupScreen({
 
         <View style={styles.formCard}>
           <SelectField
-            label="Destination"
+            label="Destination city"
             value={city}
-            placeholder="Select a city"
+            placeholder="Select a city in Ghana"
             options={DESTINATION_OPTIONS}
             onSelect={handleCityChange}
           />
           {destinationError === 'required' && (
-            <Text style={styles.fieldError}>This field is required</Text>
+            <Text style={styles.fieldError}>Choose a destination city to continue</Text>
           )}
           {destinationError === 'gibberish' && (
             <Text style={styles.fieldError}>{validationCopy.placeInvalid}</Text>
@@ -233,7 +244,7 @@ export default function DestinationSetupScreen({
           <SelectField
             label="University or area"
             value={university}
-            placeholder="Select a university or area"
+            placeholder="Select a campus or neighbourhood"
             options={universityOptions}
             onSelect={onUniversityChange}
           />
@@ -269,30 +280,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backBtn: {
-    minHeight: 44,
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backText: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
   title: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
+    lineHeight: lineHeights.display,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
   },
   formCard: {
     backgroundColor: colors.white,
@@ -301,8 +308,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   fieldError: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.danger,
@@ -320,6 +329,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   fieldLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
@@ -338,6 +348,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   dateText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textPrimary,
@@ -347,7 +358,7 @@ const styles = StyleSheet.create({
   },
   pickerBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: overlays.scrim,
     justifyContent: 'flex-end',
   },
   pickerSheet: {
@@ -355,6 +366,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,
     padding: spacing.md,
+    ...shadows.raised,
   },
   pickerDoneBtn: {
     alignSelf: 'flex-end',
@@ -365,6 +377,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pickerDoneText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.bold,
     color: colors.teal,

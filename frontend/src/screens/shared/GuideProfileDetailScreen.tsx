@@ -3,21 +3,24 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import ScreenScroll from '../../components/ScreenScroll';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import type { GuideProfileSummary } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -49,14 +52,7 @@ export default function GuideProfileDetailScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
 
         <View style={styles.heroContent}>
           <View style={styles.avatarRing}>
@@ -67,24 +63,21 @@ export default function GuideProfileDetailScreen({
           <Text style={styles.name}>{guide.name}</Text>
           <Text style={styles.location}>{guide.location}</Text>
           {showMatchScores ? (
-          <View style={styles.matchBadge}>
-            <Text style={styles.matchBadgeText}>{guide.matchPercentage}% match</Text>
-          </View>
+            <View style={styles.matchBadge}>
+              <Text style={styles.matchBadgeText}>{guide.matchPercentage}% match</Text>
+            </View>
           ) : (
-          <Text style={styles.matchHint}>
-            Complete your profile to see compatibility
-          </Text>
+            <Text style={styles.matchHint}>
+              Complete your profile to see compatibility
+            </Text>
           )}
         </View>
       </LinearGradient>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 140 },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <ScreenScroll
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + 140,
+        }}
       >
         <View style={styles.priceCard}>
           <Text style={styles.priceLabel}>Session rate</Text>
@@ -110,10 +103,11 @@ export default function GuideProfileDetailScreen({
 
         <Text style={styles.sectionTitle}>About</Text>
         <Text style={styles.bodyText}>
-          Experienced local guide offering authentic cultural experiences with
-          flexible pacing and personalized recommendations.
+          {guide.serviceTypes.slice(0, 2).join(' and ')} around {guide.location}.
+          Sessions last {guide.sessionDurationHours} hours and can cover markets,
+          transport tips, and settling into daily life in Ghana.
         </Text>
-      </ScrollView>
+      </ScreenScroll>
 
       <View
         style={[
@@ -144,16 +138,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     marginBottom: spacing.md,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
   },
   heroContent: {
     alignItems: 'center',
@@ -174,11 +160,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarInitials: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
   },
   name: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
@@ -186,6 +174,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   location: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.white,
     opacity: 0.9,
@@ -198,22 +187,17 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
   matchBadgeText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.white,
   },
   matchHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.white,
     opacity: 0.88,
     textAlign: 'center',
-  },
-  scroll: {
-    flex: 1,
-    marginTop: -spacing.lg,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
   },
   priceCard: {
     backgroundColor: colors.white,
@@ -222,32 +206,38 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   priceLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
   priceValue: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
     marginBottom: spacing.xs,
   },
   duration: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
   },
   sectionTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   bodyText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 24,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
   },
   chips: {
@@ -265,6 +255,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   chipText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
@@ -279,6 +270,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
   footerRow: {
     flexDirection: 'row',

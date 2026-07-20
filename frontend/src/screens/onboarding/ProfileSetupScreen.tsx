@@ -6,7 +6,20 @@ import OnboardingProgress from '../../components/OnboardingProgress';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  lineHeights,
+  layout,
+  shadows,
+} from '../../constants/theme';
+
+const AVATAR_SIZE = spacing.xl * 3;
 
 export interface ProfileSetupScreenProps {
   currentStep: number;
@@ -50,16 +63,15 @@ export default function ProfileSetupScreen({
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg },
+          {
+            paddingTop: insets.top + spacing.lg,
+            paddingBottom: insets.bottom + spacing.lg,
+          },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {onBack && (
-          <Pressable onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Back</Text>
-          </Pressable>
-        )}
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
         <OnboardingProgress
           currentStep={currentStep}
@@ -70,7 +82,12 @@ export default function ProfileSetupScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
 
-        <Pressable style={styles.avatarSection} onPress={onAddPhoto}>
+        <Pressable
+          style={styles.avatarSection}
+          onPress={onAddPhoto}
+          accessibilityRole="button"
+          accessibilityLabel={photoUri ? 'Change photo' : 'Add photo'}
+        >
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.avatar} />
           ) : (
@@ -79,7 +96,9 @@ export default function ProfileSetupScreen({
             </View>
           )}
           <Text style={styles.addPhoto}>{photoUri ? 'Change photo' : 'Add photo'}</Text>
-          <Text style={styles.addPhotoHint}>Optional — helps hosts recognize you</Text>
+          <Text style={styles.addPhotoHint}>
+            Optional — helps hosts and guides recognize you in Ghana
+          </Text>
         </Pressable>
 
         <View style={styles.formCard}>
@@ -93,7 +112,7 @@ export default function ProfileSetupScreen({
           <FormTextField
             label="Short bio"
             value={bio}
-            placeholder="Exchange student, loves cooking & history..."
+            placeholder="Exchange student in Accra — love cooking and history"
             onChangeText={onBioChange}
           />
         </View>
@@ -112,30 +131,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backBtn: {
-    minHeight: 44,
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backText: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
   title: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
+    lineHeight: lineHeights.display,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
   },
   avatarSection: {
     alignItems: 'center',
@@ -143,8 +158,8 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   avatar: {
-    width: 96,
-    height: 96,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.teal,
     alignItems: 'center',
@@ -152,26 +167,27 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     borderWidth: 3,
     borderColor: colors.white,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
+    ...shadows.raised,
   },
   avatarText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
   },
   addPhoto: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
   addPhotoHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     marginTop: spacing.xs,
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
   },
   formCard: {
     backgroundColor: colors.white,
@@ -180,6 +196,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   skipSpacer: {
     height: spacing.sm,

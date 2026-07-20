@@ -35,7 +35,9 @@ import ChatRoute from './ChatRoute';
 import SiteDetailRoute from './SiteDetailRoute';
 import VideoDetailRoute from './VideoDetailRoute';
 import VideoLibraryScreen from '../screens/shared/VideoLibraryScreen';
+import ExploreHubScreen from '../screens/shared/ExploreHubScreen';
 import RouteErrorState from '../components/RouteErrorState';
+import { sanitizeVideoResources } from '../utils/videoPlayback';
 import { BookingHostRoute, SessionBookingGuideRoute } from './bookingRoutes';
 import SponsorListScreen from '../screens/Sponsor/SponsorListScreen';
 import SponsorDetailScreen from '../screens/Sponsor/SponsorDetailScreen';
@@ -177,6 +179,7 @@ import { uploadProfilePhotoIfConfigured } from '../services/mediaUpload';
 import { studentHomeMockData, tabBarWithBadgesForRole, suggestedHostsForCity } from '../data/studentHomeMock';
 import {
   getQuickActionsForRole,
+  getTabBarForRole,
   homeRoleFromIntent,
 } from '../data/homeNavigation';
 import {
@@ -323,11 +326,11 @@ function handleStudentQuickAction(
   if (actionId === 'cultural-tips') {
     navigation.navigate('LocalTips');
   }
+  if (actionId === 'sponsors') {
+    navigation.navigate('SponsorList');
+  }
   if (actionId === 'transport') {
     navigation.navigate('TransportGuide');
-  }
-  if (actionId === 'sos') {
-    navigation.navigate('SOS');
   }
 }
 
@@ -344,8 +347,8 @@ function handleTouristQuickAction(
   if (actionId === 'offline-map') {
     navigation.navigate('OfflineMap');
   }
-  if (actionId === 'sos') {
-    navigation.navigate('SOS');
+  if (actionId === 'cultural-tips') {
+    navigation.navigate('LocalTips');
   }
 }
 
@@ -354,6 +357,12 @@ function handleProviderQuickAction(
   actionId: string,
   role: 'host' | 'guide',
 ) {
+  if (actionId === 'book-travel') {
+    navigation.navigate('UnifiedSearch');
+  }
+  if (actionId === 'explore') {
+    navigation.reset({ index: 0, routes: [{ name: 'ExploreHub' }] });
+  }
   if (actionId === 'listings') {
     navigation.navigate('HostListings');
   }
@@ -375,9 +384,6 @@ function handleProviderQuickAction(
     } else {
       navigation.reset({ index: 0, routes: [{ name: 'HostEarningsTab' }] });
     }
-  }
-  if (actionId === 'sos') {
-    navigation.navigate('SOS');
   }
 }
 
@@ -1403,23 +1409,27 @@ export default function AppNavigator() {
     [lodgingApi.listings, lodgingApi.isLoading, lodgingApi.error, cityLabel],
   );
 
-  const phrasesDisplay = useMemo(
-    () =>
-      withDemoFallback(contentPhrases.data, phrasesApiMock, {
-        isLoading: contentPhrases.isLoading,
-        error: contentPhrases.error,
-      }),
-    [contentPhrases.data, contentPhrases.isLoading, contentPhrases.error],
-  );
+  const phrasesDisplay = useMemo(() => {
+    // Prefer the richer curated Ghana phrase set in demo builds so thin DB
+    // seeds do not replace useful relocation content.
+    if (phrasesApiMock.length > 0) {
+      return phrasesApiMock;
+    }
+    return withDemoFallback(contentPhrases.data, phrasesApiMock, {
+      isLoading: contentPhrases.isLoading,
+      error: contentPhrases.error,
+    });
+  }, [contentPhrases.data, contentPhrases.isLoading, contentPhrases.error]);
 
-  const topicsDisplay = useMemo(
-    () =>
-      withDemoFallback(contentTopics.data, topicsApiMock, {
-        isLoading: contentTopics.isLoading,
-        error: contentTopics.error,
-      }),
-    [contentTopics.data, contentTopics.isLoading, contentTopics.error],
-  );
+  const topicsDisplay = useMemo(() => {
+    if (topicsApiMock.length > 0) {
+      return topicsApiMock;
+    }
+    return withDemoFallback(contentTopics.data, topicsApiMock, {
+      isLoading: contentTopics.isLoading,
+      error: contentTopics.error,
+    });
+  }, [contentTopics.data, contentTopics.isLoading, contentTopics.error]);
 
   const transportDisplay = useMemo(
     () =>
@@ -1459,10 +1469,12 @@ export default function AppNavigator() {
 
   const videosDisplay = useMemo(
     () =>
-      withDemoFallback(contentVideos.data, videosApiMock, {
-        isLoading: contentVideos.isLoading,
-        error: contentVideos.error,
-      }),
+      sanitizeVideoResources(
+        withDemoFallback(contentVideos.data, videosApiMock, {
+          isLoading: contentVideos.isLoading,
+          error: contentVideos.error,
+        }),
+      ),
     [contentVideos.data, contentVideos.isLoading, contentVideos.error],
   );
 
@@ -2336,14 +2348,9 @@ export default function AppNavigator() {
             userInitials={resolvedInitials}
             email={user?.email ?? ''}
             setupSummary={setupSummary}
-            culturalGuidanceItems={profileCulturalItems}
             showTravelBooking={shouldShowTravelBookingEntry(homeRole)}
             showStaffTools={Boolean(user?.isStaff)}
             onAccountSetupPress={() => navigation.navigate('AccountSetup')}
-            onCulturalGuidanceItemPress={(itemId) =>
-              handleProfileCulturalItem(navigation, itemId)
-            }
-            onCoreServicesPress={() => navigation.navigate('UnifiedSearch')}
             onTravelBookingPress={() => navigation.navigate('UnifiedSearch')}
             onStaffToolsPress={() => navigation.navigate('StaffUserSearch')}
             onSignOut={() => {
@@ -2358,6 +2365,42 @@ export default function AppNavigator() {
             }}
           />
         )}
+      </Stack.Screen>
+
+      <Stack.Screen name="ExploreHub">
+        {({ navigation }) => {
+          const isProvider = homeRole === 'HOST' || homeRole === 'GUIDE';
+          const primaryLabel =
+            homeRole === 'STUDENT'
+              ? 'Find a host'
+              : homeRole === 'TOURIST' || homeRole === 'BROWSE'
+                ? 'Find stays & guides'
+                : 'Browse stays & guides';
+          return (
+            <ExploreHubScreen
+              primaryActionLabel={primaryLabel}
+              primaryActionHint={
+                homeRole === 'STUDENT'
+                  ? 'Match with verified host families near campus in Ghana'
+                  : 'Homestays, local guides, hotels, and lodging across Ghana'
+              }
+              hubItems={profileCulturalItems}
+              tabBarItems={getTabBarForRole(homeRole)}
+              activeTabId={isProvider ? 'home' : 'explore'}
+              onPrimaryActionPress={() => {
+                if (homeRole === 'STUDENT') {
+                  navigation.navigate('MatchSearch');
+                  return;
+                }
+                navigation.navigate('UnifiedSearch');
+              }}
+              onHubItemPress={(itemId) =>
+                handleProfileCulturalItem(navigation, itemId)
+              }
+              onTabPress={(tabId) => routeTabPress(navigation, tabId)}
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="StaffUserSearch">
@@ -2465,7 +2508,7 @@ export default function AppNavigator() {
             cityLabel={cityLabel}
             categories={SEARCH_CATEGORIES}
             tabBarItems={tabBarItems}
-            activeTabId="search"
+            activeTabId="explore"
             onBack={() => navigation.goBack()}
             onCategoryPress={(categoryId) => {
               if (categoryId === 'homestays') {
@@ -2964,7 +3007,7 @@ export default function AppNavigator() {
           <MatchSearchScreen
             {...matchSearchProps}
             tabBarItems={tabBarItems}
-            activeTabId="search"
+            activeTabId="explore"
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
             onBack={() => navigation.goBack()}
             onHostPress={(hostId) =>

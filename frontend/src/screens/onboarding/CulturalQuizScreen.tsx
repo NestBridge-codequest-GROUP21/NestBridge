@@ -4,7 +4,19 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OnboardingProgress from '../../components/OnboardingProgress';
 import PrimaryButton from '../../components/PrimaryButton';
-import { colors, fontFamilies, fontSizes, fontWeights, spacing, borderRadius, lineHeights, layout } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import AppIcon from '../../components/AppIcon';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  lineHeights,
+  layout,
+  shadows,
+} from '../../constants/theme';
 
 export interface QuizOption {
   id: string;
@@ -48,15 +60,14 @@ export default function CulturalQuizScreen({
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg },
+          {
+            paddingTop: insets.top + spacing.lg,
+            paddingBottom: insets.bottom + spacing.lg,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {onBack && (
-          <Pressable onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Back</Text>
-          </Pressable>
-        )}
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
         <OnboardingProgress
           currentStep={currentStep}
@@ -84,7 +95,14 @@ export default function CulturalQuizScreen({
               accessibilityRole="radio"
               accessibilityState={{ selected }}
             >
-              {option.icon && <Text style={styles.optionIcon}>{option.icon}</Text>}
+              {option.icon ? (
+                <AppIcon
+                  glyph={option.icon}
+                  size={fontSizes.heading}
+                  color={selected ? colors.tealDeep : colors.teal}
+                  style={styles.optionIcon}
+                />
+              ) : null}
               <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
                 {option.label}
               </Text>
@@ -112,17 +130,11 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backBtn: {
-    minHeight: 44,
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backText: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
   questionMeta: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
@@ -131,18 +143,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   question: {
-    fontSize: fontSizes.display - 2,
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
-    lineHeight: 32,
+    lineHeight: lineHeights.heading,
     marginBottom: spacing.sm,
   },
   helper: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
   },
   optionCard: {
     flexDirection: 'row',
@@ -154,6 +168,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.border,
     minHeight: 56,
+    ...shadows.card,
   },
   optionCardSelected: {
     borderColor: colors.teal,
@@ -163,11 +178,11 @@ const styles = StyleSheet.create({
     opacity: 0.95,
   },
   optionIcon: {
-    fontSize: 22,
     marginRight: spacing.md,
   },
   optionLabel: {
     flex: 1,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,

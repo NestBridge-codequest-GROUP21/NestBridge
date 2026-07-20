@@ -66,6 +66,12 @@ const TOURIST_CULTURAL_ITEMS: ProfileHubItem[] = [
     icon: '👋',
   },
   {
+    id: 'sponsors',
+    label: 'Sponsors',
+    description: 'Travel grants and diaspora support partners',
+    icon: '🎓',
+  },
+  {
     id: 'transport',
     label: 'Transport guide',
     description: 'Navigate the city with confidence',

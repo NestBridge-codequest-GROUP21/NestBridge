@@ -1,22 +1,19 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ScreenHeader from '../../components/ScreenHeader';
+import ScreenScroll from '../../components/ScreenScroll';
+import EmptyState from '../../components/EmptyState';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
-  gradients,
-  layout,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 
 export interface SiteDirectoryItem {
@@ -40,59 +37,53 @@ export default function SitesDirectoryScreen({
   onSitePress,
   onBack,
 }: SitesDirectoryScreenProps) {
-  const insets = useSafeAreaInsets();
-
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.headerCompact]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-      >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Sites & culture</Text>
-        <Text style={styles.headerSubtitle}>
-          Heritage, markets, and must-see places near {cityLabel}
-        </Text>
-      </LinearGradient>
+      <ScreenHeader
+        title="Sites & culture"
+        subtitle={`Heritage sites, markets, and must-sees near ${cityLabel}`}
+        compact
+        onBack={onBack}
+      />
 
-      <ScrollView
-        style={styles.body}
-        contentContainerStyle={[
-          styles.bodyContent,
-          { paddingBottom: insets.bottom + spacing.xl },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        {sites.map((site) => (
-          <Pressable
-            key={site.id}
-            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-            onPress={() => onSitePress?.(site.id)}
-            accessibilityRole="button"
-            accessibilityLabel={site.name}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>{site.name}</Text>
-              <Text style={styles.cardCity}>{site.city}</Text>
-            </View>
-            <Text style={styles.cardDescription} numberOfLines={2}>
-              {site.description}
-            </Text>
-            <Text style={styles.cardAdmission}>{site.admission}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      <ScreenScroll>
+        {sites.length === 0 ? (
+          <EmptyState
+            title="No sites listed yet"
+            body={`No cultural sites are listed for ${cityLabel} yet. Try Accra, or book a local guide for neighbourhood recommendations.`}
+            tip="Try Accra or Kumasi for the fullest directory."
+            iconName="library-outline"
+          />
+        ) : (
+          sites.map((site) => (
+            <Pressable
+              key={site.id}
+              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+              onPress={() => onSitePress?.(site.id)}
+              accessibilityRole="button"
+              accessibilityLabel={site.name}
+            >
+              <View style={styles.cardHeader}>
+                <View style={styles.cardTitleBlock}>
+                  <Text style={styles.cardTitle}>{site.name}</Text>
+                  <Text style={styles.cardCity}>{site.city}</Text>
+                </View>
+                <AppIcon
+                  name="chevron-forward"
+                  size={fontSizes.subheading}
+                  color={colors.teal}
+                />
+              </View>
+              <Text style={styles.cardDescription} numberOfLines={2}>
+                {site.description}
+              </Text>
+              <Text style={styles.cardAdmission}>{site.admission}</Text>
+            </Pressable>
+          ))
+        )}
+      </ScreenScroll>
     </View>
   );
 }
@@ -102,42 +93,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
-  },
-  headerTitle: {
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    marginBottom: spacing.sm,
-  },
-  headerSubtitle: {
-    fontSize: fontSizes.body,
-    color: colors.white,
-    opacity: 0.88,
-    lineHeight: 22,
-  },
-  body: {
-    flex: 1,
-    marginTop: -spacing.sm,
-  },
-  bodyContent: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingTop: spacing.lg,
-  },
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -146,30 +101,43 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     minHeight: 44,
+    ...shadows.card,
   },
   cardPressed: {
     opacity: 0.95,
   },
   cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  cardTitleBlock: {
+    flex: 1,
   },
   cardTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   cardCity: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
+    lineHeight: lineHeights.caption,
   },
   cardDescription: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.sm,
   },
   cardAdmission: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     color: colors.teal,
     fontWeight: fontWeights.semibold,

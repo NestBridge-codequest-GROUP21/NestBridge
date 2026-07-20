@@ -53,12 +53,8 @@ export function handleTabPress(
     return;
   }
 
-  if (tabId === 'search') {
-    if (role === 'STUDENT') {
-      resetToTab(navigation, 'MatchSearch');
-      return;
-    }
-    resetToTab(navigation, 'UnifiedSearch');
+  if (tabId === 'explore' || tabId === 'search') {
+    resetToTab(navigation, 'ExploreHub');
     return;
   }
 

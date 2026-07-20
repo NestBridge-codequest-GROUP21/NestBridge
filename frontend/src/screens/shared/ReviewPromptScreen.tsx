@@ -10,17 +10,21 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
   layout,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import { reviewPromptCopy } from '../../data/welfareMock';
 
@@ -51,14 +55,7 @@ export default function ReviewPromptScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
         <Text style={styles.headerTitle}>{reviewPromptCopy.title}</Text>
         <Text style={styles.headerSubtitle}>
           {hostName} · {reviewPromptCopy.subtitle}
@@ -143,28 +140,22 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     marginBottom: spacing.sm,
   },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
-  },
   headerTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
     marginBottom: spacing.sm,
   },
   headerSubtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.white,
     opacity: 0.88,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   body: {
     flex: 1,
@@ -175,6 +166,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   sectionLabel: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.textSecondary,
@@ -208,6 +200,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.lg,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textPrimary,
     marginBottom: spacing.lg,
@@ -218,17 +211,20 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   sealedTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   sealedBody: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   footer: {
     position: 'absolute',
@@ -240,6 +236,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
   skipSpacer: {
     height: spacing.sm,

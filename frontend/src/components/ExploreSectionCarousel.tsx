@@ -22,6 +22,7 @@ import {
   borderRadius,
   layout,
   gradients,
+  shadows,
 } from '../constants/theme';
 
 export interface ExploreSectionCarouselProps {
@@ -246,11 +247,7 @@ const styles = StyleSheet.create({
   },
   cardOuter: {
     minHeight: layout.carouselMinHeight,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 4,
+    ...shadows.raised,
   },
   cardPressable: {
     flex: 1,

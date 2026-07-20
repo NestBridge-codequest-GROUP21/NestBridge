@@ -3,16 +3,29 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
   KeyboardAvoidingView,
   Platform,
+  View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
-import { colors, fontSizes, fontWeights, spacing } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import InlineBanner from '../../components/InlineBanner';
+import AppIcon from '../../components/AppIcon';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  lineHeights,
+  layout,
+  tints,
+} from '../../constants/theme';
 
 export interface ResetPasswordScreenProps {
   password: string;
@@ -57,21 +70,18 @@ export default function ResetPasswordScreen({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {onBack ? (
-          <Pressable
-            onPress={onBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
+
+        {success ? (
+          <View style={styles.iconTile}>
+            <AppIcon name="checkmark-circle-outline" size={28} color={colors.success} />
+          </View>
         ) : null}
 
         <Text style={styles.title}>{success ? 'Password updated' : 'Set a new password'}</Text>
         <Text style={styles.subtitle}>
           {success
-            ? 'Your password was updated. Sign in with your new password.'
+            ? 'Your password was updated. Sign in with your new password to continue.'
             : 'Choose a new password for your NestBridge account.'}
         </Text>
 
@@ -102,7 +112,7 @@ export default function ResetPasswordScreen({
               textContentType="newPassword"
             />
 
-            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+            {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
             <PrimaryButton
               label={submitting ? 'Saving…' : 'Update password'}
@@ -122,35 +132,33 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backIcon: {
-    fontSize: 24,
-    color: colors.textPrimary,
+  iconTile: {
+    width: 64,
+    height: 64,
+    borderRadius: borderRadius.pill,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   title: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.xl,
-  },
-  errorText: {
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
   },
 });

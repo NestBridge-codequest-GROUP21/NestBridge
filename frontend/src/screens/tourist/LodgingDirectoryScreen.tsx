@@ -3,22 +3,25 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
   ActivityIndicator,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ScreenHeader from '../../components/ScreenHeader';
+import ScreenScroll from '../../components/ScreenScroll';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
-  gradients,
-  layout,
+  lineHeights,
+  shadows,
+  tints,
 } from '../../constants/theme';
 import type { LodgingListing, LodgingCategoryFilter } from '../../types/lodging';
 import { lodgingCategoryLabel } from '../../data/lodgingDirectoryMock';
@@ -61,88 +64,66 @@ export default function LodgingDirectoryScreen({
   onListingPress,
   onBack,
 }: LodgingDirectoryScreenProps) {
-  const insets = useSafeAreaInsets();
   const filtered = filterListings(listings, activeFilter);
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.headerCompact]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-      >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Find lodging</Text>
-        <Text style={styles.headerSubtitle}>
-          Hotels and partners in {cityLabel}
-        </Text>
-      </LinearGradient>
+      <ScreenHeader
+        title="Find lodging"
+        subtitle={`Hotels and partners in ${cityLabel}`}
+        compact
+        onBack={onBack}
+      />
 
-      <View style={styles.banner}>
-        <AppIcon
-          name="information-circle-outline"
-          size={fontSizes.subheading}
-          color={colors.teal}
-          style={styles.bannerIcon}
+      <ScreenScroll>
+        <InlineBanner
+          tone="info"
+          message="Booking finishes with the hotel or partner — NestBridge helps you find and contact options in Ghana."
         />
-        <Text style={styles.bannerText}>
-          You will complete booking outside NestBridge. We help you find and
-          contact options.
-        </Text>
-      </View>
 
-      <View style={styles.filterBar}>
-        {FILTERS.map((filter) => {
-          const isActive = filter.id === activeFilter;
-          return (
-            <Pressable
-              key={filter.id}
-              style={[styles.filterTab, isActive && styles.filterTabActive]}
-              onPress={() => onFilterChange?.(filter.id)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: isActive }}
-              accessibilityLabel={`Filter ${filter.label}`}
-            >
-              <Text
-                style={[styles.filterLabel, isActive && styles.filterLabelActive]}
+        <View style={styles.filterBar}>
+          {FILTERS.map((filter) => {
+            const isActive = filter.id === activeFilter;
+            return (
+              <Pressable
+                key={filter.id}
+                style={[styles.filterTab, isActive && styles.filterTabActive]}
+                onPress={() => onFilterChange?.(filter.id)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={`Filter ${filter.label}`}
               >
-                {filter.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+                <Text
+                  style={[styles.filterLabel, isActive && styles.filterLabelActive]}
+                >
+                  {filter.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
-      {savedCount > 0 ? (
-        <Text style={styles.savedHint}>{savedCount} saved to My contacts</Text>
-      ) : null}
+        {savedCount > 0 ? (
+          <Text style={styles.savedHint}>{savedCount} saved to My contacts</Text>
+        ) : null}
 
-      {errorMessage ? (
-        <Text style={styles.errorText}>{errorMessage}</Text>
-      ) : null}
+        {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
 
-      {isLoading ? (
-        <ActivityIndicator color={colors.teal} style={styles.loader} />
-      ) : null}
+        {isLoading ? (
+          <ActivityIndicator color={colors.teal} style={styles.loader} />
+        ) : null}
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + spacing.xl },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
+        {!isLoading && filtered.length === 0 && !errorMessage ? (
+          <EmptyState
+            title="No lodging in this filter"
+            body={`Try another category, or widen your search around ${cityLabel}.`}
+            tip="Partner guesthouses often sit near universities and business districts."
+            iconName="bed-outline"
+          />
+        ) : null}
+
         {filtered.map((listing, index) => {
           const isLast = index === filtered.length - 1;
           return (
@@ -154,6 +135,8 @@ export default function LodgingDirectoryScreen({
                 pressed && styles.pressed,
               ]}
               onPress={() => onListingPress?.(listing.id)}
+              accessibilityRole="button"
+              accessibilityLabel={listing.name}
             >
               <View style={styles.iconWrap}>
                 <Text style={styles.iconInitials}>
@@ -175,11 +158,15 @@ export default function LodgingDirectoryScreen({
                 </Text>
                 <Text style={styles.price}>{listing.priceHint}</Text>
               </View>
-              <Text style={styles.listAction}>View</Text>
+              <AppIcon
+                name="chevron-forward"
+                size={fontSizes.subheading}
+                color={colors.teal}
+              />
             </Pressable>
           );
         })}
-      </ScrollView>
+      </ScreenScroll>
     </View>
   );
 }
@@ -189,58 +176,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
-  },
-  headerTitle: {
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    marginBottom: spacing.sm,
-  },
-  headerSubtitle: {
-    fontSize: fontSizes.body,
-    color: colors.white,
-    opacity: 0.88,
-  },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: colors.warmCream,
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  bannerIcon: {
-    marginRight: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  bannerText: {
-    flex: 1,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
   filterBar: {
     flexDirection: 'row',
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
     marginBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -252,33 +189,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: spacing.sm,
     borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderBottomColor: colors.background,
     marginBottom: -1,
   },
   filterTabActive: {
     borderBottomColor: colors.teal,
   },
   filterLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
   },
   filterLabelActive: {
+    fontFamily: fontFamilies.bold,
     color: colors.teal,
     fontWeight: fontWeights.bold,
   },
   savedHint: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     color: colors.teal,
     fontWeight: fontWeights.semibold,
-    paddingHorizontal: spacing.lg,
     marginBottom: spacing.sm,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
   },
   card: {
     flexDirection: 'row',
@@ -288,6 +221,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   cardSpacing: {
     marginBottom: spacing.md,
@@ -299,12 +233,13 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.warmCream,
+    backgroundColor: tints.teal,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
   iconInitials: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
@@ -319,6 +254,7 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
@@ -327,33 +263,26 @@ const styles = StyleSheet.create({
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs / 2,
+    gap: spacing.xs,
   },
   rating: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.warning,
   },
   category: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
     marginBottom: spacing.sm,
   },
   price: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
-  },
-  listAction: {
-    fontSize: fontSizes.heading,
-    color: colors.teal,
-    marginLeft: spacing.sm,
-  },
-  errorText: {
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    marginBottom: spacing.sm,
   },
   loader: {
     marginVertical: spacing.md,

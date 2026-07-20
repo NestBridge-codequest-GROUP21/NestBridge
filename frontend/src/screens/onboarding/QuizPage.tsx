@@ -12,8 +12,18 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
-import SecondaryButton from '../../components/SecondaryButton';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  lineHeights,
+  layout,
+  shadows,
+} from '../../constants/theme';
 import { isLikelyValidPlaceName, isLikelyValidText } from '../../utils/textValidation';
 import {
   isOtherOption,
@@ -513,8 +523,8 @@ export default function QuizPage({
         return (
           <QuizSlider
             value={typeof value === 'number' ? value : 50}
-            minLabel={question.sliderLabels?.min ?? 'Low'}
-            maxLabel={question.sliderLabels?.max ?? 'High'}
+            minLabel={question.sliderLabels?.min ?? 'Quiet'}
+            maxLabel={question.sliderLabels?.max ?? 'Social'}
             onChange={(next) => {
               markInteracted(question.id);
               setAnswers((prev) => ({ ...prev, [question.id]: next }));
@@ -559,11 +569,18 @@ export default function QuizPage({
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg },
+          {
+            paddingTop: insets.top + spacing.lg,
+            paddingBottom: insets.bottom + spacing.lg,
+          },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {showBack && onBack ? (
+          <BackButton onPress={() => onBack(answers)} style={styles.back} />
+        ) : null}
+
         <View style={styles.progressWrap}>
           <View style={styles.progressLabelRow}>
             <Text style={styles.progressStepLabel}>{stepLabel}</Text>
@@ -613,12 +630,6 @@ export default function QuizPage({
             label={isLastPage ? 'Finish' : 'Continue'}
             onPress={handleContinuePress}
           />
-          {showBack && onBack && (
-            <>
-              <View style={styles.footerSpacer} />
-              <SecondaryButton label="Back" onPress={() => onBack(answers)} />
-            </>
-          )}
         </View>
       </ScrollView>
     </View>
@@ -631,7 +642,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
+  },
+  back: {
+    marginBottom: spacing.sm,
   },
   progressWrap: {
     marginBottom: spacing.lg,
@@ -643,6 +657,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   progressStepLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
@@ -650,12 +665,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   progressCount: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
   },
   progressTrack: {
-    height: 4,
+    height: spacing.xs,
     backgroundColor: colors.border,
     borderRadius: borderRadius.pill,
     overflow: 'hidden',
@@ -669,13 +685,15 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   question: {
-    fontSize: fontSizes.display - 2,
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
-    lineHeight: 32,
+    lineHeight: lineHeights.heading,
     marginBottom: spacing.md,
   },
   fieldError: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.danger,
@@ -695,6 +713,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     minHeight: 44,
     justifyContent: 'center',
+    ...shadows.card,
   },
   chipSelected: {
     borderColor: colors.teal,
@@ -704,6 +723,7 @@ const styles = StyleSheet.create({
     opacity: 0.95,
   },
   chipLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
@@ -723,6 +743,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     minHeight: 52,
     justifyContent: 'center',
+    ...shadows.card,
   },
   optionCardSelected: {
     borderColor: colors.teal,
@@ -732,6 +753,7 @@ const styles = StyleSheet.create({
     opacity: 0.95,
   },
   optionLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
@@ -748,6 +770,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   sliderLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
@@ -757,7 +780,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sliderTrack: {
-    height: 6,
+    height: spacing.sm - 2,
     backgroundColor: colors.border,
     borderRadius: borderRadius.pill,
     position: 'relative',
@@ -772,19 +795,15 @@ const styles = StyleSheet.create({
   },
   sliderThumb: {
     position: 'absolute',
-    top: -9,
-    width: 24,
-    height: 24,
-    marginLeft: -12,
+    top: -(spacing.sm + spacing.xs / 2),
+    width: spacing.lg,
+    height: spacing.lg,
+    marginLeft: -(spacing.sm + spacing.xs),
     borderRadius: borderRadius.pill,
     backgroundColor: colors.tealBright,
     borderWidth: 3,
     borderColor: colors.white,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    ...shadows.card,
   },
   textInput: {
     backgroundColor: colors.white,
@@ -793,13 +812,15 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textPrimary,
     minHeight: 48,
+    ...shadows.card,
   },
   textInputMultiline: {
-    minHeight: 96,
+    minHeight: spacing.xl * 3,
     textAlignVertical: 'top',
   },
   skipLink: {
@@ -809,6 +830,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   skipLinkText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
@@ -816,8 +838,5 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: spacing.lg,
-  },
-  footerSpacer: {
-    height: spacing.sm,
   },
 });

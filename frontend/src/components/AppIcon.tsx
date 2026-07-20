@@ -88,6 +88,12 @@ const GLYPH_TO_ICON: Record<string, IoniconName> = {
   '🎬': 'film-outline',
   '💻': 'laptop-outline',
   '⚠️': 'warning-outline',
+  '🧭': 'compass-outline',
+  '✋': 'hand-left-outline',
+  '🗣️': 'chatbubble-ellipses-outline',
+  '👍': 'thumbs-up-outline',
+  '📱': 'phone-portrait-outline',
+  '👕': 'body-outline',
   // Emergency
   '🆘': 'alert-circle-outline',
   '🚨': 'alert-circle-outline',

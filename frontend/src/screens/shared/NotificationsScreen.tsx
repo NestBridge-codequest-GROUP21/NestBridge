@@ -9,6 +9,8 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
 import {
   colors,
   fontFamilies,
@@ -17,6 +19,8 @@ import {
   spacing,
   borderRadius,
   tints,
+  shadows,
+  lineHeights,
 } from '../../constants/theme';
 import type { AppNotification } from '../../types/booking';
 
@@ -71,7 +75,7 @@ export default function NotificationsScreen({
         onBack={onBack}
       />
       <ScreenScroll>
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
         {unreadCount > 0 && onMarkAllRead ? (
           <Pressable
             onPress={onMarkAllRead}
@@ -86,12 +90,12 @@ export default function NotificationsScreen({
           <ActivityIndicator color={colors.teal} style={styles.loader} />
         ) : null}
         {!isLoading && notifications.length === 0 ? (
-          <View style={styles.emptyBlock}>
-            <Text style={styles.emptyTitle}>No notifications yet</Text>
-            <Text style={styles.emptyBody}>
-              Booking updates, payment reminders, and messages will appear here.
-            </Text>
-          </View>
+          <EmptyState
+            title="No notifications yet"
+            body="Booking updates, payment reminders, and host messages will appear here."
+            tip="Keep notifications on so you do not miss check-in or session requests."
+            iconName="notifications-outline"
+          />
         ) : null}
         {notifications.map((notification, index) => (
           <Pressable
@@ -124,12 +128,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.danger,
-    marginBottom: spacing.md,
-  },
   markAll: {
     alignSelf: 'flex-end',
     minHeight: 44,
@@ -146,32 +144,13 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: spacing.xl,
   },
-  emptyBlock: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    marginTop: spacing.md,
-  },
-  emptyTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptyBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    lineHeight: 22,
-  },
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
+    ...shadows.card,
   },
   cardUnread: {
     backgroundColor: tints.teal,
@@ -204,7 +183,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.sm,
   },
   cardTime: {

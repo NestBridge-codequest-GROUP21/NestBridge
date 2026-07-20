@@ -17,6 +17,7 @@ export type AppStackParamList = {
   HostHome: undefined;
   GuideHome: undefined;
   Profile: undefined;
+  ExploreHub: undefined;
   DevTesting: undefined;
   StaffUserSearch: undefined;
   StaffUserDetail: { userId: string };

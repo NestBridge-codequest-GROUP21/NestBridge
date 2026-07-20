@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import EmptyState from './EmptyState';
 import {
   colors,
   fontFamilies,
@@ -7,6 +8,7 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  shadows,
 } from '../constants/theme';
 import type { ProviderBookingItem } from '../types/providerBooking';
 import { formatBookingDate, formatCurrency } from '../data/bookingMock';
@@ -119,11 +121,13 @@ export function ProviderBookingsEmptyBlock({
   tip,
 }: ProviderBookingsEmptyBlockProps) {
   return (
-    <View style={styles.emptyBlock}>
-      <Text style={styles.emptyTitle}>{title}</Text>
-      <Text style={styles.emptyBody}>{body}</Text>
-      {tip ? <Text style={styles.emptyTip}>{tip}</Text> : null}
-    </View>
+    <EmptyState
+      title={title}
+      body={body}
+      tip={tip}
+      iconName="calendar-outline"
+      style={styles.emptySpacing}
+    />
   );
 }
 
@@ -135,6 +139,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   cardSpacing: {
     marginBottom: spacing.md,
@@ -196,28 +201,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
-  emptyBlock: {
-    backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+  emptySpacing: {
     marginBottom: spacing.lg,
-  },
-  emptyTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptyBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  emptyTip: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textTertiary,
   },
 });

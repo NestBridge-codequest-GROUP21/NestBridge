@@ -11,6 +11,8 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import PrimaryButton from '../../components/PrimaryButton';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
 import type { AdminUserSummary } from '../../services/api';
 import {
   colors,
@@ -19,6 +21,7 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  shadows,
 } from '../../constants/theme';
 
 export interface StaffUserSearchScreenProps {
@@ -74,14 +77,18 @@ export default function StaffUserSearchScreen({
           />
         </View>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
 
         {isLoading ? (
           <ActivityIndicator color={colors.teal} style={styles.loader} />
         ) : null}
 
         {!isLoading && hasSearched && results.length === 0 && !errorMessage ? (
-          <Text style={styles.emptyText}>No users matched that search.</Text>
+          <EmptyState
+            title="No users matched"
+            body="Try another name or email. Staff search looks across NestBridge accounts."
+            iconName="search-outline"
+          />
         ) : null}
 
         {results.map((user) => (
@@ -127,6 +134,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.lg,
     gap: spacing.md,
+    ...shadows.card,
   },
   input: {
     minHeight: 44,
@@ -139,18 +147,6 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     color: colors.textPrimary,
     backgroundColor: colors.background,
-  },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
-  },
-  emptyText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.md,
   },
   loader: {
     marginVertical: spacing.lg,
@@ -165,6 +161,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.sm,
     minHeight: 44,
+    ...shadows.card,
   },
   pressed: {
     opacity: 0.92,

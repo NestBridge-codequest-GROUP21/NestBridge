@@ -1,13 +1,10 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppIcon from '../../components/AppIcon';
+import PrimaryButton from '../../components/PrimaryButton';
+import SecondaryButton from '../../components/SecondaryButton';
 import type { KYCPromptData } from '../../data/kycPromptMock';
 import {
   colors,
@@ -62,24 +59,8 @@ export default function KYCPromptScreen({
           { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.xl },
         ]}
       >
-        <Pressable
-          style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
-          onPress={onVerifyNow}
-          accessibilityRole="button"
-          accessibilityLabel="Verify now"
-        >
-          <Text style={styles.primaryButtonText}>Verify now</Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
-          onPress={onVerifyLater}
-          accessibilityRole="button"
-          accessibilityLabel="Verify later"
-        >
-          <Text style={styles.secondaryButtonText}>Verify later</Text>
-        </Pressable>
-
+        <PrimaryButton label="Verify now" onPress={onVerifyNow} />
+        <SecondaryButton label="Verify later" onPress={onVerifyLater} />
         <Text style={styles.note}>{data.note}</Text>
       </View>
     </View>
@@ -107,15 +88,17 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display - 6,
+    fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.md,
+    lineHeight: lineHeights.heading,
   },
   explanation: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body - 1,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: lineHeights.body,
@@ -135,44 +118,13 @@ const styles = StyleSheet.create({
   buttonContainer: {
     gap: spacing.sm,
   },
-  primaryButton: {
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.lg,
-    minHeight: 44,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    fontFamily: fontFamilies.bold,
-    color: colors.white,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-  },
-  secondaryButton: {
-    borderRadius: borderRadius.lg,
-    minHeight: 44,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.teal,
-  },
-  secondaryButtonText: {
-    fontFamily: fontFamilies.semibold,
-    color: colors.teal,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-  },
   note: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     textAlign: 'center',
     marginTop: spacing.sm,
     lineHeight: lineHeights.caption,
-  },
-  pressed: {
-    opacity: 0.88,
   },
 });

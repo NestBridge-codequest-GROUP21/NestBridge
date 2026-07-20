@@ -73,7 +73,7 @@ export function HostProfileRoute({
     return (
       <RouteErrorState
         title="Host not found"
-        message={error ?? 'Could not load host profile.'}
+        message={error ?? 'Could not load this host profile. Check your connection and try again.'}
         onBack={onBack}
       />
     );
@@ -83,6 +83,8 @@ export function HostProfileRoute({
     <HostProfileScreen
       host={host}
       showMatchScores={showMatchScores}
+      about={`A welcoming host home in ${host.location}. Quiet study space, home-cooked meals when arranged, and an easy commute to campus and city amenities.`}
+      highlights={['Meals available', 'Study-friendly', 'Near campus']}
       onBack={onBack}
       onBookPress={() => {
         if (!canBookHomestay) {

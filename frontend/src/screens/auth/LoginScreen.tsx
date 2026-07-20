@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,9 @@ import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
+import BackButton from '../../components/BackButton';
+import InlineBanner from '../../components/InlineBanner';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
@@ -21,6 +24,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  lineHeights,
+  layout,
 } from '../../constants/theme';
 import type { DemoAccount } from '../../data/demoAccounts';
 
@@ -83,16 +88,7 @@ export default function LoginScreen({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {onBack ? (
-          <Pressable
-            onPress={onBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
-        ) : null}
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
@@ -112,7 +108,7 @@ export default function LoginScreen({
         <FormTextField
           label="Email"
           value={email}
-          placeholder="Enter email address..."
+          placeholder="you@example.com"
           onChangeText={onEmailChange}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -120,7 +116,7 @@ export default function LoginScreen({
         <FormTextField
           label="Password"
           value={password}
-          placeholder="Enter your password..."
+          placeholder="Your password"
           onChangeText={onPasswordChange}
           secureTextEntry
           visibilityToggle
@@ -147,16 +143,14 @@ export default function LoginScreen({
           accessibilityState={{ checked: keepSignedIn }}
         >
           <View style={[styles.checkbox, keepSignedIn && styles.checkboxChecked]}>
-            {keepSignedIn ? <Text style={styles.checkmark}>✓</Text> : null}
+            {keepSignedIn ? (
+              <AppIcon name="checkmark" size={14} color={colors.white} />
+            ) : null}
           </View>
           <Text style={styles.keepSignedInText}>Keep me signed in</Text>
         </Pressable>
 
-        {errorMessage ? (
-          <View style={styles.errorBanner} accessibilityLiveRegion="polite">
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          </View>
-        ) : null}
+        {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
         <PrimaryButton label="Sign in" onPress={onSubmit} />
         <View style={styles.spacer} />
@@ -175,30 +169,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backIcon: {
-    fontSize: 24,
-    color: colors.textPrimary,
-  },
   title: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
   },
   dividerLabel: {
@@ -215,6 +203,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   forgotText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     color: colors.teal,
     fontWeight: fontWeights.semibold,
@@ -239,28 +228,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.teal,
     borderColor: colors.teal,
   },
-  checkmark: {
-    color: colors.white,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-  },
   keepSignedInText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textPrimary,
-  },
-  errorBanner: {
-    backgroundColor: colors.warmCream,
-    borderWidth: 1,
-    borderColor: colors.danger,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    lineHeight: 20,
   },
   spacer: {
     height: spacing.sm,

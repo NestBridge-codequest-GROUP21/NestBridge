@@ -29,6 +29,7 @@ import {
   lineHeights,
   layout,
   motion,
+  shadows,
 } from '../../constants/theme';
 
 const WELCOME_LOGO_SIZE = spacing.xl * 3;
@@ -200,8 +201,8 @@ export default function WelcomeScreen({
               accounts={demoAccounts}
               busy={demoLoginBusy}
               variant="tabs"
-              title="Jump into a demo"
-              hint="Backend + demo data — password: password"
+              title="Quick sign-in"
+              hint="Use a NestBridge sample profile to look around."
               onSelect={onDemoLogin}
             />
             <Text style={styles.dividerLabel}>or continue with your account</Text>
@@ -289,6 +290,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: spacing.md,
     minHeight: 44,
+    ...shadows.card,
   },
   pillIconTile: {
     width: 40,

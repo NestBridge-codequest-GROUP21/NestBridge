@@ -1,15 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
+import EmptyState from '../../components/EmptyState';
+import SecondaryButton from '../../components/SecondaryButton';
 import {
   colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import type { VideoResourceApi } from '../../services/api';
 import { isPlayableYoutubeId } from '../../utils/videoPlayback';
@@ -43,32 +46,28 @@ export default function VideoDetailScreen({
         <StatusBar style="light" />
         <ScreenHeader title="Video unavailable" compact onBack={onBack} />
         <View style={styles.errorBody}>
-          <Text style={styles.errorMessage}>
-            {errorMessage ?? 'We could not load this video.'}
-          </Text>
-          {onRetry ? (
-            <Pressable
-              style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
-              onPress={onRetry}
-              accessibilityRole="button"
-              accessibilityLabel="Try again"
-            >
-              <Text style={styles.retryButtonText}>Try again</Text>
-            </Pressable>
-          ) : null}
+          <EmptyState
+            title="Could not load video"
+            body={errorMessage ?? 'This orientation clip is unavailable right now.'}
+            tip="Try another title from the library, or check your connection."
+            iconName="film-outline"
+            primaryActionLabel={onRetry ? 'Try again' : undefined}
+            onPrimaryAction={onRetry}
+          />
         </View>
       </View>
     );
   }
 
   const canPlay = isPlayableYoutubeId(video.youtubeId);
+  const playerBackground = colors.navy;
   const embedHtml = `
 <!DOCTYPE html>
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <style>
-      html, body { margin: 0; padding: 0; background: #000; height: 100%; overflow: hidden; }
+      html, body { margin: 0; padding: 0; background: ${playerBackground}; height: 100%; overflow: hidden; }
       iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
     </style>
   </head>
@@ -104,14 +103,17 @@ export default function VideoDetailScreen({
             <View style={styles.comingSoon}>
               <Text style={styles.comingSoonTitle}>Video unavailable</Text>
               <Text style={styles.comingSoonBody}>
-                This video could not be loaded. Try another title from the library.
+                This clip could not be loaded. Pick another title from the library.
               </Text>
+              {onRetry ? (
+                <SecondaryButton label="Try again" onPress={onRetry} />
+              ) : null}
             </View>
           )}
         </View>
         <View style={styles.body}>
           <Text style={styles.description}>{video.description}</Text>
-          <Text style={styles.meta}>Curated for {video.city}</Text>
+          <Text style={styles.meta}>Curated for settling into {video.city}</Text>
         </View>
       </ScrollView>
     </View>
@@ -132,11 +134,12 @@ const styles = StyleSheet.create({
   playerWrap: {
     width: '100%',
     aspectRatio: 16 / 9,
-    backgroundColor: colors.textPrimary,
+    backgroundColor: colors.navy,
+    ...shadows.card,
   },
   player: {
     flex: 1,
-    backgroundColor: colors.textPrimary,
+    backgroundColor: colors.navy,
   },
   comingSoon: {
     flex: 1,
@@ -144,7 +147,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     backgroundColor: colors.navy,
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   comingSoonTitle: {
     fontFamily: fontFamilies.bold,
@@ -158,7 +161,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.caption,
     color: colors.border,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: lineHeights.caption,
   },
   body: {
     padding: spacing.md,
@@ -167,7 +170,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: fontSizes.body,
     color: colors.textPrimary,
-    lineHeight: 24,
+    lineHeight: lineHeights.body,
     fontFamily: fontFamilies.regular,
   },
   meta: {
@@ -177,33 +180,7 @@ const styles = StyleSheet.create({
   },
   errorBody: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.lg,
-    gap: spacing.md,
-  },
-  errorMessage: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  retryButton: {
-    minHeight: 44,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  retryButtonText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  pressed: {
-    opacity: 0.88,
   },
 });

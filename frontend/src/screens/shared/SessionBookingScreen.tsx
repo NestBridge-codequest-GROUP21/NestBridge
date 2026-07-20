@@ -4,19 +4,23 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GatedPrimaryButton } from '../../components/ProfileIncompleteBanner';
+import BackButton from '../../components/BackButton';
+import InlineBanner from '../../components/InlineBanner';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import type { GuideProfileSummary, SessionPriceBreakdown } from '../../types/booking';
 import {
@@ -93,17 +97,10 @@ export default function SessionBookingScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
         <Text style={styles.headerTitle}>Book a session</Text>
         <Text style={styles.headerSubtitle}>
-          Review your tour details before sending
+          Review details before requesting your guide
         </Text>
       </LinearGradient>
 
@@ -174,7 +171,7 @@ export default function SessionBookingScreen({
         </View>
 
         {submitErrorMessage ? (
-          <Text style={styles.submitError}>{submitErrorMessage}</Text>
+          <InlineBanner tone="error" message={submitErrorMessage} />
         ) : null}
       </ScrollView>
 
@@ -209,28 +206,22 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     marginBottom: spacing.sm,
   },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
-  },
   headerTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
     marginBottom: spacing.sm,
   },
   headerSubtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.white,
     opacity: 0.88,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   scroll: {
     flex: 1,
@@ -249,6 +240,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   guideIconWrap: {
     width: 56,
@@ -260,6 +252,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   guideInitials: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
@@ -268,16 +261,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   guideName: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   guideLocation: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
   },
   sectionLabel: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.textSecondary,
@@ -293,16 +289,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.sm,
+    ...shadows.card,
   },
   scheduleBlock: {
     flex: 1,
   },
   scheduleLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
   scheduleValue: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
@@ -313,10 +312,11 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.md,
   },
   scheduleHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     marginBottom: spacing.xl,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   priceCard: {
     backgroundColor: colors.warmCream,
@@ -325,6 +325,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   priceRow: {
     flexDirection: 'row',
@@ -334,19 +335,23 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     flex: 1,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     paddingRight: spacing.md,
   },
   priceLabelBold: {
+    fontFamily: fontFamilies.bold,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
   },
   priceValue: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textPrimary,
   },
   priceValueBold: {
+    fontFamily: fontFamilies.bold,
     fontWeight: fontWeights.bold,
     fontSize: fontSizes.subheading,
   },
@@ -366,17 +371,14 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  policyIcon: {
-    fontSize: 20,
-    marginRight: spacing.md,
-    marginTop: spacing.xs,
+    ...shadows.card,
   },
   policyText: {
     flex: 1,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   footer: {
     position: 'absolute',
@@ -388,18 +390,14 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
   footerHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     textAlign: 'center',
     marginTop: spacing.sm,
-    lineHeight: 18,
-  },
-  submitError: {
-    fontSize: fontSizes.caption,
-    color: colors.danger,
-    textAlign: 'center',
-    marginTop: spacing.md,
+    lineHeight: lineHeights.caption,
   },
 });

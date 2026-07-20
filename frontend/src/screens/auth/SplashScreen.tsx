@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BrandLogoMark from '../../components/BrandLogoMark';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
@@ -381,28 +382,33 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   appName: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   appNameNest: {
+    fontFamily: fontFamilies.bold,
     color: colors.white,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
   },
   appNameBridge: {
+    fontFamily: fontFamilies.bold,
     color: colors.tealBright,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
   },
   appNameSingle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
     textAlign: 'center',
   },
   tagline: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.gold,
@@ -430,6 +436,7 @@ const styles = StyleSheet.create({
     left: spacing.lg,
     right: spacing.lg,
     bottom: spacing.xl,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
     color: colors.white,

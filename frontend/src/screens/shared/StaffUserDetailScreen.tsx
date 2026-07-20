@@ -5,6 +5,8 @@ import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
 import type { AdminUserDetail } from '../../services/api';
 import {
   colors,
@@ -13,6 +15,7 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  shadows,
 } from '../../constants/theme';
 
 export interface StaffUserDetailScreenProps {
@@ -69,8 +72,16 @@ export default function StaffUserDetailScreen({
           <ActivityIndicator color={colors.teal} style={styles.loader} />
         ) : null}
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-        {actionMessage ? <Text style={styles.infoText}>{actionMessage}</Text> : null}
+        {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
+        {actionMessage ? <InlineBanner tone="info" message={actionMessage} /> : null}
+
+        {!user && !isLoading && !errorMessage ? (
+          <EmptyState
+            title="User not found"
+            body="This account could not be loaded. Go back and search again."
+            iconName="person-outline"
+          />
+        ) : null}
 
         {user && !isLoading ? (
           <>
@@ -176,18 +187,6 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: spacing.xl,
   },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
-  },
-  infoText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.success,
-    marginBottom: spacing.md,
-  },
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -195,6 +194,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.lg,
     marginBottom: spacing.lg,
+    ...shadows.card,
   },
   sectionTitle: {
     fontFamily: fontFamilies.semibold,

@@ -13,6 +13,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 
 export interface TourTypesSetupScreenProps {
@@ -33,13 +35,15 @@ export interface TourTypesSetupScreenProps {
 
 function TourTypeRow({
   tourType,
+  isLast,
   onToggle,
 }: {
   tourType: TourTypeOption;
+  isLast: boolean;
   onToggle?: (enabled: boolean) => void;
 }) {
   return (
-    <View style={styles.tourRow}>
+    <View style={[styles.tourRow, isLast && styles.tourRowLast]}>
       <View style={styles.tourInfo}>
         <Text style={styles.tourLabel}>{tourType.label}</Text>
         <Text style={styles.tourDescription}>{tourType.description}</Text>
@@ -83,16 +87,17 @@ export default function TourTypesSetupScreen({
       />
 
       <ScreenScroll>
-        <Text style={styles.screenTitle}>Tour Types Setup</Text>
+        <Text style={styles.screenTitle}>Tour types</Text>
         <Text style={styles.screenSubtitle}>
           Choose the experiences you offer and set your base pricing.
         </Text>
 
         <View style={styles.section}>
-          {tourTypes.map((tourType) => (
+          {tourTypes.map((tourType, index) => (
             <TourTypeRow
               key={tourType.id}
               tourType={tourType}
+              isLast={index === tourTypes.length - 1}
               onToggle={(enabled) => onToggleTourType?.(tourType.id, enabled)}
             />
           ))}
@@ -101,16 +106,16 @@ export default function TourTypesSetupScreen({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Pricing & capacity</Text>
           <FormTextField
-            label="Base Rate ($)"
+            label="Base rate (GHS)"
             value={baseRate}
-            placeholder="e.g. 45"
+            placeholder="45"
             keyboardType="numeric"
             onChangeText={onBaseRateChange}
           />
           <FormTextField
-            label="Max Group Size"
+            label="Max group size"
             value={maxGroupSize}
-            placeholder="e.g. 8"
+            placeholder="8"
             keyboardType="numeric"
             onChangeText={onMaxGroupSizeChange}
           />
@@ -137,8 +142,10 @@ const styles = StyleSheet.create({
   screenSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
+    lineHeight: lineHeights.body,
   },
   section: {
     backgroundColor: colors.white,
@@ -147,10 +154,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.lg,
+    ...shadows.card,
   },
   sectionTitle: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -164,6 +173,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     gap: spacing.md,
+    minHeight: 56,
+  },
+  tourRowLast: {
+    borderBottomWidth: 0,
   },
   tourInfo: {
     flex: 1,
@@ -171,12 +184,15 @@ const styles = StyleSheet.create({
   tourLabel: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   tourDescription: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
   },
 });

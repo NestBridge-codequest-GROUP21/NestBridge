@@ -2,7 +2,12 @@ import React, { useEffect, useState } from 'react';
 import BootLoader from './src/components/BootLoader';
 import AppErrorBoundary from './src/components/AppErrorBoundary';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import {
+  useFonts,
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
 import { AuthProvider } from './src/context/AuthContext';
 import { AccountProfileProvider } from './src/context/AccountProfileContext';
 import RootNavigator from './src/navigation/RootNavigator';
@@ -27,9 +32,9 @@ function AppProviders() {
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_600SemiBold,
-    Inter_700Bold,
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
   });
   const [fontWaitTimedOut, setFontWaitTimedOut] = useState(false);
 

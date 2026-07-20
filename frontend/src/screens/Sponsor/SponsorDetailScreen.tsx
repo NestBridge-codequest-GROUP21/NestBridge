@@ -2,18 +2,18 @@ import React from 'react';
 import {
   View,
   Text,
-  ScrollView,
-  Pressable,
   StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { SponsorListing } from '../../data/sponsorsMock';
+import BackButton from '../../components/BackButton';
+import PrimaryButton from '../../components/PrimaryButton';
+import ScreenScroll from '../../components/ScreenScroll';
 import AppIcon from '../../components/AppIcon';
+import type { SponsorListing } from '../../data/sponsorsMock';
 import {
   colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -22,6 +22,7 @@ import {
   layout,
   lineHeights,
   gradients,
+  shadows,
 } from '../../constants/theme';
 
 export interface SponsorDetailScreenProps {
@@ -51,12 +52,12 @@ export default function SponsorDetailScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <ScrollView
-        style={styles.container}
+      <ScreenScroll
         contentContainerStyle={{
           paddingBottom: insets.bottom + spacing.xl * 4,
+          paddingHorizontal: 0,
+          paddingTop: 0,
         }}
-        showsVerticalScrollIndicator={false}
       >
         <LinearGradient
           colors={[...gradients.headerCompact]}
@@ -64,14 +65,7 @@ export default function SponsorDetailScreen({
           end={{ x: 1, y: 1 }}
           style={[styles.header, { paddingTop: insets.top + spacing.md }]}
         >
-          <Pressable
-            style={styles.backBtn}
-            onPress={onBack}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
-          </Pressable>
+          <BackButton onPress={onBack} color={colors.white} style={styles.backBtn} />
           <View style={styles.logoTile}>
             <AppIcon glyph={sponsor.logo} size={32} color={colors.white} />
           </View>
@@ -103,23 +97,21 @@ export default function SponsorDetailScreen({
           <Text style={styles.sectionTitle}>Requirements</Text>
           {sponsor.requirements.map((requirement) => (
             <View key={requirement} style={styles.requirementRow}>
-              <AppIcon name="checkmark-circle" size={fontSizes.body} color={colors.teal} style={styles.bullet} />
+              <AppIcon
+                name="checkmark-circle"
+                size={fontSizes.body}
+                color={colors.teal}
+                style={styles.bullet}
+              />
               <Text style={styles.requirementText}>{requirement}</Text>
             </View>
           ))}
         </View>
 
         <View style={styles.footer}>
-          <Pressable
-            style={({ pressed }) => [styles.applyBtn, pressed && styles.pressed]}
-            onPress={onApplyPress}
-            accessibilityRole="button"
-            accessibilityLabel="Apply for sponsorship"
-          >
-            <Text style={styles.applyBtnText}>Apply for sponsorship</Text>
-          </Pressable>
+          <PrimaryButton label="Apply for sponsorship" onPress={onApplyPress} />
         </View>
-      </ScrollView>
+      </ScreenScroll>
     </View>
   );
 }
@@ -129,9 +121,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  container: {
-    flex: 1,
-  },
   header: {
     paddingBottom: spacing.xl,
     paddingHorizontal: layout.screenPaddingHorizontal,
@@ -139,16 +128,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     alignSelf: 'flex-start',
-    minHeight: 44,
-    minWidth: 44,
-    justifyContent: 'center',
     marginBottom: spacing.md,
-  },
-  backText: {
-    fontFamily: fontFamilies.bold,
-    color: colors.white,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
   },
   logoTile: {
     width: 64,
@@ -169,31 +149,32 @@ const styles = StyleSheet.create({
   categoryBadge: {
     backgroundColor: colors.teal,
     borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm + 6,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     marginTop: spacing.sm,
   },
   categoryText: {
     fontFamily: fontFamilies.semibold,
     color: colors.white,
-    fontSize: fontSizes.caption - 1,
+    fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
   },
   amount: {
     fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display - 4,
+    fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.gold,
     marginTop: spacing.sm,
   },
   section: {
     backgroundColor: colors.white,
-    margin: spacing.md,
-    marginBottom: 0,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   sectionTitle: {
     fontFamily: fontFamilies.bold,
@@ -204,27 +185,27 @@ const styles = StyleSheet.create({
   },
   description: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption + 1,
+    fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: lineHeights.subheading - 2,
+    lineHeight: lineHeights.body,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     gap: spacing.sm,
   },
   detailLabel: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption + 1,
+    fontSize: fontSizes.caption,
     color: colors.textSecondary,
     flex: 1,
   },
   detailValue: {
     fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption + 1,
+    fontSize: fontSizes.caption,
     color: colors.textPrimary,
     fontWeight: fontWeights.semibold,
     flex: 1,
@@ -233,41 +214,21 @@ const styles = StyleSheet.create({
   requirementRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: spacing.sm + 2,
+    marginBottom: spacing.sm,
   },
   bullet: {
-    fontFamily: fontFamilies.bold,
-    color: colors.teal,
-    fontWeight: fontWeights.bold,
-    marginRight: spacing.sm + 2,
-    fontSize: fontSizes.caption + 1,
+    marginRight: spacing.sm,
+    marginTop: 2,
   },
   requirementText: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption + 1,
+    fontSize: fontSizes.caption,
     color: colors.textSecondary,
     flex: 1,
-    lineHeight: lineHeights.caption + 4,
+    lineHeight: lineHeights.caption,
   },
   footer: {
     padding: spacing.md,
     paddingBottom: spacing.xl,
-  },
-  applyBtn: {
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.lg,
-    minHeight: 44,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  applyBtnText: {
-    fontFamily: fontFamilies.bold,
-    color: colors.white,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-  },
-  pressed: {
-    opacity: 0.88,
   },
 });

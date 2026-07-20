@@ -1,21 +1,22 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ScreenScroll from '../../components/ScreenScroll';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   lineHeights,
   layout,
+  shadows,
+  tints,
 } from '../../constants/theme';
 
 export interface TouristSiteDetail {
@@ -43,15 +44,20 @@ export default function TouristSiteDetailScreen({
     <View style={styles.root}>
       <StatusBar style="dark" />
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + spacing.xl * 4 },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <View style={[styles.topBar, { paddingTop: insets.top + spacing.xs }]}>
+        <BackButton onPress={onBack} />
+      </View>
+
+      <ScreenScroll
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + spacing.xl * 4,
+        }}
       >
-        <View style={styles.imagePlaceholder} accessibilityLabel="Site photo" />
+        <View style={styles.imagePlaceholder} accessibilityLabel="Site photo">
+          <View style={styles.imageIconWrap}>
+            <AppIcon name="library-outline" size={36} color={colors.tealDeep} />
+          </View>
+        </View>
 
         <View style={styles.content}>
           <Text style={styles.name}>{site.name}</Text>
@@ -59,7 +65,7 @@ export default function TouristSiteDetailScreen({
 
           <Text style={styles.description}>{site.description}</Text>
 
-          <Text style={styles.sectionTitle}>Details</Text>
+          <Text style={styles.sectionTitle}>Visit details</Text>
           <View style={styles.detailsCard}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Opening hours</Text>
@@ -72,7 +78,7 @@ export default function TouristSiteDetailScreen({
             </View>
           </View>
         </View>
-      </ScrollView>
+      </ScreenScroll>
 
       <View
         style={[
@@ -94,22 +100,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
+  topBar: {
+    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.background,
   },
   imagePlaceholder: {
     width: '100%',
     height: layout.carouselMinHeight + spacing.xl,
-    backgroundColor: colors.border,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.card,
   },
   content: {
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
   },
   name: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
@@ -117,6 +133,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   city: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
@@ -124,12 +141,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   description: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     lineHeight: lineHeights.body,
     marginBottom: layout.sectionGap,
   },
   sectionTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
@@ -142,16 +161,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
+    ...shadows.card,
   },
   detailRow: {
     gap: spacing.xs,
   },
   detailLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     lineHeight: lineHeights.caption,
   },
   detailValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
@@ -172,5 +194,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
 });

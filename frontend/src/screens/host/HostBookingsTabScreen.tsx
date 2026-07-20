@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -7,7 +7,12 @@ import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import ProviderBookingCard, {
   ProviderBookingsEmptyBlock,
 } from '../../components/ProviderBookingCard';
-import { colors, fontFamilies, fontSizes, spacing } from '../../constants/theme';
+import InlineBanner from '../../components/InlineBanner';
+import {
+  colors,
+  spacing,
+  borderRadius,
+} from '../../constants/theme';
 import type { ProviderBookingItem } from '../../types/providerBooking';
 
 export interface HostBookingsTabScreenProps {
@@ -55,9 +60,19 @@ export default function HostBookingsTabScreen({
         compact
       />
       <ScreenScroll withTabBar withSosDock={showSosDock}>
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <InlineBanner message={errorMessage} tone="error" />
+        ) : null}
         {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
+          <View
+            style={styles.loadingWrap}
+            accessibilityRole="progressbar"
+            accessibilityLabel="Loading bookings"
+          >
+            <View style={styles.loadingTile}>
+              <ActivityIndicator size="large" color={colors.teal} />
+            </View>
+          </View>
         ) : null}
         {!isLoading && bookings.length === 0 ? (
           <ProviderBookingsEmptyBlock
@@ -91,13 +106,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loader: {
-    marginVertical: spacing.xl,
+  loadingWrap: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
   },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.danger,
-    marginBottom: spacing.md,
+  loadingTile: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

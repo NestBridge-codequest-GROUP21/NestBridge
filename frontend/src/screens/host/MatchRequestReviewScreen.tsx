@@ -4,21 +4,24 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import SecondaryButton from '../../components/SecondaryButton';
 import {
   colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   gradients,
+  lineHeights,
+  shadows,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
@@ -78,14 +81,11 @@ export default function MatchRequestReviewScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
+        <BackButton
           onPress={onBack}
+          color={colors.white}
           style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        />
         <Text style={styles.headerTitle}>Booking request</Text>
         <Text style={styles.headerSubtitle}>Review before accepting</Text>
       </LinearGradient>
@@ -201,27 +201,23 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
     marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
+    marginLeft: -spacing.sm,
   },
   headerTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.white,
     marginBottom: spacing.xs,
   },
   headerSubtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.white,
     opacity: 0.88,
+    lineHeight: lineHeights.body,
   },
   scroll: {
     flex: 1,
@@ -238,6 +234,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   studentAvatar: {
     width: 72,
@@ -249,22 +246,26 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   studentAvatarText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.tealDeep,
   },
   studentName: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   studentMeta: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.md,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   compatBadge: {
     backgroundColor: colors.teal,
@@ -273,6 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
   compatText: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.white,
@@ -286,6 +288,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   messageLabel: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.textSecondary,
@@ -294,12 +297,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   messageText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
-    lineHeight: 24,
+    lineHeight: lineHeights.body,
     fontStyle: 'italic',
   },
   sectionLabel: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
     color: colors.textSecondary,
@@ -314,15 +320,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   datesValue: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   datesPeriod: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
   capacityCard: {
@@ -332,6 +342,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.card,
   },
   capacityCardWarning: {
     borderColor: colors.warning,
@@ -354,15 +365,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   capacityTitle: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   capacityHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   earningsCard: {
     backgroundColor: colors.warmCream,
@@ -378,17 +392,21 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   earningsLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     flex: 1,
     paddingRight: spacing.md,
   },
   earningsValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
   earningsHighlight: {
+    fontFamily: fontFamilies.bold,
     color: colors.tealDeep,
     fontWeight: fontWeights.bold,
   },
@@ -407,6 +425,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
   declineSpacing: {
     marginTop: spacing.sm,
