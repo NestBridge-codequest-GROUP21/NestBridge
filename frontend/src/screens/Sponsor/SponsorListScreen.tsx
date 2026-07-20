@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useMemo, useState } from 'react';
 import {
   View,
@@ -18,8 +19,6 @@ import KeyboardSafeView from '../../components/KeyboardSafeView';
 import type { SponsorCategory, SponsorListing } from '../../data/sponsorsMock';
 import { SPONSOR_CATEGORIES } from '../../data/sponsorsMock';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -45,6 +44,10 @@ export default function SponsorListScreen({
   onSponsorPress,
   onBack,
 }: SponsorListScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<SponsorCategory | 'All'>('All');
@@ -208,7 +211,8 @@ export default function SponsorListScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -327,3 +331,5 @@ const styles = StyleSheet.create({
     opacity: 0.92,
   },
 });
+}
+

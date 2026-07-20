@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -7,7 +8,6 @@ import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
 import AppIcon from '../../components/AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -38,6 +38,10 @@ export default function SitesDirectoryScreen({
   onSitePress,
   onBack,
 }: SitesDirectoryScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -91,7 +95,8 @@ export default function SitesDirectoryScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -144,3 +149,5 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
   },
 });
+}
+

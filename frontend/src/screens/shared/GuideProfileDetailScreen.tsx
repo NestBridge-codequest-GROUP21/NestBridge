@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -16,7 +17,6 @@ import Avatar from '../../components/Avatar';
 import StatusBadge from '../../components/StatusBadge';
 import SectionHeader from '../../components/SectionHeader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -25,7 +25,6 @@ import {
   borderWidths,
   gradients,
   lineHeights,
-  shadows,
   avatarSizes,
 } from '../../constants/theme';
 import type { GuideProfileSummary } from '../../types/booking';
@@ -46,6 +45,10 @@ export default function GuideProfileDetailScreen({
   onBookPress,
   onBack,
 }: GuideProfileDetailScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const heroAvatarSize = avatarSizes.lg + spacing.xl;
 
@@ -139,7 +142,8 @@ export default function GuideProfileDetailScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -248,3 +252,5 @@ const styles = StyleSheet.create({
     flex: 1.4,
   },
 });
+}
+

@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -10,7 +11,6 @@ import BackButton from '../../components/BackButton';
 import Card from '../../components/Card';
 import KeyboardSafeView from '../../components/KeyboardSafeView';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -19,7 +19,6 @@ import {
   borderWidths,
   lineHeights,
   layout,
-  shadows,
   touchTarget,
   avatarSizes,
 } from '../../constants/theme';
@@ -59,6 +58,8 @@ export default function ProfileSetupScreen({
   onSkip,
   onBack,
 }: ProfileSetupScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -131,7 +132,8 @@ export default function ProfileSetupScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -203,3 +205,5 @@ const styles = StyleSheet.create({
     height: spacing.sm,
   },
 });
+}
+

@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -10,7 +11,6 @@ import InlineBanner from '../../components/InlineBanner';
 import SectionHeader from '../../components/SectionHeader';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -49,6 +49,8 @@ export default function GuideEarningsTabScreen({
   emptyState,
   onTabPress,
 }: GuideEarningsTabScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const hasEarnings = lineItems.length > 0;
 
   return (
@@ -137,7 +139,8 @@ export default function GuideEarningsTabScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -223,3 +226,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
 });
+}
+

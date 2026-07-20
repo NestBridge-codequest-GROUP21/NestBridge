@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -15,14 +16,12 @@ import StatusBadge from '../../components/StatusBadge';
 import SectionHeader from '../../components/SectionHeader';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderWidths,
   touchTarget,
-  tints,
   lineHeights,
 } from '../../constants/theme';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
@@ -49,6 +48,8 @@ export default function NotificationsScreen({
   onMarkAllRead,
   onBack,
 }: NotificationsScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
@@ -126,7 +127,8 @@ export default function NotificationsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -178,3 +180,5 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
 });
+}
+

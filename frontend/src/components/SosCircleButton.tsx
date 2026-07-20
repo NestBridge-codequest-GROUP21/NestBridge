@@ -1,14 +1,13 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { Text, StyleSheet, Pressable } from 'react-native';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   borderRadius,
   spacing,
   layout,
-  shadows,
 } from '../constants/theme';
 
 export interface SosCircleButtonProps {
@@ -19,7 +18,10 @@ export interface SosCircleButtonProps {
  * Raised circular SOS control. Anchored inside the bottom tab bar (or a
  * stack-screen bottom bar) — never floats over scrollable content.
  */
-export default function SosCircleButton({ onPress }: SosCircleButtonProps) {
+export default function SosCircleButton({
+ onPress }: SosCircleButtonProps) {
+  const styles = useThemedStyles(createStyles);
+
   if (!onPress) {
     return null;
   }
@@ -36,7 +38,8 @@ export default function SosCircleButton({ onPress }: SosCircleButtonProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   button: {
     width: layout.sosButtonSize,
     height: layout.sosButtonSize,
@@ -59,3 +62,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 });
+}
+

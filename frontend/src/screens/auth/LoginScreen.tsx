@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -18,7 +19,6 @@ import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
 import CheckboxRow from '../../components/CheckboxRow';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -69,6 +69,8 @@ export default function LoginScreen({
   onCreateAccountPress,
   onBack,
 }: LoginScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -161,7 +163,8 @@ export default function LoginScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -223,3 +226,5 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
 });
+}
+

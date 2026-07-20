@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -16,7 +17,6 @@ import EmptyState from '../../components/EmptyState';
 import Avatar from '../../components/Avatar';
 import AppIcon from '../../components/AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -28,7 +28,6 @@ import {
   touchTarget,
   lineHeights,
   layout,
-  shadows,
 } from '../../constants/theme';
 import type { ChatMessage } from '../../types/messaging';
 
@@ -52,6 +51,10 @@ export default function ChatScreen({
   onBack,
   onSendMessage,
 }: ChatScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState('');
@@ -169,7 +172,8 @@ export default function ChatScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -291,3 +295,5 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 });
+}
+

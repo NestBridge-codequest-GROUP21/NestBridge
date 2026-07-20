@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useRef, useState } from 'react';
 import {
   View,
@@ -15,7 +16,6 @@ import PrimaryButton from '../../components/PrimaryButton';
 import BackButton from '../../components/BackButton';
 import Card from '../../components/Card';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -24,7 +24,6 @@ import {
   borderWidths,
   lineHeights,
   layout,
-  shadows,
   controlHeights,
   touchTarget,
 } from '../../constants/theme';
@@ -278,6 +277,8 @@ interface QuizSliderProps {
 }
 
 function QuizSlider({ value, minLabel, maxLabel, onChange }: QuizSliderProps) {
+  const styles = useThemedStyles(createStyles);
+
   const trackWidth = useRef(0);
 
   const updateFromTouch = (locationX: number) => {
@@ -329,6 +330,10 @@ export default function QuizPage({
   onBack,
   stepLabel = 'Preferences',
 }: QuizPageProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const [answers, setAnswers] = useState<QuizAnswers>(() =>
     buildPageAnswers(questions, savedAnswers),
@@ -442,6 +447,9 @@ export default function QuizPage({
   };
 
   const renderOtherSpecifyInput = (question: QuizQuestion) => {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
     if (!questionHasOtherSelected(question, answers[question.id])) {
       return null;
     }
@@ -464,6 +472,9 @@ export default function QuizPage({
   };
 
   const renderQuestionInput = (question: QuizQuestion) => {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
     const value = answers[question.id];
 
     switch (question.type) {
@@ -646,7 +657,8 @@ export default function QuizPage({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -851,3 +863,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
 });
+}
+

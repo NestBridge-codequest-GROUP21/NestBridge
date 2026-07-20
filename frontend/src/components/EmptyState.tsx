@@ -1,19 +1,17 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import AppIcon, { type IoniconName } from './AppIcon';
 import PrimaryButton from './PrimaryButton';
 import SecondaryButton from './SecondaryButton';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   lineHeights,
-  shadows,
   iconSizes,
-  tints,
   borderWidths,
   layout,
 } from '../constants/theme';
@@ -50,6 +48,10 @@ export default function EmptyState({
   style,
   carded = true,
 }: EmptyStateProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={[carded ? styles.card : styles.plain, style]}>
       <View style={styles.iconTile}>
@@ -77,7 +79,8 @@ export default function EmptyState({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -136,3 +139,5 @@ const styles = StyleSheet.create({
     height: spacing.sm,
   },
 });
+}
+

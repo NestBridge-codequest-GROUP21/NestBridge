@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useMemo, useState } from 'react';
 import {
   View,
@@ -16,7 +17,6 @@ import Card from '../../components/Card';
 import StatusBadge from '../../components/StatusBadge';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -48,6 +48,10 @@ export default function VideoLibraryScreen({
   onBack,
   onVideoPress,
 }: VideoLibraryScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const categories = useMemo(() => {
     const set = new Set(videos.map((video) => video.category));
     return ['All', ...Array.from(set)];
@@ -156,7 +160,8 @@ export default function VideoLibraryScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   filterRow: {
     paddingHorizontal: layout.screenPaddingHorizontal,
@@ -245,3 +250,5 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
 });
+}
+

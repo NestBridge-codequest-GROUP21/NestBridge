@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,7 +12,6 @@ import { devTestingCopy } from '../../data/appCopy';
 import type { DemoAccount } from '../../data/demoAccounts';
 import { DEMO_ACTOR_ACCOUNTS } from '../../data/demoAccounts';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -50,6 +50,8 @@ export interface DevTestingScreenProps {
 }
 
 function DevSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <Card style={styles.section} padding="lg">
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -67,6 +69,8 @@ function DevButton({
   onPress?: () => void;
   variant?: 'default' | 'danger';
 }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -100,6 +104,10 @@ export default function DevTestingScreen({
   onResetDemo,
   onDemoActorLogin,
 }: DevTestingScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   const applyHome = (intent: PrimaryIntent | null) => {
@@ -230,7 +238,8 @@ export default function DevTestingScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -317,3 +326,5 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
 });
+}
+

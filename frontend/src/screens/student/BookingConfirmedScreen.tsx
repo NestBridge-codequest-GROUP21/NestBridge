@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -7,7 +8,6 @@ import PrimaryButton from '../../components/PrimaryButton';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -17,7 +17,6 @@ import {
   gradients,
   motion,
   lineHeights,
-  shadows,
   layout,
   iconSizes,
   avatarSizes,
@@ -41,6 +40,10 @@ export default function BookingConfirmedScreen({
   currency,
   onViewBookings,
 }: BookingConfirmedScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const entrance = useRef(new Animated.Value(0)).current;
 
@@ -133,7 +136,8 @@ export default function BookingConfirmedScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     paddingHorizontal: layout.screenPaddingHorizontal,
@@ -210,3 +214,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
 });
+}
+

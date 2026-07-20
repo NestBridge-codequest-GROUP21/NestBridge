@@ -1,8 +1,8 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
 import AppIcon, { type IoniconName } from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -11,7 +11,6 @@ import {
   borderWidths,
   iconSizes,
   touchTarget,
-  tints,
   borderRadius,
   layout,
 } from '../constants/theme';
@@ -37,6 +36,10 @@ export default function ListRow({
   style,
   bordered = true,
 }: ListRowProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const content = (
     <>
       {iconName ? (
@@ -87,7 +90,8 @@ export default function ListRow({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -129,3 +133,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
 });
+}
+

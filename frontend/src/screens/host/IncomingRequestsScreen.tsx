@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -6,7 +7,7 @@ import ScreenScroll from '../../components/ScreenScroll';
 import IncomingRequestCard, {
   IncomingRequestsEmptyBlock,
 } from '../../components/IncomingRequestCard';
-import { colors } from '../../constants/theme';
+
 import type { IncomingBookingRequest } from '../../types/booking';
 
 export interface IncomingRequestsEmptyState {
@@ -32,6 +33,8 @@ export default function IncomingRequestsScreen({
   onRequestPress,
   onBack,
 }: IncomingRequestsScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const pendingCount = requests.length;
   const defaultSubtitle =
     pendingCount === 1 ? '1 pending request' : `${pendingCount} pending requests`;
@@ -69,9 +72,12 @@ export default function IncomingRequestsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
 });
+}
+

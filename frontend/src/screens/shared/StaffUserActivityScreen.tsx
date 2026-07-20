@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -11,7 +12,6 @@ import StatusBadge from '../../components/StatusBadge';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import type { AdminBookingActivity, AdminSosActivity } from '../../services/api';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -57,6 +57,8 @@ export default function StaffUserActivityScreen({
   errorMessage,
   onBack,
 }: StaffUserActivityScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -167,7 +169,8 @@ export default function StaffUserActivityScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -206,3 +209,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
 });
+}
+

@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -18,7 +19,6 @@ import SearchField from '../../components/SearchField';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import type { AdminUserSummary } from '../../services/api';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -56,6 +56,8 @@ export default function StaffUserSearchScreen({
   onSelectUser,
   onBack,
 }: StaffUserSearchScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -135,7 +137,8 @@ export default function StaffUserSearchScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -192,3 +195,5 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
 });
+}
+

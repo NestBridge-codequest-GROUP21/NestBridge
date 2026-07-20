@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -19,7 +20,6 @@ import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import ScreenScroll from '../../components/ScreenScroll';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -28,7 +28,6 @@ import {
   borderWidths,
   gradients,
   lineHeights,
-  shadows,
   layout,
   iconSizes,
   touchTarget,
@@ -49,6 +48,10 @@ export default function LodgingDetailScreen({
   onSaveContact,
   onBack,
 }: LodgingDetailScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   const handleCall = () => {
@@ -176,7 +179,8 @@ export default function LodgingDetailScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -308,3 +312,5 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
 });
+}
+

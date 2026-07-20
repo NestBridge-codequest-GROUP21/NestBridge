@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -12,7 +13,6 @@ import SecondaryButton from '../../components/SecondaryButton';
 import SectionHeader from '../../components/SectionHeader';
 import StatusBadge from '../../components/StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -20,7 +20,6 @@ import {
   borderRadius,
   borderWidths,
   lineHeights,
-  shadows,
   layout,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
@@ -43,6 +42,8 @@ function CapacityDots({
   accepted: number;
   max: number;
 }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.dotsRow}>
       {Array.from({ length: max }).map((_, index) => {
@@ -67,6 +68,8 @@ export default function MatchRequestReviewScreen({
   onContinueSetup,
   onBack,
 }: MatchRequestReviewScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const insets = useSafeAreaInsets();
   const { capacity, priceBreakdown } = request;
   const slotsLabel = `${capacity.overlappingAccepted} of ${capacity.maxAllowed} guest slots used`;
@@ -180,7 +183,8 @@ export default function MatchRequestReviewScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -333,3 +337,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
 });
+}
+

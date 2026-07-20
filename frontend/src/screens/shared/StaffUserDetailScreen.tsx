@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -13,7 +14,6 @@ import StatusBadge from '../../components/StatusBadge';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import type { AdminUserDetail } from '../../services/api';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -38,6 +38,8 @@ export interface StaffUserDetailScreenProps {
 }
 
 function FactRow({ label, value }: { label: string; value: string }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.factRow}>
       <Text style={styles.factLabel}>{label}</Text>
@@ -61,6 +63,8 @@ export default function StaffUserDetailScreen({
   onViewActivity,
   onBack,
 }: StaffUserDetailScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -202,7 +206,8 @@ export default function StaffUserDetailScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -271,3 +276,5 @@ const styles = StyleSheet.create({
     height: spacing.sm,
   },
 });
+}
+

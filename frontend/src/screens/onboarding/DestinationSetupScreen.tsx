@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -11,7 +12,6 @@ import PrimaryButton from '../../components/PrimaryButton';
 import BackButton from '../../components/BackButton';
 import Card from '../../components/Card';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -20,8 +20,6 @@ import {
   borderWidths,
   lineHeights,
   layout,
-  shadows,
-  overlays,
   controlHeights,
   touchTarget,
 } from '../../constants/theme';
@@ -67,6 +65,8 @@ interface DatePickerFieldProps {
 }
 
 function DatePickerField({ label, value, placeholder, onChange }: DatePickerFieldProps) {
+  const styles = useThemedStyles(createStyles);
+
   const [show, setShow] = useState(false);
   const parsed = parseDateValue(value);
   const initialDate = parsed ?? new Date();
@@ -170,6 +170,8 @@ export default function DestinationSetupScreen({
   onContinue,
   onBack,
 }: DestinationSetupScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const insets = useSafeAreaInsets();
   const [destinationError, setDestinationError] = useState<'required' | 'gibberish' | null>(
     null,
@@ -288,7 +290,8 @@ export default function DestinationSetupScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows, overlays }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -391,3 +394,5 @@ const styles = StyleSheet.create({
     color: colors.teal,
   },
 });
+}
+

@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -17,7 +18,6 @@ import ListRow from '../../components/ListRow';
 import ScreenScroll from '../../components/ScreenScroll';
 import StatusBadge, { type StatusBadgeTone } from '../../components/StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -27,7 +27,6 @@ import {
   gradients,
   layout,
   lineHeights,
-  shadows,
   touchTarget,
 } from '../../constants/theme';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
@@ -154,6 +153,10 @@ export default function StudentBookingsScreen({
   onHostReviewPress,
   onGuideReviewPress,
 }: StudentBookingsScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const filtered = filterBookings(bookings, activeFilter);
   const payNowBooking = bookings.find((b) => b.status === 'ACCEPTED');
@@ -361,7 +364,8 @@ export default function StudentBookingsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -550,3 +554,5 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.995 }],
   },
 });
+}
+

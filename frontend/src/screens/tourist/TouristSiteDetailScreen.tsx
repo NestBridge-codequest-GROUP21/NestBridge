@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -9,7 +10,6 @@ import Card from '../../components/Card';
 import SectionHeader from '../../components/SectionHeader';
 import AppIcon from '../../components/AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -18,8 +18,6 @@ import {
   borderWidths,
   lineHeights,
   layout,
-  shadows,
-  tints,
   iconSizes,
   avatarSizes,
 } from '../../constants/theme';
@@ -43,6 +41,10 @@ export default function TouristSiteDetailScreen({
   onFindGuidePress,
   onBack,
 }: TouristSiteDetailScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -106,7 +108,8 @@ export default function TouristSiteDetailScreen({
 
 const ICON_TILE = avatarSizes.lg + spacing.md;
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -192,3 +195,5 @@ const styles = StyleSheet.create({
     ...shadows.raised,
   },
 });
+}
+

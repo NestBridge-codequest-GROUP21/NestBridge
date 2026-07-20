@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -17,7 +18,6 @@ import Avatar from '../../components/Avatar';
 import Card from '../../components/Card';
 import StatusBadge from '../../components/StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -86,6 +86,8 @@ function statusTone(
 }
 
 function SetupProgressBar({ percent }: { percent: number }) {
+  const styles = useThemedStyles(createStyles);
+
   const widthAnim = useRef(new Animated.Value(percent / 100)).current;
 
   useEffect(() => {
@@ -121,6 +123,10 @@ export default function AccountSetupScreen({
   onTrackPress,
   onChangeIntent,
 }: AccountSetupScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const intentLabel = primaryIntent ? PRIMARY_INTENT_LABELS[primaryIntent] : 'Guest';
 
@@ -264,7 +270,8 @@ export default function AccountSetupScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -465,3 +472,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
 });
+}
+

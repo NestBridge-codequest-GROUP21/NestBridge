@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import {
   View,
@@ -7,7 +8,6 @@ import {
 } from 'react-native';
 import SectionHeader from './SectionHeader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -15,7 +15,6 @@ import {
   borderRadius,
   borderWidths,
   layout,
-  shadows,
   lineHeights,
   touchTarget,
 } from '../constants/theme';
@@ -39,6 +38,8 @@ export default function HomeStatsCarousel({
   items,
   onItemPress,
 }: HomeStatsCarouselProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.wrap}>
       <SectionHeader title={title} />
@@ -68,7 +69,8 @@ export default function HomeStatsCarousel({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     marginBottom: layout.sectionGap,
   },
@@ -118,3 +120,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
 });
+}
+

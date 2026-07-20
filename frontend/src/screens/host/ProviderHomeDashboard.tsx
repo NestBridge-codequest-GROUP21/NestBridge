@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -24,7 +25,6 @@ import SectionHeader from '../../components/SectionHeader';
 import type { IncomingRequestsEmptyState } from './IncomingRequestsScreen';
 import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 import {
-  colors,
   spacing,
   layout,
 } from '../../constants/theme';
@@ -95,6 +95,8 @@ export default function ProviderHomeDashboard({
   onReminderPress,
   onTabPress,
 }: ProviderHomeDashboardProps) {
+  const styles = useThemedStyles(createStyles);
+
   const secondaryRequests = featuredCard ? requests.slice(1) : requests;
 
   return (
@@ -179,7 +181,8 @@ export default function ProviderHomeDashboard({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -191,3 +194,5 @@ const styles = StyleSheet.create({
     marginBottom: layout.sectionGap,
   },
 });
+}
+

@@ -1,6 +1,13 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
-import { colors, fontSizes, fontWeights, spacing, borderRadius, motion } from '../constants/theme';
+import {
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  motion,
+} from '../constants/theme';
 
 export interface OnboardingProgressProps {
   currentStep: number;
@@ -13,6 +20,8 @@ export default function OnboardingProgress({
   totalSteps,
   stepLabel,
 }: OnboardingProgressProps) {
+  const styles = useThemedStyles(createStyles);
+
   const progress = currentStep / totalSteps;
   const widthAnim = useRef(new Animated.Value(progress)).current;
 
@@ -45,7 +54,8 @@ export default function OnboardingProgress({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     marginBottom: spacing.lg,
   },
@@ -79,3 +89,5 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
   },
 });
+}
+

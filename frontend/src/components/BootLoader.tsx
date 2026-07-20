@@ -1,9 +1,14 @@
+import { useThemedStyles, type AppTheme, useTheme } from '../theme';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { colors, spacing } from '../constants/theme';
+import {
+  spacing,
+} from '../constants/theme';
 
 function PulsingDot({ accent }: { accent?: boolean }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={[styles.dot, accent && styles.dotAccent]} />
   );
@@ -11,6 +16,8 @@ function PulsingDot({ accent }: { accent?: boolean }) {
 
 /** Minimal loader for font/auth bootstrap — not the branded splash. */
 export default function BootLoader() {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -23,7 +30,8 @@ export default function BootLoader() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.navy,
@@ -46,3 +54,5 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
 });
+}
+

@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -15,7 +16,6 @@ import Card from '../../components/Card';
 import Avatar from '../../components/Avatar';
 import StatusBadge, { type StatusBadgeTone } from '../../components/StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -86,6 +86,9 @@ function HostMatchCard({
   host: MatchResultHost;
   onPress: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { gradients } = useTheme();
+
   return (
     <Pressable
       onPress={onPress}
@@ -157,6 +160,10 @@ export default function MatchResultsScreen({
   onBack,
   onRetry,
 }: MatchResultsScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   const countLabel =
@@ -243,7 +250,8 @@ export default function MatchResultsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -373,3 +381,5 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
 });
+}
+

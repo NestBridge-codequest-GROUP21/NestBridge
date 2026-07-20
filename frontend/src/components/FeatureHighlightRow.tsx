@@ -1,8 +1,8 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import AppIcon from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   spacing,
@@ -17,7 +17,12 @@ export interface FeatureHighlightRowProps {
   items: FeatureHighlight[];
 }
 
-export default function FeatureHighlightRow({ items }: FeatureHighlightRowProps) {
+export default function FeatureHighlightRow({
+ items }: FeatureHighlightRowProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={styles.row}>
       {items.map((item) => (
@@ -37,7 +42,8 @@ export default function FeatureHighlightRow({ items }: FeatureHighlightRowProps)
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -61,3 +67,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+}
+

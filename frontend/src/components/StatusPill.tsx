@@ -1,8 +1,8 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import AppIcon from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -17,7 +17,12 @@ export interface StatusPillProps {
   label: string;
 }
 
-export default function StatusPill({ icon, label }: StatusPillProps) {
+export default function StatusPill({
+ icon, label }: StatusPillProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={styles.pill} accessibilityRole="text">
       {icon ? (
@@ -28,7 +33,8 @@ export default function StatusPill({ icon, label }: StatusPillProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -51,3 +57,5 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
 });
+}
+

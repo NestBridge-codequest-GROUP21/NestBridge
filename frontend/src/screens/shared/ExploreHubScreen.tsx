@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -11,8 +12,6 @@ import AppIcon from '../../components/AppIcon';
 import PrimaryButton from '../../components/PrimaryButton';
 import type { ProfileHubItem } from '../../data/profileHub';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -65,6 +64,10 @@ export default function ExploreHubScreen({
   onTabPress,
   onBack,
 }: ExploreHubScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -139,7 +142,8 @@ export default function ExploreHubScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -218,3 +222,5 @@ const styles = StyleSheet.create({
     opacity: 0.92,
   },
 });
+}
+

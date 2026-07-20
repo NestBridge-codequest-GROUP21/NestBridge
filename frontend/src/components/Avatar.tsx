@@ -1,14 +1,13 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   borderRadius,
   borderWidths,
   avatarSizes,
-  tints,
 } from '../constants/theme';
 
 export type AvatarSize = keyof typeof avatarSizes;
@@ -34,6 +33,8 @@ export default function Avatar({
   highlighted = false,
   style,
 }: AvatarProps) {
+  const styles = useThemedStyles(createStyles);
+
   const diameter = avatarSizes[size];
 
   return (
@@ -58,7 +59,8 @@ export default function Avatar({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   base: {
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -77,3 +79,5 @@ const styles = StyleSheet.create({
     color: colors.tealDeep,
   },
 });
+}
+

@@ -1,7 +1,7 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -26,6 +26,8 @@ export default function SectionHeader({
   onActionPress,
   style,
 }: SectionHeaderProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={[styles.row, style]}>
       <View style={styles.textBlock}>
@@ -47,7 +49,8 @@ export default function SectionHeader({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -85,3 +88,5 @@ const styles = StyleSheet.create({
     color: colors.teal,
   },
 });
+}
+

@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -19,8 +20,6 @@ import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import type { DemoAccount } from '../../data/demoAccounts';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -57,6 +56,8 @@ export interface WelcomeScreenProps {
 }
 
 function DriftRing({ size, style }: { size: number; style: object }) {
+  const styles = useThemedStyles(createStyles);
+
   const drift = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -113,6 +114,10 @@ export default function WelcomeScreen({
   onCreateAccount,
   onSignIn,
 }: WelcomeScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = Dimensions.get('window');
   const entrance = useRef(new Animated.Value(0)).current;
@@ -220,7 +225,8 @@ export default function WelcomeScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -324,3 +330,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 });
+}
+

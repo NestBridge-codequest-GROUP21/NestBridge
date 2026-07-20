@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -17,7 +18,6 @@ import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -25,7 +25,6 @@ import {
   borderRadius,
   lineHeights,
   layout,
-  tints,
   iconSizes,
 } from '../../constants/theme';
 
@@ -48,6 +47,10 @@ export default function ForgotPasswordScreen({
   onSubmit,
   onBack,
 }: ForgotPasswordScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const sent = !!statusMessage && !errorMessage;
 
@@ -116,7 +119,8 @@ export default function ForgotPasswordScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -168,3 +172,5 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
 });
+}
+

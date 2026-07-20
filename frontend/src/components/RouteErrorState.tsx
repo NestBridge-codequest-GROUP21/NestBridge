@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -5,7 +6,6 @@ import AppIcon from './AppIcon';
 import PrimaryButton from './PrimaryButton';
 import SecondaryButton from './SecondaryButton';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -13,7 +13,6 @@ import {
   borderRadius,
   layout,
   lineHeights,
-  tints,
   iconSizes,
   borderWidths,
 } from '../constants/theme';
@@ -35,6 +34,10 @@ export default function RouteErrorState({
   onBack,
   onRetry,
 }: RouteErrorStateProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   if (isLoading) {
@@ -72,7 +75,8 @@ export default function RouteErrorState({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     alignItems: 'center',
@@ -128,3 +132,5 @@ const styles = StyleSheet.create({
     height: spacing.sm,
   },
 });
+}
+

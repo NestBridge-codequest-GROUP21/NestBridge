@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -11,7 +12,6 @@ import MonthCalendarGrid, {
 } from '../../components/MonthCalendarGrid';
 import type { ActiveBookingDetail, HostCalendarDay } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -52,6 +52,8 @@ export default function HostCalendarScreen({
   onDayInteract,
   onBack,
 }: HostCalendarScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const [selectedDay, setSelectedDay] = useState(10);
 
   const gridDays = useMemo(
@@ -112,7 +114,8 @@ export default function HostCalendarScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -148,3 +151,5 @@ const styles = StyleSheet.create({
     color: colors.teal,
   },
 });
+}
+

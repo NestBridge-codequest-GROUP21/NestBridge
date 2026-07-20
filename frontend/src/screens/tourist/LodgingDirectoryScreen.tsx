@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -15,7 +16,6 @@ import SkeletonLoader from '../../components/SkeletonLoader';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -67,6 +67,10 @@ export default function LodgingDirectoryScreen({
   onListingPress,
   onBack,
 }: LodgingDirectoryScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const filtered = filterListings(listings, activeFilter);
 
   return (
@@ -182,7 +186,8 @@ export default function LodgingDirectoryScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -283,3 +288,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 });
+}
+

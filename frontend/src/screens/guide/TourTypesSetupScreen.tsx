@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -9,7 +10,6 @@ import PrimaryButton from '../../components/PrimaryButton';
 import SectionHeader from '../../components/SectionHeader';
 import type { TourTypeOption } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -44,6 +44,9 @@ function TourTypeRow({
   isLast: boolean;
   onToggle?: (enabled: boolean) => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   return (
     <View style={[styles.tourRow, isLast && styles.tourRowLast]}>
       <View style={styles.tourInfo}>
@@ -76,6 +79,10 @@ export default function TourTypesSetupScreen({
   onSavePress,
   onBack,
 }: TourTypesSetupScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -129,7 +136,8 @@ export default function TourTypesSetupScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -177,3 +185,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
 });
+}
+

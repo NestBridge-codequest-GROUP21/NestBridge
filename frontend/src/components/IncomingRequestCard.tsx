@@ -1,10 +1,10 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Avatar from './Avatar';
 import Card from './Card';
 import EmptyState from './EmptyState';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -36,6 +36,8 @@ export default function IncomingRequestCard({
   isLast = false,
   onPress,
 }: IncomingRequestCardProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -95,7 +97,8 @@ export function IncomingRequestsEmptyBlock({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   requestCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -154,3 +157,5 @@ const styles = StyleSheet.create({
     color: colors.teal,
   },
 });
+}
+

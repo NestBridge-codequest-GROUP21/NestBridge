@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -16,14 +17,12 @@ import SectionHeader from '../../components/SectionHeader';
 import Avatar from '../../components/Avatar';
 import StatusBadge from '../../components/StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderWidths,
   lineHeights,
-  shadows,
   layout,
   iconSizes,
 } from '../../constants/theme';
@@ -55,6 +54,8 @@ function PriceRow({
   bold?: boolean;
   accent?: boolean;
 }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.priceRow}>
       <Text style={[styles.priceLabel, bold && styles.priceLabelBold]}>{label}</Text>
@@ -84,6 +85,10 @@ export default function BookingScreen({
   onContinueSetup,
   onBack,
 }: BookingScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const { currency, nightlyRate, nights, subtotal, platformFee, total } =
     priceBreakdown;
@@ -214,7 +219,8 @@ export default function BookingScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -403,3 +409,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
 });
+}
+

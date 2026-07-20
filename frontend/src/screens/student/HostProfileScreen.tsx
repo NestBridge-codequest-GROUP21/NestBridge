@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -15,7 +16,6 @@ import Card from '../../components/Card';
 import SectionHeader from '../../components/SectionHeader';
 import Avatar from '../../components/Avatar';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -25,8 +25,6 @@ import {
   gradients,
   lineHeights,
   layout,
-  shadows,
-  tints,
   touchTarget,
 } from '../../constants/theme';
 import type { HostProfileSummary } from '../../types/booking';
@@ -53,6 +51,10 @@ export default function HostProfileScreen({
   onBookPress,
   onBack,
 }: HostProfileScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -161,7 +163,8 @@ export default function HostProfileScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -319,3 +322,5 @@ const styles = StyleSheet.create({
     flex: 1.4,
   },
 });
+}
+

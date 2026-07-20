@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -10,7 +11,6 @@ import EmptyState from '../../components/EmptyState';
 import StatusBadge from '../../components/StatusBadge';
 import type { HostListingItem } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -19,11 +19,9 @@ import {
   borderWidths,
   layout,
   lineHeights,
-  shadows,
   touchTarget,
   controlHeights,
   iconSizes,
-  tints,
 } from '../../constants/theme';
 
 export interface HostListingsEmptyState {
@@ -58,6 +56,9 @@ function ListingCard({
   onEditPress?: () => void;
   onDeletePress?: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   return (
     <Card padding="none" style={styles.listingCard}>
       <View style={styles.thumbnail}>
@@ -128,6 +129,10 @@ export default function HostListingsScreen({
   onAddListingPress,
   onBack,
 }: HostListingsScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -190,7 +195,8 @@ export default function HostListingsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -288,3 +294,5 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
 });
+}
+
