@@ -640,6 +640,14 @@ function HostListingsStackScreen({
       statusIcon="📅"
       statusLabel="Host"
       listings={displayListings}
+      emptyState={emptyStates.hostListings}
+      onAddListingPress={() => {
+        Alert.alert(
+          'Add listing',
+          'Listing creation opens from account setup. Update your host profile to publish a stay.',
+        );
+        navigation.navigate('AccountSetup');
+      }}
       onToggleOnline={(listingId, isOnline) => {
         setListings((prev) =>
           prev.map((listing) =>
@@ -2413,6 +2421,7 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <BrowseHomeScreen
             {...browseHomeProps}
+            guidesEmptyState={emptyStates.discoveryGuides(cityLabel)}
             onSectionPress={(sectionId) => handleExploreSectionPress(navigation, sectionId)}
             onFeaturedGuidePress={() =>
               navigation.navigate('GuideProfile', { guideId: displayTopGuideId })
@@ -2420,6 +2429,8 @@ export default function AppNavigator() {
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
             }
+            onGuidesEmptyPrimaryAction={() => navigation.navigate('GuideSearch')}
+            onRecommendationsEmptyPress={() => navigation.navigate('GuideSearch')}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'BrowseHome')}
           />
@@ -2435,6 +2446,21 @@ export default function AppNavigator() {
             tabBarItems={tabBarItems}
             activeTabId="messages"
             emptyState={emptyStates.messages}
+            onEmptyPrimaryAction={() => {
+              if (primaryIntent === 'HOST') {
+                navigation.reset({ index: 0, routes: [{ name: 'HostHome' }] });
+                return;
+              }
+              if (primaryIntent === 'GUIDE') {
+                navigation.reset({ index: 0, routes: [{ name: 'GuideHome' }] });
+                return;
+              }
+              if (primaryIntent === 'TOURIST') {
+                navigation.navigate('GuideSearch');
+                return;
+              }
+              navigation.navigate('MatchSearch');
+            }}
             isLoading={conversationsLoading}
             errorMessage={conversationsError}
             onConversationPress={(conversationId) =>
@@ -2481,6 +2507,7 @@ export default function AppNavigator() {
             isLoading={hostRequestsLoading}
             errorMessage={hostRequestsError}
             emptyState={emptyStates.hostRequests}
+            onEmptyPrimaryAction={() => navigation.navigate('HostListings')}
             onRequestPress={(requestId) =>
               navigation.navigate('MatchRequestReview', { requestId })
             }
@@ -2500,6 +2527,9 @@ export default function AppNavigator() {
             isLoading={hostBookingsLoading}
             errorMessage={hostBookingsError}
             emptyState={emptyStates.hostBookings}
+            onEmptyPrimaryAction={() =>
+              navigation.reset({ index: 0, routes: [{ name: 'HostRequestsTab' }] })
+            }
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
           />
         )}
@@ -2517,6 +2547,9 @@ export default function AppNavigator() {
             isLoading={hostEarningsLoading}
             errorMessage={hostEarningsError}
             emptyState={emptyStates.hostEarnings}
+            onEmptyPrimaryAction={() =>
+              navigation.reset({ index: 0, routes: [{ name: 'HostBookingsTab' }] })
+            }
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
           />
         )}
@@ -2533,6 +2566,7 @@ export default function AppNavigator() {
             isLoading={guideBookingsLoading}
             errorMessage={guideBookingsError}
             emptyState={emptyStates.guideBookings}
+            onEmptyPrimaryAction={() => navigation.navigate('GuideAvailability')}
             onBookingPress={(requestId) =>
               navigation.navigate('SessionReview', { requestId })
             }
@@ -2553,6 +2587,9 @@ export default function AppNavigator() {
             isLoading={guideEarningsLoading}
             errorMessage={guideEarningsError}
             emptyState={emptyStates.guideEarnings}
+            onEmptyPrimaryAction={() =>
+              navigation.reset({ index: 0, routes: [{ name: 'GuideBookingsTab' }] })
+            }
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'GuideHome')}
           />
         )}
@@ -2566,6 +2603,21 @@ export default function AppNavigator() {
             notifications={notificationsList}
             isLoading={notificationsLoading}
             onBack={() => navigation.goBack()}
+            onEmptyPrimaryAction={() => {
+              if (primaryIntent === 'HOST') {
+                navigation.reset({ index: 0, routes: [{ name: 'HostHome' }] });
+                return;
+              }
+              if (primaryIntent === 'GUIDE') {
+                navigation.reset({ index: 0, routes: [{ name: 'GuideHome' }] });
+                return;
+              }
+              if (primaryIntent === 'TOURIST') {
+                navigation.reset({ index: 0, routes: [{ name: 'ExploreHome' }] });
+                return;
+              }
+              navigation.reset({ index: 0, routes: [{ name: 'StudentHome' }] });
+            }}
             onMarkAllRead={() => {
               void (async () => {
                 try {
@@ -3059,6 +3111,7 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentHomeDashboard
             {...homeProps}
+            hostsEmptyState={emptyStates.discoveryHosts(cityLabel)}
             notificationCount={unreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
@@ -3071,12 +3124,14 @@ export default function AppNavigator() {
             onSuggestedHostPress={(hostId) =>
               navigation.navigate('HostProfile', { hostId })
             }
+            onHostsEmptyPrimaryAction={() => navigation.navigate('MatchSearch')}
             onRecommendedSectionPress={(sectionId) =>
               handleExploreSectionPress(navigation, sectionId)
             }
             onRecommendationItemPress={(item) =>
               handleRecommendationItemPress(navigation, item)
             }
+            onRecommendationsEmptyPress={() => navigation.navigate('MatchSearch')}
             onQuickActionPress={(actionId) =>
               handleStudentQuickAction(navigation, actionId)
             }
@@ -3089,6 +3144,7 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <ExploreHomeScreen
             {...exploreHomeProps}
+            guidesEmptyState={emptyStates.discoveryGuides(cityLabel)}
             notificationCount={unreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
@@ -3101,10 +3157,12 @@ export default function AppNavigator() {
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
             }
+            onGuidesEmptyPrimaryAction={() => navigation.navigate('GuideSearch')}
             onSectionPress={(sectionId) => handleExploreSectionPress(navigation, sectionId)}
             onRecommendationItemPress={(item) =>
               handleRecommendationItemPress(navigation, item)
             }
+            onRecommendationsEmptyPress={() => navigation.navigate('GuideSearch')}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'ExploreHome')}
           />
@@ -3140,6 +3198,7 @@ export default function AppNavigator() {
               recommendationHeadline={homeRecommendations.headline}
               requests={hostIncoming}
               emptyState={emptyStates.hostRequests}
+              onEmptyPrimaryAction={() => navigation.navigate('HostListings')}
               recentActivity={hostLive.recentActivity}
               reminder={hostLive.reminder}
               tabBarItems={hostTabBarItems}
@@ -3165,6 +3224,7 @@ export default function AppNavigator() {
               onRecommendationItemPress={(item) =>
                 handleRecommendationItemPress(navigation, item)
               }
+              onRecommendationsEmptyPress={() => navigation.navigate('HostListings')}
               onRequestPress={(requestId) =>
                 navigation.navigate('MatchRequestReview', { requestId })
               }
@@ -3213,6 +3273,7 @@ export default function AppNavigator() {
               recommendationHeadline={homeRecommendations.headline}
               requests={guideIncoming}
               emptyState={emptyStates.guideRequests}
+              onEmptyPrimaryAction={() => navigation.navigate('TourTypesSetup')}
               recentActivity={guideLive.recentActivity}
               reminder={guideLive.reminder}
               tabBarItems={guideTabBarItems}
@@ -3233,6 +3294,7 @@ export default function AppNavigator() {
               onRecommendationItemPress={(item) =>
                 handleRecommendationItemPress(navigation, item)
               }
+              onRecommendationsEmptyPress={() => navigation.navigate('TourTypesSetup')}
               onRequestPress={(requestId) =>
                 navigation.navigate('SessionReview', { requestId })
               }
@@ -3305,6 +3367,13 @@ export default function AppNavigator() {
               }
             }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
+            onEmptyPrimaryAction={() => {
+              if (primaryIntent === 'TOURIST') {
+                navigation.navigate('GuideSearch');
+                return;
+              }
+              navigation.navigate('MatchSearch');
+            }}
             onBack={
               navigation.canGoBack()
                 ? () => handleBookingsBack(navigation, homeRouteKey)
@@ -3434,6 +3503,7 @@ export default function AppNavigator() {
               onGuidePress={(guideId) =>
                 navigation.navigate('GuideProfile', { guideId })
               }
+              onEmptyPrimaryAction={() => navigation.navigate('ExploreStays')}
             />
           );
         }}
@@ -3529,6 +3599,7 @@ export default function AppNavigator() {
             onSitePress={(siteId) =>
               navigation.navigate('TouristSiteDetail', { siteId })
             }
+            onEmptyPrimaryAction={() => navigation.navigate('GuideSearch')}
           />
         )}
       </Stack.Screen>
@@ -3571,6 +3642,7 @@ export default function AppNavigator() {
               void logSos({ contactedSupport: true });
               dialPhoneNumber(contact.number);
             }}
+            onEmptyPrimaryAction={() => navigation.navigate('Profile')}
           />
         )}
       </Stack.Screen>
@@ -3670,6 +3742,7 @@ export default function AppNavigator() {
               description: topic.description,
             }))}
             onBack={() => navigation.goBack()}
+            onEmptyPrimaryAction={() => navigation.navigate('AccountSetup')}
           />
         )}
       </Stack.Screen>
@@ -3710,6 +3783,7 @@ export default function AppNavigator() {
             onBookPress={(listingId) =>
               navigation.navigate('HostProfile', { hostId: listingId })
             }
+            onEmptyPrimaryAction={() => navigation.navigate('MatchSearch')}
             onBack={() => navigation.goBack()}
           />
         )}
@@ -3792,6 +3866,8 @@ export default function AppNavigator() {
             requests={hostIncoming}
             title="Homestay requests"
             subtitle={`${hostIncoming.length} students want to stay with you`}
+            emptyState={emptyStates.hostRequests}
+            onEmptyPrimaryAction={() => navigation.navigate('HostListings')}
             onBack={() => navigation.goBack()}
             onRequestPress={(requestId) =>
               navigation.navigate('MatchRequestReview', { requestId })
@@ -3806,6 +3882,8 @@ export default function AppNavigator() {
             requests={guideIncoming}
             title="Session requests"
             subtitle={`${guideIncoming.length} pending tour requests`}
+            emptyState={emptyStates.guideRequests}
+            onEmptyPrimaryAction={() => navigation.navigate('TourTypesSetup')}
             onBack={() => navigation.goBack()}
             onRequestPress={(requestId) =>
               navigation.navigate('SessionReview', { requestId })

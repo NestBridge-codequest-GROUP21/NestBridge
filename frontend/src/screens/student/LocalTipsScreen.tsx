@@ -24,6 +24,7 @@ import {
   touchTarget,
   layout,
 } from '../../constants/theme';
+import { emptyStates } from '../../data/appCopy';
 
 export interface LocalTipsScreenProps {
   greeting: string;
@@ -35,6 +36,7 @@ export interface LocalTipsScreenProps {
   topics: CulturalTopicCard[];
   onPlayAudio?: (phraseId: string) => void;
   onTopicPress?: (topicId: string) => void;
+  onEmptyPrimaryAction?: () => void;
   onBack?: () => void;
 }
 
@@ -101,11 +103,13 @@ export default function LocalTipsScreen({
   phrases,
   topics,
   onPlayAudio,
+  onTopicPress,
+  onEmptyPrimaryAction,
   onBack,
 }: LocalTipsScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.localTips;
 
   const isEmpty = phrases.length === 0 && topics.length === 0;
 
@@ -129,10 +133,12 @@ export default function LocalTipsScreen({
 
         {isEmpty ? (
           <EmptyState
-            iconName="globe-outline"
-            title="No tips for this city yet"
-            body="Ghana culture notes and phrases will show here once they are available for your destination."
-            tip="Accra tips are ready — set Accra as your city in account setup if that is where you are headed."
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            primaryActionLabel={empty.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : (
           <>

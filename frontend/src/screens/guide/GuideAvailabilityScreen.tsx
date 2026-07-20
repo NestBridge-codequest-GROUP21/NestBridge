@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import Card from '../../components/Card';
+import EmptyState from '../../components/EmptyState';
 import InlineBanner from '../../components/InlineBanner';
 import SectionHeader from '../../components/SectionHeader';
 import MonthCalendarGrid, {
@@ -12,6 +13,7 @@ import MonthCalendarGrid, {
 } from '../../components/MonthCalendarGrid';
 import type { GuideCalendarDay, GuideShiftBlock } from '../../data/featureScreensMock';
 import { GUIDE_SHIFT_LABELS } from '../../data/featureScreensMock';
+import { emptyStates } from '../../data/appCopy';
 import {
   fontFamilies,
   fontSizes,
@@ -55,11 +57,15 @@ function ShiftDetailCard({
 
   if (!editable) {
     if (shifts.length === 0) {
+      const empty = emptyStates.guideAvailability;
       return (
-        <Card padding="lg" style={styles.shiftCard}>
-          <Text style={styles.shiftTitle}>No shifts scheduled</Text>
-          <Text style={styles.shiftDetailMuted}>Tap a day to manage availability</Text>
-        </Card>
+        <EmptyState
+          title={empty.title}
+          body={empty.body}
+          tip={empty.tip}
+          iconGlyph={empty.iconGlyph}
+          style={styles.shiftCard}
+        />
       );
     }
 

@@ -31,6 +31,7 @@ import {
   touchTarget,
   avatarSizes,
 } from '../../constants/theme';
+import { emptyStates } from '../../data/appCopy';
 
 export interface SponsorListScreenProps {
   sponsors: SponsorListing[];
@@ -46,7 +47,7 @@ export default function SponsorListScreen({
 }: SponsorListScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.sponsors;
 
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
@@ -139,11 +140,13 @@ export default function SponsorListScreen({
       {filtered.length === 0 ? (
         <View style={styles.emptyWrap}>
           <EmptyState
-            title="No sponsors match"
-            body="Clear the search or pick another category. Every chip shows how many partners are available."
-            tip="Try “All” or search words like scholarship, diaspora, or Accra."
-            iconName="ribbon-outline"
-            primaryActionLabel={search || selected !== 'All' ? 'Clear filters' : undefined}
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            primaryActionLabel={
+              search || selected !== 'All' ? empty.primaryActionLabel : undefined
+            }
             onPrimaryAction={
               search || selected !== 'All'
                 ? () => {
@@ -235,7 +238,7 @@ function createStyles({ colors, tints }: AppTheme) {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     justifyContent: 'center',
@@ -251,7 +254,7 @@ function createStyles({ colors, tints }: AppTheme) {
   },
   categoryTextActive: {
     fontFamily: fontFamilies.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     fontWeight: fontWeights.semibold,
   },
   emptyWrap: {

@@ -28,6 +28,8 @@ import {
 } from '../../constants/theme';
 import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
 import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
+import type { EmptyStateContent } from '../../data/appCopy';
+import { emptyStates } from '../../data/appCopy';
 
 export interface ExploreSectionItem {
   id: string;
@@ -52,6 +54,7 @@ export interface ExploreHomeScreenProps {
   exploreSectionTitle?: string;
   suggestedGuides?: DiscoveryListingItem[];
   suggestedGuidesTitle?: string;
+  guidesEmptyState?: EmptyStateContent;
   showMatchScores?: boolean;
   recommendationSections?: RecommendationSection[];
   recommendationHeadline?: string;
@@ -66,8 +69,10 @@ export interface ExploreHomeScreenProps {
   onNotificationPress?: () => void;
   onFeaturedGuidePress?: () => void;
   onSuggestedGuidePress?: (guideId: string) => void;
+  onGuidesEmptyPrimaryAction?: () => void;
   onSectionPress?: (sectionId: string) => void;
   onRecommendationItemPress?: (item: RecommendationItem) => void;
+  onRecommendationsEmptyPress?: () => void;
   onQuickActionPress?: (actionId: string) => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -88,6 +93,7 @@ export default function ExploreHomeScreen({
   exploreSectionTitle = 'Explore Accra',
   suggestedGuides = [],
   suggestedGuidesTitle = 'Top guides near you',
+  guidesEmptyState,
   showMatchScores = false,
   recommendationSections = [],
   recommendationHeadline = 'Recommended for you',
@@ -102,8 +108,10 @@ export default function ExploreHomeScreen({
   onNotificationPress,
   onFeaturedGuidePress,
   onSuggestedGuidePress,
+  onGuidesEmptyPrimaryAction,
   onSectionPress,
   onRecommendationItemPress,
+  onRecommendationsEmptyPress,
   onQuickActionPress,
   onReminderPress,
   onTabPress,
@@ -148,22 +156,22 @@ export default function ExploreHomeScreen({
           onActionPress={onQuickActionPress}
         />
 
-        {suggestedGuides.length > 0 ? (
-          <DiscoveryListingSection
-            title={suggestedGuidesTitle}
-            items={suggestedGuides}
-            showMatchScores={showMatchScores}
-            onItemPress={onSuggestedGuidePress}
-          />
-        ) : null}
+        <DiscoveryListingSection
+          title={suggestedGuidesTitle}
+          items={suggestedGuides}
+          showMatchScores={showMatchScores}
+          emptyState={guidesEmptyState}
+          onEmptyPrimaryAction={onGuidesEmptyPrimaryAction}
+          onItemPress={onSuggestedGuidePress}
+        />
 
-        {recommendationSections.length > 0 ? (
-          <RecommendedForYou
-            headline={recommendationHeadline}
-            sections={recommendationSections}
-            onItemPress={onRecommendationItemPress}
-          />
-        ) : null}
+        <RecommendedForYou
+          headline={recommendationHeadline}
+          sections={recommendationSections}
+          emptyState={emptyStates.recommendations}
+          onEmptyPrimaryAction={onRecommendationsEmptyPress}
+          onItemPress={onRecommendationItemPress}
+        />
 
         {sections.length > 0 ? (
           <View style={styles.sectionWrap}>

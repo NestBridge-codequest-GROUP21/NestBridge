@@ -11,6 +11,7 @@ import EmptyState from '../../components/EmptyState';
 import PrimaryButton from '../../components/PrimaryButton';
 import AppIcon from '../../components/AppIcon';
 import type { StayListing } from '../../data/featureScreensMock';
+import { emptyStates } from '../../data/appCopy';
 import {
   fontFamilies,
   fontSizes,
@@ -31,9 +32,11 @@ export interface ExploreStaysScreenProps {
   userInitials: string;
   statusIcon?: string;
   statusLabel?: string;
+  cityLabel?: string;
   listings: StayListing[];
   onBookPress?: (listingId: string) => void;
   onFilterPress?: () => void;
+  onEmptyPrimaryAction?: () => void;
   onBack?: () => void;
 }
 
@@ -115,14 +118,16 @@ export default function ExploreStaysScreen({
   userInitials,
   statusIcon,
   statusLabel,
+  cityLabel = 'your destination',
   listings,
   onBookPress,
   onFilterPress,
+  onEmptyPrimaryAction,
   onBack,
 }: ExploreStaysScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.exploreStays(cityLabel);
 
   return (
     <View style={styles.root}>
@@ -155,10 +160,12 @@ export default function ExploreStaysScreen({
 
         {listings.length === 0 ? (
           <EmptyState
-            title="No stays to show"
-            body="Host families in this area are still joining NestBridge. Try Accra or Kumasi, or check back soon."
-            tip="Finish your profile to see better matches."
-            iconName="home-outline"
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            primaryActionLabel={empty.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : (
           <View style={styles.list}>

@@ -16,6 +16,8 @@ import {
   touchTarget,
   layout,
 } from '../constants/theme';
+import type { EmptyStateContent } from '../data/appCopy';
+import EmptyState, { emptyStateFromContent } from './EmptyState';
 import type {
   RecommendationItem,
   RecommendationSection,
@@ -24,6 +26,8 @@ import type {
 export interface RecommendedForYouProps {
   headline?: string;
   sections: RecommendationSection[];
+  emptyState?: EmptyStateContent;
+  onEmptyPrimaryAction?: () => void;
   onItemPress?: (item: RecommendationItem) => void;
 }
 
@@ -31,13 +35,23 @@ export interface RecommendedForYouProps {
 export default function RecommendedForYou({
   headline = 'Recommended for you',
   sections,
+  emptyState,
+  onEmptyPrimaryAction,
   onItemPress,
 }: RecommendedForYouProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
 
   if (!sections.length) {
-    return null;
+    if (!emptyState) {
+      return null;
+    }
+    return (
+      <View style={styles.root} accessibilityRole="summary">
+        <SectionHeader title={headline} style={styles.headline} />
+        <EmptyState {...emptyStateFromContent(emptyState, onEmptyPrimaryAction)} />
+      </View>
+    );
   }
 
   return (

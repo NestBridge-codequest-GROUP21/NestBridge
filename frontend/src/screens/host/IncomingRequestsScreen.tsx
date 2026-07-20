@@ -10,17 +10,16 @@ import IncomingRequestCard, {
 
 import type { IncomingBookingRequest } from '../../types/booking';
 
-export interface IncomingRequestsEmptyState {
-  title: string;
-  body: string;
-  tip?: string;
-}
+import type { EmptyStateContent } from '../../data/appCopy';
+
+export interface IncomingRequestsEmptyState extends EmptyStateContent {}
 
 export interface IncomingRequestsScreenProps {
   requests: IncomingBookingRequest[];
   title?: string;
   subtitle?: string;
   emptyState?: IncomingRequestsEmptyState;
+  onEmptyPrimaryAction?: () => void;
   onRequestPress?: (requestId: string) => void;
   onBack?: () => void;
 }
@@ -30,6 +29,7 @@ export default function IncomingRequestsScreen({
   title = 'Incoming requests',
   subtitle,
   emptyState,
+  onEmptyPrimaryAction,
   onRequestPress,
   onBack,
 }: IncomingRequestsScreenProps) {
@@ -56,6 +56,9 @@ export default function IncomingRequestsScreen({
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
+            iconGlyph={emptyState.iconGlyph}
+            primaryActionLabel={emptyState.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : null}
 

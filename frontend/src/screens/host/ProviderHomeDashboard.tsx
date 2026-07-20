@@ -23,6 +23,7 @@ import IncomingRequestCard from '../../components/IncomingRequestCard';
 import { IncomingRequestsEmptyBlock } from '../../components/IncomingRequestCard';
 import SectionHeader from '../../components/SectionHeader';
 import RecommendedForYou from '../../components/RecommendedForYou';
+import { emptyStates } from '../../data/appCopy';
 import type { IncomingRequestsEmptyState } from './IncomingRequestsScreen';
 import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 import {
@@ -52,6 +53,7 @@ export interface ProviderHomeDashboardProps {
   recommendationHeadline?: string;
   requests: IncomingBookingRequest[];
   emptyState?: IncomingRequestsEmptyState;
+  onEmptyPrimaryAction?: () => void;
   recentActivity?: RecentActivityItem[];
   reminder?: string;
   tabBarItems: TabBarItem[];
@@ -65,6 +67,7 @@ export interface ProviderHomeDashboardProps {
   onSeeAllRequestsPress?: () => void;
   onTourSuggestionPress?: (sectionId: string) => void;
   onRecommendationItemPress?: (item: RecommendationItem) => void;
+  onRecommendationsEmptyPress?: () => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
 }
@@ -87,6 +90,7 @@ export default function ProviderHomeDashboard({
   recommendationHeadline = 'Recommended for you',
   requests,
   emptyState,
+  onEmptyPrimaryAction,
   recentActivity = [],
   reminder,
   tabBarItems,
@@ -100,6 +104,7 @@ export default function ProviderHomeDashboard({
   onSeeAllRequestsPress,
   onTourSuggestionPress,
   onRecommendationItemPress,
+  onRecommendationsEmptyPress,
   onReminderPress,
   onTabPress,
 }: ProviderHomeDashboardProps) {
@@ -131,6 +136,9 @@ export default function ProviderHomeDashboard({
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
+            iconGlyph={emptyState.iconGlyph}
+            primaryActionLabel={emptyState.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : null}
 
@@ -139,13 +147,13 @@ export default function ProviderHomeDashboard({
           onActionPress={onQuickActionPress}
         />
 
-        {recommendationSections.length > 0 ? (
-          <RecommendedForYou
-            headline={recommendationHeadline}
-            sections={recommendationSections}
-            onItemPress={onRecommendationItemPress}
-          />
-        ) : null}
+        <RecommendedForYou
+          headline={recommendationHeadline}
+          sections={recommendationSections}
+          emptyState={emptyStates.recommendations}
+          onEmptyPrimaryAction={onRecommendationsEmptyPress}
+          onItemPress={onRecommendationItemPress}
+        />
 
         {providerRole === 'host' && performanceStats.length > 0 ? (
           <HomeStatsCarousel title={performanceTitle} items={performanceStats} />

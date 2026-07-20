@@ -13,6 +13,7 @@ import SkeletonLoader from '../../components/SkeletonLoader';
 import {
   spacing,
 } from '../../constants/theme';
+import type { EmptyStateContent } from '../../data/appCopy';
 import type { ProviderBookingItem } from '../../types/providerBooking';
 
 export interface GuideBookingsTabScreenProps {
@@ -25,7 +26,8 @@ export interface GuideBookingsTabScreenProps {
   onSosPress?: () => void;
   isLoading?: boolean;
   errorMessage?: string | null;
-  emptyState: { title: string; body: string; tip?: string };
+  emptyState: EmptyStateContent;
+  onEmptyPrimaryAction?: () => void;
   onBookingPress?: (bookingId: string) => void;
   onTabPress?: (tabId: string) => void;
 }
@@ -41,6 +43,7 @@ export default function GuideBookingsTabScreen({
   isLoading = false,
   errorMessage,
   emptyState,
+  onEmptyPrimaryAction,
   onBookingPress,
   onTabPress,
 }: GuideBookingsTabScreenProps) {
@@ -74,6 +77,9 @@ export default function GuideBookingsTabScreen({
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
+            iconGlyph={emptyState.iconGlyph}
+            primaryActionLabel={emptyState.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : null}
         {!isLoading

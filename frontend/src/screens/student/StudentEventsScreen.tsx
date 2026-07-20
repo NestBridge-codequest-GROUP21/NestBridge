@@ -30,6 +30,7 @@ import {
   EVENT_TYPE_META,
   type StudentEvent,
 } from '../../data/studentEventsMock';
+import { emptyStates } from '../../data/appCopy';
 
 export interface StudentEventsScreenProps {
   events: StudentEvent[];
@@ -128,7 +129,7 @@ export default function StudentEventsScreen({
 }: StudentEventsScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.studentEvents;
 
   const showLoading = isLoading && events.length === 0;
   const showError = !!error && events.length === 0;
@@ -168,10 +169,12 @@ export default function StudentEventsScreen({
           />
         ) : events.length === 0 ? (
           <EmptyState
-            iconName="balloon-outline"
-            title="No events yet"
-            body="Be the first to bring students together — tap Host your own above."
-            tip="Cook-outs, market walks, and weekend trips fill up fast near campus."
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            primaryActionLabel={empty.primaryActionLabel}
+            onPrimaryAction={onCreatePress}
           />
         ) : (
           events.map((event) => (

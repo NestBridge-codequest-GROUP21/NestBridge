@@ -22,6 +22,7 @@ import {
   controlHeights,
   touchTarget,
 } from '../../constants/theme';
+import { emptyStates } from '../../data/appCopy';
 
 export interface EmergencyContact {
   label: string;
@@ -33,6 +34,7 @@ export interface SOSScreenProps {
   onBack?: () => void;
   onCallEmergencyServices?: () => void;
   onContactCallPress?: (contact: EmergencyContact) => void;
+  onEmptyPrimaryAction?: () => void;
 }
 
 function uniqueContacts(contacts: EmergencyContact[]): EmergencyContact[] {
@@ -54,10 +56,11 @@ export default function SOSScreen({
   onBack,
   onCallEmergencyServices,
   onContactCallPress,
+  onEmptyPrimaryAction,
 }: SOSScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.sosContacts;
 
   const contacts = uniqueContacts(emergencyContacts);
 
@@ -84,7 +87,7 @@ export default function SOSScreen({
         >
           <View style={styles.emergencyIconWrap}>
             <View style={styles.emergencyIconTint} />
-            <AppIcon name="call" size={iconSizes.lg} color={colors.white} />
+            <AppIcon name="call" size={iconSizes.lg} color={colors.onPrimary} />
           </View>
           <View style={styles.emergencyTextBlock}>
             <Text style={styles.emergencyTitle}>Call emergency services</Text>
@@ -92,17 +95,19 @@ export default function SOSScreen({
               Reach Ghana’s national emergency line (112)
             </Text>
           </View>
-          <AppIcon name="chevron-forward" size={iconSizes.lg} color={colors.white} />
+          <AppIcon name="chevron-forward" size={iconSizes.lg} color={colors.onPrimary} />
         </Pressable>
 
         <SectionHeader title="Your emergency contacts" />
 
         {contacts.length === 0 ? (
           <EmptyState
-            title="No contacts saved yet"
-            body="Add trusted contacts from your profile so you can reach them quickly in an emergency."
-            tip="Campus security and your host family are good starting points."
-            iconName="people-outline"
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            primaryActionLabel={empty.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : (
           <Card padding="none" elevation="card">
@@ -186,7 +191,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
   },
   emergencyIconTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     opacity: 0.18,
   },
   emergencyTextBlock: {
@@ -197,14 +202,14 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.xs,
   },
   emergencySubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     lineHeight: lineHeights.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.9,
   },
   contactRow: {
@@ -231,7 +236,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     borderRadius: borderRadius.lg,
     borderWidth: borderWidths.strong,
     borderColor: colors.danger,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
   },
   callPressed: {
     opacity: 0.9,

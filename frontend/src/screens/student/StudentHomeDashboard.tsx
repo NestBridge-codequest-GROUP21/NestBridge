@@ -30,6 +30,8 @@ import {
 } from '../../constants/theme';
 import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
+import type { EmptyStateContent } from '../../data/appCopy';
+import { emptyStates } from '../../data/appCopy';
 
 export type { TabBarItem } from '../../components/AppTabBar';
 export type { QuickActionItem } from '../../components/QuickActionsGrid';
@@ -59,6 +61,7 @@ export interface StudentHomeDashboardProps {
   recommendationHeadline?: string;
   suggestedHosts?: SuggestedHostItem[];
   suggestedHostsTitle?: string;
+  hostsEmptyState?: EmptyStateContent;
   showMatchScores?: boolean;
   recentActivity?: RecentActivityItem[];
   reminder?: string;
@@ -73,8 +76,10 @@ export interface StudentHomeDashboardProps {
   onNotificationPress?: () => void;
   onFeaturedMatchPress?: () => void;
   onSuggestedHostPress?: (hostId: string) => void;
+  onHostsEmptyPrimaryAction?: () => void;
   onRecommendedSectionPress?: (sectionId: string) => void;
   onRecommendationItemPress?: (item: RecommendationItem) => void;
+  onRecommendationsEmptyPress?: () => void;
   onQuickActionPress?: (actionId: string) => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -95,6 +100,7 @@ export default function StudentHomeDashboard({
   recommendationHeadline = 'Recommended for you',
   suggestedHosts = [],
   suggestedHostsTitle = 'Suggested hosts',
+  hostsEmptyState,
   showMatchScores = false,
   recentActivity = [],
   reminder,
@@ -109,8 +115,10 @@ export default function StudentHomeDashboard({
   onNotificationPress,
   onFeaturedMatchPress,
   onSuggestedHostPress,
+  onHostsEmptyPrimaryAction,
   onRecommendedSectionPress,
   onRecommendationItemPress,
+  onRecommendationsEmptyPress,
   onQuickActionPress,
   onReminderPress,
   onTabPress,
@@ -162,34 +170,34 @@ export default function StudentHomeDashboard({
           onActionPress={onQuickActionPress}
         />
 
-        {suggestedHosts.length > 0 ? (
-          <DiscoveryListingSection
-            title={suggestedHostsTitle}
-            items={suggestedHosts.map((host): DiscoveryListingItem => ({
-              id: host.id,
-              name: host.name,
-              subtitle: host.location,
-              priceLabel: host.pricePerNight,
-              initials: host.name
-                .split(/\s+/)
-                .map((part) => part[0])
-                .join('')
-                .slice(0, 2)
-                .toUpperCase(),
-              matchPercentage: host.matchPercentage,
-            }))}
-            showMatchScores={showMatchScores}
-            onItemPress={onSuggestedHostPress}
-          />
-        ) : null}
+        <DiscoveryListingSection
+          title={suggestedHostsTitle}
+          items={suggestedHosts.map((host): DiscoveryListingItem => ({
+            id: host.id,
+            name: host.name,
+            subtitle: host.location,
+            priceLabel: host.pricePerNight,
+            initials: host.name
+              .split(/\s+/)
+              .map((part) => part[0])
+              .join('')
+              .slice(0, 2)
+              .toUpperCase(),
+            matchPercentage: host.matchPercentage,
+          }))}
+          showMatchScores={showMatchScores}
+          emptyState={hostsEmptyState}
+          onEmptyPrimaryAction={onHostsEmptyPrimaryAction}
+          onItemPress={onSuggestedHostPress}
+        />
 
-        {recommendationSections.length > 0 ? (
-          <RecommendedForYou
-            headline={recommendationHeadline}
-            sections={recommendationSections}
-            onItemPress={onRecommendationItemPress}
-          />
-        ) : null}
+        <RecommendedForYou
+          headline={recommendationHeadline}
+          sections={recommendationSections}
+          emptyState={emptyStates.recommendations}
+          onEmptyPrimaryAction={onRecommendationsEmptyPress}
+          onItemPress={onRecommendationItemPress}
+        />
 
         {recommendedSections.length > 0 ? (
           <View style={styles.sectionBlock}>

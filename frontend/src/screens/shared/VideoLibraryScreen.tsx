@@ -30,6 +30,7 @@ import {
 } from '../../constants/theme';
 import type { VideoResourceApi } from '../../services/api';
 import { isPlayableYoutubeId } from '../../utils/videoPlayback';
+import { emptyStates } from '../../data/appCopy';
 
 export interface VideoLibraryScreenProps {
   cityLabel: string;
@@ -50,7 +51,7 @@ export default function VideoLibraryScreen({
 }: VideoLibraryScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.videoLibrary(cityLabel);
 
   const categories = useMemo(() => {
     const set = new Set(videos.map((video) => video.category));
@@ -116,10 +117,10 @@ export default function VideoLibraryScreen({
       ) : filtered.length === 0 ? (
         <View style={styles.emptyWrap}>
           <EmptyState
-            title="No videos in this category"
-            body={`Try another topic, or check back for new orientation clips about ${cityLabel}.`}
-            tip="Browse culture, transport, visas, Mobile Money, festivals, and safety."
-            iconName="film-outline"
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
           />
         </View>
       ) : (
@@ -174,7 +175,7 @@ function createStyles({ colors }: AppTheme) {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     marginRight: spacing.sm,
@@ -189,7 +190,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.regular,
   },
   filterChipTextActive: {
-    color: colors.white,
+    color: colors.onPrimary,
     fontWeight: fontWeights.semibold,
   },
   listContent: {
