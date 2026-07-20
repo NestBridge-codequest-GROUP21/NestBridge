@@ -69,7 +69,10 @@ export default function PrimaryButton({
               style={styles.icon}
             />
           ) : null}
-          <Text style={[styles.label, isDisabled && styles.labelDisabled]}>
+          <Text
+            style={[styles.label, isDisabled && styles.labelDisabled]}
+            numberOfLines={1}
+          >
             {label}
           </Text>
         </View>
@@ -110,6 +113,7 @@ function createStyles({ colors }: AppTheme) {
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.subheading,
     color: colors.onPrimary,
+    flexShrink: 1,
   },
   labelDisabled: {
     color: colors.textTertiary,

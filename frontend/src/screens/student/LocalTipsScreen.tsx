@@ -1,6 +1,6 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -21,7 +21,6 @@ import {
   lineHeights,
   iconSizes,
   avatarSizes,
-  touchTarget,
   layout,
 } from '../../constants/theme';
 import { emptyStates } from '../../data/appCopy';
@@ -34,7 +33,7 @@ export interface LocalTipsScreenProps {
   statusLabel?: string;
   phrases: CulturalPhraseCard[];
   topics: CulturalTopicCard[];
-  onPlayAudio?: (phraseId: string) => void;
+  onPhrasePress?: (phraseId: string) => void;
   onTopicPress?: (topicId: string) => void;
   onEmptyPrimaryAction?: () => void;
   onBack?: () => void;
@@ -42,17 +41,20 @@ export interface LocalTipsScreenProps {
 
 function PhraseCard({
   phrase,
-  onPlayAudio,
+  cardWidth,
+  onPress,
 }: {
   phrase: CulturalPhraseCard;
-  onPlayAudio?: () => void;
+  cardWidth: number;
+  onPress?: () => void;
 }) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
 
   return (
     <Pressable
-      onPress={onPlayAudio}
+      style={[styles.phrasePressable, { width: cardWidth }]}
+      onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${phrase.phrase}. ${phrase.translation}`}
     >
@@ -62,12 +64,6 @@ function PhraseCard({
         </View>
         <Text style={styles.phraseText}>{phrase.phrase}</Text>
         <Text style={styles.phraseTranslation}>{phrase.translation}</Text>
-        {phrase.hasAudio ? (
-          <View style={styles.audioButton}>
-            <AppIcon name="volume-high-outline" size={iconSizes.md} color={colors.teal} />
-            <Text style={styles.audioLabel}>Hear it</Text>
-          </View>
-        ) : null}
       </Card>
     </Pressable>
   );
@@ -110,14 +106,16 @@ export default function LocalTipsScreen({
   statusLabel,
   phrases,
   topics,
-  onPlayAudio,
+  onPhrasePress,
   onTopicPress,
   onEmptyPrimaryAction,
   onBack,
 }: LocalTipsScreenProps) {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
   const empty = emptyStates.localTips;
+  const contentWidth = windowWidth - layout.screenPaddingHorizontal * 2;
+  const phraseCardWidth = Math.floor((contentWidth - spacing.md) / 2);
 
   const isEmpty = phrases.length === 0 && topics.length === 0;
 
@@ -158,7 +156,8 @@ export default function LocalTipsScreen({
                     <PhraseCard
                       key={phrase.id}
                       phrase={phrase}
-                      onPlayAudio={() => onPlayAudio?.(phrase.id)}
+                      cardWidth={phraseCardWidth}
+                      onPress={() => onPhrasePress?.(phrase.id)}
                     />
                   ))}
                 </View>
@@ -190,104 +189,92 @@ export default function LocalTipsScreen({
 
 function createStyles({ colors, tints }: AppTheme) {
   return StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  sectionTight: {
-    marginBottom: spacing.sm,
-  },
-  sectionSpacer: {
-    marginTop: layout.sectionGap,
-    marginBottom: spacing.sm,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  topicList: {
-    gap: spacing.md,
-  },
-  phraseCard: {
-    width: '47%',
-    alignItems: 'center',
-  },
-  iconTile: {
-    width: avatarSizes.lg,
-    height: avatarSizes.lg,
-    borderRadius: borderRadius.md,
-    backgroundColor: tints.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  topicHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  iconTileCompact: {
-    width: avatarSizes.md,
-    height: avatarSizes.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: tints.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  phraseText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    lineHeight: lineHeights.subheading,
-  },
-  phraseTranslation: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-    lineHeight: lineHeights.caption,
-  },
-  audioButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minHeight: touchTarget,
-  },
-  audioLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
-  topicCard: {
-    width: '100%',
-  },
-  topicTitle: {
-    flex: 1,
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    lineHeight: lineHeights.subheading,
-  },
-  topicDescription: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    lineHeight: lineHeights.body,
-  },
-});
+    root: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    sectionTight: {
+      marginBottom: spacing.sm,
+    },
+    sectionSpacer: {
+      marginTop: layout.sectionGap,
+      marginBottom: spacing.sm,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.md,
+    },
+    topicList: {
+      gap: spacing.md,
+    },
+    phrasePressable: {
+      // Explicit pixel width from parent — avoids % width collapsing inside Pressable.
+    },
+    phraseCard: {
+      width: '100%',
+      alignItems: 'center',
+    },
+    iconTile: {
+      width: avatarSizes.lg,
+      height: avatarSizes.lg,
+      borderRadius: borderRadius.md,
+      backgroundColor: tints.teal,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.sm,
+    },
+    topicHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    iconTileCompact: {
+      width: avatarSizes.md,
+      height: avatarSizes.md,
+      borderRadius: borderRadius.md,
+      backgroundColor: tints.teal,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    phraseText: {
+      alignSelf: 'stretch',
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.subheading,
+      fontWeight: fontWeights.semibold,
+      color: colors.textPrimary,
+      textAlign: 'center',
+      lineHeight: lineHeights.subheading,
+    },
+    phraseTranslation: {
+      alignSelf: 'stretch',
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      fontWeight: fontWeights.regular,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
+      textAlign: 'center',
+      lineHeight: lineHeights.caption,
+    },
+    topicCard: {
+      width: '100%',
+    },
+    topicTitle: {
+      flex: 1,
+      flexShrink: 1,
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.subheading,
+      fontWeight: fontWeights.semibold,
+      color: colors.textPrimary,
+      lineHeight: lineHeights.subheading,
+    },
+    topicDescription: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.body,
+      fontWeight: fontWeights.regular,
+      color: colors.textSecondary,
+      lineHeight: lineHeights.body,
+    },
+  });
 }
-

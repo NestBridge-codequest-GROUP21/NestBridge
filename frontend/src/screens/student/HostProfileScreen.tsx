@@ -158,12 +158,16 @@ export default function HostProfileScreen({
         ]}
       >
         <View style={styles.footerRow}>
-          <View style={styles.messageButtonWrap}>
-            <SecondaryButton label="Message" onPress={onMessagePress} />
-          </View>
-          <View style={styles.bookButtonWrap}>
-            <PrimaryButton label="Request to book" onPress={onBookPress} />
-          </View>
+          <SecondaryButton
+            label="Message"
+            onPress={onMessagePress}
+            style={styles.messageButton}
+          />
+          <PrimaryButton
+            label="Request to book"
+            onPress={onBookPress}
+            style={styles.bookButton}
+          />
         </View>
       </View>
     </View>
@@ -323,13 +327,17 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
   },
   footerRow: {
     flexDirection: 'row',
+    alignItems: 'stretch',
     gap: spacing.sm,
   },
-  messageButtonWrap: {
-    flex: 1,
+  messageButton: {
+    flexGrow: 0,
+    flexShrink: 0,
+    paddingHorizontal: spacing.md,
   },
-  bookButtonWrap: {
-    flex: 1.4,
+  bookButton: {
+    flex: 1,
+    minWidth: 0,
   },
 });
 }
