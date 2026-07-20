@@ -137,12 +137,16 @@ export default function GuideProfileDetailScreen({
         ]}
       >
         <View style={styles.footerRow}>
-          <View style={styles.messageWrap}>
-            <SecondaryButton label="Message" onPress={onMessagePress} />
-          </View>
-          <View style={styles.bookWrap}>
-            <PrimaryButton label="Book session" onPress={onBookPress} />
-          </View>
+          <SecondaryButton
+            label="Message"
+            onPress={onMessagePress}
+            style={styles.messageButton}
+          />
+          <PrimaryButton
+            label="Book session"
+            onPress={onBookPress}
+            style={styles.bookButton}
+          />
         </View>
       </View>
     </View>
@@ -253,13 +257,17 @@ function createStyles({ colors, shadows }: AppTheme) {
   },
   footerRow: {
     flexDirection: 'row',
+    alignItems: 'stretch',
     gap: spacing.sm,
   },
-  messageWrap: {
-    flex: 1,
+  messageButton: {
+    flexGrow: 0,
+    flexShrink: 0,
+    paddingHorizontal: spacing.md,
   },
-  bookWrap: {
-    flex: 1.4,
+  bookButton: {
+    flex: 1,
+    minWidth: 0,
   },
 });
 }

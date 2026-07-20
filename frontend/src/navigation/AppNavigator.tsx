@@ -3918,7 +3918,7 @@ export default function AppNavigator() {
             onTopicPress={() => {
               void markJourney('cultureTipsCompleted');
             }}
-            onPlayAudio={() => {
+            onPhrasePress={() => {
               void markJourney('languageBasicsCompleted');
             }}
             onBack={() => navigation.goBack()}

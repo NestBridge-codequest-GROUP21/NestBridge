@@ -70,7 +70,10 @@ export default function SecondaryButton({
               style={styles.icon}
             />
           ) : null}
-          <Text style={[styles.label, isDisabled && styles.labelDisabled]}>
+          <Text
+            style={[styles.label, isDisabled && styles.labelDisabled]}
+            numberOfLines={1}
+          >
             {label}
           </Text>
         </View>
@@ -114,6 +117,7 @@ function createStyles({ colors }: AppTheme) {
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.subheading,
     color: colors.teal,
+    flexShrink: 1,
   },
   labelDisabled: {
     color: colors.textTertiary,

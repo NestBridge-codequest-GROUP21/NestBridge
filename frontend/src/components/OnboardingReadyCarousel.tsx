@@ -152,12 +152,14 @@ function createStyles({ colors }: AppTheme) {
     color: colors.textPrimary,
     marginBottom: spacing.sm,
     paddingRight: spacing.xl,
+    alignSelf: 'stretch',
   },
   cardBody: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     lineHeight: lineHeights.body,
+    alignSelf: 'stretch',
   },
 });
 }

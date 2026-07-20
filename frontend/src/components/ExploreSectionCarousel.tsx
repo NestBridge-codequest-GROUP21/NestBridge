@@ -280,6 +280,8 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
   cardBody: {
     padding: spacing.lg,
     justifyContent: 'center',
+    width: '100%',
+    alignSelf: 'stretch',
   },
   iconTile: {
     width: controlHeights.lg,
@@ -297,12 +299,15 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     color: colors.textPrimary,
     marginBottom: spacing.xs,
     lineHeight: lineHeights.subheading,
+    alignSelf: 'stretch',
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.body,
+    alignSelf: 'stretch',
   },
   savedBadge: {
     alignSelf: 'flex-start',
