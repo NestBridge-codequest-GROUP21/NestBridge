@@ -16,6 +16,7 @@ import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
 import RecommendedForYou from '../../components/RecommendedForYou';
+import JourneyProgressCard from '../../components/JourneyProgressCard';
 import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
@@ -32,6 +33,7 @@ import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 import type { EmptyStateContent } from '../../data/appCopy';
 import { emptyStates } from '../../data/appCopy';
+import type { JourneyProgress, JourneyStep } from '../../types/journeyProgress';
 
 export type { TabBarItem } from '../../components/AppTabBar';
 export type { QuickActionItem } from '../../components/QuickActionsGrid';
@@ -63,6 +65,7 @@ export interface StudentHomeDashboardProps {
   suggestedHostsTitle?: string;
   hostsEmptyState?: EmptyStateContent;
   showMatchScores?: boolean;
+  journeyProgress?: JourneyProgress | null;
   recentActivity?: RecentActivityItem[];
   reminder?: string;
   isHomeLoading?: boolean;
@@ -80,6 +83,7 @@ export interface StudentHomeDashboardProps {
   onRecommendedSectionPress?: (sectionId: string) => void;
   onRecommendationItemPress?: (item: RecommendationItem) => void;
   onRecommendationsEmptyPress?: () => void;
+  onJourneyStepPress?: (step: JourneyStep) => void;
   onQuickActionPress?: (actionId: string) => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -102,6 +106,7 @@ export default function StudentHomeDashboard({
   suggestedHostsTitle = 'Suggested hosts',
   hostsEmptyState,
   showMatchScores = false,
+  journeyProgress = null,
   recentActivity = [],
   reminder,
   isHomeLoading = false,
@@ -119,6 +124,7 @@ export default function StudentHomeDashboard({
   onRecommendedSectionPress,
   onRecommendationItemPress,
   onRecommendationsEmptyPress,
+  onJourneyStepPress,
   onQuickActionPress,
   onReminderPress,
   onTabPress,
@@ -169,6 +175,13 @@ export default function StudentHomeDashboard({
           actions={quickActions}
           onActionPress={onQuickActionPress}
         />
+
+        {journeyProgress ? (
+          <JourneyProgressCard
+            journey={journeyProgress}
+            onStepPress={onJourneyStepPress}
+          />
+        ) : null}
 
         <DiscoveryListingSection
           title={suggestedHostsTitle}

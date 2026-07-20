@@ -1,5 +1,5 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -35,6 +35,8 @@ export interface SOSScreenProps {
   onCallEmergencyServices?: () => void;
   onContactCallPress?: (contact: EmergencyContact) => void;
   onEmptyPrimaryAction?: () => void;
+  /** Fired once when contacts are available — marks journey progress. */
+  onJourneyVisit?: () => void;
 }
 
 function uniqueContacts(contacts: EmergencyContact[]): EmergencyContact[] {
@@ -57,12 +59,19 @@ export default function SOSScreen({
   onCallEmergencyServices,
   onContactCallPress,
   onEmptyPrimaryAction,
+  onJourneyVisit,
 }: SOSScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const empty = emptyStates.sosContacts;
 
   const contacts = uniqueContacts(emergencyContacts);
+
+  useEffect(() => {
+    if (contacts.length > 0) {
+      onJourneyVisit?.();
+    }
+  }, [contacts.length, onJourneyVisit]);
 
   return (
     <View style={styles.root}>

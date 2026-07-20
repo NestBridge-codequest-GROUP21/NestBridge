@@ -51,37 +51,45 @@ function PhraseCard({
   const { colors } = useTheme();
 
   return (
-    <Card style={styles.phraseCard} padding="md">
-      <View style={styles.iconTile}>
-        <AppIcon glyph={phrase.emoji} size={iconSizes.lg} color={colors.tealDeep} />
-      </View>
-      <Text style={styles.phraseText}>{phrase.phrase}</Text>
-      <Text style={styles.phraseTranslation}>{phrase.translation}</Text>
-      {phrase.hasAudio && onPlayAudio ? (
-        <Pressable
-          style={styles.audioButton}
-          onPress={onPlayAudio}
-          accessibilityRole="button"
-          accessibilityLabel={`Play audio for ${phrase.phrase}`}
-        >
-          <AppIcon name="volume-high-outline" size={iconSizes.md} color={colors.teal} />
-          <Text style={styles.audioLabel}>Hear it</Text>
-        </Pressable>
-      ) : null}
-    </Card>
+    <Pressable
+      onPress={onPlayAudio}
+      accessibilityRole="button"
+      accessibilityLabel={`${phrase.phrase}. ${phrase.translation}`}
+    >
+      <Card style={styles.phraseCard} padding="md">
+        <View style={styles.iconTile}>
+          <AppIcon glyph={phrase.emoji} size={iconSizes.lg} color={colors.tealDeep} />
+        </View>
+        <Text style={styles.phraseText}>{phrase.phrase}</Text>
+        <Text style={styles.phraseTranslation}>{phrase.translation}</Text>
+        {phrase.hasAudio ? (
+          <View style={styles.audioButton}>
+            <AppIcon name="volume-high-outline" size={iconSizes.md} color={colors.teal} />
+            <Text style={styles.audioLabel}>Hear it</Text>
+          </View>
+        ) : null}
+      </Card>
+    </Pressable>
   );
 }
 
-function TopicCard({ topic }: { topic: CulturalTopicCard }) {
+function TopicCard({
+  topic,
+  onPress,
+}: {
+  topic: CulturalTopicCard;
+  onPress?: () => void;
+}) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
 
   return (
-    <Card style={styles.topicCard} padding="md">
-      <View
-        accessibilityRole="text"
-        accessibilityLabel={`${topic.title}. ${topic.description}`}
-      >
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${topic.title}. ${topic.description}`}
+    >
+      <Card style={styles.topicCard} padding="md">
         <View style={styles.topicHeader}>
           <View style={styles.iconTileCompact}>
             <AppIcon glyph={topic.emoji} size={iconSizes.md} color={colors.tealDeep} />
@@ -89,8 +97,8 @@ function TopicCard({ topic }: { topic: CulturalTopicCard }) {
           <Text style={styles.topicTitle}>{topic.title}</Text>
         </View>
         <Text style={styles.topicDescription}>{topic.description}</Text>
-      </View>
-    </Card>
+      </Card>
+    </Pressable>
   );
 }
 
@@ -164,7 +172,11 @@ export default function LocalTipsScreen({
                 />
                 <View style={styles.topicList}>
                   {topics.map((topic) => (
-                    <TopicCard key={topic.id} topic={topic} />
+                    <TopicCard
+                      key={topic.id}
+                      topic={topic}
+                      onPress={() => onTopicPress?.(topic.id)}
+                    />
                   ))}
                 </View>
               </>

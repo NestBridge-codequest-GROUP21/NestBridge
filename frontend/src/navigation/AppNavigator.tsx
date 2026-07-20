@@ -244,6 +244,16 @@ import { buildDemoHomeRecommendations } from '../data/recommendations';
 import type { RecommendationItem } from '../types/recommendations';
 import type { HomeRecommendations } from '../types/recommendations';
 import {
+  EMPTY_JOURNEY_MILESTONES,
+  type JourneyMilestones,
+  type JourneyStep,
+} from '../types/journeyProgress';
+import { buildJourneyProgress } from '../utils/buildJourneyProgress';
+import {
+  loadJourneyMilestones,
+  markJourneyMilestone,
+} from '../services/journeyMilestones';
+import {
   touristSiteIdFromCarouselSection,
   touristSiteSummaryFromId,
 } from '../data/touristSitesMock';
@@ -1135,6 +1145,9 @@ export default function AppNavigator() {
   const [checklistRemoved, setChecklistRemoved] = useState<string[]>(
     profileState.seekerSetup.data.checklistRemoved ?? [],
   );
+  const [journeyMilestones, setJourneyMilestones] = useState<JourneyMilestones>(
+    EMPTY_JOURNEY_MILESTONES,
+  );
   const [tourTypes, setTourTypes] = useState(tourTypesMock);
   const [tourBaseRate, setTourBaseRate] = useState('45');
   const [tourMaxGroupSize, setTourMaxGroupSize] = useState('8');
@@ -1690,6 +1703,34 @@ export default function AppNavigator() {
     profileState.seekerSetup.data.checklistRemoved,
     user?.userId,
   ]);
+
+  useEffect(() => {
+    if (!user?.userId) {
+      setJourneyMilestones(EMPTY_JOURNEY_MILESTONES);
+      return;
+    }
+    let cancelled = false;
+    void loadJourneyMilestones(user.userId).then((milestones) => {
+      if (!cancelled) {
+        setJourneyMilestones(milestones);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.userId]);
+
+  const markJourney = useCallback(
+    async (key: keyof JourneyMilestones) => {
+      if (!user?.userId) {
+        return;
+      }
+      const next = await markJourneyMilestone(user.userId, key);
+      setJourneyMilestones(next);
+    },
+    [user?.userId],
+  );
+
   const checkIn = defaultCheckIn(arrivalDate || profileFields.arrivalDate);
   const checkOut = defaultCheckOut(departureDate || profileFields.departureDate);
   const sessionDate = arrivalDate || profileFields.arrivalDate || DEFAULT_SESSION_DATE;
@@ -2013,6 +2054,43 @@ export default function AppNavigator() {
     seekerSetupIncomplete,
     homeDataError,
   );
+  const journeyProgress = useMemo(
+    () =>
+      buildJourneyProgress({
+        profileState,
+        bookings: mergedBookings,
+        milestones: journeyMilestones,
+        destinationLabel: cityLabel,
+      }),
+    [profileState, mergedBookings, journeyMilestones, cityLabel],
+  );
+  const handleJourneyStepPress = useCallback(
+    (
+      navigation: NativeStackNavigationProp<AppStackParamList>,
+      step: JourneyStep,
+    ) => {
+      switch (step.routeHint) {
+        case 'AccountSetup':
+          navigation.navigate('AccountSetup');
+          return;
+        case 'MatchSearch':
+          navigation.navigate('MatchSearch');
+          return;
+        case 'GuideSearch':
+          navigation.navigate('GuideSearch');
+          return;
+        case 'SOS':
+          navigation.navigate('SOS');
+          return;
+        case 'LocalTips':
+          navigation.navigate('LocalTips');
+          return;
+        default:
+          break;
+      }
+    },
+    [],
+  );
   const hostLive = buildHostHomeStatus(
     hostIncoming,
     presentableError(providerTab.error ?? homeApi.error, providerTab.hostPending, hostPendingDisplay),
@@ -2041,6 +2119,7 @@ export default function AppNavigator() {
       recommendedSectionTitle: 'Prep before you arrive',
       recommendationSections: homeRecommendations.sections,
       recommendationHeadline: homeRecommendations.headline,
+      journeyProgress,
       showMatchScores,
       isHomeLoading,
       homeDataError,
@@ -2070,6 +2149,7 @@ export default function AppNavigator() {
       primaryIntent,
       cityLabel,
       homeRecommendations,
+      journeyProgress,
     ],
   );
 
@@ -2121,8 +2201,9 @@ export default function AppNavigator() {
       showMatchScores,
       recommendationSections: homeRecommendations.sections,
       recommendationHeadline: homeRecommendations.headline,
+      journeyProgress,
     }),
-    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeDataError, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, homeRecommendations],
+    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeDataError, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, homeRecommendations, journeyProgress],
   );
 
   const exploreHomeProps = useMemo(
@@ -2145,6 +2226,7 @@ export default function AppNavigator() {
       isHomeLoading,
       recommendationSections: homeRecommendations.sections,
       recommendationHeadline: homeRecommendations.headline,
+      journeyProgress,
       homeDataError,
       quickActions: getQuickActionsForRole('TOURIST'),
       sections: exploreSectionsForCity(cityLabel),
@@ -2172,6 +2254,8 @@ export default function AppNavigator() {
       seekerSetupIncomplete,
       primaryIntent,
       homeRecommendations,
+      journeyProgress,
+      touristLive,
     ],
   );
 
@@ -2431,6 +2515,7 @@ export default function AppNavigator() {
             }
             onGuidesEmptyPrimaryAction={() => navigation.navigate('GuideSearch')}
             onRecommendationsEmptyPress={() => navigation.navigate('GuideSearch')}
+            onJourneyStepPress={(step) => handleJourneyStepPress(navigation, step)}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'BrowseHome')}
           />
@@ -3132,6 +3217,7 @@ export default function AppNavigator() {
               handleRecommendationItemPress(navigation, item)
             }
             onRecommendationsEmptyPress={() => navigation.navigate('MatchSearch')}
+            onJourneyStepPress={(step) => handleJourneyStepPress(navigation, step)}
             onQuickActionPress={(actionId) =>
               handleStudentQuickAction(navigation, actionId)
             }
@@ -3163,6 +3249,7 @@ export default function AppNavigator() {
               handleRecommendationItemPress(navigation, item)
             }
             onRecommendationsEmptyPress={() => navigation.navigate('GuideSearch')}
+            onJourneyStepPress={(step) => handleJourneyStepPress(navigation, step)}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'ExploreHome')}
           />
@@ -3636,13 +3723,18 @@ export default function AppNavigator() {
             onBack={() => navigation.goBack()}
             onCallEmergencyServices={() => {
               void logSos({ contactedEmergency: true });
+              void markJourney('emergencyContactsSaved');
               dialPhoneNumber(localEmergencyNumber);
             }}
             onContactCallPress={(contact) => {
               void logSos({ contactedSupport: true });
+              void markJourney('emergencyContactsSaved');
               dialPhoneNumber(contact.number);
             }}
             onEmptyPrimaryAction={() => navigation.navigate('Profile')}
+            onJourneyVisit={() => {
+              void markJourney('emergencyContactsSaved');
+            }}
           />
         )}
       </Stack.Screen>
@@ -3741,6 +3833,12 @@ export default function AppNavigator() {
               title: topic.title,
               description: topic.description,
             }))}
+            onTopicPress={() => {
+              void markJourney('cultureTipsCompleted');
+            }}
+            onPlayAudio={() => {
+              void markJourney('languageBasicsCompleted');
+            }}
             onBack={() => navigation.goBack()}
             onEmptyPrimaryAction={() => navigation.navigate('AccountSetup')}
           />
