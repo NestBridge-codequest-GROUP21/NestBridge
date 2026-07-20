@@ -30,6 +30,10 @@ export function handleProfileCulturalItem(
     navigation.navigate('PrepChecklist');
     return;
   }
+  if (itemId === 'student-events') {
+    navigation.navigate('StudentEvents');
+    return;
+  }
   if (itemId === 'cultural-tips') {
     navigation.navigate('LocalTips');
     return;

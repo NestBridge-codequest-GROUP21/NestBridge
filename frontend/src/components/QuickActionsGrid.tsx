@@ -59,7 +59,9 @@ export default function QuickActionsGrid({
                 color={action.id === 'sos' ? colors.white : colors.teal}
               />
             </View>
-            <Text style={styles.label}>{action.label}</Text>
+            <Text style={styles.label} numberOfLines={2}>
+              {action.label}
+            </Text>
           </Pressable>
         ))}
       </View>

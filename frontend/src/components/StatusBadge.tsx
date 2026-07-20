@@ -50,7 +50,12 @@ export default function StatusBadge({
       ]}
       accessibilityRole="text"
     >
-      <Text style={[styles.label, { color: toneStyle.text }]}>{label}</Text>
+      <Text
+        style={[styles.label, { color: toneStyle.text }]}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
     </View>
   );
 }

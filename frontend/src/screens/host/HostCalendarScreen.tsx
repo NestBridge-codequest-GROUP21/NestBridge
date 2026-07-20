@@ -29,7 +29,7 @@ export interface HostCalendarScreenProps {
   monthLabel: string;
   startWeekday: number;
   days: HostCalendarDay[];
-  activeBooking: ActiveBookingDetail;
+  activeBooking: ActiveBookingDetail | null;
   editable?: boolean;
   statusMessage?: string | null;
   onDayInteract?: (day: number) => void;
@@ -102,13 +102,15 @@ export default function HostCalendarScreen({
           <InlineBanner message={statusMessage} tone="info" style={styles.statusBanner} />
         ) : null}
 
-        <Card padding="lg" style={styles.bookingCard}>
-          <Text style={styles.bookingTitle}>Active booking</Text>
-          <Text style={styles.bookingDetail}>
-            Guest: {activeBooking.guestName}, {activeBooking.dateRange}
-          </Text>
-          <Text style={styles.bookingTotal}>Total: {activeBooking.totalAmount}</Text>
-        </Card>
+        {activeBooking ? (
+          <Card padding="lg" style={styles.bookingCard}>
+            <Text style={styles.bookingTitle}>Active booking</Text>
+            <Text style={styles.bookingDetail}>
+              Guest: {activeBooking.guestName}, {activeBooking.dateRange}
+            </Text>
+            <Text style={styles.bookingTotal}>Total: {activeBooking.totalAmount}</Text>
+          </Card>
+        ) : null}
       </ScreenScroll>
     </View>
   );

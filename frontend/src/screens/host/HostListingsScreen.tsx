@@ -193,7 +193,7 @@ export default function HostListingsScreen({
         accessibilityLabel="Add new listing"
       >
         <AppIcon name="add" size={iconSizes.lg} color={colors.onPrimary} />
-        <Text style={styles.fabLabel}>Add listing</Text>
+        <Text style={styles.fabLabel}>Finish setup</Text>
       </Pressable>
     </View>
   );
