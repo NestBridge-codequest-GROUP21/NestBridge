@@ -237,6 +237,27 @@ public final class GhanaReference {
         return names;
     }
 
+    public static List<String> nearbyHubCities(String city) {
+        String capital = normalizeCity(city);
+        return NEARBY_DESTINATION_HUBS.getOrDefault(capital, List.of());
+    }
+
+    /**
+     * Search cities for local inventory: primary capital first, then nearby hubs
+     * when the destination has sparse local data (e.g. Damongo → Tamale).
+     */
+    public static List<String> recommendationSearchCities(String city) {
+        String capital = normalizeCity(city);
+        List<String> cities = new ArrayList<>();
+        cities.add(capital);
+        for (String hub : nearbyHubCities(capital)) {
+            if (!cities.contains(hub)) {
+                cities.add(hub);
+            }
+        }
+        return cities;
+    }
+
     public static String normalizeCity(String city) {
         if (city == null || city.isBlank()) {
             return "Accra";

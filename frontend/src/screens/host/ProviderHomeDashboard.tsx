@@ -22,6 +22,7 @@ import ReminderBanner from '../../components/ReminderBanner';
 import IncomingRequestCard from '../../components/IncomingRequestCard';
 import { IncomingRequestsEmptyBlock } from '../../components/IncomingRequestCard';
 import SectionHeader from '../../components/SectionHeader';
+import RecommendedForYou from '../../components/RecommendedForYou';
 import type { IncomingRequestsEmptyState } from './IncomingRequestsScreen';
 import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 import {
@@ -29,6 +30,7 @@ import {
   layout,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
+import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 
 export type { TabBarItem } from '../../components/AppTabBar';
 
@@ -46,6 +48,8 @@ export interface ProviderHomeDashboardProps {
   performanceTitle?: string;
   tourSuggestions?: ExploreSectionItem[];
   tourSuggestionsTitle?: string;
+  recommendationSections?: RecommendationSection[];
+  recommendationHeadline?: string;
   requests: IncomingBookingRequest[];
   emptyState?: IncomingRequestsEmptyState;
   recentActivity?: RecentActivityItem[];
@@ -60,6 +64,7 @@ export interface ProviderHomeDashboardProps {
   onRequestPress?: (requestId: string) => void;
   onSeeAllRequestsPress?: () => void;
   onTourSuggestionPress?: (sectionId: string) => void;
+  onRecommendationItemPress?: (item: RecommendationItem) => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
 }
@@ -78,6 +83,8 @@ export default function ProviderHomeDashboard({
   performanceTitle = 'Your listing performance',
   tourSuggestions = [],
   tourSuggestionsTitle = 'Suggested tour requests',
+  recommendationSections = [],
+  recommendationHeadline = 'Recommended for you',
   requests,
   emptyState,
   recentActivity = [],
@@ -92,6 +99,7 @@ export default function ProviderHomeDashboard({
   onRequestPress,
   onSeeAllRequestsPress,
   onTourSuggestionPress,
+  onRecommendationItemPress,
   onReminderPress,
   onTabPress,
 }: ProviderHomeDashboardProps) {
@@ -130,6 +138,14 @@ export default function ProviderHomeDashboard({
           actions={quickActions}
           onActionPress={onQuickActionPress}
         />
+
+        {recommendationSections.length > 0 ? (
+          <RecommendedForYou
+            headline={recommendationHeadline}
+            sections={recommendationSections}
+            onItemPress={onRecommendationItemPress}
+          />
+        ) : null}
 
         {providerRole === 'host' && performanceStats.length > 0 ? (
           <HomeStatsCarousel title={performanceTitle} items={performanceStats} />

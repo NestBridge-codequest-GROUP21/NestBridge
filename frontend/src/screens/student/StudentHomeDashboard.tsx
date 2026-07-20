@@ -15,6 +15,7 @@ import ExploreSectionList from '../../components/ExploreSectionList';
 import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
+import RecommendedForYou from '../../components/RecommendedForYou';
 import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
@@ -28,6 +29,7 @@ import {
   layout,
 } from '../../constants/theme';
 import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
+import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 
 export type { TabBarItem } from '../../components/AppTabBar';
 export type { QuickActionItem } from '../../components/QuickActionsGrid';
@@ -52,6 +54,9 @@ export interface StudentHomeDashboardProps {
   quickActions: QuickActionItem[];
   recommendedSections?: ExploreSectionItem[];
   recommendedSectionTitle?: string;
+  /** Personalized destination-aware recommendations. */
+  recommendationSections?: RecommendationSection[];
+  recommendationHeadline?: string;
   suggestedHosts?: SuggestedHostItem[];
   suggestedHostsTitle?: string;
   showMatchScores?: boolean;
@@ -69,6 +74,7 @@ export interface StudentHomeDashboardProps {
   onFeaturedMatchPress?: () => void;
   onSuggestedHostPress?: (hostId: string) => void;
   onRecommendedSectionPress?: (sectionId: string) => void;
+  onRecommendationItemPress?: (item: RecommendationItem) => void;
   onQuickActionPress?: (actionId: string) => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -85,6 +91,8 @@ export default function StudentHomeDashboard({
   quickActions,
   recommendedSections = [],
   recommendedSectionTitle = 'Prep before you arrive',
+  recommendationSections = [],
+  recommendationHeadline = 'Recommended for you',
   suggestedHosts = [],
   suggestedHostsTitle = 'Suggested hosts',
   showMatchScores = false,
@@ -102,6 +110,7 @@ export default function StudentHomeDashboard({
   onFeaturedMatchPress,
   onSuggestedHostPress,
   onRecommendedSectionPress,
+  onRecommendationItemPress,
   onQuickActionPress,
   onReminderPress,
   onTabPress,
@@ -171,6 +180,14 @@ export default function StudentHomeDashboard({
             }))}
             showMatchScores={showMatchScores}
             onItemPress={onSuggestedHostPress}
+          />
+        ) : null}
+
+        {recommendationSections.length > 0 ? (
+          <RecommendedForYou
+            headline={recommendationHeadline}
+            sections={recommendationSections}
+            onItemPress={onRecommendationItemPress}
           />
         ) : null}
 

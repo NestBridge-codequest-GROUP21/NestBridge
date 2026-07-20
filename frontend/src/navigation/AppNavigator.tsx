@@ -144,6 +144,7 @@ import {
   markAllNotificationsRead,
   createKycSession,
   findMatches,
+  getHomeRecommendations,
   getGuideProfile,
   getHostProfile,
   logSos,
@@ -239,6 +240,9 @@ import {
   videosApiMock,
 } from '../data/contentLibraryMock';
 import { exploreSectionsForCity } from '../data/touristExploreMock';
+import { buildDemoHomeRecommendations } from '../data/recommendations';
+import type { RecommendationItem } from '../types/recommendations';
+import type { HomeRecommendations } from '../types/recommendations';
 import {
   touristSiteIdFromCarouselSection,
   touristSiteSummaryFromId,
@@ -349,6 +353,80 @@ function handleTouristQuickAction(
   }
   if (actionId === 'cultural-tips') {
     navigation.navigate('LocalTips');
+  }
+}
+
+function handleRecommendationItemPress(
+  navigation: NativeStackNavigationProp<AppStackParamList>,
+  item: RecommendationItem,
+) {
+  const targetId = item.targetId ?? item.id;
+  switch (item.routeHint) {
+    case 'HostProfile':
+      navigation.navigate('HostProfile', { hostId: targetId });
+      return;
+    case 'GuideProfile':
+      navigation.navigate('GuideProfile', { guideId: targetId });
+      return;
+    case 'TouristSiteDetail':
+      navigation.navigate('TouristSiteDetail', { siteId: targetId });
+      return;
+    case 'LodgingDetail':
+      navigation.navigate('LodgingDetail', { listingId: targetId });
+      return;
+    case 'GuideSearch':
+      navigation.navigate('GuideSearch');
+      return;
+    case 'ExploreStays':
+      navigation.navigate('ExploreStays');
+      return;
+    case 'LodgingDirectory':
+      navigation.navigate('LodgingDirectory');
+      return;
+    case 'SitesDirectory':
+      navigation.navigate('SitesDirectory');
+      return;
+    case 'TransportGuide':
+      navigation.navigate('TransportGuide');
+      return;
+    case 'LocalTips':
+      navigation.navigate('LocalTips');
+      return;
+    case 'PrepChecklist':
+      navigation.navigate('PrepChecklist');
+      return;
+    case 'VideoLibrary':
+      navigation.navigate('VideoLibrary');
+      return;
+    case 'SponsorList':
+      navigation.navigate('SponsorList');
+      return;
+    case 'StudentEvents':
+      navigation.navigate('StudentEvents');
+      return;
+    case 'AccountSetup':
+      navigation.navigate('AccountSetup');
+      return;
+    case 'HostListings':
+      navigation.navigate('HostListings');
+      return;
+    case 'HostCalendar':
+      navigation.navigate('HostCalendar');
+      return;
+    case 'HostRequestsTab':
+      navigation.reset({ index: 0, routes: [{ name: 'HostRequestsTab' }] });
+      return;
+    case 'TourTypesSetup':
+      navigation.navigate('TourTypesSetup');
+      return;
+    case 'GuideAvailability':
+      navigation.navigate('GuideAvailability');
+      return;
+    case 'GuideBookingsTab':
+      navigation.reset({ index: 0, routes: [{ name: 'GuideBookingsTab' }] });
+      return;
+    default:
+      break;
   }
 }
 
@@ -1668,6 +1746,45 @@ export default function AppNavigator() {
       : 0) +
     (canAcceptHostBookings && hostIncoming.length > 0 ? hostIncoming.length : 0);
   const homeRole = homeRoleFromIntent(primaryIntent);
+  const demoRecommendations = useMemo(
+    () =>
+      buildDemoHomeRecommendations(
+        homeRole === 'BROWSE' ? 'TOURIST' : primaryIntent ?? 'STUDENT',
+        cityLabel,
+        { university: university || profileFields.university },
+      ),
+    [homeRole, primaryIntent, cityLabel, university, profileFields.university],
+  );
+  const [liveRecommendations, setLiveRecommendations] =
+    useState<HomeRecommendations | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setLiveRecommendations(null);
+      return;
+    }
+    let cancelled = false;
+    void getHomeRecommendations({
+      city: cityLabel,
+      role: primaryIntent ?? undefined,
+    })
+      .then((data) => {
+        if (!cancelled && data?.sections?.length) {
+          setLiveRecommendations(data);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLiveRecommendations(null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, cityLabel, primaryIntent]);
+
+  const homeRecommendations = liveRecommendations ?? demoRecommendations;
+
   const tabBarItems = tabBarWithBadgesForRole(
     homeRole,
     unreadNotifications,
@@ -1914,6 +2031,8 @@ export default function AppNavigator() {
         (host) => host.id !== displayTopMatchHostId,
       ),
       recommendedSectionTitle: 'Prep before you arrive',
+      recommendationSections: homeRecommendations.sections,
+      recommendationHeadline: homeRecommendations.headline,
       showMatchScores,
       isHomeLoading,
       homeDataError,
@@ -1942,6 +2061,7 @@ export default function AppNavigator() {
       seekerSetupIncomplete,
       primaryIntent,
       cityLabel,
+      homeRecommendations,
     ],
   );
 
@@ -1991,8 +2111,10 @@ export default function AppNavigator() {
         (guide) => guide.id !== displayTopGuideId,
       ),
       showMatchScores,
+      recommendationSections: homeRecommendations.sections,
+      recommendationHeadline: homeRecommendations.headline,
     }),
-    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeDataError, suggestedGuidesDisplay, displayTopGuideId, showMatchScores],
+    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeDataError, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, homeRecommendations],
   );
 
   const exploreHomeProps = useMemo(
@@ -2013,6 +2135,8 @@ export default function AppNavigator() {
       ),
       showMatchScores,
       isHomeLoading,
+      recommendationSections: homeRecommendations.sections,
+      recommendationHeadline: homeRecommendations.headline,
       homeDataError,
       quickActions: getQuickActionsForRole('TOURIST'),
       sections: exploreSectionsForCity(cityLabel),
@@ -2039,6 +2163,7 @@ export default function AppNavigator() {
       homeDataError,
       seekerSetupIncomplete,
       primaryIntent,
+      homeRecommendations,
     ],
   );
 
@@ -2949,6 +3074,9 @@ export default function AppNavigator() {
             onRecommendedSectionPress={(sectionId) =>
               handleExploreSectionPress(navigation, sectionId)
             }
+            onRecommendationItemPress={(item) =>
+              handleRecommendationItemPress(navigation, item)
+            }
             onQuickActionPress={(actionId) =>
               handleStudentQuickAction(navigation, actionId)
             }
@@ -2974,6 +3102,9 @@ export default function AppNavigator() {
               navigation.navigate('GuideProfile', { guideId })
             }
             onSectionPress={(sectionId) => handleExploreSectionPress(navigation, sectionId)}
+            onRecommendationItemPress={(item) =>
+              handleRecommendationItemPress(navigation, item)
+            }
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'ExploreHome')}
           />
@@ -3005,6 +3136,8 @@ export default function AppNavigator() {
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('HOST')}
               performanceStats={hostPerformanceMock}
+              recommendationSections={homeRecommendations.sections}
+              recommendationHeadline={homeRecommendations.headline}
               requests={hostIncoming}
               emptyState={emptyStates.hostRequests}
               recentActivity={hostLive.recentActivity}
@@ -3028,6 +3161,9 @@ export default function AppNavigator() {
               }}
               onQuickActionPress={(actionId) =>
                 handleProviderQuickAction(navigation, actionId, 'host')
+              }
+              onRecommendationItemPress={(item) =>
+                handleRecommendationItemPress(navigation, item)
               }
               onRequestPress={(requestId) =>
                 navigation.navigate('MatchRequestReview', { requestId })
@@ -3073,6 +3209,8 @@ export default function AppNavigator() {
               quickActions={getQuickActionsForRole('GUIDE')}
               tourSuggestions={guideTourSections}
               tourSuggestionsTitle="Your tour types"
+              recommendationSections={homeRecommendations.sections}
+              recommendationHeadline={homeRecommendations.headline}
               requests={guideIncoming}
               emptyState={emptyStates.guideRequests}
               recentActivity={guideLive.recentActivity}
@@ -3091,6 +3229,9 @@ export default function AppNavigator() {
               }}
               onQuickActionPress={(actionId) =>
                 handleProviderQuickAction(navigation, actionId, 'guide')
+              }
+              onRecommendationItemPress={(item) =>
+                handleRecommendationItemPress(navigation, item)
               }
               onRequestPress={(requestId) =>
                 navigation.navigate('SessionReview', { requestId })

@@ -796,6 +796,16 @@ export async function findMatches(params: MatchFindParams): Promise<MatchResult[
   return unwrap({ data });
 }
 
+export async function getHomeRecommendations(params?: {
+  city?: string;
+  role?: string;
+}): Promise<import('../types/recommendations').HomeRecommendations> {
+  const { data } = await api.get<
+    ApiResponse<import('../types/recommendations').HomeRecommendations>
+  >('/api/recommendations/home', { params });
+  return unwrap({ data });
+}
+
 export async function getIncomingBookings(
   bookingType: BookingType = 'HOST',
   status?: BookingStatus,

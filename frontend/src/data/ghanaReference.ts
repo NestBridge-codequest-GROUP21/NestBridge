@@ -588,10 +588,22 @@ export function nearbyUniversitiesForCity(city: string): string[] {
         continue;
       }
       seen.add(name);
-      names.push(`Nearby · ${name}`);
+      names.push(name);
     }
   }
   return names;
+}
+
+/** Primary city plus nearby hubs for local inventory lookups. */
+export function recommendationSearchCities(city: string): string[] {
+  const capital = normalizeCity(city);
+  const cities = [capital];
+  for (const hub of NEARBY_DESTINATION_HUBS[capital] ?? []) {
+    if (!cities.includes(hub)) {
+      cities.push(hub);
+    }
+  }
+  return cities;
 }
 
 export function allUniversityOptions(): string[] {

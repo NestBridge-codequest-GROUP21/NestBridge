@@ -88,6 +88,39 @@ export const touristSitesMock: TouristSiteSummary[] = [
     guideKeywords: ['kejetia', 'market', 'shopping', 'kumasi', 'city'],
     icon: '🛍️',
   },
+  {
+    id: 'site-mole',
+    name: 'Mole National Park',
+    city: 'Damongo',
+    description:
+      'Ghana’s largest wildlife park — guided savannah drives and walking safaris near Damongo.',
+    openingHours: 'Daily, 6:00 AM – 5:00 PM',
+    admission: 'Park fees apply (guided)',
+    guideKeywords: ['mole', 'wildlife', 'safari', 'damongo', 'nature'],
+    icon: '🐘',
+  },
+  {
+    id: 'site-larabanga',
+    name: 'Larabanga Mosque',
+    city: 'Damongo',
+    description:
+      'One of West Africa’s oldest mosques, a short trip from Damongo — heritage architecture and local guides.',
+    openingHours: 'Daylight hours',
+    admission: 'Donation suggested',
+    guideKeywords: ['larabanga', 'mosque', 'heritage', 'damongo'],
+    icon: '🕌',
+  },
+  {
+    id: 'site-tamale-central',
+    name: 'Tamale Central Market',
+    city: 'Tamale',
+    description:
+      'Northern Ghana’s busiest market — textiles, spices, and local food. Useful hub for Damongo travellers.',
+    openingHours: 'Daily, morning – evening',
+    admission: 'Free entry',
+    guideKeywords: ['tamale', 'market', 'food', 'northern'],
+    icon: '🛒',
+  },
 ];
 
 /** Legacy alias — old carousel used site-1 for Nkrumah park. */
