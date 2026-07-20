@@ -27,6 +27,7 @@ import {
   lineHeights,
 } from '../../constants/theme';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
+import type { EmptyStateContent } from '../../data/appCopy';
 import type { ConversationListItem } from '../../types/messaging';
 
 function roleLabel(role: ConversationListItem['participantRole']): string {
@@ -50,7 +51,8 @@ export interface MessagesTabScreenProps {
   onSosPress?: () => void;
   isLoading?: boolean;
   errorMessage?: string | null;
-  emptyState: { title: string; body: string; tip?: string };
+  emptyState: EmptyStateContent;
+  onEmptyPrimaryAction?: () => void;
   onConversationPress?: (conversationId: string) => void;
   onTabPress?: (tabId: string) => void;
 }
@@ -66,6 +68,7 @@ export default function MessagesTabScreen({
   isLoading = false,
   errorMessage,
   emptyState,
+  onEmptyPrimaryAction,
   onConversationPress,
   onTabPress,
 }: MessagesTabScreenProps) {
@@ -94,7 +97,9 @@ export default function MessagesTabScreen({
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
-            iconName="chatbubble-ellipses-outline"
+            iconGlyph={emptyState.iconGlyph ?? '💬'}
+            primaryActionLabel={emptyState.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : null}
         {!isLoading
@@ -238,7 +243,7 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.micro,
     lineHeight: lineHeights.micro,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
 });
 }

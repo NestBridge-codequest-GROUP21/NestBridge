@@ -101,12 +101,18 @@ export interface ProviderBookingsEmptyBlockProps {
   title: string;
   body: string;
   tip?: string;
+  iconGlyph?: string;
+  primaryActionLabel?: string;
+  onPrimaryAction?: () => void;
 }
 
 export function ProviderBookingsEmptyBlock({
   title,
   body,
   tip,
+  iconGlyph = '📅',
+  primaryActionLabel,
+  onPrimaryAction,
 }: ProviderBookingsEmptyBlockProps) {
   const styles = useThemedStyles(createStyles);
 
@@ -115,7 +121,9 @@ export function ProviderBookingsEmptyBlock({
       title={title}
       body={body}
       tip={tip}
-      iconName="calendar-outline"
+      iconGlyph={iconGlyph}
+      primaryActionLabel={primaryActionLabel}
+      onPrimaryAction={onPrimaryAction}
       style={styles.emptySpacing}
     />
   );

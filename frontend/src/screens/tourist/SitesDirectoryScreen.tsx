@@ -16,6 +16,7 @@ import {
   iconSizes,
   touchTarget,
 } from '../../constants/theme';
+import { emptyStates } from '../../data/appCopy';
 
 export interface SiteDirectoryItem {
   id: string;
@@ -29,6 +30,7 @@ export interface SitesDirectoryScreenProps {
   cityLabel: string;
   sites: SiteDirectoryItem[];
   onSitePress?: (siteId: string) => void;
+  onEmptyPrimaryAction?: () => void;
   onBack?: () => void;
 }
 
@@ -36,11 +38,12 @@ export default function SitesDirectoryScreen({
   cityLabel,
   sites,
   onSitePress,
+  onEmptyPrimaryAction,
   onBack,
 }: SitesDirectoryScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.sitesDirectory(cityLabel);
 
   return (
     <View style={styles.root}>
@@ -56,10 +59,12 @@ export default function SitesDirectoryScreen({
       <ScreenScroll>
         {sites.length === 0 ? (
           <EmptyState
-            title="No sites listed yet"
-            body={`No cultural sites are listed for ${cityLabel} yet. Try Accra, or book a local guide for neighbourhood recommendations.`}
-            tip="Try Accra or Kumasi for the fullest directory."
-            iconName="library-outline"
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            primaryActionLabel={empty.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : (
           sites.map((site) => (

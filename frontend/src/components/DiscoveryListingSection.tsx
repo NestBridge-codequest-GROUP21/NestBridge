@@ -4,7 +4,8 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Card from './Card';
 import Avatar from './Avatar';
 import SectionHeader from './SectionHeader';
-import EmptyState from './EmptyState';
+import EmptyState, { emptyStateFromContent } from './EmptyState';
+import type { EmptyStateContent } from '../data/appCopy';
 import {
   fontFamilies,
   fontSizes,
@@ -23,16 +24,12 @@ export interface DiscoveryListingItem {
   matchPercentage?: number;
 }
 
-export interface DiscoveryEmptyState {
-  title: string;
-  body: string;
-}
-
 export interface DiscoveryListingSectionProps {
   title: string;
   items: DiscoveryListingItem[];
   showMatchScores?: boolean;
-  emptyState?: DiscoveryEmptyState;
+  emptyState?: EmptyStateContent;
+  onEmptyPrimaryAction?: () => void;
   onItemPress?: (itemId: string) => void;
 }
 
@@ -41,6 +38,7 @@ export default function DiscoveryListingSection({
   items,
   showMatchScores = false,
   emptyState,
+  onEmptyPrimaryAction,
   onItemPress,
 }: DiscoveryListingSectionProps) {
   const styles = useThemedStyles(createStyles);
@@ -51,9 +49,8 @@ export default function DiscoveryListingSection({
 
       {items.length === 0 && emptyState ? (
         <EmptyState
-          title={emptyState.title}
-          body={emptyState.body}
-          iconName="home-outline"
+          {...emptyStateFromContent(emptyState, onEmptyPrimaryAction)}
+          iconGlyph={emptyState.iconGlyph ?? '🏠'}
           style={styles.empty}
         />
       ) : null}

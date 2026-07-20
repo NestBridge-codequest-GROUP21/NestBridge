@@ -18,6 +18,7 @@ import {
   lineHeights,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
+import type { EmptyStateContent } from '../../data/appCopy';
 import type { EarningsLineItem, EarningsSummary } from '../../types/providerBooking';
 
 export interface GuideEarningsTabScreenProps {
@@ -31,7 +32,8 @@ export interface GuideEarningsTabScreenProps {
   onSosPress?: () => void;
   isLoading?: boolean;
   errorMessage?: string | null;
-  emptyState: { title: string; body: string; tip?: string };
+  emptyState: EmptyStateContent;
+  onEmptyPrimaryAction?: () => void;
   onTabPress?: (tabId: string) => void;
 }
 
@@ -47,6 +49,7 @@ export default function GuideEarningsTabScreen({
   isLoading = false,
   errorMessage,
   emptyState,
+  onEmptyPrimaryAction,
   onTabPress,
 }: GuideEarningsTabScreenProps) {
   const styles = useThemedStyles(createStyles);
@@ -104,7 +107,9 @@ export default function GuideEarningsTabScreen({
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
-            iconName="cash-outline"
+            iconGlyph={emptyState.iconGlyph ?? '💰'}
+            primaryActionLabel={emptyState.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : null}
         {!isLoading && hasEarnings ? (

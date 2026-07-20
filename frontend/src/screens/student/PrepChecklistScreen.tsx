@@ -24,6 +24,7 @@ import {
   controlHeights,
   layout,
 } from '../../constants/theme';
+import { emptyStates } from '../../data/appCopy';
 
 export interface PrepChecklistScreenProps {
   greeting: string;
@@ -66,7 +67,7 @@ export default function PrepChecklistScreen({
 }: PrepChecklistScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.prepChecklist;
 
   const [customTasks, setCustomTasks] = useState<ChecklistTask[]>([]);
   const [newItemLabel, setNewItemLabel] = useState('');
@@ -115,7 +116,7 @@ export default function PrepChecklistScreen({
       >
         <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
           {task.completed ? (
-            <AppIcon name="checkmark" size={iconSizes.sm} color={colors.white} />
+            <AppIcon name="checkmark" size={iconSizes.sm} color={colors.onPrimary} />
           ) : null}
         </View>
         <Text
@@ -164,10 +165,10 @@ export default function PrepChecklistScreen({
 
         {allTasks.length === 0 ? (
           <EmptyState
-            iconName="clipboard-outline"
-            title="Your checklist is empty"
-            body="Add items you need before arrival — travel adapter, MoMo float, and copies of your documents."
-            tip="Use the field below to add anything you don't want to forget."
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
             style={styles.emptyState}
           />
         ) : (

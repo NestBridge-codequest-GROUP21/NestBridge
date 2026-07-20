@@ -22,6 +22,7 @@ import {
   touchTarget,
   layout,
 } from '../../constants/theme';
+import { emptyStates } from '../../data/appCopy';
 
 const MODE_ICON_BY_TAB: Record<string, IoniconName> = {
   trotros: 'bus-outline',
@@ -78,7 +79,8 @@ export default function TransportGuideScreen({
 }: TransportGuideScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const emptyTransport = emptyStates.transport;
+  const emptyMode = emptyStates.transportMode;
 
   const [activeTabId, setActiveTabId] = useState(tabs[0]?.id ?? '');
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
@@ -104,9 +106,10 @@ export default function TransportGuideScreen({
 
         {tabs.length === 0 ? (
           <EmptyState
-            iconName="bus-outline"
-            title="No routes for this city yet"
-            body="Trotro, taxi, and ride-hailing guidance will show here when available for your destination."
+            title={emptyTransport.title}
+            body={emptyTransport.body}
+            tip={emptyTransport.tip}
+            iconGlyph={emptyTransport.iconGlyph}
           />
         ) : (
           <>
@@ -144,9 +147,10 @@ export default function TransportGuideScreen({
 
             {routes.length === 0 ? (
               <EmptyState
-                iconName="map-outline"
-                title="No routes listed"
-                body="We don't have sample routes for this mode yet. Try another tab above."
+                title={emptyMode.title}
+                body={emptyMode.body}
+                tip={emptyMode.tip}
+                iconGlyph={emptyMode.iconGlyph}
               />
             ) : (
               <View style={styles.routeList}>
@@ -179,7 +183,7 @@ function createStyles({ colors, tints }: AppTheme) {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     minHeight: touchTarget,
@@ -196,7 +200,7 @@ function createStyles({ colors, tints }: AppTheme) {
     color: colors.textSecondary,
   },
   tabLabelActive: {
-    color: colors.white,
+    color: colors.onPrimary,
   },
   routeList: {
     gap: spacing.md,

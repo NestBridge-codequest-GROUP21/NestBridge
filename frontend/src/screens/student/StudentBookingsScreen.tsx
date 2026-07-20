@@ -30,6 +30,7 @@ import {
   touchTarget,
 } from '../../constants/theme';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
+import { emptyStates } from '../../data/appCopy';
 import type { BookingListItem, BookingStatus, BookingTabFilter, BookingType } from '../../types/booking';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
 import { formatSessionSchedule } from '../../data/guideSessionMock';
@@ -47,6 +48,7 @@ export interface StudentBookingsScreenProps {
   onFilterChange?: (filter: BookingTabFilter) => void;
   onBookingPress?: (bookingId: string) => void;
   onPayPress?: (bookingId: string) => void;
+  onEmptyPrimaryAction?: () => void;
   /** True while Paystack / mock confirm is in flight. */
   payLoading?: boolean;
   /** Shown on the Pay CTA while payment is in progress (e.g. Preparing payment...). */
@@ -146,6 +148,7 @@ export default function StudentBookingsScreen({
   onFilterChange,
   onBookingPress,
   onPayPress,
+  onEmptyPrimaryAction,
   payLoading = false,
   payStatusLabel,
   payBlocked = false,
@@ -162,6 +165,12 @@ export default function StudentBookingsScreen({
 
   const insets = useSafeAreaInsets();
   const filtered = filterBookings(bookings, activeFilter);
+  const emptyCopy =
+    activeFilter === 'pending'
+      ? emptyStates.studentBookings.pending
+      : activeFilter === 'past'
+        ? emptyStates.studentBookings.past
+        : emptyStates.studentBookings.active;
   const payNowBooking = bookings.find((b) => b.status === 'ACCEPTED');
 
   return (
@@ -176,7 +185,7 @@ export default function StudentBookingsScreen({
       >
         <View style={styles.headerTop}>
           {onBack ? (
-            <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
+            <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backButton} />
           ) : (
             <View style={styles.backPlaceholder} />
           )}
@@ -292,20 +301,12 @@ export default function StudentBookingsScreen({
 
         {filtered.length === 0 ? (
           <EmptyState
-            iconName="clipboard-outline"
-            title="Nothing here yet"
-            body={
-              activeFilter === 'pending'
-                ? 'Send a request to a host — it will show here while they review it.'
-                : activeFilter === 'past'
-                  ? 'Completed stays and declined requests land here.'
-                  : 'Confirmed stays and payment-ready bookings show up here.'
-            }
-            tip={
-              activeFilter === 'active'
-                ? 'Search hosts in Accra, Kumasi, or your campus city to get started.'
-                : undefined
-            }
+            title={emptyCopy.title}
+            body={emptyCopy.body}
+            tip={emptyCopy.tip}
+            iconGlyph={emptyCopy.iconGlyph}
+            primaryActionLabel={emptyCopy.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : (
           filtered.map((booking, index) => {
@@ -422,14 +423,14 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     lineHeight: lineHeights.heading,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.85,
     textAlign: 'center',
     lineHeight: lineHeights.body,
@@ -441,7 +442,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   },
   segment: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.xs,
     borderWidth: borderWidths.hairline,
@@ -465,7 +466,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     color: colors.textSecondary,
   },
   segmentLabelActive: {
-    color: colors.white,
+    color: colors.onPrimary,
   },
   scrollContent: {
     paddingTop: 0,
@@ -489,7 +490,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.9,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -499,7 +500,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     lineHeight: lineHeights.heading,
     marginBottom: spacing.sm,
   },
@@ -507,7 +508,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.92,
     marginBottom: spacing.md,
     lineHeight: lineHeights.body,
@@ -516,7 +517,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
@@ -599,7 +600,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   pressed: {
     opacity: 0.94,

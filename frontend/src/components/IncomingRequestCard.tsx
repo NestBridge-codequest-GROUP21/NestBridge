@@ -80,19 +80,27 @@ export interface IncomingRequestsEmptyBlockProps {
   title: string;
   body: string;
   tip?: string;
+  iconGlyph?: string;
+  primaryActionLabel?: string;
+  onPrimaryAction?: () => void;
 }
 
 export function IncomingRequestsEmptyBlock({
   title,
   body,
   tip,
+  iconGlyph = '📩',
+  primaryActionLabel,
+  onPrimaryAction,
 }: IncomingRequestsEmptyBlockProps) {
   return (
     <EmptyState
       title={title}
       body={body}
       tip={tip}
-      iconName="mail-open-outline"
+      iconGlyph={iconGlyph}
+      primaryActionLabel={primaryActionLabel}
+      onPrimaryAction={onPrimaryAction}
     />
   );
 }

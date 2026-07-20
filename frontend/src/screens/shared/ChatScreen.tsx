@@ -30,6 +30,7 @@ import {
   layout,
 } from '../../constants/theme';
 import type { ChatMessage } from '../../types/messaging';
+import { emptyStates } from '../../data/appCopy';
 
 function formatMessageTime(iso: string): string {
   const date = new Date(iso);
@@ -53,7 +54,7 @@ export default function ChatScreen({
 }: ChatScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.chatThread(participantName);
 
   const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState(initialMessages);
@@ -84,7 +85,7 @@ export default function ChatScreen({
       <StatusBar style="light" />
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
         {onBack ? (
-          <BackButton onPress={onBack} color={colors.white} />
+          <BackButton onPress={onBack} color={colors.onPrimary} />
         ) : (
           <View style={styles.backPlaceholder} />
         )}
@@ -105,10 +106,10 @@ export default function ChatScreen({
       >
         {messages.length === 0 ? (
           <EmptyState
-            title="Start the conversation"
-            body={`Say hello to ${participantName}. Clear plans help hosts and guides prepare for your stay.`}
-            tip="Share arrival times, dietary needs, or questions about Accra."
-            iconName="chatbubble-ellipses-outline"
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
             carded={false}
           />
         ) : null}
@@ -165,7 +166,7 @@ export default function ChatScreen({
           accessibilityRole="button"
           accessibilityLabel="Send message"
         >
-          <AppIcon name="send" size={iconSizes.md} color={colors.white} />
+          <AppIcon name="send" size={iconSizes.md} color={colors.onPrimary} />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -197,13 +198,13 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.body,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     lineHeight: lineHeights.caption,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.8,
   },
   messagesScroll: {
@@ -235,7 +236,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     ...shadows.card,
   },
   bubbleOther: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     ...shadows.card,
@@ -246,7 +247,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     lineHeight: lineHeights.body,
   },
   bubbleTextOwn: {
-    color: colors.white,
+    color: colors.onPrimary,
   },
   bubbleTextOther: {
     color: colors.textPrimary,
@@ -264,7 +265,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     gap: spacing.sm,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.sm,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
   },

@@ -29,6 +29,7 @@ import {
 } from '../../constants/theme';
 import type { GuideProfileSummary } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
+import { emptyStates } from '../../data/appCopy';
 
 export interface GuideSearchScreenProps {
   title: string;
@@ -37,6 +38,7 @@ export interface GuideSearchScreenProps {
   guides: GuideProfileSummary[];
   showMatchScores?: boolean;
   onGuidePress?: (guideId: string) => void;
+  onEmptyPrimaryAction?: () => void;
   onBack?: () => void;
 }
 
@@ -47,11 +49,12 @@ export default function GuideSearchScreen({
   guides,
   showMatchScores = false,
   onGuidePress,
+  onEmptyPrimaryAction,
   onBack,
 }: GuideSearchScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.guideSearch(cityLabel);
 
   const insets = useSafeAreaInsets();
 
@@ -75,10 +78,12 @@ export default function GuideSearchScreen({
       {guides.length === 0 ? (
         <View style={styles.emptyWrap}>
           <EmptyState
-            title="No guides nearby yet"
-            body={`We are onboarding more local guides around ${cityLabel}. Try Accra or check back soon.`}
-            tip="Guides help with markets, transport, and settling in."
-            iconName="people-outline"
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            primaryActionLabel={empty.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         </View>
       ) : (
@@ -152,7 +157,7 @@ function createStyles({ colors }: AppTheme) {
   },
   cityPill: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,

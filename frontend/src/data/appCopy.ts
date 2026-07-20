@@ -39,43 +39,223 @@ export const bookingGateCopy = {
   guide: 'Add your travel details to book a guide session.',
 };
 
+/** Shared shape for polished empty experiences (icon + copy + optional CTA label). */
+export type EmptyStateContent = {
+  title: string;
+  body: string;
+  tip?: string;
+  /** Emoji glyph key resolved by AppIcon — never rendered as raw emoji in the icon tile. */
+  iconGlyph?: string;
+  primaryActionLabel?: string;
+};
+
 export const emptyStates = {
   hostRequests: {
-    title: 'No requests yet',
-    body: 'When a student matches your home, they will show up here. Keep your listing details fresh so matches find you.',
-  },
+    title: 'Your request inbox is clear',
+    body: 'When a student or traveller matches your home, their request will land here.',
+    tip: 'Keep your listing photos and house rules fresh so the right guests find you.',
+    iconGlyph: '📩',
+    primaryActionLabel: 'Review my listing',
+  } satisfies EmptyStateContent,
   guideRequests: {
     title: 'No session requests yet',
-    body: 'When a traveller books a tour with you, it will appear here.',
-  },
+    body: 'Travellers booking tours and orientation walks will appear here first.',
+    tip: 'Clear tour types and open availability help guests book with confidence.',
+    iconGlyph: '🗺️',
+    primaryActionLabel: 'Set tour types',
+  } satisfies EmptyStateContent,
   hostBookings: {
     title: 'No confirmed stays yet',
-    body: 'When guests pay for an accepted request, their stay will appear here on your calendar.',
-  },
+    body: 'Once a guest pays for an accepted request, their stay shows up here on your calendar.',
+    tip: 'Respond to pending requests so great matches do not slip away.',
+    iconGlyph: '🏠',
+    primaryActionLabel: 'View requests',
+  } satisfies EmptyStateContent,
   guideBookings: {
     title: 'No upcoming tours',
-    body: 'Confirmed and paid sessions will show here with date, time, and guest details.',
-  },
+    body: 'Confirmed sessions appear here with date, time, and guest details.',
+    tip: 'Open a few slots this week — orientation walks book quickly before term starts.',
+    iconGlyph: '📅',
+    primaryActionLabel: 'Set availability',
+  } satisfies EmptyStateContent,
   guideEarnings: {
     title: 'No earnings yet',
-    body: 'Completed and confirmed tours will appear here with payout breakdown.',
-  },
+    body: 'Completed tours will show payout amounts and status once guests check out.',
+    tip: 'Finish a confirmed session to see your first NestBridge payout here.',
+    iconGlyph: '💰',
+    primaryActionLabel: 'View bookings',
+  } satisfies EmptyStateContent,
   hostEarnings: {
     title: 'No payouts yet',
-    body: 'When guests pay for confirmed stays, escrow releases to this screen after check-in.',
-  },
+    body: 'When guests pay for confirmed stays, escrow releases appear here after check-in.',
+    tip: 'Accept a request and complete check-in to unlock your first payout.',
+    iconGlyph: '💰',
+    primaryActionLabel: 'View bookings',
+  } satisfies EmptyStateContent,
   messages: {
-    title: 'No messages yet',
-    body: 'When you message a host, guide, or guest, conversations will appear here.',
+    title: 'Your inbox is quiet',
+    body: 'Connect with hosts and guides to start conversations about stays, tours, and arrival plans.',
+    tip: 'A short hello after matching goes a long way.',
+    iconGlyph: '💬',
+    primaryActionLabel: 'Start exploring',
+  } satisfies EmptyStateContent,
+  notifications: {
+    title: 'All caught up',
+    body: 'Booking updates, payment reminders, and host messages will appear here.',
+    tip: 'Keep notifications on so you never miss a check-in or session request.',
+    iconGlyph: '🔔',
+    primaryActionLabel: 'Go to home',
+  } satisfies EmptyStateContent,
+  recommendations: {
+    title: 'Personal picks are on the way',
+    body: 'As you set a destination and preferences, NestBridge suggests hosts, guides, and local tips for you.',
+    tip: 'Finish profile setup for sharper recommendations.',
+    iconGlyph: '✨',
+    primaryActionLabel: 'Start exploring',
+  } satisfies EmptyStateContent,
+  studentBookings: {
+    active: {
+      title: 'No journeys yet',
+      body: 'Your Ghana experience starts here. Find a host, guide, or cultural experience to begin.',
+      tip: 'Search hosts near your campus city, or book a guide for your first weekend.',
+      iconGlyph: '🌍',
+      primaryActionLabel: 'Find accommodation',
+    } satisfies EmptyStateContent,
+    pending: {
+      title: 'No pending requests',
+      body: 'Send a stay request to a host — it will show here while they review it.',
+      tip: 'Compatible hosts often reply within a day or two.',
+      iconGlyph: '📩',
+      primaryActionLabel: 'Find a host',
+    } satisfies EmptyStateContent,
+    past: {
+      title: 'No past trips yet',
+      body: 'Completed stays and closed requests will gather here as you travel.',
+      tip: 'After a stay, you can leave a review from your booking details.',
+      iconGlyph: '🧳',
+      primaryActionLabel: 'Plan a trip',
+    } satisfies EmptyStateContent,
   },
-  discoveryHosts: (city: string) => ({
+  hostListings: {
+    title: 'No listings yet',
+    body: 'Add your home so students and travellers can discover you on NestBridge.',
+    tip: 'A clear photo and neighbourhood note help guests feel at home before they arrive.',
+    iconGlyph: '🏡',
+    primaryActionLabel: 'Add listing',
+  } satisfies EmptyStateContent,
+  matchResults: {
+    title: 'No matches this time',
+    body: 'Try widening your budget or adjusting your dates, then search again.',
+    tip: 'Hosts near campus fill up fast — a flexible date range helps.',
+    iconGlyph: '🏠',
+    primaryActionLabel: 'Edit search',
+  } satisfies EmptyStateContent,
+  guideSearch: (city: string): EmptyStateContent => ({
+    title: 'No guides nearby yet',
+    body: `We are onboarding more local guides around ${city}. Try another city or check back soon.`,
+    tip: 'Guides help with markets, transport, and settling in.',
+    iconGlyph: '🗺️',
+    primaryActionLabel: 'Browse stays instead',
+  }),
+  discoveryHosts: (city: string): EmptyStateContent => ({
     title: `No homestays in ${city} yet`,
-    body: 'We are onboarding more host families in this area. Try Accra or Kumasi, or check back soon.',
+    body: 'Host families in this area are still joining NestBridge. Try Accra or Kumasi, or check back soon.',
+    tip: 'Finish your profile to see better matches when listings appear.',
+    iconGlyph: '🏠',
+    primaryActionLabel: 'Search hosts',
   }),
-  discoveryGuides: (city: string) => ({
+  discoveryGuides: (city: string): EmptyStateContent => ({
     title: `No guides in ${city} yet`,
-    body: 'New guides join every week. Browse Accra listings or widen your search.',
+    body: 'New guides join every week. Browse another city or explore cultural sites meanwhile.',
+    tip: 'Orientation walks book quickly before the semester starts.',
+    iconGlyph: '🗺️',
+    primaryActionLabel: 'Explore guides',
   }),
+  exploreStays: (city: string): EmptyStateContent => ({
+    title: 'Nothing to explore here yet',
+    body: `Host families near ${city} are still joining. Try Accra or Kumasi, or check back soon.`,
+    tip: 'Finish your profile to unlock better stay matches.',
+    iconGlyph: '🏡',
+    primaryActionLabel: 'Find a host',
+  }),
+  lodgingDirectory: (city: string): EmptyStateContent => ({
+    title: 'Nothing saved in this filter',
+    body: `Try another category, or widen your search around ${city}.`,
+    tip: 'Partner guesthouses often sit near universities and business districts.',
+    iconGlyph: '🏨',
+    primaryActionLabel: 'Clear filters',
+  }),
+  sitesDirectory: (city: string): EmptyStateContent => ({
+    title: 'No sites listed yet',
+    body: `Cultural sites for ${city} are still being curated. Try Accra, or book a local guide for neighbourhood tips.`,
+    tip: 'Accra and Cape Coast have the fullest directories today.',
+    iconGlyph: '🏛️',
+    primaryActionLabel: 'Explore guides',
+  }),
+  studentEvents: {
+    title: 'No events yet',
+    body: 'Be the first to bring students together — host a cook-out, market walk, or weekend trip.',
+    tip: 'Campus events fill up fast near the start of term.',
+    iconGlyph: '🎉',
+    primaryActionLabel: 'Host your own',
+  } satisfies EmptyStateContent,
+  chatThread: (participantName: string): EmptyStateContent => ({
+    title: 'Start the conversation',
+    body: `Say hello to ${participantName}. Clear plans help hosts and guides prepare for your stay.`,
+    tip: 'Share arrival times, dietary needs, or questions about your destination.',
+    iconGlyph: '👋',
+  }),
+  sosContacts: {
+    title: 'Nothing saved yet',
+    body: 'Add trusted contacts so you can reach them quickly in an emergency.',
+    tip: 'Campus security and your host family are good starting points.',
+    iconGlyph: '❤️',
+    primaryActionLabel: 'Open profile',
+  } satisfies EmptyStateContent,
+  prepChecklist: {
+    title: 'Your checklist is empty',
+    body: 'Add items you need before arrival — travel adapter, MoMo float, and copies of your documents.',
+    tip: 'Use the field below to add anything you do not want to forget.',
+    iconGlyph: '✅',
+  } satisfies EmptyStateContent,
+  localTips: {
+    title: 'No tips for this city yet',
+    body: 'Culture notes and phrases will show here once they are available for your destination.',
+    tip: 'Accra tips are ready — update your city in account setup if that is where you are headed.',
+    iconGlyph: '👋',
+    primaryActionLabel: 'Update destination',
+  } satisfies EmptyStateContent,
+  transport: {
+    title: 'No routes for this city yet',
+    body: 'Tro-tro, taxi, and ride-hailing guidance will show here when available for your destination.',
+    tip: 'Try Accra or Kumasi for the fullest transport guide.',
+    iconGlyph: '🚌',
+  } satisfies EmptyStateContent,
+  transportMode: {
+    title: 'No routes listed',
+    body: 'We do not have sample routes for this mode yet. Try another tab above.',
+    tip: 'Switch modes to see tro-tro, taxi, or ride-hailing options.',
+    iconGlyph: '🚌',
+  } satisfies EmptyStateContent,
+  videoLibrary: (city: string): EmptyStateContent => ({
+    title: 'No videos in this category',
+    body: `Try another topic, or check back for new orientation clips about ${city}.`,
+    tip: 'Browse culture, transport, visas, Mobile Money, festivals, and safety.',
+    iconGlyph: '🎬',
+  }),
+  sponsors: {
+    title: 'No sponsors match',
+    body: 'Clear the search or pick another category. Every chip shows how many partners are available.',
+    tip: 'Try “All” or search words like scholarship, diaspora, or Accra.',
+    iconGlyph: '🎓',
+    primaryActionLabel: 'Clear filters',
+  } satisfies EmptyStateContent,
+  guideAvailability: {
+    title: 'No shifts scheduled',
+    body: 'Tap a day on the calendar to open or close availability for tours.',
+    tip: 'Regular morning and weekend slots attract the most bookings.',
+    iconGlyph: '📆',
+  } satisfies EmptyStateContent,
 };
 
 export const providerWelcome = {

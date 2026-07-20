@@ -28,6 +28,8 @@ export interface HostListingsEmptyState {
   title: string;
   body: string;
   tip?: string;
+  iconGlyph?: string;
+  primaryActionLabel?: string;
 }
 
 export interface HostListingsScreenProps {
@@ -157,8 +159,10 @@ export default function HostListingsScreen({
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
-            iconName="home-outline"
-            primaryActionLabel="Add listing"
+            iconGlyph={emptyState.iconGlyph ?? '🏡'}
+            primaryActionLabel={
+              emptyState.primaryActionLabel ?? 'Add listing'
+            }
             onPrimaryAction={onAddListingPress}
           />
         ) : (
@@ -188,7 +192,7 @@ export default function HostListingsScreen({
         accessibilityRole="button"
         accessibilityLabel="Add new listing"
       >
-        <AppIcon name="add" size={iconSizes.lg} color={colors.white} />
+        <AppIcon name="add" size={iconSizes.lg} color={colors.onPrimary} />
         <Text style={styles.fabLabel}>Add listing</Text>
       </Pressable>
     </View>
@@ -252,7 +256,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     borderRadius: borderRadius.md,
     borderWidth: borderWidths.strong,
     borderColor: colors.teal,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
   },
   actionPressed: {
     opacity: 0.88,
@@ -291,7 +295,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
 });
 }

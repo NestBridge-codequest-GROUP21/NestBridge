@@ -28,6 +28,7 @@ import {
 } from '../../constants/theme';
 import type { LodgingListing, LodgingCategoryFilter } from '../../types/lodging';
 import { lodgingCategoryLabel } from '../../data/lodgingDirectoryMock';
+import { emptyStates } from '../../data/appCopy';
 
 export interface LodgingDirectoryScreenProps {
   cityLabel: string;
@@ -69,7 +70,8 @@ export default function LodgingDirectoryScreen({
 }: LodgingDirectoryScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const empty = emptyStates.lodgingDirectory(cityLabel);
+  const filterActive = activeFilter !== 'ALL';
 
   const filtered = filterListings(listings, activeFilter);
 
@@ -127,10 +129,16 @@ export default function LodgingDirectoryScreen({
 
         {!isLoading && filtered.length === 0 && !errorMessage ? (
           <EmptyState
-            title="No lodging in this filter"
-            body={`Try another category, or widen your search around ${cityLabel}.`}
-            tip="Partner guesthouses often sit near universities and business districts."
-            iconName="bed-outline"
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            primaryActionLabel={
+              filterActive ? empty.primaryActionLabel : undefined
+            }
+            onPrimaryAction={
+              filterActive ? () => onFilterChange?.('ALL') : undefined
+            }
           />
         ) : null}
 

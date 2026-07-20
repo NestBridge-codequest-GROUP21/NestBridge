@@ -56,6 +56,7 @@ const GLYPH_TO_ICON: Record<string, IoniconName> = {
   '🤗': 'happy-outline',
   '🤲': 'heart-outline',
   '💛': 'heart-outline',
+  '❤️': 'heart-outline',
   '👑': 'ribbon-outline',
   '👤': 'person-outline',
   '🎓': 'school-outline',

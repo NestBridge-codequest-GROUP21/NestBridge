@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import AppIcon, { type IoniconName } from './AppIcon';
 import PrimaryButton from './PrimaryButton';
 import SecondaryButton from './SecondaryButton';
+import type { EmptyStateContent } from '../data/appCopy';
 import {
   fontFamilies,
   fontSizes,
@@ -29,6 +30,33 @@ export interface EmptyStateProps {
   style?: ViewStyle;
   /** When false, renders without card chrome (for full-screen empties). Default true. */
   carded?: boolean;
+}
+
+/** Map shared empty-state copy + optional CTA handler into EmptyState props. */
+export function emptyStateFromContent(
+  content: EmptyStateContent,
+  onPrimaryAction?: () => void,
+): Pick<
+  EmptyStateProps,
+  | 'title'
+  | 'body'
+  | 'tip'
+  | 'iconGlyph'
+  | 'primaryActionLabel'
+  | 'onPrimaryAction'
+> {
+  return {
+    title: content.title,
+    body: content.body,
+    tip: content.tip,
+    iconGlyph: content.iconGlyph,
+    primaryActionLabel:
+      onPrimaryAction && content.primaryActionLabel
+        ? content.primaryActionLabel
+        : undefined,
+    onPrimaryAction:
+      onPrimaryAction && content.primaryActionLabel ? onPrimaryAction : undefined,
+  };
 }
 
 /**
@@ -82,7 +110,7 @@ export default function EmptyState({
 function createStyles({ colors, tints, shadows }: AppTheme) {
   return StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     borderWidth: borderWidths.hairline,

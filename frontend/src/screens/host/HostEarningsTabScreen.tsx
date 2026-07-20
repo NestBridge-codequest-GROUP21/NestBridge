@@ -18,6 +18,7 @@ import {
   lineHeights,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
+import type { EmptyStateContent } from '../../data/appCopy';
 import type { EarningsLineItem, EarningsSummary } from '../../types/providerBooking';
 
 export interface HostEarningsTabScreenProps {
@@ -29,7 +30,8 @@ export interface HostEarningsTabScreenProps {
   activeTabId: string;
   isLoading?: boolean;
   errorMessage?: string | null;
-  emptyState: { title: string; body: string; tip?: string };
+  emptyState: EmptyStateContent;
+  onEmptyPrimaryAction?: () => void;
   showSosDock?: boolean;
   onSosPress?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -45,6 +47,7 @@ export default function HostEarningsTabScreen({
   isLoading = false,
   errorMessage,
   emptyState,
+  onEmptyPrimaryAction,
   showSosDock = false,
   onSosPress,
   onTabPress,
@@ -114,7 +117,9 @@ export default function HostEarningsTabScreen({
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
-            iconName="cash-outline"
+            iconGlyph={emptyState.iconGlyph ?? '💰'}
+            primaryActionLabel={emptyState.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : null}
 

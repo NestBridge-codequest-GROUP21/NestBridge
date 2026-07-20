@@ -25,6 +25,7 @@ import {
   lineHeights,
 } from '../../constants/theme';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
+import { emptyStates } from '../../data/appCopy';
 import type { AppNotification } from '../../types/booking';
 
 export interface NotificationsScreenProps {
@@ -35,6 +36,7 @@ export interface NotificationsScreenProps {
   errorMessage?: string | null;
   onNotificationPress?: (notification: AppNotification) => void;
   onMarkAllRead?: () => void;
+  onEmptyPrimaryAction?: () => void;
   onBack?: () => void;
 }
 
@@ -46,9 +48,11 @@ export default function NotificationsScreen({
   errorMessage,
   onNotificationPress,
   onMarkAllRead,
+  onEmptyPrimaryAction,
   onBack,
 }: NotificationsScreenProps) {
   const styles = useThemedStyles(createStyles);
+  const empty = emptyStates.notifications;
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -84,10 +88,12 @@ export default function NotificationsScreen({
         ) : null}
         {!isLoading && notifications.length === 0 ? (
           <EmptyState
-            title="No notifications yet"
-            body="Booking updates, payment reminders, and host messages will appear here."
-            tip="Keep notifications on so you do not miss check-in or session requests."
-            iconName="notifications-outline"
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            primaryActionLabel={empty.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : null}
         {!isLoading

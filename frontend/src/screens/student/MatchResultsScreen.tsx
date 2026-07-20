@@ -28,6 +28,7 @@ import {
   touchTarget,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
+import { emptyStates } from '../../data/appCopy';
 import type { ProviderVerification } from '../../types/verification';
 export { sampleMatchResults } from '../../data/matchResultsMock';
 export interface MatchResultHost {
@@ -211,11 +212,13 @@ export default function MatchResultsScreen({
         />
         <View style={styles.errorWrap}>
           <EmptyState
-            title="No matches found"
-            body="Try widening your budget or adjusting your dates, then search again."
-            tip="Hosts near campus in Accra and Kumasi fill up fast — a flexible date range helps."
-            iconName="search-outline"
-            primaryActionLabel={onBack ? 'Edit search' : undefined}
+            title={emptyStates.matchResults.title}
+            body={emptyStates.matchResults.body}
+            tip={emptyStates.matchResults.tip}
+            iconGlyph={emptyStates.matchResults.iconGlyph}
+            primaryActionLabel={
+              onBack ? emptyStates.matchResults.primaryActionLabel : undefined
+            }
             onPrimaryAction={onBack}
           />
         </View>
@@ -317,7 +320,7 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.caption,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   reasonsBlock: {
     marginBottom: spacing.md,
