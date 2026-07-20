@@ -12,8 +12,22 @@ export type ColorPalette = {
   gold: string;
   terracotta: string;
   warmCream: string;
+  /** Always pure white — never reuse as a dark surface. */
   white: string;
   background: string;
+  /** Card / panel fill (light: white; dark: elevated navy). */
+  surface: string;
+  /** Subtle raised panel behind icons / chips. */
+  surfaceElevated: string;
+  /** Text/icons on primary CTAs and header gradients. */
+  onPrimary: string;
+  /** Links, active accents, recommendation reasons. */
+  primaryAction: string;
+  secondaryAction: string;
+  placeholder: string;
+  disabled: string;
+  disabledText: string;
+  error: string;
   textPrimary: string;
   textSecondary: string;
   textTertiary: string;
@@ -69,6 +83,15 @@ export const lightColors: ColorPalette = {
   warmCream: '#FBF8F2',
   white: '#FFFFFF',
   background: '#EFF5F3',
+  surface: '#FFFFFF',
+  surfaceElevated: '#F5F8F7',
+  onPrimary: '#FFFFFF',
+  primaryAction: '#0F7871',
+  secondaryAction: '#135062',
+  placeholder: '#9CA3AF',
+  disabled: '#E5E9E7',
+  disabledText: '#9CA3AF',
+  error: '#C0392B',
   textPrimary: '#21273D',
   textSecondary: '#6B7280',
   textTertiary: '#9CA3AF',
@@ -150,8 +173,17 @@ export const darkColors: ColorPalette = {
   gold: '#E0B03A',
   terracotta: '#E06A42',
   warmCream: '#1A2233',
-  white: '#162033',
+  white: '#FFFFFF',
   background: '#0B1220',
+  surface: '#162033',
+  surfaceElevated: '#1A2A4A',
+  onPrimary: '#FFFFFF',
+  primaryAction: '#1AA68C',
+  secondaryAction: '#2BC4A8',
+  placeholder: '#7C879A',
+  disabled: '#2A3548',
+  disabledText: '#7C879A',
+  error: '#E0554A',
   textPrimary: '#F2F4F7',
   textSecondary: '#A8B0C0',
   textTertiary: '#7C879A',

@@ -70,6 +70,21 @@ export const suggestedGuidesMock: GuideProfileSummary[] = [
     icon: '🏰',
     verification: guideVerification(),
   },
+  {
+    id: 'guide-5',
+    name: 'Abdul Razak',
+    initials: 'AR',
+    location: 'Tamale — Mole & Damongo corridor',
+    matchPercentage: 91,
+    pricePerSession: 140,
+    sessionDurationHours: 4,
+    currency: 'GHS',
+    serviceTypes: ['Wildlife safari', 'Cultural orientation', 'Food tour'],
+    languages: ['English', 'Dagbani'],
+    cancellationPolicy: FLEXIBLE_POLICY,
+    icon: '🐘',
+    verification: guideVerification(),
+  },
 ];
 
 export const incomingSessionRequestsMock: IncomingBookingRequest[] = [

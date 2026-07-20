@@ -17,6 +17,7 @@ import ExploreSectionList from '../../components/ExploreSectionList';
 import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
+import RecommendedForYou from '../../components/RecommendedForYou';
 import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
@@ -26,6 +27,7 @@ import {
   layout,
 } from '../../constants/theme';
 import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
+import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 
 export interface ExploreSectionItem {
   id: string;
@@ -51,6 +53,8 @@ export interface ExploreHomeScreenProps {
   suggestedGuides?: DiscoveryListingItem[];
   suggestedGuidesTitle?: string;
   showMatchScores?: boolean;
+  recommendationSections?: RecommendationSection[];
+  recommendationHeadline?: string;
   recentActivity?: RecentActivityItem[];
   reminder?: string;
   tabBarItems: TabBarItem[];
@@ -63,6 +67,7 @@ export interface ExploreHomeScreenProps {
   onFeaturedGuidePress?: () => void;
   onSuggestedGuidePress?: (guideId: string) => void;
   onSectionPress?: (sectionId: string) => void;
+  onRecommendationItemPress?: (item: RecommendationItem) => void;
   onQuickActionPress?: (actionId: string) => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -84,6 +89,8 @@ export default function ExploreHomeScreen({
   suggestedGuides = [],
   suggestedGuidesTitle = 'Top guides near you',
   showMatchScores = false,
+  recommendationSections = [],
+  recommendationHeadline = 'Recommended for you',
   recentActivity = [],
   reminder,
   tabBarItems,
@@ -96,6 +103,7 @@ export default function ExploreHomeScreen({
   onFeaturedGuidePress,
   onSuggestedGuidePress,
   onSectionPress,
+  onRecommendationItemPress,
   onQuickActionPress,
   onReminderPress,
   onTabPress,
@@ -146,6 +154,14 @@ export default function ExploreHomeScreen({
             items={suggestedGuides}
             showMatchScores={showMatchScores}
             onItemPress={onSuggestedGuidePress}
+          />
+        ) : null}
+
+        {recommendationSections.length > 0 ? (
+          <RecommendedForYou
+            headline={recommendationHeadline}
+            sections={recommendationSections}
+            onItemPress={onRecommendationItemPress}
           />
         ) : null}
 

@@ -447,9 +447,6 @@ export default function QuizPage({
   };
 
   const renderOtherSpecifyInput = (question: QuizQuestion) => {
-  const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
-
     if (!questionHasOtherSelected(question, answers[question.id])) {
       return null;
     }
@@ -472,9 +469,6 @@ export default function QuizPage({
   };
 
   const renderQuestionInput = (question: QuizQuestion) => {
-  const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
-
     const value = answers[question.id];
 
     switch (question.type) {
@@ -732,7 +726,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     borderRadius: borderRadius.pill,
     borderWidth: borderWidths.strong,
     borderColor: colors.border,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     minHeight: touchTarget,
     justifyContent: 'center',
     ...shadows.card,
@@ -829,7 +823,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     ...shadows.card,
   },
   textInput: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,

@@ -76,8 +76,6 @@ export default function ProviderBookingCard({
   );
 
   if (!onPress) {
-  const styles = useThemedStyles(createStyles);
-
     return (
       <Card style={[styles.card, !isLast && styles.cardSpacing]} padding="lg">
         {cardBody}
