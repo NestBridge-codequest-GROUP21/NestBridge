@@ -52,7 +52,7 @@ export default function StatusBadge({
     >
       <Text
         style={[styles.label, { color: toneStyle.text }]}
-        numberOfLines={1}
+        numberOfLines={2}
       >
         {label}
       </Text>
@@ -63,6 +63,7 @@ export default function StatusBadge({
 const styles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
+    maxWidth: '100%',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.pill,
@@ -72,5 +73,6 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.caption,
+    flexShrink: 1,
   },
 });

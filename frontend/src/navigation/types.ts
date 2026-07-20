@@ -64,6 +64,7 @@ export type AppStackParamList = {
   TouristSiteDetail: { siteId: string };
   PrepChecklist: undefined;
   LocalTips: { focus?: 'culture' | 'language' } | undefined;
+  PracticalTips: undefined;
   TransportGuide: undefined;
   ExploreStays: undefined;
   OfflineMap: undefined;

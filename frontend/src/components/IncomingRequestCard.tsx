@@ -54,13 +54,13 @@ export default function IncomingRequestCard({
 
         <View style={styles.body}>
           <View style={styles.topRow}>
-            <Text style={styles.name} numberOfLines={1}>
+            <Text style={styles.name} numberOfLines={2}>
               {request.studentName}
             </Text>
             <Text style={styles.score}>{request.compatibilityScore}%</Text>
           </View>
           <Text style={styles.dates}>{requestScheduleLine(request)}</Text>
-          <Text style={styles.capacity} numberOfLines={1}>
+          <Text style={styles.capacity} numberOfLines={2}>
             {request.bookingType === 'GUIDE'
               ? `${request.seekerRole === 'TOURIST' ? 'Tourist' : 'Student'} · `
               : ''}
@@ -109,7 +109,7 @@ function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
   requestCard: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.md,
   },
   requestCardSpacing: {
@@ -124,26 +124,29 @@ function createStyles({ colors }: AppTheme) {
   },
   body: {
     flex: 1,
+    minWidth: 0,
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: spacing.xs,
+    gap: spacing.sm,
   },
   name: {
     flex: 1,
+    minWidth: 0,
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-    marginRight: spacing.sm,
   },
   score: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
+    flexShrink: 0,
   },
   dates: {
     fontFamily: fontFamilies.regular,
@@ -163,6 +166,8 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
+    marginTop: spacing.xs,
+    flexShrink: 0,
   },
 });
 }

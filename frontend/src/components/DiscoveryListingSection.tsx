@@ -107,7 +107,7 @@ function createStyles({ colors }: AppTheme) {
   },
   card: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     minHeight: touchTarget,
     gap: spacing.md,
   },
@@ -119,6 +119,7 @@ function createStyles({ colors }: AppTheme) {
   },
   body: {
     flex: 1,
+    minWidth: 0,
   },
   name: {
     fontFamily: fontFamilies.semibold,
@@ -144,6 +145,8 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
+    flexShrink: 0,
+    marginTop: spacing.xs,
   },
 });
 }

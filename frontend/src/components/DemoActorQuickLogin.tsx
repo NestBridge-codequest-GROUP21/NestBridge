@@ -73,7 +73,7 @@ export default function DemoActorQuickLogin({
                 />
               </View>
               <Text style={styles.tabLabel}>{account.label}</Text>
-              <Text style={styles.tabName} numberOfLines={1}>
+              <Text style={styles.tabName} numberOfLines={2}>
                 {account.name}
               </Text>
             </Pressable>

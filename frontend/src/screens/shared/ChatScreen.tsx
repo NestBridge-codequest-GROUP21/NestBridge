@@ -194,10 +194,10 @@ export default function ChatScreen({
         >
           <Avatar initials={participantInitials} size="md" highlighted />
           <View style={styles.headerText}>
-            <Text style={styles.headerTitle} numberOfLines={1}>
+            <Text style={styles.headerTitle} numberOfLines={2}>
               {participantName}
             </Text>
-            <Text style={styles.headerSubtitle} numberOfLines={1}>
+            <Text style={styles.headerSubtitle} numberOfLines={2}>
               {subtitleParts.join(' · ')}
             </Text>
           </View>
@@ -386,6 +386,7 @@ function createStyles({ colors, shadows, tints }: AppTheme) {
     },
     headerText: {
       flex: 1,
+      minWidth: 0,
     },
     headerTitle: {
       fontFamily: fontFamilies.semibold,

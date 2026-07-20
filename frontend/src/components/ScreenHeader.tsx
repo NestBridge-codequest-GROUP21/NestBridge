@@ -236,6 +236,7 @@ function createStyles({ colors }: AppTheme) {
   },
   userText: {
     flex: 1,
+    minWidth: 0,
     paddingRight: spacing.md,
   },
   greeting: {

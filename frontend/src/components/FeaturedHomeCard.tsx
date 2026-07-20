@@ -52,7 +52,7 @@ export default function FeaturedHomeCard({
 
           <View style={styles.content}>
             <View style={styles.titleRow}>
-              <Text style={styles.name} numberOfLines={1}>
+              <Text style={styles.name} numberOfLines={2}>
                 {name}
               </Text>
               {badge ? <StatusBadge label={badge} tone="info" /> : null}
@@ -104,19 +104,23 @@ function createStyles({ colors }: AppTheme) {
   },
   content: {
     flex: 1,
+    minWidth: 0,
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexWrap: 'wrap',
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
   name: {
+    flexGrow: 1,
     flexShrink: 1,
+    minWidth: '40%',
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
   },
   details: {

@@ -6,6 +6,7 @@ import {
   fontFamilies,
   fontSizes,
   spacing,
+  lineHeights,
 } from '../constants/theme';
 
 export interface FeatureHighlight {
@@ -52,8 +53,8 @@ function createStyles({ colors }: AppTheme) {
   },
   item: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'center',
-    minWidth: 44,
   },
   icon: {
     fontSize: fontSizes.subheading,
@@ -62,9 +63,11 @@ function createStyles({ colors }: AppTheme) {
   label: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.onPrimary,
     opacity: 0.88,
     textAlign: 'center',
+    width: '100%',
   },
 });
 }

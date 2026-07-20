@@ -91,11 +91,11 @@ function ListSection({
               </View>
             )}
             <View style={styles.listText}>
-              <Text style={styles.listTitle} numberOfLines={1}>
+              <Text style={styles.listTitle} numberOfLines={2}>
                 {item.title}
               </Text>
               {item.location ? (
-                <Text style={styles.location} numberOfLines={1}>
+                <Text style={styles.location} numberOfLines={2}>
                   📍 {item.location}
                 </Text>
               ) : null}
@@ -178,7 +178,7 @@ function GridSection({
               {item.title}
             </Text>
             {item.location ? (
-              <Text style={styles.gridLocation} numberOfLines={1}>
+              <Text style={styles.gridLocation} numberOfLines={2}>
                 📍 {item.location}
               </Text>
             ) : null}
@@ -247,7 +247,7 @@ function FeaturedSection({
               {item.title}
             </Text>
             {item.location ? (
-              <Text style={styles.featuredLocation} numberOfLines={1}>
+              <Text style={styles.featuredLocation} numberOfLines={2}>
                 📍 {item.location}
               </Text>
             ) : null}
@@ -411,6 +411,7 @@ function createStyles({ colors, tints }: AppTheme) {
     },
     listText: {
       flex: 1,
+      minWidth: 0,
       gap: spacing.xs,
     },
     listTitle: {
@@ -449,9 +450,10 @@ function createStyles({ colors, tints }: AppTheme) {
       fontSize: fontSizes.caption,
       fontWeight: fontWeights.semibold,
       color: colors.tealDeep,
-      maxWidth: 88,
+      flexShrink: 0,
       textAlign: 'right',
       marginTop: spacing.xs,
+      maxWidth: '34%',
     },
     grid: {
       flexDirection: 'row',

@@ -62,7 +62,7 @@ export default function ProviderBookingCard({
 
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text style={styles.name} numberOfLines={2}>
             {booking.guestName}
           </Text>
           <StatusBadge label={status.label} tone={status.tone} />
@@ -133,7 +133,7 @@ function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
   card: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.md,
   },
   cardSpacing: {
@@ -144,16 +144,20 @@ function createStyles({ colors }: AppTheme) {
   },
   body: {
     flex: 1,
+    minWidth: 0,
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
     marginBottom: spacing.xs,
     gap: spacing.sm,
   },
   name: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: '40%',
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,

@@ -211,6 +211,7 @@ export default function StudentBookingsScreen({
               >
                 <Text
                   style={[styles.segmentLabel, isActive && styles.segmentLabelActive]}
+                  numberOfLines={2}
                 >
                   {tab.label}
                 </Text>
@@ -338,13 +339,13 @@ export default function StudentBookingsScreen({
                       />
                     </View>
                     <View style={styles.bookingTopRow}>
-                      <Text style={styles.hostName} numberOfLines={1}>
+                      <Text style={styles.hostName} numberOfLines={2}>
                         {booking.hostName}
                       </Text>
                       <StatusBadge label={meta.label} tone={meta.tone} />
                     </View>
 
-                    <Text style={styles.location} numberOfLines={1}>
+                    <Text style={styles.location} numberOfLines={2}>
                       {booking.hostLocation}
                     </Text>
 
@@ -451,10 +452,12 @@ function createStyles({ colors, shadows }: AppTheme) {
   },
   segmentItem: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: touchTarget,
     borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.xs,
   },
   segmentItemActive: {
     backgroundColor: colors.navy,
@@ -463,7 +466,9 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.body,
     color: colors.textSecondary,
+    textAlign: 'center',
   },
   segmentLabelActive: {
     color: colors.onPrimary,
@@ -541,6 +546,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   },
   bookingBody: {
     flex: 1,
+    minWidth: 0,
   },
   typeChipRow: {
     marginBottom: spacing.sm,
@@ -554,6 +560,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   },
   hostName: {
     flex: 1,
+    minWidth: 0,
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,

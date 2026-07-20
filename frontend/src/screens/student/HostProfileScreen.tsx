@@ -347,15 +347,20 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
   footerRow: {
     flexDirection: 'row',
     alignItems: 'stretch',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   messageButton: {
-    flexGrow: 0,
-    flexShrink: 0,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: '30%',
+    minWidth: 0,
     paddingHorizontal: spacing.md,
   },
   bookButton: {
-    flex: 1,
+    flexGrow: 2,
+    flexShrink: 1,
+    flexBasis: '45%',
     minWidth: 0,
   },
 });

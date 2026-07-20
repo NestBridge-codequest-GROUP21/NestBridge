@@ -36,8 +36,10 @@ export const phrasesApiMock: PhraseApi[] = localTipsPhrasesMock.map((item) => ({
   phrase: item.phrase,
   translation: item.translation,
   hasAudio: item.hasAudio,
+  // Pronunciation guides live on the Culture & Language screen (not the thin API shape).
 }));
 
+/** Culture/etiquette topics only — practical living is local to PracticalTips. */
 export const topicsApiMock: TopicApi[] = localTipsTopicsMock.map((item) => ({
   id: item.id,
   emoji: item.emoji,

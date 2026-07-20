@@ -60,6 +60,7 @@ function createStyles({ colors }: AppTheme) {
   },
   textBlock: {
     flex: 1,
+    minWidth: 0,
   },
   title: {
     fontFamily: fontFamilies.semibold,
@@ -80,6 +81,7 @@ function createStyles({ colors }: AppTheme) {
     minHeight: touchTarget,
     justifyContent: 'center',
     paddingHorizontal: spacing.xs,
+    flexShrink: 0,
   },
   actionLabel: {
     fontFamily: fontFamilies.semibold,

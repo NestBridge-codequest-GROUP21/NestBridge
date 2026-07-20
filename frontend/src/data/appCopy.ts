@@ -220,10 +220,17 @@ export const emptyStates = {
     iconGlyph: '✅',
   } satisfies EmptyStateContent,
   localTips: {
-    title: 'No tips for this city yet',
-    body: 'Culture notes and phrases will show here once they are available for your destination.',
-    tip: 'Accra tips are ready — update your city in account setup if that is where you are headed.',
+    title: 'No culture guide for this city yet',
+    body: 'Phrases and cultural etiquette will show here once they are available for your destination.',
+    tip: 'The Ghana culture & language guide is ready for Accra — update your city in account setup if needed.',
     iconGlyph: '👋',
+    primaryActionLabel: 'Update destination',
+  } satisfies EmptyStateContent,
+  practicalTips: {
+    title: 'No local tips for this city yet',
+    body: 'Practical living tips — transport, money, SIM cards, and safety — will show here when available.',
+    tip: 'Try Accra or Kumasi for the fullest daily-living guide.',
+    iconGlyph: '📍',
     primaryActionLabel: 'Update destination',
   } satisfies EmptyStateContent,
   transport: {

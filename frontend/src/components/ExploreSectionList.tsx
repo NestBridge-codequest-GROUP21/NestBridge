@@ -61,10 +61,10 @@ export default function ExploreSectionList({
                   />
                 </View>
               ) : null}
-              <Text style={styles.gridTitle} numberOfLines={2}>
+              <Text style={styles.gridTitle} numberOfLines={3}>
                 {section.title}
               </Text>
-              <Text style={styles.gridSubtitle} numberOfLines={2}>
+              <Text style={styles.gridSubtitle} numberOfLines={3}>
                 {section.subtitle}
               </Text>
             </Card>
@@ -95,10 +95,10 @@ export default function ExploreSectionList({
               </View>
             ) : null}
             <View style={styles.listText}>
-              <Text style={styles.listTitle} numberOfLines={2}>
+              <Text style={styles.listTitle} numberOfLines={3}>
                 {section.title}
               </Text>
-              <Text style={styles.listSubtitle} numberOfLines={2}>
+              <Text style={styles.listSubtitle} numberOfLines={3}>
                 {section.subtitle}
               </Text>
             </View>

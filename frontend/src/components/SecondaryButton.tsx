@@ -72,7 +72,7 @@ export default function SecondaryButton({
           ) : null}
           <Text
             style={[styles.label, isDisabled && styles.labelDisabled]}
-            numberOfLines={1}
+            numberOfLines={2}
           >
             {label}
           </Text>
@@ -107,9 +107,11 @@ function createStyles({ colors }: AppTheme) {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    maxWidth: '100%',
+    gap: spacing.sm,
   },
   icon: {
-    marginRight: spacing.sm,
+    flexShrink: 0,
   },
   label: {
     fontFamily: fontFamilies.semibold,
@@ -118,6 +120,7 @@ function createStyles({ colors }: AppTheme) {
     lineHeight: lineHeights.subheading,
     color: colors.teal,
     flexShrink: 1,
+    textAlign: 'center',
   },
   labelDisabled: {
     color: colors.textTertiary,

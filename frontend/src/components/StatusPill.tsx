@@ -37,8 +37,8 @@ function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
   pill: {
     flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignItems: 'flex-start',
+    alignSelf: 'stretch',
     backgroundColor: colors.navyMid,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -50,6 +50,8 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.body,
   },
   label: {
+    flex: 1,
+    minWidth: 0,
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
