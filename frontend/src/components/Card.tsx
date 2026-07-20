@@ -1,11 +1,10 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { useThemedStyles, type AppTheme } from '../theme';
 import {
-  colors,
   borderRadius,
   borderWidths,
   layout,
-  shadows,
 } from '../constants/theme';
 
 export type CardPadding = 'md' | 'lg' | 'none';
@@ -18,22 +17,24 @@ export interface CardProps {
   style?: StyleProp<ViewStyle>;
 }
 
-/** Standard white surface used across list/detail screens. */
+/** Standard surface used across list/detail screens. */
 export default function Card({
   children,
   padding = 'md',
   elevation = 'card',
   style,
 }: CardProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View
       style={[
         styles.base,
         padding === 'md' && styles.paddingMd,
         padding === 'lg' && styles.paddingLg,
-        elevation === 'none' && shadows.none,
-        elevation === 'card' && shadows.card,
-        elevation === 'raised' && shadows.raised,
+        elevation === 'none' && styles.elevationNone,
+        elevation === 'card' && styles.elevationCard,
+        elevation === 'raised' && styles.elevationRaised,
         style,
       ]}
     >
@@ -42,17 +43,28 @@ export default function Card({
   );
 }
 
-const styles = StyleSheet.create({
-  base: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: borderWidths.hairline,
-    borderColor: colors.border,
-  },
-  paddingMd: {
-    padding: layout.cardPadding,
-  },
-  paddingLg: {
-    padding: layout.cardPaddingLarge,
-  },
-});
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
+    base: {
+      backgroundColor: colors.white,
+      borderRadius: borderRadius.lg,
+      borderWidth: borderWidths.hairline,
+      borderColor: colors.border,
+    },
+    paddingMd: {
+      padding: layout.cardPadding,
+    },
+    paddingLg: {
+      padding: layout.cardPaddingLarge,
+    },
+    elevationNone: {
+      ...shadows.none,
+    },
+    elevationCard: {
+      ...shadows.card,
+    },
+    elevationRaised: {
+      ...shadows.raised,
+    },
+  });
+}

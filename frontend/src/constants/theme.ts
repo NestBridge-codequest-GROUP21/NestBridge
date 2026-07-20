@@ -3,44 +3,27 @@
  *
  * Usage:
  *   import { colors, fontSizes, fontFamilies, lineHeights, spacing, borderRadius, gradients, layout, shadows } from '../constants/theme';
+ *   // Prefer useTheme() / useThemedStyles() in components so light/dark update at runtime.
  *
  * Do NOT hardcode hex values, font sizes, or spacing in components.
- * If a token is missing, add it here first.
+ * If a token is missing, add it to theme/palettes.ts (colors) or here (layout).
  */
 
-export const colors = {
-  navy: '#0C1735',
-  navyMid: '#142247',
-  tealDeep: '#135062',
-  teal: '#0F7871',
-  tealBright: '#1AA68C',
-  gold: '#D4A017',
-  terracotta: '#D85A30',
-  warmCream: '#FBF8F2',
-  white: '#FFFFFF',
-  background: '#EFF5F3',
-  textPrimary: '#21273D',
-  textSecondary: '#6B7280',
-  textTertiary: '#9CA3AF',
-  border: '#D8DEDC',
-  success: '#2C8A7C',
-  warning: '#D4A017',
-  danger: '#C0392B',
-} as const;
+import {
+  lightColors,
+  lightTints,
+  lightGradients,
+  lightShadows,
+  lightOverlays,
+} from '../theme/palettes';
+
+/** @deprecated Prefer useTheme().colors — static light palette for module-scope fallbacks. */
+export const colors = lightColors;
 
 export type ColorToken = keyof typeof colors;
 
-/**
- * Soft, low-saturation tints derived from the brand palette. Used only as
- * backgrounds behind icons/tiles and progress-bar tracks — never for text.
- */
-export const tints = {
-  teal: '#E3F1EE',
-  gold: '#F7ECCF',
-  terracotta: '#F8E3D9',
-  navy: '#E4E8F0',
-  cream: colors.warmCream,
-} as const;
+/** @deprecated Prefer useTheme().tints */
+export const tints = lightTints;
 
 export type TintToken = keyof typeof tints;
 
@@ -163,56 +146,19 @@ export const layout = {
   authContentTop: spacing.lg,
 } as const;
 
-export const gradients = {
-  header: [colors.navy, colors.navyMid, colors.tealDeep, colors.teal] as const,
-  headerCompact: [colors.navy, colors.tealDeep] as const,
-  accent: [colors.teal, colors.tealBright] as const,
-} as const;
+/** @deprecated Prefer useTheme().gradients */
+export const gradients = lightGradients;
 
 export const motion = {
   durationFast: 200,
   durationNormal: 400,
 } as const;
 
-/**
- * Elevation recipes — spread into StyleSheet entries (`...shadows.card`).
- * Prefer these over inventing per-screen shadowOpacity / elevation values.
- */
-export const shadows = {
-  none: {
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  card: {
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  raised: {
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  floating: {
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.14,
-    shadowRadius: 16,
-    elevation: 6,
-  },
-} as const;
+/** @deprecated Prefer useTheme().shadows */
+export const shadows = lightShadows;
 
-export const overlays = {
-  scrim: 'rgba(12, 23, 53, 0.45)',
-  scrimStrong: 'rgba(12, 23, 53, 0.6)',
-} as const;
+/** @deprecated Prefer useTheme().overlays */
+export const overlays = lightOverlays;
 
 const theme = {
   colors,
