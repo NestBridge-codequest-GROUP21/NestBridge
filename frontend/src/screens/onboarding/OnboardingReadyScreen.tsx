@@ -127,7 +127,7 @@ export default function OnboardingReadyScreen({
 
         <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
           {onBack ? (
-            <BackButton onPress={onBack} color={colors.white} />
+            <BackButton onPress={onBack} color={colors.onPrimary} />
           ) : (
             <View style={styles.topSpacer} />
           )}
@@ -138,7 +138,7 @@ export default function OnboardingReadyScreen({
             <AppIcon
               glyph={roleIcon}
               size={iconSizes.md}
-              color={colors.white}
+              color={colors.onPrimary}
               style={styles.roleBadgeIcon}
             />
           ) : null}
@@ -181,7 +181,7 @@ export default function OnboardingReadyScreen({
                 <AppIcon
                   name="checkmark"
                   size={iconSizes.xl}
-                  color={colors.white}
+                  color={colors.onPrimary}
                 />
               </View>
             </Animated.View>
@@ -275,7 +275,7 @@ function createStyles({ colors, shadows, overlays }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   contentGradient: {
     flex: 1,
@@ -330,7 +330,7 @@ function createStyles({ colors, shadows, overlays }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     lineHeight: lineHeights.display,
     textAlign: 'center',
     marginBottom: spacing.sm,
@@ -339,7 +339,7 @@ function createStyles({ colors, shadows, overlays }: AppTheme) {
   subtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     lineHeight: lineHeights.body,
     textAlign: 'center',
     opacity: 0.92,
@@ -369,7 +369,7 @@ function createStyles({ colors, shadows, overlays }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     textDecorationLine: 'underline',
   },
 });

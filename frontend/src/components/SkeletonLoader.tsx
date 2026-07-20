@@ -113,7 +113,7 @@ function createStyles({ colors, tints }: AppTheme) {
     backgroundColor: tints.navy,
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,

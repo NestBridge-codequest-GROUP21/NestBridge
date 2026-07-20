@@ -63,7 +63,7 @@ export default function GuideProfileDetailScreen({
         end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}
       >
-        <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
+        <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backButton} />
 
         <View style={styles.heroContent}>
           <View style={styles.avatarRing}>
@@ -183,14 +183,14 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
   location: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.9,
     marginBottom: spacing.sm,
   },
@@ -200,7 +200,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   matchHint: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     textAlign: 'center',
   },
@@ -244,7 +244,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     borderTopWidth: borderWidths.hairline,

@@ -30,7 +30,7 @@ export default function FeatureHighlightRow({
           <AppIcon
             glyph={item.icon}
             size={fontSizes.subheading}
-            color={colors.white}
+            color={colors.onPrimary}
             style={styles.icon}
           />
           <Text style={styles.label} numberOfLines={2}>
@@ -62,7 +62,7 @@ function createStyles({ colors }: AppTheme) {
   label: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     textAlign: 'center',
   },

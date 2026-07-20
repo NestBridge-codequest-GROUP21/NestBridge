@@ -82,7 +82,7 @@ export default function IntentSelectScreen({
         {onBack ? (
           <BackButton
             onPress={onBack}
-            color={colors.white}
+            color={colors.onPrimary}
             style={styles.back}
           />
         ) : (
@@ -183,14 +183,14 @@ function createStyles({ colors, tints }: AppTheme) {
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     lineHeight: lineHeights.heading,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     lineHeight: lineHeights.body,
   },

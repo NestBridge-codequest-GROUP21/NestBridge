@@ -277,7 +277,7 @@ export function buildGuideCalendarGrid(
 function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
   container: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
@@ -343,7 +343,7 @@ function createStyles({ colors }: AppTheme) {
   dayNumber: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   guideDayNumber: {
     fontFamily: fontFamilies.semibold,

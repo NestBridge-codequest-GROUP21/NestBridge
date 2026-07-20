@@ -86,7 +86,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   },
   card: {
     minHeight: touchTarget * 2,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: layout.cardPadding,
     borderWidth: borderWidths.hairline,

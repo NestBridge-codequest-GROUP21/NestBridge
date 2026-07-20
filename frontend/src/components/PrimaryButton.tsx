@@ -58,14 +58,14 @@ export default function PrimaryButton({
       accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {loading ? (
-        <ActivityIndicator color={colors.white} />
+        <ActivityIndicator color={colors.onPrimary} />
       ) : (
         <View style={styles.content}>
           {iconName ? (
             <AppIcon
               name={iconName}
               size={iconSizes.md}
-              color={isDisabled ? colors.textTertiary : colors.white}
+              color={isDisabled ? colors.textTertiary : colors.onPrimary}
               style={styles.icon}
             />
           ) : null}
@@ -109,7 +109,7 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.subheading,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   labelDisabled: {
     color: colors.textTertiary,

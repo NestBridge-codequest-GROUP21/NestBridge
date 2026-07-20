@@ -209,7 +209,7 @@ export default function MatchSearchScreen({
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
         {onBack && !showTabBar ? (
-          <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
+          <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backButton} />
         ) : (
           <View style={styles.backButtonSpacer} />
         )}
@@ -368,7 +368,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.82,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -378,7 +378,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.sm,
     lineHeight: lineHeights.display,
   },
@@ -386,7 +386,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.9,
     lineHeight: lineHeights.body,
   },
@@ -461,7 +461,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.sm,
     lineHeight: lineHeights.subheading,
   },
@@ -469,7 +469,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.9,
     lineHeight: lineHeights.caption,
   },

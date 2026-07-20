@@ -147,7 +147,7 @@ function createStyles({ colors }: AppTheme) {
   inputRow: {
     position: 'relative',
     justifyContent: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,

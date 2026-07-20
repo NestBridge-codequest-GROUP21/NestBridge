@@ -45,7 +45,7 @@ export default function BrandLogoMark({
 function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
   logoMark: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     alignItems: 'center',

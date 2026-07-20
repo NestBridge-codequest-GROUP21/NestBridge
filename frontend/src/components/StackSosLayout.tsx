@@ -52,7 +52,7 @@ function createStyles({ colors }: AppTheme) {
     flex: 1,
   },
   sosBar: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     alignItems: 'center',

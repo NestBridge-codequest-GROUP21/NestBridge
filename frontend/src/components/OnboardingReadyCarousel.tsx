@@ -114,7 +114,7 @@ function createStyles({ colors }: AppTheme) {
     paddingRight: CARD_GAP,
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     minHeight: layout.carouselMinHeight,

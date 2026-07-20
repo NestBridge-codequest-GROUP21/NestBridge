@@ -167,7 +167,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.subheading,
-    color: colors.white,
+    color: colors.onPrimary,
     textAlign: 'center',
   },
   comingSoonBody: {

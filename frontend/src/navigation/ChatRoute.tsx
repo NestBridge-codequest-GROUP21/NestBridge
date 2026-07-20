@@ -71,7 +71,7 @@ function createStyles({ colors }: AppTheme) {
     paddingVertical: spacing.sm,
   },
   errorText: {
-    color: colors.white,
+    color: colors.onPrimary,
     fontSize: fontSizes.caption,
   },
 });

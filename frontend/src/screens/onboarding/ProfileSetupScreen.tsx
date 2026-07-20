@@ -181,7 +181,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   addPhoto: {
     fontFamily: fontFamilies.semibold,

@@ -74,12 +74,12 @@ export default function SponsorDetailScreen({
           end={{ x: 1, y: 1 }}
           style={[styles.header, { paddingTop: insets.top + spacing.md }]}
         >
-          <BackButton onPress={onBack} color={colors.white} style={styles.backBtn} />
+          <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backBtn} />
           <View style={styles.logoTile}>
             <AppIcon
               glyph={sponsor.logo}
               size={iconSizes.xl}
-              color={colors.white}
+              color={colors.onPrimary}
             />
           </View>
           <Text style={styles.name}>{sponsor.name}</Text>
@@ -163,7 +163,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     textAlign: 'center',
   },
   categoryBadge: {

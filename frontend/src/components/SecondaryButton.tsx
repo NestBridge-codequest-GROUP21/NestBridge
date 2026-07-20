@@ -90,7 +90,7 @@ function createStyles({ colors }: AppTheme) {
     minHeight: controlHeights.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
   },
   buttonDisabled: {
     borderColor: colors.border,

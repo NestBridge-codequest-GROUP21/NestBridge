@@ -213,7 +213,7 @@ function createStyles({ colors }: AppTheme) {
       fontFamily: fontFamilies.semibold,
       fontSize: fontSizes.caption,
       fontWeight: fontWeights.semibold,
-      color: colors.white,
+      color: colors.onPrimary,
     },
     pressed: {
       opacity: 0.9,

@@ -136,7 +136,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     flexGrow: 1,
     minWidth: '46%',
     minHeight: 96,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -173,7 +173,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     marginTop: spacing.xs,
   },
   demoCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -202,7 +202,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   demoName: {
     flex: 1,
