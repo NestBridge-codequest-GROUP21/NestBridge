@@ -26,7 +26,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -35,13 +38,23 @@ import java.util.UUID;
 @Slf4j
 public class PaystackService {
 
+    private static final List<String> CHECKOUT_CHANNELS = List.of(
+            "card",
+            "mobile_money",
+            "bank",
+            "ussd",
+            "bank_transfer"
+    );
+
     private final BookingRepository bookingRepository;
     private final PaymentRecordRepository paymentRecordRepository;
     private final UserRepository userRepository;
     private final ProfileGateService profileGateService;
     private final BookingNotificationService bookingNotificationService;
     private final ObjectMapper objectMapper;
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(15))
+            .build();
 
     @Value("${paystack.enabled:false}")
     private boolean paystackEnabled;
@@ -52,6 +65,10 @@ public class PaystackService {
     @Value("${app.public-url:http://localhost:8080}")
     private String publicUrl;
 
+    public boolean isLivePaystack() {
+        return paystackEnabled && secretKey != null && !secretKey.isBlank();
+    }
+
     @Transactional
     public PaymentInitializeResponse initializePayment(UUID bookingId, UUID guestId) {
         profileGateService.requireEmailVerified(guestId);
@@ -60,22 +77,43 @@ public class PaystackService {
         if (!booking.getGuestId().equals(guestId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized.");
         }
+        if (booking.getStatus() == BookingStatus.CONFIRMED
+                || "PAID".equalsIgnoreCase(booking.getPaymentStatus())) {
+            throw new IllegalStateException("This booking is already paid.");
+        }
         if (booking.getStatus() != BookingStatus.ACCEPTED) {
             throw new IllegalArgumentException("Booking must be accepted before payment.");
         }
-
-        if (!paystackEnabled || secretKey == null || secretKey.isBlank()) {
-            log.info("Paystack disabled — mock payment for booking {}", bookingId);
-            return PaymentInitializeResponse.builder().mockPayment(true).build();
+        if (booking.getTotalPrice() == null || booking.getTotalPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Booking total is invalid for payment.");
         }
+
+        if (!isLivePaystack()) {
+            log.info("Paystack disabled — mock payment for booking {}", bookingId);
+            return PaymentInitializeResponse.builder()
+                    .mockPayment(true)
+                    .bookingId(bookingId.toString())
+                    .amount(booking.getTotalPrice())
+                    .currency("GHS")
+                    .build();
+        }
+
+        if (paymentRecordRepository.existsByBookingIdAndStatus(bookingId, "SUCCESS")) {
+            throw new IllegalStateException("This booking is already paid.");
+        }
+
+        // Abandon prior pending checkouts so only one active reference is charged.
+        paymentRecordRepository.findByBookingIdAndStatus(bookingId, "PENDING")
+                .forEach(pending -> {
+                    pending.setStatus("ABANDONED");
+                    paymentRecordRepository.save(pending);
+                });
 
         User guest = userRepository.findById(guestId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
-        String reference = "nb-" + bookingId.toString().substring(0, 8) + "-" + System.currentTimeMillis();
-        long amountPesewas = booking.getTotalPrice()
-                .multiply(BigDecimal.valueOf(100))
-                .setScale(0, RoundingMode.HALF_UP)
-                .longValue();
+        String reference = "nb-" + bookingId.toString().replace("-", "").substring(0, 12)
+                + "-" + System.currentTimeMillis();
+        long amountPesewas = toPesewas(booking.getTotalPrice());
 
         try {
             String callbackUrl = publicUrl.replaceAll("/$", "") + "/api/payments/callback";
@@ -85,11 +123,23 @@ public class PaystackService {
                     "currency", "GHS",
                     "reference", reference,
                     "callback_url", callbackUrl,
-                    "metadata", Map.of("booking_id", bookingId.toString())
+                    "channels", CHECKOUT_CHANNELS,
+                    "metadata", Map.of(
+                            "booking_id", bookingId.toString(),
+                            "guest_id", guestId.toString(),
+                            "custom_fields", List.of(
+                                    Map.of(
+                                            "display_name", "Booking",
+                                            "variable_name", "booking_id",
+                                            "value", bookingId.toString()
+                                    )
+                            )
+                    )
             ));
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.paystack.co/transaction/initialize"))
+                    .timeout(Duration.ofSeconds(30))
                     .header("Authorization", "Bearer " + secretKey)
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(body))
@@ -103,6 +153,10 @@ public class PaystackService {
             }
 
             String authorizationUrl = json.path("data").path("authorization_url").asText();
+            if (authorizationUrl == null || authorizationUrl.isBlank()) {
+                throw new IllegalStateException("Could not start payment. Missing checkout URL.");
+            }
+
             PaymentRecord record = PaymentRecord.builder()
                     .bookingId(bookingId)
                     .paystackReference(reference)
@@ -112,15 +166,24 @@ public class PaystackService {
                     .build();
             paymentRecordRepository.save(record);
 
+            log.info(
+                    "Paystack checkout created bookingId={} reference={} amount={} GHS",
+                    bookingId,
+                    reference,
+                    booking.getTotalPrice());
+
             return PaymentInitializeResponse.builder()
                     .mockPayment(false)
                     .authorizationUrl(authorizationUrl)
                     .reference(reference)
+                    .bookingId(bookingId.toString())
+                    .amount(booking.getTotalPrice())
+                    .currency("GHS")
                     .build();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Payment initialization interrupted.");
-        } catch (ResponseStatusException e) {
+        } catch (ResponseStatusException | IllegalStateException | IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
             log.error("Paystack initialize error", e);
@@ -128,9 +191,81 @@ public class PaystackService {
         }
     }
 
+    /**
+     * App calls this after returning from Paystack checkout to confirm payment
+     * without waiting solely on the webhook.
+     */
+    @Transactional
+    public PaymentVerifyResponse verifyPaymentForGuest(UUID bookingId, UUID guestId) {
+        profileGateService.requireEmailVerified(guestId);
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
+        if (!booking.getGuestId().equals(guestId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not authorized.");
+        }
+
+        if (booking.getStatus() == BookingStatus.CONFIRMED
+                || "PAID".equalsIgnoreCase(booking.getPaymentStatus())) {
+            return PaymentVerifyResponse.builder()
+                    .paid(true)
+                    .bookingStatus(booking.getStatus().name())
+                    .paymentStatus(booking.getPaymentStatus())
+                    .message("Payment already confirmed.")
+                    .build();
+        }
+
+        if (!isLivePaystack()) {
+            return PaymentVerifyResponse.builder()
+                    .paid(false)
+                    .bookingStatus(booking.getStatus().name())
+                    .paymentStatus(booking.getPaymentStatus())
+                    .message("Live payment is not enabled.")
+                    .build();
+        }
+
+        PaymentRecord pending = paymentRecordRepository
+                .findTopByBookingIdAndStatusOrderByCreatedAtDesc(bookingId, "PENDING")
+                .orElse(null);
+        if (pending == null) {
+            PaymentRecord success = paymentRecordRepository
+                    .findTopByBookingIdAndStatusOrderByCreatedAtDesc(bookingId, "SUCCESS")
+                    .orElse(null);
+            if (success != null) {
+                completeBookingPayment(bookingId);
+                Booking refreshed = bookingRepository.findById(bookingId).orElse(booking);
+                return PaymentVerifyResponse.builder()
+                        .paid(true)
+                        .reference(success.getPaystackReference())
+                        .bookingStatus(refreshed.getStatus().name())
+                        .paymentStatus(refreshed.getPaymentStatus())
+                        .message("Payment successful.")
+                        .build();
+            }
+            return PaymentVerifyResponse.builder()
+                    .paid(false)
+                    .bookingStatus(booking.getStatus().name())
+                    .paymentStatus(booking.getPaymentStatus())
+                    .message("No pending payment found. Tap Pay now to try again.")
+                    .build();
+        }
+
+        boolean paid = verifyAndCompleteByReference(pending.getPaystackReference());
+        Booking refreshed = bookingRepository.findById(bookingId).orElse(booking);
+        return PaymentVerifyResponse.builder()
+                .paid(paid)
+                .reference(pending.getPaystackReference())
+                .bookingStatus(refreshed.getStatus().name())
+                .paymentStatus(refreshed.getPaymentStatus())
+                .message(paid
+                        ? "Payment successful."
+                        : "Payment not confirmed yet. If you were charged, wait a moment and retry.")
+                .build();
+    }
+
     @Transactional
     public void handleWebhook(String rawBody, String signature) {
-        if (!paystackEnabled || secretKey == null || secretKey.isBlank()) {
+        if (!isLivePaystack()) {
+            log.warn("Ignoring Paystack webhook — live payments disabled.");
             return;
         }
         if (!verifySignature(rawBody, signature)) {
@@ -139,7 +274,9 @@ public class PaystackService {
 
         try {
             JsonNode event = objectMapper.readTree(rawBody);
-            if (!"charge.success".equals(event.path("event").asText())) {
+            String eventName = event.path("event").asText();
+            if (!"charge.success".equals(eventName)) {
+                log.info("Ignoring Paystack event {}", eventName);
                 return;
             }
             JsonNode data = event.path("data");
@@ -162,13 +299,14 @@ public class PaystackService {
         if (reference == null || reference.isBlank()) {
             return false;
         }
-        if (!paystackEnabled || secretKey == null || secretKey.isBlank()) {
+        if (!isLivePaystack()) {
             return false;
         }
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.paystack.co/transaction/verify/" + reference))
+                    .timeout(Duration.ofSeconds(30))
                     .header("Authorization", "Bearer " + secretKey)
                     .GET()
                     .build();
@@ -199,11 +337,35 @@ public class PaystackService {
         PaymentRecord payment = paymentRecordRepository.findByPaystackReference(reference)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown payment reference."));
         if ("SUCCESS".equals(payment.getStatus())) {
+            completeBookingPayment(payment.getBookingId());
             return;
         }
 
+        long expectedPesewas = toPesewas(payment.getAmount());
+        long paidPesewas = data.path("amount").asLong(-1);
+        if (paidPesewas >= 0 && paidPesewas != expectedPesewas) {
+            log.error(
+                    "Paystack amount mismatch reference={} expected={} paid={}",
+                    reference,
+                    expectedPesewas,
+                    paidPesewas);
+            payment.setStatus("FAILED");
+            payment.setRawPayload(objectMapper.convertValue(data, Map.class));
+            paymentRecordRepository.save(payment);
+            throw new IllegalStateException("Payment amount did not match the booking total.");
+        }
+
+        String currency = data.path("currency").asText("GHS");
+        if (!"GHS".equalsIgnoreCase(currency)) {
+            log.error("Paystack currency mismatch reference={} currency={}", reference, currency);
+            payment.setStatus("FAILED");
+            payment.setRawPayload(objectMapper.convertValue(data, Map.class));
+            paymentRecordRepository.save(payment);
+            throw new IllegalStateException("Payment currency is not supported.");
+        }
+
         payment.setStatus("SUCCESS");
-        payment.setCompletedAt(java.time.OffsetDateTime.now());
+        payment.setCompletedAt(OffsetDateTime.now());
         payment.setRawPayload(objectMapper.convertValue(data, Map.class));
         paymentRecordRepository.save(payment);
 
@@ -214,13 +376,37 @@ public class PaystackService {
     public void completeBookingPayment(UUID bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
-        if (booking.getStatus() == BookingStatus.CONFIRMED) {
+        if (booking.getStatus() == BookingStatus.CONFIRMED
+                && "PAID".equalsIgnoreCase(booking.getPaymentStatus())) {
             return;
+        }
+        if (booking.getStatus() == BookingStatus.CANCELLED
+                || booking.getStatus() == BookingStatus.DECLINED
+                || booking.getStatus() == BookingStatus.EXPIRED) {
+            log.warn(
+                    "Skipping booking confirm for {} — status is {}",
+                    bookingId,
+                    booking.getStatus());
+            return;
+        }
+        if (booking.getStatus() != BookingStatus.ACCEPTED
+                && booking.getStatus() != BookingStatus.CONFIRMED) {
+            log.warn(
+                    "Unexpected booking status {} while completing payment for {}",
+                    booking.getStatus(),
+                    bookingId);
         }
         booking.setStatus(BookingStatus.CONFIRMED);
         booking.setPaymentStatus("PAID");
         bookingRepository.save(booking);
         bookingNotificationService.onBookingConfirmed(booking);
+    }
+
+    private static long toPesewas(BigDecimal amountGhs) {
+        return amountGhs
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(0, RoundingMode.HALF_UP)
+                .longValueExact();
     }
 
     private boolean verifySignature(String payload, String signature) {

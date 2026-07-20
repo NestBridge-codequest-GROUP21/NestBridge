@@ -176,7 +176,7 @@ import {
   buildEmptyHostMonthDays,
   buildEmptyGuideMonthDays,
 } from '../services/providerProfile';
-import { completeBookingPayment } from '../services/paymentFlow';
+import { completeBookingPayment, PaymentCancelledError } from '../services/paymentFlow';
 import { uploadProfilePhotoIfConfigured } from '../services/mediaUpload';
 import { studentHomeMockData, tabBarWithBadgesForRole, suggestedHostsForCity } from '../data/studentHomeMock';
 import {
@@ -1040,6 +1040,7 @@ export default function AppNavigator() {
   const demoProfileSyncedForUser = useRef<string | null>(null);
   const [bookingFilter, setBookingFilter] = useState<BookingTabFilter>('active');
   const [payLoading, setPayLoading] = useState(false);
+  const [payStatusLabel, setPayStatusLabel] = useState('Preparing payment...');
   const [lodgingFilter, setLodgingFilter] = useState<LodgingCategoryFilter>('ALL');
   const [savedLodgingIds, setSavedLodgingIds] = useState<string[]>([]);
   const [checklistCompleted, setChecklistCompleted] = useState<string[]>(
@@ -2199,13 +2200,27 @@ export default function AppNavigator() {
 
       // Mock/demo rows (e.g. booking-1) are not UUIDs — confirm locally only.
       if (booking && !isApiBookingId(bookingId)) {
+        setPayStatusLabel('Confirming payment...');
         const confirmed = confirmDemoBooking(booking);
         upsertLocalBooking(confirmed);
         return confirmed;
       }
 
       try {
-        const payment = await completeBookingPayment(bookingId);
+        const payment = await completeBookingPayment(bookingId, {
+          onProgress: (phase, detail) => {
+            if (detail) {
+              setPayStatusLabel(detail);
+              return;
+            }
+            if (phase === 'preparing') setPayStatusLabel('Preparing payment...');
+            else if (phase === 'opening_checkout') setPayStatusLabel('Opening Paystack...');
+            else if (phase === 'awaiting_confirmation') {
+              setPayStatusLabel('Confirming payment...');
+            } else if (phase === 'verifying') setPayStatusLabel('Verifying payment...');
+            else if (phase === 'success') setPayStatusLabel('Payment Successful');
+          },
+        });
         homeApi.refresh();
         const confirmed = confirmDemoBooking(
           booking ?? {
@@ -2220,11 +2235,11 @@ export default function AppNavigator() {
             status: 'ACCEPTED',
             priceBreakdown: {
               nightlyRate: 0,
-              currency: 'GHS',
+              currency: payment.currency ?? 'GHS',
               nights: 1,
               subtotal: payment.booking.totalPrice ?? 0,
               platformFee: payment.booking.platformFee ?? 0,
-              total: payment.booking.totalPrice ?? 0,
+              total: payment.booking.totalPrice ?? payment.amount ?? 0,
             },
             cancellationPolicy: 'Flexible',
             createdAt: new Date().toISOString(),
@@ -3088,10 +3103,12 @@ export default function AppNavigator() {
             payBlockedMessage="Complete your travel profile to pay for bookings."
             onContinueSetupPay={() => continueSeekerSetup(navigation)}
             payLoading={payLoading}
+            payStatusLabel={payStatusLabel}
             onPayPress={async (bookingId) => {
-              if (!canBookHomestay && !canBookGuideSession || payLoading) {
+              if ((!canBookHomestay && !canBookGuideSession) || payLoading) {
                 return;
               }
+              setPayStatusLabel('Preparing payment...');
               setPayLoading(true);
               try {
                 const confirmed = await confirmBookingWithDemoFallback(bookingId);
@@ -3099,16 +3116,22 @@ export default function AppNavigator() {
                   Alert.alert('Payment failed', 'We could not find that booking.');
                   return;
                 }
+                Alert.alert('Payment Successful', 'Your booking is confirmed.');
                 navigation.navigate('BookingConfirmed', { bookingId });
               } catch (error) {
+                if (error instanceof PaymentCancelledError) {
+                  Alert.alert('Payment cancelled', error.message);
+                  return;
+                }
                 Alert.alert(
                   'Payment',
                   error instanceof Error
                     ? error.message
-                    : 'Payment could not be completed.',
+                    : 'Payment could not be completed. You can try again.',
                 );
               } finally {
                 setPayLoading(false);
+                setPayStatusLabel('Preparing payment...');
               }
             }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}

@@ -49,6 +49,8 @@ export interface StudentBookingsScreenProps {
   onPayPress?: (bookingId: string) => void;
   /** True while Paystack / mock confirm is in flight. */
   payLoading?: boolean;
+  /** Shown on the Pay CTA while payment is in progress (e.g. Preparing payment...). */
+  payStatusLabel?: string;
   payBlocked?: boolean;
   payBlockedMessage?: string;
   onContinueSetupPay?: () => void;
@@ -145,6 +147,7 @@ export default function StudentBookingsScreen({
   onBookingPress,
   onPayPress,
   payLoading = false,
+  payStatusLabel,
   payBlocked = false,
   payBlockedMessage = 'Finish your Student or Tourist profile to complete payment.',
   onContinueSetupPay,
@@ -277,7 +280,9 @@ export default function StudentBookingsScreen({
                 </Text>
                 <View style={styles.heroCta}>
                   <Text style={styles.heroCtaText}>
-                    {payLoading ? 'Processing…' : 'Pay now'}
+                    {payLoading
+                      ? payStatusLabel || 'Preparing payment...'
+                      : 'Pay now'}
                   </Text>
                 </View>
               </LinearGradient>
@@ -345,6 +350,33 @@ export default function StudentBookingsScreen({
                     <Text style={styles.dates}>{bookingScheduleLine(booking)}</Text>
 
                     <Text style={styles.total}>{bookingTotalLine(booking)}</Text>
+
+                    {booking.status === 'ACCEPTED' ? (
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.rowPayButton,
+                          pressed && !payBlocked && !payLoading && styles.pressed,
+                          (payBlocked || payLoading) && styles.rowPayButtonDisabled,
+                        ]}
+                        onPress={() => {
+                          if (!payBlocked && !payLoading) {
+                            onPayPress?.(booking.id);
+                          }
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Pay now for ${booking.hostName}`}
+                        accessibilityState={{
+                          disabled: payBlocked || payLoading,
+                          busy: payLoading,
+                        }}
+                      >
+                        <Text style={styles.rowPayButtonText}>
+                          {payLoading && payNowBooking?.id === booking.id
+                            ? payStatusLabel || 'Preparing payment...'
+                            : 'Pay now'}
+                        </Text>
+                      </Pressable>
+                    ) : null}
                   </View>
                 </Card>
               </Pressable>
@@ -548,6 +580,26 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
+  },
+  rowPayButton: {
+    marginTop: spacing.md,
+    alignSelf: 'flex-start',
+    minHeight: touchTarget,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.tealBright,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowPayButtonDisabled: {
+    opacity: 0.55,
+  },
+  rowPayButtonText: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.white,
   },
   pressed: {
     opacity: 0.94,

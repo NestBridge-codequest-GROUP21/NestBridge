@@ -66,14 +66,15 @@ Optional: `APP_MOBILE_SCHEME` = `nestbridge` (must match `scheme` in `frontend/a
 
 1. Sign up at [paystack.com](https://paystack.com) → complete business verification
 2. **Settings → API Keys & Webhooks**
-3. Copy **Live Secret Key**
+3. Copy **Live Secret Key** (or Test Secret Key for sandbox)
 4. Add to Railway:
    - `PAYSTACK_ENABLED` = `true`
-   - `PAYSTACK_SECRET_KEY` = live secret key
+   - `PAYSTACK_SECRET_KEY` = secret key
 5. Set webhook URL: `https://YOUR-RAILWAY-URL/api/webhooks/paystack`
 6. Enable `charge.success` event
+7. Ensure `APP_PUBLIC_URL` matches the Railway HTTPS URL (used as Paystack `callback_url`)
 
-**Pay now** in the app opens Paystack checkout. Without keys, dev mode uses mock payment.
+**Pay now** (Bookings → Active) opens Paystack checkout with **Mobile Money**, cards, bank, and USSD. The app verifies the charge with Paystack before marking the booking `CONFIRMED` / `PAID`. Without keys (`PAYSTACK_ENABLED=false`), the app uses a safe mock confirm for demos only — do not leave that on for real users.
 
 ---
 

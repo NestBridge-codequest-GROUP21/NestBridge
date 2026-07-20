@@ -179,6 +179,7 @@ export interface BookingApi {
   totalPrice?: number;
   platformFee?: number;
   status: BookingStatus;
+  paymentStatus?: string | null;
   guestName?: string;
   guestInitials?: string;
   providerName?: string;
@@ -841,6 +842,17 @@ export interface PaymentInitializeResult {
   mockPayment: boolean;
   authorizationUrl?: string;
   reference?: string;
+  bookingId?: string;
+  amount?: number;
+  currency?: string;
+}
+
+export interface PaymentVerifyResult {
+  paid: boolean;
+  reference?: string;
+  bookingStatus?: string;
+  paymentStatus?: string;
+  message?: string;
 }
 
 export async function initializeBookingPayment(
@@ -848,6 +860,15 @@ export async function initializeBookingPayment(
 ): Promise<PaymentInitializeResult> {
   const { data } = await api.post<ApiResponse<PaymentInitializeResult>>(
     `/api/bookings/${bookingId}/payment/initialize`,
+  );
+  return unwrap({ data });
+}
+
+export async function verifyBookingPayment(
+  bookingId: string,
+): Promise<PaymentVerifyResult> {
+  const { data } = await api.post<ApiResponse<PaymentVerifyResult>>(
+    `/api/bookings/${bookingId}/payment/verify`,
   );
   return unwrap({ data });
 }
