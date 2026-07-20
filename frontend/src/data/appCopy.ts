@@ -253,7 +253,7 @@ export function onboardingReadyCopy(
           body: 'Emergency contacts and SOS stay within reach during your trip.',
         },
       ],
-      ctaLabel: 'See your matches',
+      ctaLabel: 'Book a trip',
       roleLabel: ONBOARDING_ROLE_LABELS.TOURIST,
       roleIcon: PRIMARY_INTENT_ICONS.TOURIST,
     };

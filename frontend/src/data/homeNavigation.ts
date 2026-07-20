@@ -34,7 +34,7 @@ export const STUDENT_QUICK_ACTIONS: QuickActionItem[] = [
 ];
 
 export const TOURIST_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'book-guide', label: 'Book guide', icon: '🗺️' },
+  { id: 'book-guide', label: 'Book a trip', icon: '🧳' },
   { id: 'explore-stays', label: 'Stays', icon: '🏡' },
   { id: 'offline-map', label: 'Offline map', icon: '📍' },
   { id: 'cultural-tips', label: 'Local tips', icon: '👋' },
