@@ -1,5 +1,6 @@
 package com.nestbridge.auth;
 
+import com.nestbridge.notification.EmailDeliveryException;
 import com.nestbridge.notification.EmailVerificationService;
 import com.nestbridge.user.User;
 import com.nestbridge.user.UserRepository;
@@ -7,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +21,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
     private final EmailVerificationService emailVerificationService;
+    private final PlatformTransactionManager transactionManager;
 
     @Value("${jwt.refresh-expiry-ms}")
     private long refreshExpiryMs;
@@ -25,7 +29,6 @@ public class AuthService {
     @Value("${email.verification-enabled:true}")
     private boolean verificationEnabled;
 
-    @Transactional
     public RegisterResponse register(RegisterRequest request) {
         String email = request.getEmail().trim().toLowerCase();
         var existing = userRepository.findByEmailIgnoreCase(email);
@@ -33,34 +36,54 @@ public class AuthService {
             User user = existing.get();
             if (verificationEnabled && !user.isEmailVerified()) {
                 throw new IllegalArgumentException(
-                        "You already started signup with this email. Check your inbox to verify, or sign in and resend the link.");
+                        "You already started signup with this email. Check your inbox to verify, or use Resend verification email.");
             }
             throw new IllegalArgumentException("An account with this email already exists. Try signing in.");
         }
-        User user = User.builder()
-                .fullName(request.getFullName().trim())
-                .email(email)
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .activeExchangeStudent(true)
-                .identityVerified(false)
-                .emailVerified(!verificationEnabled)
-                .build();
-        user = userRepository.save(user);
 
-        if (verificationEnabled) {
-            emailVerificationService.sendVerificationEmail(user);
+        User user = persistNewUser(request, email, !verificationEnabled);
+
+        if (!verificationEnabled) {
             return RegisterResponse.builder()
                     .email(user.getEmail())
                     .displayName(user.getFullName())
-                    .requiresEmailVerification(true)
+                    .requiresEmailVerification(false)
+                    .emailDeliveryFailed(false)
                     .build();
+        }
+
+        String verifyUrl = emailVerificationService.issueVerificationLink(user);
+        boolean deliveryFailed = false;
+        try {
+            emailVerificationService.deliverVerificationEmail(user, verifyUrl);
+        } catch (EmailDeliveryException ex) {
+            deliveryFailed = true;
         }
 
         return RegisterResponse.builder()
                 .email(user.getEmail())
                 .displayName(user.getFullName())
-                .requiresEmailVerification(false)
+                .requiresEmailVerification(true)
+                .emailDeliveryFailed(deliveryFailed)
                 .build();
+    }
+
+    private User persistNewUser(RegisterRequest request, String email, boolean emailVerified) {
+        TransactionTemplate template = new TransactionTemplate(transactionManager);
+        return template.execute(status -> {
+            User user = User.builder()
+                    .fullName(request.getFullName().trim())
+                    .email(email)
+                    .passwordHash(passwordEncoder.encode(request.getPassword()))
+                    .activeExchangeStudent(true)
+                    .identityVerified(false)
+                    .emailVerified(emailVerified)
+                    .build();
+            if (emailVerified) {
+                user.setEmailVerifiedAt(java.time.OffsetDateTime.now());
+            }
+            return userRepository.save(user);
+        });
     }
 
     public AuthTokenResponse login(LoginRequest request) {

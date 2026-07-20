@@ -24,9 +24,15 @@ public class AuthController {
     public ResponseEntity<ApiResponse<RegisterResponse>> register(
             @Valid @RequestBody RegisterRequest request) {
         RegisterResponse result = authService.register(request);
-        String message = result.isRequiresEmailVerification()
-                ? "Account created. Check your email to verify before signing in."
-                : "Account created. You can sign in now.";
+        String message;
+        if (!result.isRequiresEmailVerification()) {
+            message = "Account created. You can sign in now.";
+        } else if (result.isEmailDeliveryFailed()) {
+            message = "Your account was created, but we could not send the verification email. "
+                    + "Use Resend verification email, or contact support if this keeps happening.";
+        } else {
+            message = "Your account has been created successfully. Please check your email to verify your account before signing in.";
+        }
         return ResponseEntity.ok(ApiResponse.success(message, result));
     }
 
@@ -77,7 +83,7 @@ public class AuthController {
         }
         emailVerificationService.resendVerificationEmail(request.getEmail());
         return ResponseEntity.ok(ApiResponse.success(
-                "If an unverified account exists for this email, we sent a new verification link.",
+                "Verification email sent. Check your inbox (and spam folder).",
                 null));
     }
 

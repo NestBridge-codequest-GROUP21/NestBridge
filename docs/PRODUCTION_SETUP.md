@@ -52,7 +52,11 @@ Services like Paystack, SendGrid, and Smile Identity give you **secret passwords
 
 New users receive a verification link. Demo accounts (`*@nestbridge.app`) are pre-verified.
 
-**Forgot password** uses the same SendGrid setup. Users tap **Forgot password?** on sign-in, receive a reset link (valid 1 hour), and set a new password in the app. The link opens via `nestbridge://reset-password?token=…` when the app is installed; otherwise the web landing page at `APP_PUBLIC_URL/api/auth/reset-password` explains next steps. Without SendGrid, reset URLs are logged on the Railway backend (same as verification).
+**Critical:** If `SENDGRID_API_KEY` is missing or `EMAIL_FROM` is not a verified sender, registration still creates the account but returns `emailDeliveryFailed` so the app can show Resend / Contact support. Check Railway logs for `SendGrid` errors.
+
+Set `APP_PUBLIC_URL` to the **same** public HTTPS URL the app uses (e.g. `https://nestbridge-production.up.railway.app`). Verification links are built as `{APP_PUBLIC_URL}/api/auth/verify-email?token=…`.
+
+**Forgot password** uses the same SendGrid setup. Users tap **Forgot password?** on sign-in, receive a reset link (valid 1 hour), and set a new password in the app. The link opens via `nestbridge://reset-password?token=…` when the app is installed; otherwise the web landing page at `APP_PUBLIC_URL/api/auth/reset-password` explains next steps.
 
 Optional: `APP_MOBILE_SCHEME` = `nestbridge` (must match `scheme` in `frontend/app.config.ts`).
 
