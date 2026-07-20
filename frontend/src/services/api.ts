@@ -540,6 +540,7 @@ export async function register(
       email: string;
       displayName: string;
       requiresEmailVerification: boolean;
+      emailDeliveryFailed?: boolean;
     }>
   >('/api/auth/register', {
     fullName: displayName,
@@ -551,6 +552,8 @@ export async function register(
     email: payload.email,
     displayName: payload.displayName,
     requiresEmailVerification: payload.requiresEmailVerification,
+    emailDeliveryFailed: Boolean(payload.emailDeliveryFailed),
+    message: data?.message,
   };
 }
 
@@ -1167,11 +1170,42 @@ export async function leaveStudentEvent(eventId: string): Promise<StudentEventAp
 
 export function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
+    const status = error.response?.status;
     const msg = (error.response?.data as ApiResponse<unknown> | undefined)?.message;
-    if (msg) return msg;
-    if (error.code === 'ECONNABORTED') return 'Request timed out. Check your connection.';
-    if (!error.response) return 'Cannot reach the server. Start the backend and try again.';
-    return error.message;
+
+    if (msg && typeof msg === 'string' && msg.trim()) {
+      return msg;
+    }
+
+    if (error.code === 'ECONNABORTED') {
+      return 'Request timed out. Check your connection and try again.';
+    }
+
+    // No HTTP response → network / DNS / TLS / offline (not an auth business error).
+    if (!error.response) {
+      if (error.message?.toLowerCase().includes('network')) {
+        return 'No network connection. Check your internet and try again.';
+      }
+      return 'Cannot reach the NestBridge server. Check your connection and try again.';
+    }
+
+    if (status === 429) {
+      return 'Too many attempts. Please wait a minute and try again.';
+    }
+    if (status === 503 || status === 502) {
+      return 'Email delivery is temporarily unavailable. Please try again shortly.';
+    }
+    if (status === 401) {
+      return 'Your session has expired. Please sign in again.';
+    }
+    if (status === 403) {
+      return 'You do not have permission to do that.';
+    }
+    if (status != null && status >= 500) {
+      return 'The server ran into a problem. Please try again.';
+    }
+
+    return error.message || 'Something went wrong.';
   }
   if (error instanceof Error) return error.message;
   return 'Something went wrong.';

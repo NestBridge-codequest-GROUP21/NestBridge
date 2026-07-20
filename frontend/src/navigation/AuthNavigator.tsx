@@ -4,7 +4,9 @@ import Constants from 'expo-constants';
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
-import VerifyEmailScreen from '../screens/auth/VerifyEmailScreen';
+import VerifyEmailScreen, {
+  openNestBridgeSupportEmail,
+} from '../screens/auth/VerifyEmailScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import { welcomeMock, registerMock, loginMock } from '../data/studentOnboardingMock';
@@ -18,7 +20,12 @@ import { isDemoQuickLoginEnabled } from '../config/demoMode';
 import { useAuth } from '../context/AuthContext';
 import { useAccountProfile } from '../context/AccountProfileContext';
 import * as api from '../services/api';
-import { isUnverifiedEmailError } from '../utils/authErrors';
+import {
+  ACCOUNT_CREATED_VERIFY_COPY,
+  EMAIL_DELIVERY_FAILED_COPY,
+  UNVERIFIED_LOGIN_COPY,
+  isUnverifiedEmailError,
+} from '../utils/authErrors';
 import type { AuthStackParamList } from './types';
 
 const APP_VERSION =
@@ -48,7 +55,11 @@ export default function AuthNavigator({
   const [demoLoginBusy, setDemoLoginBusy] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState('');
   const [verifyError, setVerifyError] = useState('');
+  const [verifySubtitle, setVerifySubtitle] = useState(
+    'Open the verification link we sent, then come back and sign in to NestBridge.',
+  );
   const [resendBusy, setResendBusy] = useState(false);
+  const [loginNeedsVerification, setLoginNeedsVerification] = useState(false);
   const [forgotError, setForgotError] = useState('');
   const [forgotStatus, setForgotStatus] = useState('');
   const [forgotBusy, setForgotBusy] = useState(false);
@@ -141,6 +152,21 @@ export default function AuthNavigator({
                 }
                 const result = await register(fullName, email, password, keepSignedIn);
                 if (result.requiresEmailVerification) {
+                  const createdCopy =
+                    result.message?.trim() || ACCOUNT_CREATED_VERIFY_COPY;
+                  if (result.emailDeliveryFailed) {
+                    setVerifyStatus('');
+                    setVerifyError(EMAIL_DELIVERY_FAILED_COPY);
+                    setVerifySubtitle(
+                      'Your account exists, but we could not deliver the verification email yet.',
+                    );
+                  } else {
+                    setVerifyStatus(createdCopy);
+                    setVerifyError('');
+                    setVerifySubtitle(
+                      'Open the verification link we sent, then come back and sign in to NestBridge.',
+                    );
+                  }
                   navigation.navigate('VerifyEmail', { email: result.email });
                 } else {
                   await signIn(email, password, keepSignedIn);
@@ -150,7 +176,14 @@ export default function AuthNavigator({
                   error instanceof Error ? error.message : 'Could not create account.';
                 if (isUnverifiedEmailError(message)) {
                   setRegisterError('');
-                  navigation.navigate('VerifyEmail', { email: email.trim().toLowerCase() });
+                  setVerifyStatus('');
+                  setVerifyError(message);
+                  setVerifySubtitle(
+                    'This email already started signup. Resend the verification link, then sign in.',
+                  );
+                  navigation.navigate('VerifyEmail', {
+                    email: email.trim().toLowerCase(),
+                  });
                   return;
                 }
                 setRegisterError(message);
@@ -166,6 +199,7 @@ export default function AuthNavigator({
         {({ navigation, route }) => (
           <VerifyEmailScreen
             email={route.params.email}
+            subtitle={verifySubtitle}
             statusMessage={verifyStatus}
             errorMessage={verifyError}
             resendBusy={resendBusy}
@@ -175,17 +209,25 @@ export default function AuthNavigator({
               setResendBusy(true);
               try {
                 await api.resendVerificationEmail(route.params.email);
-                setVerifyStatus('Verification email sent. Check your inbox.');
+                setVerifyStatus('Verification email sent. Check your inbox (and spam folder).');
               } catch (error) {
                 setVerifyError(api.getApiErrorMessage(error));
               } finally {
                 setResendBusy(false);
               }
             }}
+            onChangeEmail={() => {
+              setVerifyStatus('');
+              setVerifyError('');
+              setRegisterError('');
+              navigation.navigate('Register');
+            }}
+            onContactSupport={openNestBridgeSupportEmail}
             onBackToSignIn={() => {
               setVerifyStatus('');
               setVerifyError('');
               setLoginError('');
+              setLoginNeedsVerification(false);
               navigation.navigate('Login');
             }}
           />
@@ -297,14 +339,20 @@ export default function AuthNavigator({
             password={password}
             keepSignedIn={keepSignedIn}
             errorMessage={loginError}
+            showResendVerification={loginNeedsVerification}
+            resendBusy={resendBusy}
             appVersion={APP_VERSION}
             demoAccounts={demoAccounts}
             demoLoginBusy={demoLoginBusy}
-            onEmailChange={setEmail}
+            onEmailChange={(value) => {
+              setEmail(value);
+              setLoginNeedsVerification(false);
+            }}
             onPasswordChange={setPassword}
             onToggleKeepSignedIn={() => setKeepSignedIn((value) => !value)}
             onSubmit={async () => {
               setLoginError('');
+              setLoginNeedsVerification(false);
               if (!email.trim()) {
                 setLoginError('Enter your email address.');
                 return;
@@ -319,11 +367,35 @@ export default function AuthNavigator({
                 const message =
                   error instanceof Error ? error.message : 'Email or password is incorrect.';
                 if (isUnverifiedEmailError(message)) {
-                  setLoginError('');
-                  navigation.navigate('VerifyEmail', { email: email.trim().toLowerCase() });
+                  setLoginError(UNVERIFIED_LOGIN_COPY);
+                  setLoginNeedsVerification(true);
                   return;
                 }
                 setLoginError(message);
+              }
+            }}
+            onResendVerification={async () => {
+              if (!email.trim()) {
+                setLoginError('Enter your email address.');
+                return;
+              }
+              setResendBusy(true);
+              try {
+                await api.resendVerificationEmail(email.trim().toLowerCase());
+                setLoginError('');
+                setLoginNeedsVerification(false);
+                setVerifyStatus('Verification email sent. Check your inbox (and spam folder).');
+                setVerifyError('');
+                setVerifySubtitle(
+                  'Open the verification link we sent, then come back and sign in to NestBridge.',
+                );
+                navigation.navigate('VerifyEmail', {
+                  email: email.trim().toLowerCase(),
+                });
+              } catch (error) {
+                setLoginError(api.getApiErrorMessage(error));
+              } finally {
+                setResendBusy(false);
               }
             }}
             onDemoLogin={(account) => {

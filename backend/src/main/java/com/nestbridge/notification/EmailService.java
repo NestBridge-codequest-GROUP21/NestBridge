@@ -9,12 +9,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 @Service
 @Slf4j
 public class EmailService {
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
 
     @Value("${email.sendgrid-api-key:}")
     private String sendGridApiKey;
@@ -24,6 +27,10 @@ public class EmailService {
 
     @Value("${email.from-name:NestBridge}")
     private String fromName;
+
+    public boolean isConfigured() {
+        return sendGridApiKey != null && !sendGridApiKey.isBlank();
+    }
 
     public void sendVerificationEmail(String toEmail, String displayName, String verifyUrl) {
         String subject = "Verify your NestBridge account";
@@ -38,7 +45,15 @@ public class EmailService {
 
                 — The NestBridge team
                 """.formatted(displayName, verifyUrl);
-        sendPlainEmail(toEmail, subject, plainBody, verifyUrl);
+        String htmlBody = """
+                <p>Hi %s,</p>
+                <p>Thanks for joining NestBridge. Please verify your email address:</p>
+                <p><a href="%s">Verify my email</a></p>
+                <p>Or copy this link into your browser:<br>%s</p>
+                <p>This link expires in 24 hours. If you did not create an account, you can ignore this email.</p>
+                <p>— The NestBridge team</p>
+                """.formatted(escapeHtml(displayName), escapeHtml(verifyUrl), escapeHtml(verifyUrl));
+        sendEmail(toEmail, subject, plainBody, htmlBody, verifyUrl);
     }
 
     public void sendPasswordResetEmail(
@@ -64,21 +79,42 @@ public class EmailService {
 
                 — The NestBridge team
                 """.formatted(displayName, webResetUrl, appResetUrl);
-        sendPlainEmail(toEmail, subject, plainBody, webResetUrl);
+        String htmlBody = """
+                <p>Hi %s,</p>
+                <p>We received a request to reset your NestBridge password.</p>
+                <p><a href="%s">Reset password in NestBridge</a></p>
+                <p>Or open the app: %s</p>
+                <p>This link expires in 1 hour. If you did not request a reset, you can ignore this email.</p>
+                <p>— The NestBridge team</p>
+                """.formatted(escapeHtml(displayName), escapeHtml(webResetUrl), escapeHtml(appResetUrl));
+        sendEmail(toEmail, subject, plainBody, htmlBody, webResetUrl);
     }
 
     public void sendPlainEmail(String toEmail, String subject, String plainBody) {
-        sendPlainEmail(toEmail, subject, plainBody, null);
+        sendEmail(toEmail, subject, plainBody, null, null);
     }
 
-    private void sendPlainEmail(String toEmail, String subject, String plainBody, String devLogExtra) {
-        if (sendGridApiKey == null || sendGridApiKey.isBlank()) {
-            if (devLogExtra != null) {
-                log.warn("SendGrid not configured — email to {} ({}): {}", toEmail, subject, devLogExtra);
-            } else {
-                log.warn("SendGrid not configured — would email {}: {}", toEmail, subject);
-            }
-            return;
+    private void sendEmail(
+            String toEmail,
+            String subject,
+            String plainBody,
+            String htmlBody,
+            String debugExtra) {
+        if (!isConfigured()) {
+            log.error(
+                    "SendGrid API key missing — cannot email {} subject=\"{}\" from={} extra={}",
+                    toEmail,
+                    subject,
+                    fromAddress,
+                    debugExtra);
+            throw new EmailDeliveryException(
+                    "Verification email could not be sent. Email delivery is not configured on the server. Please try again later or contact support.");
+        }
+
+        StringBuilder content = new StringBuilder();
+        content.append("{\"type\":\"text/plain\",\"value\":").append(jsonString(plainBody)).append('}');
+        if (htmlBody != null && !htmlBody.isBlank()) {
+            content.append(",{\"type\":\"text/html\",\"value\":").append(jsonString(htmlBody)).append('}');
         }
 
         String json = """
@@ -86,34 +122,56 @@ public class EmailService {
                   "personalizations": [{"to": [{"email": "%s"}]}],
                   "from": {"email": "%s", "name": "%s"},
                   "subject": "%s",
-                  "content": [{"type": "text/plain", "value": %s}]
+                  "content": [%s]
                 }
                 """.formatted(
                 escapeJson(toEmail),
                 escapeJson(fromAddress),
                 escapeJson(fromName),
                 escapeJson(subject),
-                jsonString(plainBody));
+                content);
 
         try {
+            log.info("Sending email via SendGrid to={} from={} subject=\"{}\"", toEmail, fromAddress, subject);
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("https://api.sendgrid.com/v3/mail/send"))
+                    .timeout(Duration.ofSeconds(20))
                     .header("Authorization", "Bearer " + sendGridApiKey)
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() >= 400) {
-                log.error("SendGrid failed ({}): {}", response.statusCode(), response.body());
-                throw new IllegalStateException("Could not send email. Please try again later.");
+            int status = response.statusCode();
+            if (status >= 400) {
+                log.error(
+                        "SendGrid rejected email to={} from={} status={} body={}",
+                        toEmail,
+                        fromAddress,
+                        status,
+                        response.body());
+                throw new EmailDeliveryException(mapSendGridFailure(status));
             }
+            log.info("SendGrid accepted email to={} status={}", toEmail, status);
+        } catch (EmailDeliveryException e) {
+            throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Could not send email.");
+            throw new EmailDeliveryException("Verification email could not be sent. Please try again.");
         } catch (Exception e) {
-            log.error("SendGrid error", e);
-            throw new IllegalStateException("Could not send email. Please try again later.");
+            log.error("SendGrid request failed to={} from={}", toEmail, fromAddress, e);
+            throw new EmailDeliveryException(
+                    "Verification email could not be sent. Please try again later.", e);
         }
+    }
+
+    private static String mapSendGridFailure(int status) {
+        if (status == 401 || status == 403) {
+            return "Verification email could not be sent. The mail provider rejected the request (check API key and verified sender).";
+        }
+        if (status == 413 || status == 429) {
+            return "Verification email could not be sent right now. Please wait a minute and try again.";
+        }
+        return "Verification email could not be sent. Please try again later.";
     }
 
     private static String escapeJson(String value) {
@@ -121,6 +179,14 @@ public class EmailService {
     }
 
     private static String jsonString(String value) {
-        return "\"" + escapeJson(value).replace("\n", "\\n") + "\"";
+        return "\"" + escapeJson(value).replace("\n", "\\n").replace("\r", "") + "\"";
+    }
+
+    private static String escapeHtml(String value) {
+        return value
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 }

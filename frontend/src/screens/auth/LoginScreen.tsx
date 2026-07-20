@@ -36,6 +36,9 @@ export interface LoginScreenProps {
   password: string;
   keepSignedIn: boolean;
   errorMessage?: string;
+  /** When true, show resend verification under the error banner. */
+  showResendVerification?: boolean;
+  resendBusy?: boolean;
   /** Shown as muted footer text so installs can be verified (e.g. APK builds). */
   appVersion?: string;
   demoAccounts?: DemoAccount[];
@@ -44,6 +47,7 @@ export interface LoginScreenProps {
   onPasswordChange?: (value: string) => void;
   onToggleKeepSignedIn?: () => void;
   onSubmit?: () => void;
+  onResendVerification?: () => void;
   onDemoLogin?: (account: DemoAccount) => void;
   onForgotPasswordPress?: () => void;
   onCreateAccountPress?: () => void;
@@ -57,6 +61,8 @@ export default function LoginScreen({
   password,
   keepSignedIn,
   errorMessage,
+  showResendVerification = false,
+  resendBusy = false,
   appVersion,
   demoAccounts = [],
   demoLoginBusy = false,
@@ -64,6 +70,7 @@ export default function LoginScreen({
   onPasswordChange,
   onToggleKeepSignedIn,
   onSubmit,
+  onResendVerification,
   onDemoLogin,
   onForgotPasswordPress,
   onCreateAccountPress,
@@ -148,6 +155,16 @@ export default function LoginScreen({
 
         {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
+        {showResendVerification ? (
+          <View style={styles.resendWrap}>
+            <SecondaryButton
+              label="Resend verification email"
+              onPress={onResendVerification}
+              disabled={demoLoginBusy || resendBusy}
+            />
+          </View>
+        ) : null}
+
         <PrimaryButton label="Sign in" onPress={onSubmit} loading={demoLoginBusy} />
         <View style={styles.spacer} />
         <SecondaryButton
@@ -213,6 +230,9 @@ function createStyles({ colors }: AppTheme) {
   },
   keepSignedIn: {
     marginBottom: spacing.lg,
+  },
+  resendWrap: {
+    marginBottom: spacing.md,
   },
   spacer: {
     height: spacing.sm,

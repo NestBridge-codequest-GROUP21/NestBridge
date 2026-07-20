@@ -1,9 +1,11 @@
 package com.nestbridge.auth;
 
+import com.nestbridge.notification.EmailDeliveryException;
 import com.nestbridge.notification.EmailService;
 import com.nestbridge.user.User;
 import com.nestbridge.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PasswordResetService {
 
     private static final int TOKEN_BYTES = 32;
@@ -100,7 +103,12 @@ public class PasswordResetService {
         String base = publicUrl.replaceAll("/$", "");
         String webUrl = base + "/api/auth/reset-password?token=" + rawToken;
         String appUrl = mobileScheme + "://reset-password?token=" + rawToken;
-        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), webUrl, appUrl);
+        try {
+            emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), webUrl, appUrl);
+        } catch (EmailDeliveryException ex) {
+            // Keep forgot-password response enumeration-safe; ops see logs.
+            log.error("Password reset email failed for userId={}", user.getUserId(), ex);
+        }
     }
 
     private String generateRawToken() {

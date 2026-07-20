@@ -7,6 +7,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Linking,
+  Pressable,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,6 +26,7 @@ import {
   lineHeights,
   layout,
   iconSizes,
+  touchTarget,
 } from '../../constants/theme';
 
 export interface VerifyEmailScreenProps {
@@ -34,6 +37,8 @@ export interface VerifyEmailScreenProps {
   errorMessage?: string;
   resendBusy?: boolean;
   onResend?: () => void;
+  onChangeEmail?: () => void;
+  onContactSupport?: () => void;
   onBackToSignIn?: () => void;
 }
 
@@ -45,12 +50,12 @@ export default function VerifyEmailScreen({
   errorMessage,
   resendBusy = false,
   onResend,
+  onChangeEmail,
+  onContactSupport,
   onBackToSignIn,
 }: VerifyEmailScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
-
   const insets = useSafeAreaInsets();
 
   return (
@@ -91,76 +96,108 @@ export default function VerifyEmailScreen({
           loading={resendBusy}
         />
 
+        {onChangeEmail ? (
+          <View style={styles.secondaryWrap}>
+            <SecondaryButton label="Change email" onPress={onChangeEmail} />
+          </View>
+        ) : null}
+
         <View style={styles.secondaryWrap}>
           <SecondaryButton label="Back to sign in" onPress={onBackToSignIn} />
         </View>
+
+        {onContactSupport ? (
+          <Pressable
+            onPress={onContactSupport}
+            style={styles.supportRow}
+            accessibilityRole="link"
+            accessibilityLabel="Contact support"
+          >
+            <Text style={styles.supportText}>Contact support</Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-function createStyles({ colors, tints }: AppTheme) {
-  return StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    gap: spacing.md,
-  },
-  iconCircle: {
-    width: layout.iconTileSize,
-    height: layout.iconTileSize,
-    borderRadius: borderRadius.pill,
-    backgroundColor: tints.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginBottom: spacing.sm,
-  },
-  title: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.semibold,
-    lineHeight: lineHeights.heading,
-    color: colors.textPrimary,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: lineHeights.body,
-  },
-  emailCard: {
-    marginTop: spacing.sm,
-  },
-  emailLabel: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textTertiary,
-    marginBottom: spacing.xs,
-  },
-  emailValue: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-  },
-  hint: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    lineHeight: lineHeights.caption,
-    marginTop: spacing.sm,
-  },
-  secondaryWrap: {
-    marginTop: spacing.sm,
-  },
-});
+export function openNestBridgeSupportEmail(): void {
+  void Linking.openURL('mailto:support@nestbridge.app?subject=NestBridge%20verification%20help');
 }
 
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
+    flex: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    container: {
+      flexGrow: 1,
+      paddingHorizontal: layout.screenPaddingHorizontal,
+      gap: spacing.md,
+    },
+    iconCircle: {
+      width: layout.iconTileSize,
+      height: layout.iconTileSize,
+      borderRadius: borderRadius.pill,
+      backgroundColor: tints.teal,
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'center',
+      marginBottom: spacing.sm,
+    },
+    title: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.heading,
+      fontWeight: fontWeights.semibold,
+      lineHeight: lineHeights.heading,
+      color: colors.textPrimary,
+      textAlign: 'center',
+    },
+    subtitle: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.body,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: lineHeights.body,
+    },
+    emailCard: {
+      marginTop: spacing.sm,
+    },
+    emailLabel: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.textTertiary,
+      marginBottom: spacing.xs,
+    },
+    emailValue: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.body,
+      fontWeight: fontWeights.semibold,
+      color: colors.textPrimary,
+    },
+    hint: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.textTertiary,
+      textAlign: 'center',
+      lineHeight: lineHeights.caption,
+      marginTop: spacing.sm,
+    },
+    secondaryWrap: {
+      marginTop: spacing.sm,
+    },
+    supportRow: {
+      minHeight: touchTarget,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: spacing.sm,
+    },
+    supportText: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.body,
+      fontWeight: fontWeights.semibold,
+      color: colors.teal,
+    },
+  });
+}
