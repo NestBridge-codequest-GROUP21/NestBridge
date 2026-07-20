@@ -3,16 +3,19 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
-import AppIcon from '../../components/AppIcon';
 import BackButton from '../../components/BackButton';
+import Avatar from '../../components/Avatar';
+import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
+import ListRow from '../../components/ListRow';
+import ScreenScroll from '../../components/ScreenScroll';
+import StatusBadge, { type StatusBadgeTone } from '../../components/StatusBadge';
 import {
   colors,
   fontFamilies,
@@ -20,11 +23,12 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   layout,
   lineHeights,
   shadows,
-  tints,
+  touchTarget,
 } from '../../constants/theme';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import type { BookingListItem, BookingStatus, BookingTabFilter, BookingType } from '../../types/booking';
@@ -60,30 +64,28 @@ const FILTERS: { id: BookingTabFilter; label: string }[] = [
 
 function statusMeta(status: BookingStatus, bookingType: BookingType): {
   label: string;
-  bg: string;
-  text: string;
+  tone: StatusBadgeTone;
 } {
   switch (status) {
     case 'PENDING_HOST':
       return {
         label: bookingType === 'GUIDE' ? 'Awaiting guide' : 'Awaiting host',
-        bg: colors.warmCream,
-        text: colors.warning,
+        tone: 'warning',
       };
     case 'ACCEPTED':
-      return { label: 'Ready to pay', bg: colors.teal, text: colors.white };
+      return { label: 'Ready to pay', tone: 'info' };
     case 'CONFIRMED':
-      return { label: 'Confirmed', bg: colors.success, text: colors.white };
+      return { label: 'Confirmed', tone: 'success' };
     case 'CHECKED_IN':
-      return { label: 'Checked in', bg: colors.success, text: colors.white };
+      return { label: 'Checked in', tone: 'success' };
     case 'DECLINED':
-      return { label: 'Declined', bg: colors.border, text: colors.textSecondary };
+      return { label: 'Declined', tone: 'neutral' };
     case 'EXPIRED':
-      return { label: 'Expired', bg: colors.border, text: colors.textSecondary };
+      return { label: 'Expired', tone: 'neutral' };
     case 'CANCELLED':
-      return { label: 'Cancelled', bg: colors.border, text: colors.textSecondary };
+      return { label: 'Cancelled', tone: 'neutral' };
     default:
-      return { label: status, bg: colors.border, text: colors.textSecondary };
+      return { label: status, tone: 'neutral' };
   }
 }
 
@@ -200,54 +202,33 @@ export default function StudentBookingsScreen({
         </View>
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + layout.scrollBottomInset },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <ScreenScroll
+        withTabBar
+        withSosDock={showSosDock}
+        contentContainerStyle={styles.scrollContent}
       >
         {showGuideReviewEntry ? (
-          <Pressable
-            style={({ pressed }) => [styles.hostEntryCard, pressed && styles.pressed]}
-            onPress={onGuideReviewPress ?? onHostReviewPress}
-            accessibilityRole="button"
-            accessibilityLabel="Review incoming session requests"
-          >
-            <View style={styles.hostEntryIconWrap}>
-              <AppIcon name="map-outline" size={fontSizes.subheading} color={colors.tealDeep} />
-            </View>
-            <View style={styles.hostEntryText}>
-              <Text style={styles.hostEntryTitle}>Session requests</Text>
-              <Text style={styles.hostEntrySubtitle}>
-                Students and tourists who want to book a tour
-              </Text>
-            </View>
-            <Text style={styles.hostEntryAction}>Review</Text>
-            <AppIcon name="chevron-forward" size={fontSizes.body} color={colors.teal} />
-          </Pressable>
+          <Card padding="none" style={styles.entryCard}>
+            <ListRow
+              title="Session requests"
+              subtitle="Students and tourists who want to book a tour"
+              iconName="map-outline"
+              onPress={onGuideReviewPress ?? onHostReviewPress}
+              bordered={false}
+            />
+          </Card>
         ) : null}
 
         {showHostReviewEntry ? (
-          <Pressable
-            style={({ pressed }) => [styles.hostEntryCard, pressed && styles.pressed]}
-            onPress={onHostReviewPress}
-            accessibilityRole="button"
-            accessibilityLabel="Review incoming booking requests"
-          >
-            <View style={styles.hostEntryIconWrap}>
-              <AppIcon name="home-outline" size={fontSizes.subheading} color={colors.tealDeep} />
-            </View>
-            <View style={styles.hostEntryText}>
-              <Text style={styles.hostEntryTitle}>Incoming requests</Text>
-              <Text style={styles.hostEntrySubtitle}>
-                Review students who want to stay with you
-              </Text>
-            </View>
-            <Text style={styles.hostEntryAction}>Review</Text>
-            <AppIcon name="chevron-forward" size={fontSizes.body} color={colors.teal} />
-          </Pressable>
+          <Card padding="none" style={styles.entryCard}>
+            <ListRow
+              title="Incoming requests"
+              subtitle="Review students who want to stay with you"
+              iconName="home-outline"
+              onPress={onHostReviewPress}
+              bordered={false}
+            />
+          </Card>
         ) : null}
 
         {activeFilter === 'active' && payNowBooking ? (
@@ -275,18 +256,18 @@ export default function StudentBookingsScreen({
                 end={{ x: 1, y: 0 }}
                 style={[styles.heroGradient, payBlocked && styles.heroGradientDisabled]}
               >
-              <Text style={styles.heroEyebrow}>Action needed</Text>
-              <Text style={styles.heroTitle}>
-                Complete payment for {payNowBooking.hostName}
-              </Text>
-              <Text style={styles.heroDates}>
-                {bookingScheduleLine(payNowBooking)}
-              </Text>
-              <View style={styles.heroCta}>
-                <Text style={styles.heroCtaText}>Pay now</Text>
-              </View>
-            </LinearGradient>
-          </Pressable>
+                <Text style={styles.heroEyebrow}>Action needed</Text>
+                <Text style={styles.heroTitle}>
+                  Complete payment for {payNowBooking.hostName}
+                </Text>
+                <Text style={styles.heroDates}>
+                  {bookingScheduleLine(payNowBooking)}
+                </Text>
+                <View style={styles.heroCta}>
+                  <Text style={styles.heroCtaText}>Pay now</Text>
+                </View>
+              </LinearGradient>
+            </Pressable>
           </>
         ) : null}
 
@@ -315,7 +296,6 @@ export default function StudentBookingsScreen({
               <Pressable
                 key={booking.id}
                 style={({ pressed }) => [
-                  styles.bookingCard,
                   !isLast && styles.bookingCardSpacing,
                   pressed && styles.pressed,
                 ]}
@@ -323,42 +303,41 @@ export default function StudentBookingsScreen({
                 accessibilityRole="button"
                 accessibilityLabel={`${booking.hostName}, ${meta.label}`}
               >
-                <View style={styles.hostAvatar}>
-                  <Text style={styles.hostAvatarText}>{booking.hostInitials}</Text>
-                </View>
+                <Card style={styles.bookingCard}>
+                  <Avatar
+                    initials={booking.hostInitials}
+                    size="lg"
+                    style={styles.hostAvatar}
+                  />
 
-                <View style={styles.bookingBody}>
-                  <View style={styles.typeChipRow}>
-                    <View style={styles.typeChip}>
-                      <Text style={styles.typeChipText}>
-                        {bookingTypeLabel(booking.bookingType)}
-                      </Text>
+                  <View style={styles.bookingBody}>
+                    <View style={styles.typeChipRow}>
+                      <StatusBadge
+                        label={bookingTypeLabel(booking.bookingType)}
+                        tone="info"
+                      />
                     </View>
-                  </View>
-                  <View style={styles.bookingTopRow}>
-                    <Text style={styles.hostName} numberOfLines={1}>
-                      {booking.hostName}
+                    <View style={styles.bookingTopRow}>
+                      <Text style={styles.hostName} numberOfLines={1}>
+                        {booking.hostName}
+                      </Text>
+                      <StatusBadge label={meta.label} tone={meta.tone} />
+                    </View>
+
+                    <Text style={styles.location} numberOfLines={1}>
+                      {booking.hostLocation}
                     </Text>
-                    <View style={[styles.statusPill, { backgroundColor: meta.bg }]}>
-                      <Text style={[styles.statusText, { color: meta.text }]}>
-                        {meta.label}
-                      </Text>
-                    </View>
+
+                    <Text style={styles.dates}>{bookingScheduleLine(booking)}</Text>
+
+                    <Text style={styles.total}>{bookingTotalLine(booking)}</Text>
                   </View>
-
-                  <Text style={styles.location} numberOfLines={1}>
-                    {booking.hostLocation}
-                  </Text>
-
-                  <Text style={styles.dates}>{bookingScheduleLine(booking)}</Text>
-
-                  <Text style={styles.total}>{bookingTotalLine(booking)}</Text>
-                </View>
+                </Card>
               </Pressable>
             );
           })
         )}
-      </ScrollView>
+      </ScreenScroll>
 
       <AppTabBar
         items={tabBarItems}
@@ -377,7 +356,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingBottom: spacing.lg,
   },
   headerTop: {
@@ -390,7 +369,7 @@ const styles = StyleSheet.create({
     marginLeft: -spacing.sm,
   },
   backPlaceholder: {
-    width: 44,
+    width: touchTarget,
   },
   headerTitle: {
     fontFamily: fontFamilies.bold,
@@ -418,7 +397,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     padding: spacing.xs,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     ...shadows.card,
   },
@@ -426,7 +405,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44,
+    minHeight: touchTarget,
     borderRadius: borderRadius.md,
   },
   segmentItemActive: {
@@ -441,72 +420,28 @@ const styles = StyleSheet.create({
   segmentLabelActive: {
     color: colors.white,
   },
-  scroll: {
-    flex: 1,
-  },
   scrollContent: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
+    paddingTop: 0,
   },
-  hostEntryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: spacing.sm,
-    ...shadows.card,
-  },
-  hostEntryIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.md,
-    backgroundColor: tints.cream,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  hostEntryAction: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
-  hostEntryText: {
-    flex: 1,
-  },
-  hostEntryTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-    lineHeight: lineHeights.subheading,
-  },
-  hostEntrySubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    lineHeight: lineHeights.caption,
+  entryCard: {
+    marginBottom: layout.sectionGap,
   },
   heroCard: {
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    marginBottom: spacing.lg,
+    marginBottom: layout.sectionGap,
     ...shadows.raised,
   },
   heroGradient: {
-    padding: spacing.lg,
+    padding: layout.cardPaddingLarge,
   },
   heroGradientDisabled: {
     opacity: 0.55,
   },
   heroEyebrow: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
     opacity: 0.9,
     textTransform: 'uppercase',
@@ -514,9 +449,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   heroTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
     lineHeight: lineHeights.heading,
     marginBottom: spacing.sm,
@@ -538,61 +473,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   heroCtaText: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
   bookingCard: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
+    alignItems: 'flex-start',
   },
   bookingCardSpacing: {
     marginBottom: spacing.md,
   },
   hostAvatar: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.pill,
-    backgroundColor: tints.cream,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: spacing.md,
-  },
-  hostAvatarText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   bookingBody: {
     flex: 1,
   },
   typeChipRow: {
     marginBottom: spacing.sm,
-  },
-  typeChip: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.warmCream,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  typeChipText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   bookingTopRow: {
     flexDirection: 'row',
@@ -603,21 +506,11 @@ const styles = StyleSheet.create({
   },
   hostName: {
     flex: 1,
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     lineHeight: lineHeights.subheading,
-  },
-  statusPill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-  },
-  statusText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
   },
   location: {
     fontFamily: fontFamilies.regular,

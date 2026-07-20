@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -14,6 +13,8 @@ import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import InlineBanner from '../../components/InlineBanner';
+import Card from '../../components/Card';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import {
   colors,
   fontFamilies,
@@ -21,10 +22,12 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  controlHeights,
+  touchTarget,
   gradients,
   layout,
   lineHeights,
-  shadows,
 } from '../../constants/theme';
 import type { WelfareCheckInQuestion } from '../../data/welfareMock';
 import { welfareCheckInIntro } from '../../data/welfareMock';
@@ -87,20 +90,18 @@ export default function WelfareCheckInScreen({
         <Text style={styles.intro}>{welfareCheckInIntro}</Text>
 
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
-        {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
-        ) : null}
+        {isLoading ? <SkeletonLoader style={styles.loader} /> : null}
 
         {alreadyCompleted ? (
-          <View style={styles.doneCard}>
+          <Card padding="lg">
             <Text style={styles.doneTitle}>Check-in complete</Text>
             <Text style={styles.doneBody}>
               Thanks for confirming you are okay. We will follow up if anything needs attention.
             </Text>
-          </View>
+          </Card>
         ) : (
           questions.map((question) => (
-            <View key={question.id} style={styles.questionCard}>
+            <Card key={question.id} style={styles.questionCard} padding="lg">
               <Text style={styles.questionText}>{question.prompt}</Text>
               <View style={styles.answerRow}>
                 {(['yes', 'no'] as const).map((choice) => {
@@ -132,7 +133,7 @@ export default function WelfareCheckInScreen({
                   );
                 })}
               </View>
-            </View>
+            </Card>
           ))
         )}
 
@@ -219,14 +220,6 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: spacing.lg,
   },
-  doneCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
-  },
   doneTitle: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
@@ -241,13 +234,7 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   questionCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   questionText: {
     fontFamily: fontFamilies.semibold,
@@ -263,16 +250,17 @@ const styles = StyleSheet.create({
   },
   answerButton: {
     flex: 1,
-    minHeight: 44,
+    minHeight: controlHeights.md,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: borderRadius.md,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     backgroundColor: colors.background,
   },
   answerButtonSelected: {
     borderColor: colors.teal,
+    borderWidth: borderWidths.strong,
     backgroundColor: colors.warmCream,
   },
   answerButtonPressed: {
@@ -288,7 +276,7 @@ const styles = StyleSheet.create({
     color: colors.tealDeep,
   },
   sosLink: {
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
     marginTop: spacing.md,
   },
@@ -310,7 +298,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
   },
 });

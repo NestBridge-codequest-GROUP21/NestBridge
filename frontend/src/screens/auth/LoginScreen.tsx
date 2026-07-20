@@ -24,8 +24,11 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
   layout,
+  touchTarget,
+  iconSizes,
 } from '../../constants/theme';
 import type { DemoAccount } from '../../data/demoAccounts';
 
@@ -144,7 +147,7 @@ export default function LoginScreen({
         >
           <View style={[styles.checkbox, keepSignedIn && styles.checkboxChecked]}>
             {keepSignedIn ? (
-              <AppIcon name="checkmark" size={14} color={colors.white} />
+              <AppIcon name="checkmark" size={iconSizes.sm} color={colors.white} />
             ) : null}
           </View>
           <Text style={styles.keepSignedInText}>Keep me signed in</Text>
@@ -152,9 +155,13 @@ export default function LoginScreen({
 
         {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
-        <PrimaryButton label="Sign in" onPress={onSubmit} />
+        <PrimaryButton label="Sign in" onPress={onSubmit} loading={demoLoginBusy} />
         <View style={styles.spacer} />
-        <SecondaryButton label="Create an account" onPress={onCreateAccountPress} />
+        <SecondaryButton
+          label="Create an account"
+          onPress={onCreateAccountPress}
+          disabled={demoLoginBusy}
+        />
         {appVersion ? (
           <Text style={styles.versionText}>NestBridge {appVersion}</Text>
         ) : null}
@@ -198,7 +205,7 @@ const styles = StyleSheet.create({
   },
   forgotRow: {
     alignSelf: 'flex-end',
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
@@ -212,13 +219,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing.lg,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   checkbox: {
-    width: 22,
-    height: 22,
+    width: spacing.lg,
+    height: spacing.lg,
     borderRadius: borderRadius.sm,
-    borderWidth: 1.5,
+    borderWidth: borderWidths.strong,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',

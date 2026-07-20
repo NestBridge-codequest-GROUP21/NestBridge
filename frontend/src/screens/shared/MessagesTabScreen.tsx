@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Pressable,
-  ActivityIndicator,
   StyleSheet,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -12,6 +11,10 @@ import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import EmptyState from '../../components/EmptyState';
 import InlineBanner from '../../components/InlineBanner';
+import Card from '../../components/Card';
+import Avatar from '../../components/Avatar';
+import StatusBadge from '../../components/StatusBadge';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import {
   colors,
   fontFamilies,
@@ -19,7 +22,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
-  shadows,
+  borderWidths,
+  touchTarget,
   lineHeights,
 } from '../../constants/theme';
 import type { ConversationListItem } from '../../types/messaging';
@@ -89,7 +93,10 @@ export default function MessagesTabScreen({
       <ScreenScroll withTabBar withSosDock={showSosDock}>
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
         {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
+          <View style={styles.skeletonWrap}>
+            <SkeletonLoader />
+            <SkeletonLoader style={styles.skeletonGap} />
+          </View>
         ) : null}
         {!isLoading && conversations.length === 0 ? (
           <EmptyState
@@ -99,44 +106,55 @@ export default function MessagesTabScreen({
             iconName="chatbubble-ellipses-outline"
           />
         ) : null}
-        {conversations.map((conversation, index) => (
-          <Pressable
-            key={conversation.id}
-            style={({ pressed }) => [
-              styles.row,
-              index < conversations.length - 1 && styles.rowBorder,
-              pressed && styles.pressed,
-            ]}
-            onPress={() => onConversationPress?.(conversation.id)}
-            accessibilityRole="button"
-            accessibilityLabel={`Open chat with ${conversation.participantName}`}
-          >
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{conversation.participantInitials}</Text>
-            </View>
-            <View style={styles.body}>
-              <View style={styles.topRow}>
-                <Text style={styles.name} numberOfLines={1}>
-                  {conversation.participantName}
-                </Text>
-                <Text style={styles.time}>
-                  {formatRelativeTime(conversation.lastMessageAt)}
-                </Text>
-              </View>
-              <View style={styles.bottomRow}>
-                <Text style={styles.preview} numberOfLines={1}>
-                  {conversation.lastMessage}
-                </Text>
-                {conversation.unreadCount > 0 ? (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadText}>{conversation.unreadCount}</Text>
+        {!isLoading
+          ? conversations.map((conversation) => (
+              <Pressable
+                key={conversation.id}
+                style={({ pressed }) => [
+                  styles.rowPress,
+                  pressed && styles.pressed,
+                ]}
+                onPress={() => onConversationPress?.(conversation.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Open chat with ${conversation.participantName}`}
+              >
+                <Card style={styles.row}>
+                  <Avatar
+                    initials={conversation.participantInitials}
+                    size="lg"
+                    highlighted={conversation.unreadCount > 0}
+                  />
+                  <View style={styles.body}>
+                    <View style={styles.topRow}>
+                      <Text style={styles.name} numberOfLines={1}>
+                        {conversation.participantName}
+                      </Text>
+                      <Text style={styles.time}>
+                        {formatRelativeTime(conversation.lastMessageAt)}
+                      </Text>
+                    </View>
+                    <View style={styles.bottomRow}>
+                      <Text style={styles.preview} numberOfLines={1}>
+                        {conversation.lastMessage}
+                      </Text>
+                      {conversation.unreadCount > 0 ? (
+                        <View style={styles.unreadBadge}>
+                          <Text style={styles.unreadText}>
+                            {conversation.unreadCount}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <StatusBadge
+                      label={roleLabel(conversation.participantRole)}
+                      tone="info"
+                      style={styles.roleBadge}
+                    />
                   </View>
-                ) : null}
-              </View>
-              <Text style={styles.role}>{roleLabel(conversation.participantRole)}</Text>
-            </View>
-          </Pressable>
-        ))}
+                </Card>
+              </Pressable>
+            ))
+          : null}
       </ScreenScroll>
       <AppTabBar
         items={tabBarItems}
@@ -154,38 +172,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loader: {
-    marginVertical: spacing.xl,
+  skeletonWrap: {
+    marginBottom: spacing.md,
+  },
+  skeletonGap: {
+    marginTop: spacing.sm,
+  },
+  rowPress: {
+    marginBottom: spacing.sm,
   },
   row: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
-    padding: spacing.lg,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 44,
-    ...shadows.card,
+    alignItems: 'flex-start',
+    minHeight: touchTarget,
+    gap: spacing.md,
   },
-  rowBorder: {},
   pressed: {
     opacity: 0.92,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  avatarText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
   },
   body: {
     flex: 1,
@@ -229,6 +232,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xs,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.danger,
   },
   unreadText: {
     fontFamily: fontFamilies.bold,
@@ -236,9 +241,7 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
     color: colors.white,
   },
-  role: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textTertiary,
+  roleBadge: {
+    alignSelf: 'flex-start',
   },
 });

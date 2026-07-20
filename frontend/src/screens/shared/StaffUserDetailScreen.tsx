@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -7,6 +7,10 @@ import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import EmptyState from '../../components/EmptyState';
 import InlineBanner from '../../components/InlineBanner';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import StatusBadge from '../../components/StatusBadge';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import type { AdminUserDetail } from '../../services/api';
 import {
   colors,
@@ -14,8 +18,7 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
-  shadows,
+  borderWidths,
 } from '../../constants/theme';
 
 export interface StaffUserDetailScreenProps {
@@ -68,9 +71,7 @@ export default function StaffUserDetailScreen({
         onBack={onBack}
       />
       <ScreenScroll>
-        {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
-        ) : null}
+        {isLoading ? <SkeletonLoader style={styles.loader} lines={4} /> : null}
 
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
         {actionMessage ? <InlineBanner tone="info" message={actionMessage} /> : null}
@@ -85,8 +86,20 @@ export default function StaffUserDetailScreen({
 
         {user && !isLoading ? (
           <>
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Account basics</Text>
+            <View style={styles.badgeRow}>
+              <StatusBadge
+                label={user.suspended ? 'Suspended' : 'Active'}
+                tone={user.suspended ? 'danger' : 'success'}
+              />
+              <StatusBadge
+                label={user.identityVerified ? 'Verified' : 'Unverified'}
+                tone={user.identityVerified ? 'success' : 'warning'}
+              />
+              {user.staff ? <StatusBadge label="Staff" tone="info" /> : null}
+            </View>
+
+            <SectionHeader title="Account basics" />
+            <Card style={styles.card} padding="lg">
               <FactRow label="Intent" value={user.primaryIntent ?? 'None'} />
               <FactRow
                 label="Identity"
@@ -103,29 +116,39 @@ export default function StaffUserDetailScreen({
                 label="Seeker setup"
                 value={user.seekerSetupStatus ?? 'NOT_STARTED'}
               />
-            </View>
+            </Card>
 
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Listings</Text>
+            <SectionHeader title="Listings" />
+            <Card style={styles.card} padding="lg">
               {user.listings.length === 0 ? (
                 <Text style={styles.emptyText}>No host or guide listing.</Text>
               ) : (
-                user.listings.map((listing) => (
-                  <View key={listing.listingId} style={styles.listingRow}>
+                user.listings.map((listing, index) => (
+                  <View
+                    key={listing.listingId}
+                    style={[
+                      styles.listingRow,
+                      index < user.listings.length - 1 && styles.listingBorder,
+                    ]}
+                  >
                     <Text style={styles.listingTitle}>
                       {listing.type}
                       {listing.city ? ` · ${listing.city}` : ''}
                     </Text>
-                    <Text style={styles.listingMeta}>
-                      {[
-                        listing.active ? 'Active' : 'Hidden',
-                        listing.setupStatus ?? 'NOT_STARTED',
-                      ].join(' · ')}
-                    </Text>
+                    <View style={styles.listingBadges}>
+                      <StatusBadge
+                        label={listing.active ? 'Active' : 'Hidden'}
+                        tone={listing.active ? 'success' : 'neutral'}
+                      />
+                      <StatusBadge
+                        label={listing.setupStatus ?? 'NOT_STARTED'}
+                        tone="info"
+                      />
+                    </View>
                   </View>
                 ))
               )}
-            </View>
+            </Card>
 
             <View style={styles.actions}>
               {user.suspended ? (
@@ -187,21 +210,14 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: spacing.xl,
   },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    ...shadows.card,
-  },
-  sectionTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
     marginBottom: spacing.md,
+  },
+  card: {
+    marginBottom: spacing.lg,
   },
   factRow: {
     flexDirection: 'row',
@@ -230,7 +246,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   listingRow: {
-    marginBottom: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  listingBorder: {
+    borderBottomWidth: borderWidths.hairline,
+    borderBottomColor: colors.border,
   },
   listingTitle: {
     fontFamily: fontFamilies.semibold,
@@ -239,10 +259,10 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
-  listingMeta: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
+  listingBadges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
   },
   actions: {
     marginBottom: spacing.xl,

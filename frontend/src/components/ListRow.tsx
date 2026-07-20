@@ -1,0 +1,130 @@
+import React from 'react';
+import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
+import AppIcon, { type IoniconName } from './AppIcon';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  lineHeights,
+  borderWidths,
+  iconSizes,
+  touchTarget,
+  tints,
+  borderRadius,
+} from '../constants/theme';
+
+export interface ListRowProps {
+  title: string;
+  subtitle?: string;
+  iconName?: IoniconName;
+  showChevron?: boolean;
+  onPress?: () => void;
+  style?: ViewStyle;
+  /** When false, omit bottom border (e.g. last row). Default true. */
+  bordered?: boolean;
+}
+
+/** Tappable settings / directory row with optional leading icon. */
+export default function ListRow({
+  title,
+  subtitle,
+  iconName,
+  showChevron = true,
+  onPress,
+  style,
+  bordered = true,
+}: ListRowProps) {
+  const content = (
+    <>
+      {iconName ? (
+        <View style={styles.iconTile}>
+          <AppIcon name={iconName} size={iconSizes.md} color={colors.tealDeep} />
+        </View>
+      ) : null}
+      <View style={styles.textBlock}>
+        <Text style={styles.title} numberOfLines={1}>
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text style={styles.subtitle} numberOfLines={2}>
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+      {showChevron ? (
+        <AppIcon
+          name="chevron-forward"
+          size={iconSizes.md}
+          color={colors.textTertiary}
+        />
+      ) : null}
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable
+        style={({ pressed }) => [
+          styles.row,
+          bordered && styles.bordered,
+          pressed && styles.pressed,
+          style,
+        ]}
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={subtitle ? `${title}. ${subtitle}` : title}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={[styles.row, bordered && styles.bordered, style]}>{content}</View>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: touchTarget + spacing.sm,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
+  },
+  bordered: {
+    borderBottomWidth: borderWidths.hairline,
+    borderBottomColor: colors.border,
+  },
+  pressed: {
+    opacity: 0.88,
+  },
+  iconTile: {
+    width: touchTarget,
+    height: touchTarget,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textBlock: {
+    flex: 1,
+  },
+  title: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.body,
+    color: colors.textPrimary,
+  },
+  subtitle: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
+    lineHeight: lineHeights.caption,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+});

@@ -1,10 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import EmptyState from '../../components/EmptyState';
 import SecondaryButton from '../../components/SecondaryButton';
+import Card from '../../components/Card';
+import StatusBadge from '../../components/StatusBadge';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import {
   colors,
   fontFamilies,
@@ -13,6 +16,7 @@ import {
   spacing,
   lineHeights,
   shadows,
+  layout,
 } from '../../constants/theme';
 import type { VideoResourceApi } from '../../services/api';
 import { isPlayableYoutubeId } from '../../utils/videoPlayback';
@@ -35,7 +39,7 @@ export default function VideoDetailScreen({
   if (isLoading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator size="large" color={colors.teal} />
+        <SkeletonLoader style={styles.skeleton} lines={4} />
       </View>
     );
   }
@@ -111,10 +115,11 @@ export default function VideoDetailScreen({
             </View>
           )}
         </View>
-        <View style={styles.body}>
+        <Card style={styles.body} padding="lg">
+          <StatusBadge label={video.category} tone="info" style={styles.badge} />
           <Text style={styles.description}>{video.description}</Text>
           <Text style={styles.meta}>Curated for settling into {video.city}</Text>
-        </View>
+        </Card>
       </ScrollView>
     </View>
   );
@@ -127,6 +132,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.background,
+    padding: layout.screenPaddingHorizontal,
+  },
+  skeleton: {
+    alignSelf: 'stretch',
   },
   content: {
     paddingBottom: spacing.xl,
@@ -164,8 +173,12 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
   body: {
-    padding: spacing.md,
+    margin: layout.screenPaddingHorizontal,
+    marginTop: spacing.md,
     gap: spacing.sm,
+  },
+  badge: {
+    marginBottom: spacing.xs,
   },
   description: {
     fontSize: fontSizes.body,
@@ -177,6 +190,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.caption,
     color: colors.textSecondary,
     fontFamily: fontFamilies.regular,
+    marginTop: spacing.sm,
   },
   errorBody: {
     flex: 1,

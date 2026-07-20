@@ -1,10 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
-import AppIcon from '../../components/AppIcon';
 import FeaturedHomeCard, {
   type FeaturedHomeCardProps,
 } from '../../components/FeaturedHomeCard';
@@ -21,13 +20,11 @@ import RecentActivityList, {
 import ReminderBanner from '../../components/ReminderBanner';
 import IncomingRequestCard from '../../components/IncomingRequestCard';
 import { IncomingRequestsEmptyBlock } from '../../components/IncomingRequestCard';
+import SectionHeader from '../../components/SectionHeader';
 import type { IncomingRequestsEmptyState } from './IncomingRequestsScreen';
 import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 import {
   colors,
-  fontFamilies,
-  fontSizes,
-  fontWeights,
   spacing,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
@@ -137,7 +134,7 @@ export default function ProviderHomeDashboard({
 
         {providerRole === 'guide' && tourSuggestions.length > 0 ? (
           <View style={styles.carouselWrap}>
-            <Text style={styles.sectionTitle}>{tourSuggestionsTitle}</Text>
+            <SectionHeader title={tourSuggestionsTitle} />
             <ExploreSectionCarousel
               sections={tourSuggestions}
               onSectionPress={onTourSuggestionPress}
@@ -147,26 +144,11 @@ export default function ProviderHomeDashboard({
 
         {secondaryRequests.length > 0 ? (
           <View style={styles.requestsSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitleInline}>More requests</Text>
-              <Pressable
-                onPress={onSeeAllRequestsPress}
-                hitSlop={12}
-                style={({ pressed }) => [
-                  styles.seeAllButton,
-                  pressed && styles.seeAllPressed,
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="See all requests"
-              >
-                <Text style={styles.seeAll}>View all</Text>
-                <AppIcon
-                  name="chevron-forward"
-                  size={fontSizes.body}
-                  color={colors.teal}
-                />
-              </Pressable>
-            </View>
+            <SectionHeader
+              title="More requests"
+              actionLabel="View all"
+              onActionPress={onSeeAllRequestsPress}
+            />
             {secondaryRequests.map((request, index) => (
               <IncomingRequestCard
                 key={request.id}
@@ -204,44 +186,7 @@ const styles = StyleSheet.create({
   carouselWrap: {
     marginBottom: spacing.lg,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
   requestsSection: {
     marginBottom: spacing.lg,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  sectionTitleInline: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-  },
-  seeAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 44,
-    paddingHorizontal: spacing.xs,
-    gap: spacing.xs,
-  },
-  seeAllPressed: {
-    opacity: 0.7,
-  },
-  seeAll: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
 });
-

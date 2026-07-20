@@ -5,10 +5,12 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
-  TextInput,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
+import SearchField from '../../components/SearchField';
+import Card from '../../components/Card';
+import StatusBadge from '../../components/StatusBadge';
 import EmptyState from '../../components/EmptyState';
 import AppIcon from '../../components/AppIcon';
 import type { SponsorCategory, SponsorListing } from '../../data/sponsorsMock';
@@ -21,9 +23,12 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
-  shadows,
   layout,
+  iconSizes,
+  touchTarget,
+  avatarSizes,
 } from '../../constants/theme';
 
 export interface SponsorListScreenProps {
@@ -81,28 +86,12 @@ export default function SponsorListScreen({
       />
 
       <View style={styles.searchContainer}>
-        <View style={styles.searchField}>
-          <AppIcon name="search" size={fontSizes.body} color={colors.textTertiary} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by name, city, or focus…"
-            placeholderTextColor={colors.textTertiary}
-            value={search}
-            onChangeText={setSearch}
-            accessibilityLabel="Search sponsors"
-          />
-          {search.length > 0 ? (
-            <Pressable
-              onPress={() => setSearch('')}
-              accessibilityRole="button"
-              accessibilityLabel="Clear search"
-              hitSlop={spacing.sm}
-              style={styles.clearButton}
-            >
-              <AppIcon name="close-circle" size={20} color={colors.textTertiary} />
-            </Pressable>
-          ) : null}
-        </View>
+        <SearchField
+          value={search}
+          placeholder="Search by name, city, or focus…"
+          onChangeText={setSearch}
+          onClear={() => setSearch('')}
+        />
       </View>
 
       <FlatList
@@ -166,32 +155,42 @@ export default function SponsorListScreen({
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
             <Pressable
-              style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+              style={({ pressed }) => [pressed && styles.pressed]}
               onPress={() => onSponsorPress?.(item.id)}
               accessibilityRole="button"
               accessibilityLabel={`View ${item.name} sponsorship`}
             >
-              <View style={styles.cardTop}>
-                <View style={styles.logoTile}>
-                  <AppIcon glyph={item.logo} size={26} color={colors.tealDeep} />
+              <Card padding="md" elevation="card">
+                <View style={styles.cardTop}>
+                  <View style={styles.logoTile}>
+                    <AppIcon
+                      glyph={item.logo}
+                      size={iconSizes.lg}
+                      color={colors.tealDeep}
+                    />
+                  </View>
+                  <View style={styles.cardTitleBlock}>
+                    <Text style={styles.sponsorName}>{item.name}</Text>
+                    <StatusBadge
+                      label={item.category}
+                      tone="info"
+                      style={styles.categoryBadge}
+                    />
+                  </View>
                 </View>
-                <View style={styles.cardTitleBlock}>
-                  <Text style={styles.sponsorName}>{item.name}</Text>
-                  <Text style={styles.sponsorCategory}>{item.category}</Text>
+                <Text style={styles.sponsorDesc}>{item.description}</Text>
+                <View style={styles.cardFooter}>
+                  <Text style={styles.amount}>{item.amountLabel}</Text>
+                  <View style={styles.applyRow}>
+                    <Text style={styles.applyText}>View & apply</Text>
+                    <AppIcon
+                      name="chevron-forward"
+                      size={iconSizes.sm}
+                      color={colors.teal}
+                    />
+                  </View>
                 </View>
-              </View>
-              <Text style={styles.sponsorDesc}>{item.description}</Text>
-              <View style={styles.cardFooter}>
-                <Text style={styles.amount}>{item.amountLabel}</Text>
-                <View style={styles.applyRow}>
-                  <Text style={styles.applyText}>View & apply</Text>
-                  <AppIcon
-                    name="chevron-forward"
-                    size={fontSizes.caption}
-                    color={colors.teal}
-                  />
-                </View>
-              </View>
+              </Card>
             </Pressable>
           )}
         />
@@ -209,31 +208,6 @@ const styles = StyleSheet.create({
     marginHorizontal: layout.screenPaddingHorizontal,
     marginTop: spacing.md,
   },
-  searchField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    minHeight: 44,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    fontSize: fontSizes.body,
-    fontFamily: fontFamilies.regular,
-    color: colors.textPrimary,
-  },
-  clearButton: {
-    minWidth: 44,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   categoryList: {
     marginTop: spacing.md,
     marginBottom: spacing.sm,
@@ -244,12 +218,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   categoryChip: {
-    minHeight: 44,
+    minHeight: touchTarget,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     justifyContent: 'center',
   },
@@ -276,14 +250,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
     gap: spacing.md,
   },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
-  },
   cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -291,8 +257,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   logoTile: {
-    width: 48,
-    height: 48,
+    width: avatarSizes.lg,
+    height: avatarSizes.lg,
     borderRadius: borderRadius.md,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -300,6 +266,7 @@ const styles = StyleSheet.create({
   },
   cardTitleBlock: {
     flex: 1,
+    gap: spacing.xs,
   },
   sponsorName: {
     fontFamily: fontFamilies.bold,
@@ -307,12 +274,8 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
   },
-  sponsorCategory: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    color: colors.teal,
-    marginTop: spacing.xs,
-    fontWeight: fontWeights.semibold,
+  categoryBadge: {
+    alignSelf: 'flex-start',
   },
   sponsorDesc: {
     fontFamily: fontFamilies.regular,
@@ -338,6 +301,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    minHeight: touchTarget / 2,
   },
   applyText: {
     fontFamily: fontFamilies.semibold,

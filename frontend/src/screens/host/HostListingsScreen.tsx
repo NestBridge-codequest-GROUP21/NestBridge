@@ -5,7 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
+import StatusBadge from '../../components/StatusBadge';
 import type { HostListingItem } from '../../data/featureScreensMock';
 import {
   colors,
@@ -14,9 +16,14 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   layout,
   lineHeights,
   shadows,
+  touchTarget,
+  controlHeights,
+  iconSizes,
+  tints,
 } from '../../constants/theme';
 
 export interface HostListingsEmptyState {
@@ -52,21 +59,17 @@ function ListingCard({
   onDeletePress?: () => void;
 }) {
   return (
-    <View style={styles.listingCard}>
+    <Card padding="none" style={styles.listingCard}>
       <View style={styles.thumbnail}>
-        <AppIcon glyph={listing.imageEmoji} size={32} color={colors.tealDeep} />
+        <AppIcon glyph={listing.imageEmoji} size={iconSizes.xl} color={colors.tealDeep} />
       </View>
 
       <View style={styles.listingBody}>
         <View style={styles.onlineRow}>
-          <Text
-            style={[
-              styles.onlineLabel,
-              !listing.isOnline && styles.onlineLabelOff,
-            ]}
-          >
-            {listing.isOnline ? 'Online' : 'Offline'}
-          </Text>
+          <StatusBadge
+            label={listing.isOnline ? 'Online' : 'Offline'}
+            tone={listing.isOnline ? 'success' : 'neutral'}
+          />
           <Switch
             value={listing.isOnline}
             onValueChange={onToggleOnline}
@@ -107,7 +110,7 @@ function ListingCard({
           </Pressable>
         </View>
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -141,7 +144,7 @@ export default function HostListingsScreen({
 
       <ScreenScroll
         contentContainerStyle={{
-          paddingBottom: insets.bottom + spacing.xl + 64,
+          paddingBottom: insets.bottom + spacing.xxl + controlHeights.lg,
         }}
       >
         {listings.length === 0 && emptyState ? (
@@ -180,7 +183,7 @@ export default function HostListingsScreen({
         accessibilityRole="button"
         accessibilityLabel="Add new listing"
       >
-        <AppIcon name="add" size={fontSizes.heading} color={colors.white} />
+        <AppIcon name="add" size={iconSizes.lg} color={colors.white} />
         <Text style={styles.fabLabel}>Add listing</Text>
       </Pressable>
     </View>
@@ -199,16 +202,11 @@ const styles = StyleSheet.create({
   },
   listingCard: {
     width: '47%',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
-    ...shadows.card,
   },
   thumbnail: {
-    height: 88,
-    backgroundColor: colors.warmCream,
+    height: spacing.xxl + spacing.xl + spacing.md,
+    backgroundColor: tints.cream,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -220,16 +218,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: 44,
-  },
-  onlineLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
-  onlineLabelOff: {
-    color: colors.textTertiary,
+    minHeight: touchTarget,
   },
   address: {
     fontFamily: fontFamilies.semibold,
@@ -251,11 +240,11 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    minHeight: 44,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: borderRadius.md,
-    borderWidth: 1.5,
+    borderWidth: borderWidths.strong,
     borderColor: colors.teal,
     backgroundColor: colors.white,
   },
@@ -285,7 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    minHeight: 52,
+    minHeight: controlHeights.lg,
     ...shadows.floating,
   },
   fabPressed: {

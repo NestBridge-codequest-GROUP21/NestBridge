@@ -6,6 +6,7 @@ import {
   ScrollView,
   Pressable,
 } from 'react-native';
+import SectionHeader from './SectionHeader';
 import {
   colors,
   fontFamilies,
@@ -13,7 +14,9 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   layout,
+  shadows,
 } from '../constants/theme';
 
 export interface HomeStatItem {
@@ -36,7 +39,7 @@ export default function HomeStatsCarousel({
 }: HomeStatsCarouselProps) {
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>{title}</Text>
+      <SectionHeader title={title} />
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -71,13 +74,6 @@ const styles = StyleSheet.create({
   wrap: {
     marginBottom: layout.sectionGap,
   },
-  title: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-  },
   listContent: {
     paddingRight: spacing.lg,
   },
@@ -86,10 +82,11 @@ const styles = StyleSheet.create({
     minHeight: layout.carouselMinHeight * 0.65,
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
+    padding: layout.cardPaddingLarge,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     justifyContent: 'center',
+    ...shadows.card,
   },
   cardSpacing: {
     marginRight: spacing.md,

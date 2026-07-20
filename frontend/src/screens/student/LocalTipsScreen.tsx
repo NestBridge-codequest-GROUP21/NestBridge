@@ -4,7 +4,9 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
+import SectionHeader from '../../components/SectionHeader';
 import type {
   CulturalPhraseCard,
   CulturalTopicCard,
@@ -18,7 +20,10 @@ import {
   spacing,
   borderRadius,
   lineHeights,
-  shadows,
+  iconSizes,
+  avatarSizes,
+  touchTarget,
+  layout,
 } from '../../constants/theme';
 
 export interface LocalTipsScreenProps {
@@ -42,9 +47,9 @@ function PhraseCard({
   onPlayAudio?: () => void;
 }) {
   return (
-    <View style={styles.phraseCard}>
+    <Card style={styles.phraseCard} padding="md">
       <View style={styles.iconTile}>
-        <AppIcon glyph={phrase.emoji} size={26} color={colors.tealDeep} />
+        <AppIcon glyph={phrase.emoji} size={iconSizes.lg} color={colors.tealDeep} />
       </View>
       <Text style={styles.phraseText}>{phrase.phrase}</Text>
       <Text style={styles.phraseTranslation}>{phrase.translation}</Text>
@@ -55,29 +60,30 @@ function PhraseCard({
           accessibilityRole="button"
           accessibilityLabel={`Play audio for ${phrase.phrase}`}
         >
-          <AppIcon name="volume-high-outline" size={fontSizes.body} color={colors.teal} />
+          <AppIcon name="volume-high-outline" size={iconSizes.md} color={colors.teal} />
           <Text style={styles.audioLabel}>Hear it</Text>
         </Pressable>
       ) : null}
-    </View>
+    </Card>
   );
 }
 
 function TopicCard({ topic }: { topic: CulturalTopicCard }) {
   return (
-    <View
-      style={styles.topicCard}
-      accessibilityRole="text"
-      accessibilityLabel={`${topic.title}. ${topic.description}`}
-    >
-      <View style={styles.topicHeader}>
-        <View style={styles.iconTileCompact}>
-          <AppIcon glyph={topic.emoji} size={22} color={colors.tealDeep} />
+    <Card style={styles.topicCard} padding="md">
+      <View
+        accessibilityRole="text"
+        accessibilityLabel={`${topic.title}. ${topic.description}`}
+      >
+        <View style={styles.topicHeader}>
+          <View style={styles.iconTileCompact}>
+            <AppIcon glyph={topic.emoji} size={iconSizes.md} color={colors.tealDeep} />
+          </View>
+          <Text style={styles.topicTitle}>{topic.title}</Text>
         </View>
-        <Text style={styles.topicTitle}>{topic.title}</Text>
+        <Text style={styles.topicDescription}>{topic.description}</Text>
       </View>
-      <Text style={styles.topicDescription}>{topic.description}</Text>
-    </View>
+    </Card>
   );
 }
 
@@ -107,10 +113,10 @@ export default function LocalTipsScreen({
       />
 
       <ScreenScroll>
-        <Text style={styles.screenTitle}>Ghana culture & language</Text>
-        <Text style={styles.screenSubtitle}>
-          Everyday phrases and local customs that help you settle in with confidence.
-        </Text>
+        <SectionHeader
+          title="Ghana culture & language"
+          subtitle="Everyday phrases and local customs that help you settle in with confidence."
+        />
 
         {isEmpty ? (
           <EmptyState
@@ -123,7 +129,7 @@ export default function LocalTipsScreen({
           <>
             {phrases.length > 0 ? (
               <>
-                <Text style={styles.sectionLabel}>Useful phrases</Text>
+                <SectionHeader title="Useful phrases" style={styles.sectionTight} />
                 <View style={styles.grid}>
                   {phrases.map((phrase) => (
                     <PhraseCard
@@ -137,9 +143,10 @@ export default function LocalTipsScreen({
             ) : null}
             {topics.length > 0 ? (
               <>
-                <Text style={[styles.sectionLabel, styles.sectionSpacer]}>
-                  Settling into Ghana
-                </Text>
+                <SectionHeader
+                  title="Settling into Ghana"
+                  style={styles.sectionSpacer}
+                />
                 <View style={styles.topicList}>
                   {topics.map((topic) => (
                     <TopicCard key={topic.id} topic={topic} />
@@ -159,33 +166,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  screenTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    lineHeight: lineHeights.heading,
-    marginBottom: spacing.sm,
-  },
-  screenSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    lineHeight: lineHeights.body,
-    marginBottom: spacing.lg,
-  },
-  sectionLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+  sectionTight: {
     marginBottom: spacing.sm,
   },
   sectionSpacer: {
-    marginTop: spacing.lg,
+    marginTop: layout.sectionGap,
+    marginBottom: spacing.sm,
   },
   grid: {
     flexDirection: 'row',
@@ -197,17 +183,11 @@ const styles = StyleSheet.create({
   },
   phraseCard: {
     width: '47%',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
     alignItems: 'center',
-    ...shadows.card,
   },
   iconTile: {
-    width: 48,
-    height: 48,
+    width: avatarSizes.lg,
+    height: avatarSizes.lg,
     borderRadius: borderRadius.md,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -221,17 +201,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   iconTileCompact: {
-    width: 40,
-    height: 40,
+    width: avatarSizes.md,
+    height: avatarSizes.md,
     borderRadius: borderRadius.md,
     backgroundColor: tints.teal,
     alignItems: 'center',
     justifyContent: 'center',
   },
   phraseText: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     textAlign: 'center',
     lineHeight: lineHeights.subheading,
@@ -254,7 +234,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   audioLabel: {
     fontFamily: fontFamilies.semibold,
@@ -264,18 +244,12 @@ const styles = StyleSheet.create({
   },
   topicCard: {
     width: '100%',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    ...shadows.card,
   },
   topicTitle: {
     flex: 1,
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     lineHeight: lineHeights.subheading,
   },

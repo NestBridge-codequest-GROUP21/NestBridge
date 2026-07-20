@@ -6,16 +6,18 @@ import OnboardingProgress from '../../components/OnboardingProgress';
 import PrimaryButton from '../../components/PrimaryButton';
 import BackButton from '../../components/BackButton';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import {
   colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  borderWidths,
   lineHeights,
   layout,
-  shadows,
+  iconSizes,
+  controlHeights,
 } from '../../constants/theme';
 
 export interface QuizOption {
@@ -87,25 +89,28 @@ export default function CulturalQuizScreen({
             <Pressable
               key={option.id}
               style={({ pressed }) => [
-                styles.optionCard,
-                selected && styles.optionCardSelected,
+                styles.optionPressable,
                 pressed && styles.optionCardPressed,
               ]}
               onPress={() => onSelectOption?.(option.id)}
               accessibilityRole="radio"
               accessibilityState={{ selected }}
             >
-              {option.icon ? (
-                <AppIcon
-                  glyph={option.icon}
-                  size={fontSizes.heading}
-                  color={selected ? colors.tealDeep : colors.teal}
-                  style={styles.optionIcon}
-                />
-              ) : null}
-              <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
-                {option.label}
-              </Text>
+              <Card
+                style={[styles.optionCard, selected && styles.optionCardSelected]}
+              >
+                {option.icon ? (
+                  <AppIcon
+                    glyph={option.icon}
+                    size={iconSizes.lg}
+                    color={selected ? colors.tealDeep : colors.teal}
+                    style={styles.optionIcon}
+                  />
+                ) : null}
+                <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
+                  {option.label}
+                </Text>
+              </Card>
             </Pressable>
           );
         })}
@@ -143,9 +148,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   question: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     lineHeight: lineHeights.heading,
     marginBottom: spacing.sm,
@@ -158,20 +163,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     lineHeight: lineHeights.body,
   },
+  optionPressable: {
+    marginBottom: spacing.sm,
+  },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    minHeight: 56,
-    ...shadows.card,
+    minHeight: controlHeights.lg + spacing.xs,
   },
   optionCardSelected: {
     borderColor: colors.teal,
+    borderWidth: borderWidths.strong,
     backgroundColor: colors.warmCream,
   },
   optionCardPressed: {
@@ -182,12 +184,14 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     flex: 1,
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
   },
   optionLabelSelected: {
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
   },
   footer: {

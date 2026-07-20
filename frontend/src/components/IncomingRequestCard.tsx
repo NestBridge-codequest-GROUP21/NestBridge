@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import AppIcon from './AppIcon';
+import Avatar from './Avatar';
+import Card from './Card';
 import EmptyState from './EmptyState';
 import {
   colors,
@@ -8,8 +9,6 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
-  shadows,
 } from '../constants/theme';
 import type { IncomingBookingRequest } from '../types/booking';
 import { formatBookingDate } from '../data/bookingMock';
@@ -40,7 +39,6 @@ export default function IncomingRequestCard({
   return (
     <Pressable
       style={({ pressed }) => [
-        styles.requestCard,
         !isLast && styles.requestCardSpacing,
         !request.capacity.canAccept && styles.requestCardMuted,
         pressed && styles.pressed,
@@ -49,29 +47,29 @@ export default function IncomingRequestCard({
       accessibilityRole="button"
       accessibilityLabel={`Review request from ${request.studentName}`}
     >
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{request.studentInitials}</Text>
-      </View>
+      <Card style={styles.requestCard} padding="lg">
+        <Avatar initials={request.studentInitials} size="lg" />
 
-      <View style={styles.body}>
-        <View style={styles.topRow}>
-          <Text style={styles.name} numberOfLines={1}>
-            {request.studentName}
+        <View style={styles.body}>
+          <View style={styles.topRow}>
+            <Text style={styles.name} numberOfLines={1}>
+              {request.studentName}
+            </Text>
+            <Text style={styles.score}>{request.compatibilityScore}%</Text>
+          </View>
+          <Text style={styles.dates}>{requestScheduleLine(request)}</Text>
+          <Text style={styles.capacity} numberOfLines={1}>
+            {request.bookingType === 'GUIDE'
+              ? `${request.seekerRole === 'TOURIST' ? 'Tourist' : 'Student'} · `
+              : ''}
+            {request.capacity.canAccept
+              ? `${request.capacity.overlappingAccepted} of ${request.capacity.maxAllowed} slots used`
+              : request.capacity.declineReason ?? 'At capacity'}
           </Text>
-          <Text style={styles.score}>{request.compatibilityScore}%</Text>
         </View>
-        <Text style={styles.dates}>{requestScheduleLine(request)}</Text>
-        <Text style={styles.capacity} numberOfLines={1}>
-          {request.bookingType === 'GUIDE'
-            ? `${request.seekerRole === 'TOURIST' ? 'Tourist' : 'Student'} · `
-            : ''}
-          {request.capacity.canAccept
-            ? `${request.capacity.overlappingAccepted} of ${request.capacity.maxAllowed} slots used`
-            : request.capacity.declineReason ?? 'At capacity'}
-        </Text>
-      </View>
 
-      <Text style={styles.listAction}>Open</Text>
+        <Text style={styles.listAction}>Open</Text>
+      </Card>
     </Pressable>
   );
 }
@@ -101,12 +99,7 @@ const styles = StyleSheet.create({
   requestCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
+    gap: spacing.md,
   },
   requestCardSpacing: {
     marginBottom: spacing.md,
@@ -117,21 +110,6 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.94,
     transform: [{ scale: 0.995 }],
-  },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  avatarText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   body: {
     flex: 1,
@@ -144,16 +122,16 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     marginRight: spacing.sm,
   },
   score: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
   dates: {
@@ -174,6 +152,5 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
-    marginLeft: spacing.sm,
   },
 });

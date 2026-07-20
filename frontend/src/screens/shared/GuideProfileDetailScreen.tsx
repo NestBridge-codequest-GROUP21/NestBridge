@@ -11,6 +11,10 @@ import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import ScreenScroll from '../../components/ScreenScroll';
+import Card from '../../components/Card';
+import Avatar from '../../components/Avatar';
+import StatusBadge from '../../components/StatusBadge';
+import SectionHeader from '../../components/SectionHeader';
 import {
   colors,
   fontFamilies,
@@ -18,9 +22,11 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   lineHeights,
   shadows,
+  avatarSizes,
 } from '../../constants/theme';
 import type { GuideProfileSummary } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -41,6 +47,7 @@ export default function GuideProfileDetailScreen({
   onBack,
 }: GuideProfileDetailScreenProps) {
   const insets = useSafeAreaInsets();
+  const heroAvatarSize = avatarSizes.lg + spacing.xl;
 
   return (
     <View style={styles.root}>
@@ -56,16 +63,22 @@ export default function GuideProfileDetailScreen({
 
         <View style={styles.heroContent}>
           <View style={styles.avatarRing}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarInitials}>{guide.initials}</Text>
+            <View
+              style={[
+                styles.avatarWrap,
+                { width: heroAvatarSize, height: heroAvatarSize },
+              ]}
+            >
+              <Avatar initials={guide.initials} size="lg" highlighted />
             </View>
           </View>
           <Text style={styles.name}>{guide.name}</Text>
           <Text style={styles.location}>{guide.location}</Text>
           {showMatchScores ? (
-            <View style={styles.matchBadge}>
-              <Text style={styles.matchBadgeText}>{guide.matchPercentage}% match</Text>
-            </View>
+            <StatusBadge
+              label={`${guide.matchPercentage}% match`}
+              tone="accent"
+            />
           ) : (
             <Text style={styles.matchHint}>
               Complete your profile to see compatibility
@@ -79,7 +92,7 @@ export default function GuideProfileDetailScreen({
           paddingBottom: insets.bottom + 140,
         }}
       >
-        <View style={styles.priceCard}>
+        <Card style={styles.priceCard} padding="lg">
           <Text style={styles.priceLabel}>Session rate</Text>
           <Text style={styles.priceValue}>
             {formatCurrency(guide.pricePerSession, guide.currency)}
@@ -87,21 +100,19 @@ export default function GuideProfileDetailScreen({
           <Text style={styles.duration}>
             {guide.sessionDurationHours} hour sessions
           </Text>
-        </View>
+        </Card>
 
-        <Text style={styles.sectionTitle}>Services offered</Text>
+        <SectionHeader title="Services offered" />
         <View style={styles.chips}>
           {guide.serviceTypes.map((service) => (
-            <View key={service} style={styles.chip}>
-              <Text style={styles.chipText}>{service}</Text>
-            </View>
+            <StatusBadge key={service} label={service} tone="neutral" />
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Languages</Text>
+        <SectionHeader title="Languages" />
         <Text style={styles.bodyText}>{guide.languages.join(' · ')}</Text>
 
-        <Text style={styles.sectionTitle}>About</Text>
+        <SectionHeader title="About" />
         <Text style={styles.bodyText}>
           {guide.serviceTypes.slice(0, 2).join(' and ')} around {guide.location}.
           Sessions last {guide.sessionDurationHours} hours and can cover markets,
@@ -147,23 +158,15 @@ const styles = StyleSheet.create({
   avatarRing: {
     padding: spacing.xs,
     borderRadius: borderRadius.pill,
-    borderWidth: 2,
+    borderWidth: borderWidths.strong,
     borderColor: colors.white,
     marginBottom: spacing.md,
   },
-  avatar: {
-    width: 88,
-    height: 88,
+  avatarWrap: {
     borderRadius: borderRadius.pill,
     backgroundColor: colors.warmCream,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  avatarInitials: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   name: {
     fontFamily: fontFamilies.bold,
@@ -180,18 +183,6 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     marginBottom: spacing.md,
   },
-  matchBadge: {
-    backgroundColor: colors.tealBright,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.pill,
-  },
-  matchBadgeText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
   matchHint: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
@@ -200,13 +191,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   priceCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   priceLabel: {
     fontFamily: fontFamilies.regular,
@@ -226,13 +211,6 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     color: colors.textSecondary,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
   bodyText: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
@@ -246,20 +224,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.lg,
   },
-  chip: {
-    backgroundColor: colors.warmCream,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-  },
   footer: {
     position: 'absolute',
     left: 0,
@@ -268,7 +232,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     ...shadows.raised,
   },

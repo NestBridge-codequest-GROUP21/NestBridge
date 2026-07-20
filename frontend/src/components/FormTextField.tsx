@@ -7,7 +7,17 @@ import {
   Pressable,
   TextInputProps,
 } from 'react-native';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../constants/theme';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  borderWidths,
+  controlHeights,
+  lineHeights,
+} from '../constants/theme';
 
 export interface FormTextFieldProps {
   label: string;
@@ -21,6 +31,13 @@ export interface FormTextFieldProps {
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoCorrect?: boolean;
   textContentType?: TextInputProps['textContentType'];
+  editable?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
+  errorMessage?: string;
+  helperText?: string;
+  onBlur?: () => void;
+  onFocus?: () => void;
 }
 
 export default function FormTextField({
@@ -34,17 +51,37 @@ export default function FormTextField({
   autoCapitalize,
   autoCorrect,
   textContentType,
+  editable = true,
+  multiline = false,
+  numberOfLines,
+  errorMessage,
+  helperText,
+  onBlur,
+  onFocus,
 }: FormTextFieldProps) {
   const [visible, setVisible] = useState(false);
+  const [focused, setFocused] = useState(false);
   const showToggle = Boolean(secureTextEntry && visibilityToggle);
   const isSecure = Boolean(secureTextEntry) && !(showToggle && visible);
+  const hasError = Boolean(errorMessage);
 
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputRow}>
+      <View
+        style={[
+          styles.inputRow,
+          focused && styles.inputRowFocused,
+          hasError && styles.inputRowError,
+          !editable && styles.inputRowDisabled,
+        ]}
+      >
         <TextInput
-          style={[styles.input, showToggle && styles.inputWithToggle]}
+          style={[
+            styles.input,
+            showToggle && styles.inputWithToggle,
+            multiline && styles.inputMultiline,
+          ]}
           value={value}
           placeholder={placeholder}
           placeholderTextColor={colors.textTertiary}
@@ -54,6 +91,17 @@ export default function FormTextField({
           autoCapitalize={autoCapitalize}
           autoCorrect={autoCorrect}
           textContentType={textContentType}
+          editable={editable}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
+          onFocus={() => {
+            setFocused(true);
+            onFocus?.();
+          }}
+          onBlur={() => {
+            setFocused(false);
+            onBlur?.();
+          }}
         />
         {showToggle ? (
           <Pressable
@@ -67,6 +115,13 @@ export default function FormTextField({
           </Pressable>
         ) : null}
       </View>
+      {hasError ? (
+        <Text style={styles.errorText} accessibilityLiveRegion="polite">
+          {errorMessage}
+        </Text>
+      ) : helperText ? (
+        <Text style={styles.helperText}>{helperText}</Text>
+      ) : null}
     </View>
   );
 }
@@ -76,6 +131,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   label: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
@@ -86,18 +142,35 @@ const styles = StyleSheet.create({
   inputRow: {
     position: 'relative',
     justifyContent: 'center',
-  },
-  input: {
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
+  },
+  inputRowFocused: {
+    borderColor: colors.teal,
+    borderWidth: borderWidths.strong,
+  },
+  inputRowError: {
+    borderColor: colors.danger,
+  },
+  inputRowDisabled: {
+    backgroundColor: colors.background,
+    opacity: 0.85,
+  },
+  input: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md - 2,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textPrimary,
-    minHeight: 48,
+    minHeight: controlHeights.md,
+  },
+  inputMultiline: {
+    minHeight: controlHeights.lg + spacing.lg,
+    textAlignVertical: 'top',
+    paddingTop: spacing.md,
   },
   inputWithToggle: {
     paddingRight: spacing.xl + spacing.lg,
@@ -105,15 +178,30 @@ const styles = StyleSheet.create({
   toggleButton: {
     position: 'absolute',
     right: spacing.sm,
-    minHeight: 44,
-    minWidth: 44,
+    minHeight: controlHeights.md,
+    minWidth: controlHeights.md,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
   toggleText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
+  },
+  errorText: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
+    color: colors.danger,
+    marginTop: spacing.xs,
+  },
+  helperText: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
+    color: colors.textTertiary,
+    marginTop: spacing.xs,
   },
 });

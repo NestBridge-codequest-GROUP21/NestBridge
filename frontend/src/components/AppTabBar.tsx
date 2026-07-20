@@ -10,6 +10,9 @@ import {
   fontWeights,
   spacing,
   layout,
+  iconSizes,
+  borderRadius,
+  lineHeights,
 } from '../constants/theme';
 
 export interface TabBarItem {
@@ -58,7 +61,7 @@ export default function AppTabBar({
         {iconName ? (
           <AppIcon
             name={iconName}
-            size={fontSizes.subheading}
+            size={iconSizes.md}
             color={active ? colors.teal : colors.textTertiary}
             style={styles.tabIcon}
           />
@@ -149,7 +152,7 @@ const styles = StyleSheet.create({
     right: spacing.sm,
     minWidth: 18,
     height: 18,
-    borderRadius: 9,
+    borderRadius: borderRadius.pill,
     backgroundColor: colors.danger,
     alignItems: 'center',
     justifyContent: 'center',
@@ -157,7 +160,8 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontFamily: fontFamilies.bold,
-    fontSize: 10,
+    fontSize: fontSizes.micro,
+    lineHeight: lineHeights.micro,
     color: colors.white,
   },
 });

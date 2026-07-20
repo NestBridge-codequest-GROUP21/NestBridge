@@ -10,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import {
   colors,
   tints,
@@ -18,8 +19,10 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  iconSizes,
+  touchTarget,
   layout,
-  shadows,
   lineHeights,
 } from '../../constants/theme';
 
@@ -82,19 +85,29 @@ export default function UnifiedSearchScreen({
         {categories.map((category) => (
           <Pressable
             key={category.id}
-            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+            style={({ pressed }) => [styles.cardPress, pressed && styles.cardPressed]}
             onPress={() => onCategoryPress?.(category.id)}
             accessibilityRole="button"
             accessibilityLabel={category.label}
           >
-            <View style={styles.cardIconTile}>
-              <AppIcon glyph={category.icon} size={24} color={colors.tealDeep} />
-            </View>
-            <View style={styles.cardText}>
-              <Text style={styles.cardTitle}>{category.label}</Text>
-              <Text style={styles.cardDescription}>{category.description}</Text>
-            </View>
-            <AppIcon name="chevron-forward" size={22} color={colors.teal} />
+            <Card style={styles.card} padding="lg">
+              <View style={styles.cardIconTile}>
+                <AppIcon
+                  glyph={category.icon}
+                  size={iconSizes.lg}
+                  color={colors.tealDeep}
+                />
+              </View>
+              <View style={styles.cardText}>
+                <Text style={styles.cardTitle}>{category.label}</Text>
+                <Text style={styles.cardDescription}>{category.description}</Text>
+              </View>
+              <AppIcon
+                name="chevron-forward"
+                size={iconSizes.lg}
+                color={colors.teal}
+              />
+            </Card>
           </Pressable>
         ))}
       </ScrollView>
@@ -130,29 +143,27 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
   },
+  cardPress: {
+    marginBottom: spacing.md,
+  },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 72,
-    ...shadows.card,
+    minHeight: touchTarget + spacing.lg,
   },
   cardPressed: {
     opacity: 0.95,
   },
   cardIconTile: {
-    width: 48,
-    height: 48,
+    width: touchTarget,
+    height: touchTarget,
     borderRadius: borderRadius.md,
     backgroundColor: tints.teal,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.border,
   },
   cardText: {
     flex: 1,

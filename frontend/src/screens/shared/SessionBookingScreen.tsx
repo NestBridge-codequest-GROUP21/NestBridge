@@ -5,22 +5,26 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GatedPrimaryButton } from '../../components/ProfileIncompleteBanner';
-import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
+import ScreenHeader from '../../components/ScreenHeader';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import Avatar from '../../components/Avatar';
+import AppIcon from '../../components/AppIcon';
 import {
   colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
-  gradients,
+  borderWidths,
   lineHeights,
   shadows,
+  layout,
+  iconSizes,
 } from '../../constants/theme';
 import type { GuideProfileSummary, SessionPriceBreakdown } from '../../types/booking';
 import {
@@ -91,18 +95,12 @@ export default function SessionBookingScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.headerCompact]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-      >
-        <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
-        <Text style={styles.headerTitle}>Book a session</Text>
-        <Text style={styles.headerSubtitle}>
-          Review details before requesting your guide
-        </Text>
-      </LinearGradient>
+      <ScreenHeader
+        title="Book a session"
+        subtitle="Review details before requesting your guide"
+        compact
+        onBack={onBack}
+      />
 
       <ScrollView
         style={styles.scroll}
@@ -112,30 +110,32 @@ export default function SessionBookingScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.guideCard}>
-          <View style={styles.guideIconWrap}>
-            <Text style={styles.guideInitials}>{guide.initials}</Text>
+        <Card padding="lg" elevation="card" style={styles.guideCard}>
+          <View style={styles.guideRow}>
+            <Avatar initials={guide.initials} size="lg" style={styles.guideAvatar} />
+            <View style={styles.guideInfo}>
+              <Text style={styles.guideName}>{guide.name}</Text>
+              <Text style={styles.guideLocation}>{guide.location}</Text>
+            </View>
           </View>
-          <View style={styles.guideInfo}>
-            <Text style={styles.guideName}>{guide.name}</Text>
-            <Text style={styles.guideLocation}>{guide.location}</Text>
-          </View>
-        </View>
+        </Card>
 
-        <Text style={styles.sectionLabel}>Session schedule</Text>
-        <View style={styles.scheduleCard}>
-          <View style={styles.scheduleBlock}>
-            <Text style={styles.scheduleLabel}>Date</Text>
-            <Text style={styles.scheduleValue}>{formatBookingDate(sessionDate)}</Text>
+        <SectionHeader title="Session schedule" />
+        <Card padding="lg" elevation="card" style={styles.scheduleCard}>
+          <View style={styles.scheduleInner}>
+            <View style={styles.scheduleBlock}>
+              <Text style={styles.scheduleLabel}>Date</Text>
+              <Text style={styles.scheduleValue}>{formatBookingDate(sessionDate)}</Text>
+            </View>
+            <View style={styles.scheduleDivider} />
+            <View style={styles.scheduleBlock}>
+              <Text style={styles.scheduleLabel}>Start time</Text>
+              <Text style={styles.scheduleValue}>
+                {formatSessionTime(sessionStartTime)}
+              </Text>
+            </View>
           </View>
-          <View style={styles.scheduleDivider} />
-          <View style={styles.scheduleBlock}>
-            <Text style={styles.scheduleLabel}>Start time</Text>
-            <Text style={styles.scheduleValue}>
-              {formatSessionTime(sessionStartTime)}
-            </Text>
-          </View>
-        </View>
+        </Card>
         <Text style={styles.scheduleHint}>
           {formatSessionSchedule(
             sessionDate,
@@ -145,8 +145,8 @@ export default function SessionBookingScreen({
           · Guide will review before you pay
         </Text>
 
-        <Text style={styles.sectionLabel}>Price summary</Text>
-        <View style={styles.priceCard}>
+        <SectionHeader title="Price summary" />
+        <Card padding="lg" elevation="card" style={styles.priceCard}>
           <PriceRow
             label={`Session (${guide.sessionDurationHours}h)`}
             value={formatCurrency(sessionRate, currency)}
@@ -163,15 +163,21 @@ export default function SessionBookingScreen({
             bold
             accent
           />
-        </View>
+        </Card>
 
-        <Text style={styles.sectionLabel}>Cancellation policy</Text>
-        <View style={styles.policyCard}>
+        <SectionHeader title="Cancellation policy" />
+        <Card padding="lg" elevation="card" style={styles.policyCard}>
+          <AppIcon
+            name="document-text-outline"
+            size={iconSizes.md}
+            color={colors.tealDeep}
+            style={styles.policyIcon}
+          />
           <Text style={styles.policyText}>{guide.cancellationPolicy}</Text>
-        </View>
+        </Card>
 
         {submitErrorMessage ? (
-          <InlineBanner tone="error" message={submitErrorMessage} />
+          <InlineBanner tone="error" message={submitErrorMessage} style={styles.errorBanner} />
         ) : null}
       </ScrollView>
 
@@ -201,61 +207,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    marginBottom: spacing.sm,
-  },
-  headerTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    marginBottom: spacing.sm,
-  },
-  headerSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.white,
-    opacity: 0.88,
-    lineHeight: lineHeights.body,
-  },
   scroll: {
     flex: 1,
-    marginTop: -spacing.sm,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
   },
   guideCard: {
+    marginBottom: spacing.xl,
+  },
+  guideRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
-  guideIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
+  guideAvatar: {
     marginRight: spacing.md,
-  },
-  guideInitials: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   guideInfo: {
     flex: 1,
@@ -272,24 +239,11 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     color: colors.textSecondary,
   },
-  sectionLabel: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+  scheduleCard: {
     marginBottom: spacing.sm,
   },
-  scheduleCard: {
+  scheduleInner: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.sm,
-    ...shadows.card,
   },
   scheduleBlock: {
     flex: 1,
@@ -307,7 +261,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   scheduleDivider: {
-    width: 1,
+    width: borderWidths.hairline,
     backgroundColor: colors.border,
     marginHorizontal: spacing.md,
   },
@@ -320,12 +274,7 @@ const styles = StyleSheet.create({
   },
   priceCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   priceRow: {
     flexDirection: 'row',
@@ -359,19 +308,17 @@ const styles = StyleSheet.create({
     color: colors.tealDeep,
   },
   priceDivider: {
-    height: 1,
+    height: borderWidths.hairline,
     backgroundColor: colors.border,
     opacity: 0.6,
   },
   policyCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
+  },
+  policyIcon: {
+    marginRight: spacing.md,
+    marginTop: spacing.xs,
   },
   policyText: {
     flex: 1,
@@ -380,15 +327,19 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: lineHeights.body,
   },
+  errorBanner: {
+    marginTop: spacing.lg,
+    marginBottom: 0,
+  },
   footer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     ...shadows.raised,
   },

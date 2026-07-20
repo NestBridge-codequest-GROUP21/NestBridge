@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  ActivityIndicator,
   Image,
   ScrollView,
 } from 'react-native';
@@ -13,6 +12,9 @@ import ScreenHeader from '../../components/ScreenHeader';
 import EmptyState from '../../components/EmptyState';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
+import StatusBadge from '../../components/StatusBadge';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import {
   colors,
   fontFamilies,
@@ -20,7 +22,10 @@ import {
   fontWeights,
   spacing,
   borderRadius,
-  shadows,
+  borderWidths,
+  iconSizes,
+  touchTarget,
+  layout,
   lineHeights,
 } from '../../constants/theme';
 import type { VideoResourceApi } from '../../services/api';
@@ -97,7 +102,8 @@ export default function VideoLibraryScreen({
 
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.teal} />
+          <SkeletonLoader style={styles.skeleton} />
+          <SkeletonLoader style={styles.skeleton} />
         </View>
       ) : errorMessage ? (
         <View style={styles.centered}>
@@ -117,25 +123,31 @@ export default function VideoLibraryScreen({
           {filtered.map((video) => (
             <Pressable
               key={video.id}
-              style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.cardPress, pressed && styles.pressed]}
               onPress={() => onVideoPress?.(video.videoKey)}
               accessibilityRole="button"
               accessibilityLabel={video.title}
             >
-              {video.thumbnailUrl && isPlayableYoutubeId(video.youtubeId) ? (
-                <Image source={{ uri: video.thumbnailUrl }} style={styles.thumbnail} />
-              ) : (
-                <View style={styles.thumbnailPlaceholder}>
-                  <AppIcon name="play-circle" size={40} color={colors.teal} />
+              <Card padding="none" style={styles.card}>
+                {video.thumbnailUrl && isPlayableYoutubeId(video.youtubeId) ? (
+                  <Image source={{ uri: video.thumbnailUrl }} style={styles.thumbnail} />
+                ) : (
+                  <View style={styles.thumbnailPlaceholder}>
+                    <AppIcon
+                      name="play-circle"
+                      size={iconSizes.xl}
+                      color={colors.teal}
+                    />
+                  </View>
+                )}
+                <View style={styles.cardBody}>
+                  <StatusBadge label={video.category} tone="info" />
+                  <Text style={styles.title}>{video.title}</Text>
+                  <Text style={styles.description} numberOfLines={2}>
+                    {video.description}
+                  </Text>
                 </View>
-              )}
-              <View style={styles.cardBody}>
-                <Text style={styles.category}>{video.category}</Text>
-                <Text style={styles.title}>{video.title}</Text>
-                <Text style={styles.description} numberOfLines={2}>
-                  {video.description}
-                </Text>
-              </View>
+              </Card>
             </Pressable>
           ))}
         </ScrollView>
@@ -147,18 +159,18 @@ export default function VideoLibraryScreen({
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   filterRow: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingVertical: spacing.sm,
     gap: spacing.sm,
   },
   filterChip: {
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     marginRight: spacing.sm,
   },
@@ -176,27 +188,24 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
   },
   listContent: {
-    padding: spacing.md,
+    padding: layout.screenPaddingHorizontal,
     gap: spacing.md,
   },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
+  cardPress: {
     marginBottom: spacing.md,
-    ...shadows.card,
+  },
+  card: {
+    overflow: 'hidden',
   },
   pressed: { opacity: 0.92 },
   thumbnail: {
     width: '100%',
-    height: 180,
+    height: layout.carouselMinHeight,
     backgroundColor: colors.warmCream,
   },
   thumbnailPlaceholder: {
     width: '100%',
-    height: 180,
+    height: layout.carouselMinHeight,
     backgroundColor: colors.warmCream,
     alignItems: 'center',
     justifyContent: 'center',
@@ -204,12 +213,6 @@ const styles = StyleSheet.create({
   cardBody: {
     padding: spacing.md,
     gap: spacing.xs,
-  },
-  category: {
-    fontSize: fontSizes.caption,
-    color: colors.teal,
-    fontWeight: fontWeights.semibold,
-    fontFamily: fontFamilies.semibold,
   },
   title: {
     fontSize: fontSizes.heading,
@@ -229,6 +232,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.lg,
+    gap: spacing.md,
+  },
+  skeleton: {
+    alignSelf: 'stretch',
   },
   emptyWrap: {
     flex: 1,

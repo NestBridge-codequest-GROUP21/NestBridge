@@ -3,7 +3,9 @@ import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import Card from '../../components/Card';
 import InlineBanner from '../../components/InlineBanner';
+import SectionHeader from '../../components/SectionHeader';
 import MonthCalendarGrid, {
   buildHostCalendarGrid,
 } from '../../components/MonthCalendarGrid';
@@ -14,9 +16,7 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
   lineHeights,
-  shadows,
 } from '../../constants/theme';
 
 export interface HostCalendarScreenProps {
@@ -79,12 +79,14 @@ export default function HostCalendarScreen({
       />
 
       <ScreenScroll>
-        <Text style={styles.screenTitle}>{calendarTitle}</Text>
-        {editable ? (
-          <Text style={styles.screenSubtitle}>
-            Tap an open day to block or unblock it. Booked days cannot be changed.
-          </Text>
-        ) : null}
+        <SectionHeader
+          title={calendarTitle}
+          subtitle={
+            editable
+              ? 'Tap an open day to block or unblock it. Booked days cannot be changed.'
+              : undefined
+          }
+        />
 
         <MonthCalendarGrid
           monthLabel={monthLabel}
@@ -98,13 +100,13 @@ export default function HostCalendarScreen({
           <InlineBanner message={statusMessage} tone="info" style={styles.statusBanner} />
         ) : null}
 
-        <View style={styles.bookingCard}>
+        <Card padding="lg" style={styles.bookingCard}>
           <Text style={styles.bookingTitle}>Active booking</Text>
           <Text style={styles.bookingDetail}>
             Guest: {activeBooking.guestName}, {activeBooking.dateRange}
           </Text>
           <Text style={styles.bookingTotal}>Total: {activeBooking.totalAmount}</Text>
-        </View>
+        </Card>
       </ScreenScroll>
     </View>
   );
@@ -115,32 +117,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  screenTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  screenSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-    lineHeight: lineHeights.body,
-  },
   statusBanner: {
     marginTop: spacing.md,
   },
   bookingCard: {
     marginTop: spacing.lg,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    ...shadows.card,
   },
   bookingTitle: {
     fontFamily: fontFamilies.semibold,

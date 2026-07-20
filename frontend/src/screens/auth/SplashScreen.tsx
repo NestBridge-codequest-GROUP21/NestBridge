@@ -20,7 +20,9 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   motion,
+  layout,
 } from '../../constants/theme';
 import { splashCopy } from '../../data/appCopy';
 
@@ -367,7 +369,7 @@ const styles = StyleSheet.create({
   },
   driftRing: {
     position: 'absolute',
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     backgroundColor: 'transparent',
   },
   content: {
@@ -408,9 +410,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tagline: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.gold,
     letterSpacing: spacing.xs,
     textAlign: 'center',
@@ -433,8 +435,8 @@ const styles = StyleSheet.create({
   },
   continueHint: {
     position: 'absolute',
-    left: spacing.lg,
-    right: spacing.lg,
+    left: layout.screenPaddingHorizontal,
+    right: layout.screenPaddingHorizontal,
     bottom: spacing.xl,
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,

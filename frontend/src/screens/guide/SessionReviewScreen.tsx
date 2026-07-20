@@ -1,17 +1,16 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import BackButton from '../../components/BackButton';
+import ScreenHeader from '../../components/ScreenHeader';
+import ScreenScroll from '../../components/ScreenScroll';
+import Avatar from '../../components/Avatar';
+import Card from '../../components/Card';
 import PrimaryButton from '../../components/PrimaryButton';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import SecondaryButton from '../../components/SecondaryButton';
+import SectionHeader from '../../components/SectionHeader';
+import StatusBadge from '../../components/StatusBadge';
 import {
   colors,
   fontFamilies,
@@ -19,9 +18,10 @@ import {
   fontWeights,
   spacing,
   borderRadius,
-  gradients,
+  borderWidths,
   lineHeights,
   shadows,
+  layout,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -76,63 +76,53 @@ export default function SessionReviewScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.headerCompact]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-      >
-        <BackButton
-          onPress={onBack}
-          color={colors.white}
-          style={styles.backButton}
-        />
-        <Text style={styles.headerTitle}>Session request</Text>
-        <Text style={styles.headerSubtitle}>Review before accepting</Text>
-      </LinearGradient>
+      <ScreenHeader
+        title="Session request"
+        subtitle="Review before accepting"
+        onBack={onBack}
+        compact
+      />
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 160 },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <ScreenScroll
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + spacing.xxl * 3 + layout.cardPadding,
+        }}
       >
-        <View style={styles.hero}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{request.studentInitials}</Text>
-          </View>
+        <Card padding="lg" style={styles.hero}>
+          <Avatar initials={request.studentInitials} size="lg" style={styles.heroAvatar} />
           <Text style={styles.name}>{request.studentName}</Text>
           <Text style={styles.meta}>
             {request.studentOrigin} · {request.studentUniversity}
           </Text>
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>
-              {request.seekerRole === 'TOURIST' ? 'Tourist' : 'Student'} request
-            </Text>
-          </View>
-          <View style={styles.compatBadge}>
-            <Text style={styles.compatText}>{request.compatibilityScore}% compatible</Text>
-          </View>
-        </View>
+          <StatusBadge
+            label={request.seekerRole === 'TOURIST' ? 'Tourist request' : 'Student request'}
+            tone="neutral"
+            style={styles.roleBadge}
+          />
+          <StatusBadge
+            label={`${request.compatibilityScore}% compatible`}
+            tone="info"
+          />
+        </Card>
 
         {request.message ? (
-          <View style={styles.messageCard}>
+          <Card padding="lg" elevation="none" style={styles.messageCard}>
             <Text style={styles.messageLabel}>Message</Text>
             <Text style={styles.messageText}>{request.message}</Text>
-          </View>
+          </Card>
         ) : null}
 
-        <Text style={styles.sectionLabel}>Session time</Text>
-        <View style={styles.datesCard}>
+        <SectionHeader title="Session time" />
+        <Card padding="lg" style={styles.sectionCard}>
           <Text style={styles.datesValue}>{sessionLine ?? 'Schedule pending'}</Text>
           <Text style={styles.datesPeriod}>{capacity.periodLabel}</Text>
-        </View>
+        </Card>
 
-        <Text style={styles.sectionLabel}>Your capacity</Text>
-        <View
+        <SectionHeader title="Your capacity" />
+        <Card
+          padding="lg"
           style={[
-            styles.capacityCard,
+            styles.sectionCard,
             !capacity.canAccept && styles.capacityWarning,
           ]}
         >
@@ -146,10 +136,10 @@ export default function SessionReviewScreen({
               ? 'You can accept up to 2 overlapping sessions.'
               : capacity.declineReason}
           </Text>
-        </View>
+        </Card>
 
-        <Text style={styles.sectionLabel}>Earnings</Text>
-        <View style={styles.earningsCard}>
+        <SectionHeader title="Earnings" />
+        <Card padding="lg" elevation="none" style={styles.earningsCard}>
           <View style={styles.earningsRow}>
             <Text style={styles.earningsLabel}>Guest pays</Text>
             <Text style={styles.earningsValue}>
@@ -163,8 +153,8 @@ export default function SessionReviewScreen({
               {formatCurrency(earnings.sessionRate, earnings.currency)}
             </Text>
           </View>
-        </View>
-      </ScrollView>
+        </Card>
+      </ScreenScroll>
 
       <View
         style={[
@@ -196,57 +186,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    marginBottom: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  headerTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    marginBottom: spacing.xs,
-  },
-  headerSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.white,
-    opacity: 0.88,
-    lineHeight: lineHeights.body,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
   hero: {
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.xl,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
+  heroAvatar: {
     marginBottom: spacing.md,
-  },
-  avatarText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   name: {
     fontFamily: fontFamilies.bold,
@@ -265,37 +210,11 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   roleBadge: {
-    backgroundColor: colors.warmCream,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
     marginBottom: spacing.sm,
-  },
-  roleBadgeText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
-  },
-  compatBadge: {
-    backgroundColor: colors.teal,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.pill,
-  },
-  compatText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
   },
   messageCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   messageLabel: {
     fontFamily: fontFamilies.bold,
@@ -314,23 +233,8 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
     fontStyle: 'italic',
   },
-  sectionLabel: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: spacing.sm,
-  },
-  datesCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+  sectionCard: {
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   datesValue: {
     fontFamily: fontFamilies.bold,
@@ -345,15 +249,6 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
-  capacityCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
-  },
   capacityWarning: {
     borderColor: colors.warning,
     backgroundColor: colors.warmCream,
@@ -364,8 +259,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   dot: {
-    width: 16,
-    height: 16,
+    width: spacing.md,
+    height: spacing.md,
     borderRadius: borderRadius.pill,
   },
   dotFilled: {
@@ -390,10 +285,7 @@ const styles = StyleSheet.create({
   },
   earningsCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    marginBottom: spacing.lg,
   },
   earningsRow: {
     flexDirection: 'row',
@@ -419,7 +311,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
   },
   divider: {
-    height: 1,
+    height: borderWidths.hairline,
     backgroundColor: colors.border,
     opacity: 0.6,
   },
@@ -431,7 +323,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     ...shadows.raised,
   },

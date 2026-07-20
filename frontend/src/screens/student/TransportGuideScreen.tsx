@@ -4,7 +4,9 @@ import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppIcon, { type IoniconName } from '../../components/AppIcon';
+import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
+import SectionHeader from '../../components/SectionHeader';
 import type { TransportTab } from '../../data/featureScreensMock';
 import {
   colors,
@@ -13,9 +15,13 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
-  shadows,
   tints,
+  iconSizes,
+  avatarSizes,
+  touchTarget,
+  layout,
 } from '../../constants/theme';
 
 const MODE_ICON_BY_TAB: Record<string, IoniconName> = {
@@ -40,10 +46,10 @@ function RouteCard({
   route: TransportTab['routes'][number];
 }) {
   return (
-    <View style={styles.routeCard}>
+    <Card padding="md">
       <View style={styles.routeHeader}>
         <View style={styles.locationIconWrap}>
-          <AppIcon name="location-outline" size={fontSizes.body} color={colors.tealDeep} />
+          <AppIcon name="location-outline" size={iconSizes.md} color={colors.tealDeep} />
         </View>
         <Text style={styles.routeName}>{route.name}</Text>
       </View>
@@ -55,7 +61,7 @@ function RouteCard({
           <Text style={styles.priceSubtext}>Est. range</Text>
         </View>
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -85,10 +91,10 @@ export default function TransportGuideScreen({
       />
 
       <ScreenScroll>
-        <Text style={styles.screenTitle}>Getting around Ghana</Text>
-        <Text style={styles.screenSubtitle}>
-          Trotros, shared taxis, and ride-hailing — what to expect and rough fare ranges.
-        </Text>
+        <SectionHeader
+          title="Getting around Ghana"
+          subtitle="Trotros, shared taxis, and ride-hailing — what to expect and rough fare ranges."
+        />
 
         {tabs.length === 0 ? (
           <EmptyState
@@ -117,7 +123,7 @@ export default function TransportGuideScreen({
                   >
                     <AppIcon
                       name={iconName}
-                      size={20}
+                      size={iconSizes.md}
                       color={isActive ? colors.white : colors.tealDeep}
                     />
                     <Text
@@ -155,25 +161,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  screenTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    lineHeight: lineHeights.heading,
-    marginBottom: spacing.sm,
-  },
-  screenSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    lineHeight: lineHeights.body,
-    marginBottom: spacing.lg,
-  },
   tabRow: {
     gap: spacing.sm,
-    marginBottom: spacing.lg,
+    marginBottom: layout.sectionGap,
   },
   tabChip: {
     flexDirection: 'row',
@@ -183,11 +173,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
-    ...shadows.card,
   },
   tabChipActive: {
     backgroundColor: colors.teal,
@@ -205,14 +194,6 @@ const styles = StyleSheet.create({
   routeList: {
     gap: spacing.md,
   },
-  routeCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    ...shadows.card,
-  },
   routeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -220,8 +201,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   locationIconWrap: {
-    width: 32,
-    height: 32,
+    width: avatarSizes.sm,
+    height: avatarSizes.sm,
     borderRadius: borderRadius.pill,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -229,9 +210,9 @@ const styles = StyleSheet.create({
   },
   routeName: {
     flex: 1,
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     lineHeight: lineHeights.body,
   },
@@ -261,9 +242,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   priceText: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
     lineHeight: lineHeights.subheading,
   },

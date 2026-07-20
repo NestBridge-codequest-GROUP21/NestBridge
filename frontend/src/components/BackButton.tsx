@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 import AppIcon from './AppIcon';
-import { colors, spacing } from '../constants/theme';
+import { colors, spacing, iconSizes, touchTarget } from '../constants/theme';
 
 export interface BackButtonProps {
   onPress?: () => void;
@@ -26,15 +26,15 @@ export default function BackButton({
       accessibilityLabel={accessibilityLabel}
       hitSlop={spacing.xs}
     >
-      <AppIcon name="chevron-back" size={24} color={color} />
+      <AppIcon name="chevron-back" size={iconSizes.lg} color={color} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },

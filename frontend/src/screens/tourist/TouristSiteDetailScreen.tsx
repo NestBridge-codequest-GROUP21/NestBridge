@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenScroll from '../../components/ScreenScroll';
 import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
 import AppIcon from '../../components/AppIcon';
 import {
   colors,
@@ -13,10 +15,13 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
   layout,
   shadows,
   tints,
+  iconSizes,
+  avatarSizes,
 } from '../../constants/theme';
 
 export interface TouristSiteDetail {
@@ -50,12 +55,16 @@ export default function TouristSiteDetailScreen({
 
       <ScreenScroll
         contentContainerStyle={{
-          paddingBottom: insets.bottom + spacing.xl * 4,
+          paddingBottom: insets.bottom + layout.scrollBottomInsetWithSos,
         }}
       >
         <View style={styles.imagePlaceholder} accessibilityLabel="Site photo">
           <View style={styles.imageIconWrap}>
-            <AppIcon name="library-outline" size={36} color={colors.tealDeep} />
+            <AppIcon
+              name="library-outline"
+              size={iconSizes.xl}
+              color={colors.tealDeep}
+            />
           </View>
         </View>
 
@@ -65,8 +74,8 @@ export default function TouristSiteDetailScreen({
 
           <Text style={styles.description}>{site.description}</Text>
 
-          <Text style={styles.sectionTitle}>Visit details</Text>
-          <View style={styles.detailsCard}>
+          <SectionHeader title="Visit details" />
+          <Card padding="md" elevation="card">
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Opening hours</Text>
               <Text style={styles.detailValue}>{site.openingHours}</Text>
@@ -76,7 +85,7 @@ export default function TouristSiteDetailScreen({
               <Text style={styles.detailLabel}>Admission</Text>
               <Text style={styles.detailValue}>{site.admission}</Text>
             </View>
-          </View>
+          </Card>
         </View>
       </ScreenScroll>
 
@@ -95,6 +104,8 @@ export default function TouristSiteDetailScreen({
   );
 }
 
+const ICON_TILE = avatarSizes.lg + spacing.md;
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -112,8 +123,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   imageIconWrap: {
-    width: 72,
-    height: 72,
+    width: ICON_TILE,
+    height: ICON_TILE,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.white,
     alignItems: 'center',
@@ -147,22 +158,6 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
     marginBottom: layout.sectionGap,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    lineHeight: lineHeights.heading,
-    marginBottom: spacing.sm,
-  },
-  detailsCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    ...shadows.card,
-  },
   detailRow: {
     gap: spacing.xs,
   },
@@ -180,7 +175,7 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   detailDivider: {
-    height: 1,
+    height: borderWidths.hairline,
     backgroundColor: colors.border,
     marginVertical: spacing.md,
   },
@@ -192,7 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     ...shadows.raised,
   },

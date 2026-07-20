@@ -7,6 +7,7 @@ import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import BackButton from '../../components/BackButton';
+import Card from '../../components/Card';
 import {
   colors,
   fontFamilies,
@@ -14,9 +15,11 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
   layout,
   shadows,
+  touchTarget,
 } from '../../constants/theme';
 
 const AVATAR_SIZE = spacing.xl * 3;
@@ -101,7 +104,7 @@ export default function ProfileSetupScreen({
           </Text>
         </Pressable>
 
-        <View style={styles.formCard}>
+        <Card style={styles.formCard}>
           <FormTextField
             label="Display name"
             value={displayName}
@@ -115,7 +118,7 @@ export default function ProfileSetupScreen({
             placeholder="Exchange student in Accra — love cooking and history"
             onChangeText={onBioChange}
           />
-        </View>
+        </Card>
 
         <PrimaryButton label="Continue" onPress={onContinue} />
         <View style={styles.skipSpacer} />
@@ -137,9 +140,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   title: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     lineHeight: lineHeights.display,
     marginBottom: spacing.sm,
@@ -155,7 +158,7 @@ const styles = StyleSheet.create({
   avatarSection: {
     alignItems: 'center',
     marginBottom: spacing.lg,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   avatar: {
     width: AVATAR_SIZE,
@@ -165,14 +168,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
-    borderWidth: 3,
+    borderWidth: borderWidths.strong + borderWidths.hairline,
     borderColor: colors.white,
     ...shadows.raised,
   },
   avatarText: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
   },
   addPhoto: {
@@ -190,13 +193,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   formCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   skipSpacer: {
     height: spacing.sm,

@@ -13,6 +13,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '../../components/BackButton';
 import AppIcon from '../../components/AppIcon';
+import Avatar from '../../components/Avatar';
+import Card from '../../components/Card';
+import StatusBadge from '../../components/StatusBadge';
 import {
   colors,
   fontFamilies,
@@ -20,11 +23,13 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   lineHeights,
   layout,
   motion,
-  shadows,
+  touchTarget,
+  iconSizes,
 } from '../../constants/theme';
 import { accountSetupCopy } from '../../data/appCopy';
 import {
@@ -64,6 +69,19 @@ function statusLabel(status: SetupTrackCardData['status']): string {
       return 'In progress';
     default:
       return 'Not started';
+  }
+}
+
+function statusTone(
+  status: SetupTrackCardData['status'],
+): 'success' | 'warning' | 'neutral' {
+  switch (status) {
+    case 'COMPLETE':
+      return 'success';
+    case 'IN_PROGRESS':
+      return 'warning';
+    default:
+      return 'neutral';
   }
 }
 
@@ -137,9 +155,7 @@ export default function AccountSetupScreen({
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.userRow}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{userInitials}</Text>
-          </View>
+          <Avatar initials={userInitials} size="lg" style={styles.avatarSpacing} />
           <View style={styles.userText}>
             <Text style={styles.userName}>{userName}</Text>
             <Text style={styles.userHint}>Primary focus: {intentLabel}</Text>
@@ -159,41 +175,42 @@ export default function AccountSetupScreen({
 
         {showExchangeStudentToggle ? (
           <Pressable
-            style={styles.exchangeToggleRow}
+            style={styles.exchangeTogglePressable}
             onPress={onExchangeStudentToggle}
             accessibilityRole="checkbox"
             accessibilityState={{ checked: isNoLongerExchangeStudent }}
             accessibilityLabel={accountSetupCopy.exchangeStudentToggleLabel}
           >
-            <View
-              style={[
-                styles.exchangeCheckbox,
-                isNoLongerExchangeStudent && styles.exchangeCheckboxChecked,
-              ]}
-            >
-              {isNoLongerExchangeStudent ? (
-                <Text style={styles.exchangeCheckmark}>✓</Text>
-              ) : null}
-            </View>
-            <View style={styles.exchangeToggleText}>
-              <Text style={styles.exchangeToggleLabel}>
-                {accountSetupCopy.exchangeStudentToggleLabel}
-              </Text>
-              <Text style={styles.exchangeToggleHint}>
-                {accountSetupCopy.exchangeStudentToggleHint}
-              </Text>
-            </View>
+            <Card style={styles.exchangeToggleRow}>
+              <View
+                style={[
+                  styles.exchangeCheckbox,
+                  isNoLongerExchangeStudent && styles.exchangeCheckboxChecked,
+                ]}
+              >
+                {isNoLongerExchangeStudent ? (
+                  <AppIcon name="checkmark" size={iconSizes.sm} color={colors.white} />
+                ) : null}
+              </View>
+              <View style={styles.exchangeToggleText}>
+                <Text style={styles.exchangeToggleLabel}>
+                  {accountSetupCopy.exchangeStudentToggleLabel}
+                </Text>
+                <Text style={styles.exchangeToggleHint}>
+                  {accountSetupCopy.exchangeStudentToggleHint}
+                </Text>
+              </View>
+            </Card>
           </Pressable>
         ) : null}
 
         {setupTracks.map((item) => {
-          const complete = item.status === 'COMPLETE';
           const disabled = item.blocked === true;
           return (
             <Pressable
               key={item.track}
               style={({ pressed }) => [
-                styles.card,
+                styles.cardPressable,
                 disabled && styles.cardDisabled,
                 pressed && !disabled && styles.cardPressed,
               ]}
@@ -206,51 +223,42 @@ export default function AccountSetupScreen({
               accessibilityLabel={SETUP_TRACK_LABELS[item.track]}
               accessibilityState={{ disabled }}
             >
-              <View style={styles.cardTop}>
-                <View style={styles.cardLeading}>
-                  <View style={styles.cardAccent} />
-                  <AppIcon
-                    glyph={SETUP_TRACK_ICONS[item.track]}
-                    size={fontSizes.heading}
-                    color={colors.tealDeep}
+              <Card>
+                <View style={styles.cardTop}>
+                  <View style={styles.cardLeading}>
+                    <View style={styles.cardAccent} />
+                    <AppIcon
+                      glyph={SETUP_TRACK_ICONS[item.track]}
+                      size={iconSizes.lg}
+                      color={colors.tealDeep}
+                    />
+                  </View>
+                  <View style={styles.cardText}>
+                    <Text style={styles.cardTitle}>{SETUP_TRACK_LABELS[item.track]}</Text>
+                    <Text style={styles.cardDescription}>
+                      {SETUP_TRACK_DESCRIPTIONS[item.track]}
+                    </Text>
+                    {disabled && item.blockedMessage ? (
+                      <Text style={styles.blockedText}>{item.blockedMessage}</Text>
+                    ) : null}
+                  </View>
+                  <StatusBadge
+                    label={statusLabel(item.status)}
+                    tone={statusTone(item.status)}
                   />
                 </View>
-                <View style={styles.cardText}>
-                  <Text style={styles.cardTitle}>{SETUP_TRACK_LABELS[item.track]}</Text>
-                  <Text style={styles.cardDescription}>
-                    {SETUP_TRACK_DESCRIPTIONS[item.track]}
-                  </Text>
-                  {disabled && item.blockedMessage ? (
-                    <Text style={styles.blockedText}>{item.blockedMessage}</Text>
-                  ) : null}
-                </View>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    complete ? styles.statusComplete : styles.statusPending,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusText,
-                      complete ? styles.statusTextComplete : styles.statusTextPending,
-                    ]}
-                  >
-                    {statusLabel(item.status)}
-                  </Text>
-                </View>
-              </View>
 
-              <SetupProgressBar percent={item.progressPercent} />
-              <Text style={styles.progressLabel}>{item.progressPercent}% complete</Text>
+                <SetupProgressBar percent={item.progressPercent} />
+                <Text style={styles.progressLabel}>{item.progressPercent}% complete</Text>
+              </Card>
             </Pressable>
           );
         })}
 
-        <View style={styles.infoCard}>
+        <Card padding="lg" style={styles.infoCard}>
           <Text style={styles.infoTitle}>{accountSetupCopy.infoTitle}</Text>
           <Text style={styles.infoBody}>{accountSetupCopy.infoBody}</Text>
-        </View>
+        </Card>
       </ScrollView>
     </View>
   );
@@ -262,7 +270,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingBottom: spacing.lg,
     borderBottomLeftRadius: borderRadius.lg,
     borderBottomRightRadius: borderRadius.lg,
@@ -274,13 +282,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   backPlaceholder: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
   },
   headerTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
   },
   headerSubtitle: {
@@ -296,7 +304,7 @@ const styles = StyleSheet.create({
     marginTop: -spacing.sm,
   },
   bodyContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
   },
   userRow: {
@@ -304,19 +312,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
+  avatarSpacing: {
     marginRight: spacing.md,
-  },
-  avatarText: {
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
   },
   userText: {
     flex: 1,
@@ -334,7 +331,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   changeIntentButton: {
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
@@ -344,23 +341,19 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
+  exchangeTogglePressable: {
+    marginBottom: spacing.lg,
+  },
   exchangeToggleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 44,
-    ...shadows.card,
+    minHeight: touchTarget,
   },
   exchangeCheckbox: {
-    width: 24,
-    height: 24,
+    width: spacing.lg,
+    height: spacing.lg,
     borderRadius: borderRadius.sm,
-    borderWidth: 2,
+    borderWidth: borderWidths.strong,
     borderColor: colors.teal,
     alignItems: 'center',
     justifyContent: 'center',
@@ -370,18 +363,13 @@ const styles = StyleSheet.create({
   exchangeCheckboxChecked: {
     backgroundColor: colors.teal,
   },
-  exchangeCheckmark: {
-    color: colors.white,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-  },
   exchangeToggleText: {
     flex: 1,
   },
   exchangeToggleLabel: {
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
@@ -389,16 +377,10 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textSecondary,
-    lineHeight: 16,
+    lineHeight: lineHeights.caption,
   },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
+  cardPressable: {
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   cardDisabled: {
     opacity: 0.65,
@@ -417,7 +399,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   cardAccent: {
-    width: 4,
+    width: spacing.xs,
     alignSelf: 'stretch',
     borderRadius: borderRadius.pill,
     backgroundColor: colors.teal,
@@ -438,38 +420,17 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textSecondary,
-    lineHeight: 16,
+    lineHeight: lineHeights.caption,
   },
   blockedText: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.danger,
     marginTop: spacing.sm,
-    lineHeight: 16,
-  },
-  statusBadge: {
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  statusComplete: {
-    backgroundColor: colors.success,
-  },
-  statusPending: {
-    backgroundColor: colors.warmCream,
-  },
-  statusText: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-  },
-  statusTextComplete: {
-    color: colors.white,
-  },
-  statusTextPending: {
-    color: colors.warning,
+    lineHeight: lineHeights.caption,
   },
   progressTrack: {
-    height: 6,
+    height: spacing.sm - borderWidths.strong,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.border,
     overflow: 'hidden',
@@ -480,16 +441,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.teal,
   },
   progressLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
   },
   infoCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginTop: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   infoTitle: {
     fontFamily: fontFamilies.semibold,

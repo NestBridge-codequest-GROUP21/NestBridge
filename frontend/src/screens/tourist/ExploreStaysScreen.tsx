@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import SectionHeader from '../../components/SectionHeader';
+import Card from '../../components/Card';
+import StatusBadge from '../../components/StatusBadge';
 import EmptyState from '../../components/EmptyState';
 import PrimaryButton from '../../components/PrimaryButton';
 import AppIcon from '../../components/AppIcon';
@@ -15,8 +18,12 @@ import {
   fontWeights,
   spacing,
   borderRadius,
-  shadows,
+  borderWidths,
   lineHeights,
+  layout,
+  iconSizes,
+  touchTarget,
+  controlHeights,
 } from '../../constants/theme';
 
 export interface ExploreStaysScreenProps {
@@ -38,7 +45,7 @@ function StarRow({ rating }: { rating: number }) {
         <AppIcon
           key={`star-${index}`}
           name={index < rating ? 'star' : 'star-outline'}
-          size={fontSizes.body}
+          size={iconSizes.sm}
           color={index < rating ? colors.warning : colors.border}
         />
       ))}
@@ -54,16 +61,18 @@ function StayCard({
   onBookPress?: () => void;
 }) {
   return (
-    <View style={styles.stayCard}>
+    <Card padding="none" elevation="card" style={styles.stayCard}>
       <View style={styles.imageTile}>
-        <AppIcon glyph={listing.imageEmoji} size={44} color={colors.tealDeep} />
+        <AppIcon
+          glyph={listing.imageEmoji}
+          size={iconSizes.xl}
+          color={colors.tealDeep}
+        />
       </View>
 
       <View style={styles.cardBody}>
         {listing.verifiedHost ? (
-          <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedText}>Verified Host</Text>
-          </View>
+          <StatusBadge label="Verified Host" tone="success" />
         ) : null}
 
         <Text style={styles.stayTitle}>{listing.title}</Text>
@@ -73,18 +82,25 @@ function StayCard({
 
         <View style={styles.amenityRow}>
           {listing.amenities.map((amenity) => (
-            <View key={amenity} style={styles.amenityChip}>
-              <Text style={styles.amenityText}>{amenity}</Text>
-            </View>
+            <StatusBadge
+              key={amenity}
+              label={amenity}
+              tone="neutral"
+              style={styles.amenityChip}
+            />
           ))}
         </View>
 
         <View style={styles.priceRow}>
           <Text style={styles.priceText}>{listing.pricePerNight}</Text>
-          <PrimaryButton label="Book Now" onPress={onBookPress} style={styles.bookButton} />
+          <PrimaryButton
+            label="Book Now"
+            onPress={onBookPress}
+            style={styles.bookButton}
+          />
         </View>
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -113,14 +129,18 @@ export default function ExploreStaysScreen({
 
       <ScreenScroll>
         <View style={styles.titleRow}>
-          <Text style={styles.screenTitle}>Homestays nearby</Text>
+          <SectionHeader title="Homestays nearby" style={styles.sectionHeader} />
           <Pressable
             onPress={onFilterPress}
             style={styles.filterButton}
             accessibilityRole="button"
             accessibilityLabel="Filter listings"
           >
-            <AppIcon name="options-outline" size={fontSizes.heading} color={colors.textSecondary} />
+            <AppIcon
+              name="options-outline"
+              size={iconSizes.lg}
+              color={colors.textSecondary}
+            />
           </Pressable>
         </View>
 
@@ -158,19 +178,18 @@ const styles = StyleSheet.create({
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
-  screenTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
+  sectionHeader: {
+    flex: 1,
+    marginBottom: 0,
   },
   filterButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: touchTarget,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -179,16 +198,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   stayCard: {
-    width: 280,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    width: layout.listingCardWidth,
     overflow: 'hidden',
-    ...shadows.card,
   },
   imageTile: {
-    height: 120,
+    height: layout.carouselMinHeight - spacing.xl,
     margin: spacing.sm,
     backgroundColor: tints.teal,
     borderRadius: borderRadius.md,
@@ -196,24 +210,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardBody: {
-    padding: spacing.md,
+    padding: layout.cardPadding,
     gap: spacing.sm,
-  },
-  verifiedBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  verifiedText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    color: colors.white,
   },
   stayTitle: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
     color: colors.textPrimary,
   },
   stayLocation: {
@@ -228,33 +231,30 @@ const styles = StyleSheet.create({
   },
   amenityRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   amenityChip: {
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  amenityText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.border,
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: spacing.sm,
+    gap: spacing.sm,
   },
   priceText: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.bold,
     color: colors.teal,
+    flexShrink: 1,
   },
   bookButton: {
     paddingHorizontal: spacing.md,
-    minHeight: 44,
+    minHeight: controlHeights.sm,
     paddingVertical: spacing.sm,
   },
 });

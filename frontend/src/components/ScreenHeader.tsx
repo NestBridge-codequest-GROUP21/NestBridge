@@ -16,6 +16,9 @@ import {
   borderRadius,
   gradients,
   lineHeights,
+  iconSizes,
+  touchTarget,
+  avatarSizes,
 } from '../constants/theme';
 
 export interface ScreenHeaderProps {
@@ -78,7 +81,7 @@ export default function ScreenHeader({
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
-              <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
+              <AppIcon name="chevron-back" size={iconSizes.lg} color={colors.white} />
             </Pressable>
           ) : (
             <View style={styles.actionSpacer} />
@@ -90,7 +93,7 @@ export default function ScreenHeader({
               accessibilityRole="button"
               accessibilityLabel="Help"
             >
-              <AppIcon name="help-circle-outline" size={fontSizes.heading} color={colors.white} />
+              <AppIcon name="help-circle-outline" size={iconSizes.lg} color={colors.white} />
             </Pressable>
           ) : (
             <View style={styles.actionSpacer} />
@@ -124,7 +127,7 @@ export default function ScreenHeader({
                 >
                   <AppIcon
                     name="notifications-outline"
-                    size={fontSizes.subheading}
+                    size={iconSizes.md}
                     color={colors.white}
                   />
                   {notificationCount > 0 ? (
@@ -150,7 +153,7 @@ export default function ScreenHeader({
                 >
                   <Text style={styles.avatarText}>{userInitials}</Text>
                   <View style={styles.avatarBadge}>
-                    <AppIcon name="person" size={10} color={colors.white} />
+                    <AppIcon name="person" size={fontSizes.micro} color={colors.white} />
                   </View>
                 </Pressable>
               ) : null}
@@ -187,13 +190,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   actionButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: touchTarget,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionSpacer: {
-    width: 44,
+    width: touchTarget,
   },
   actionText: {
     fontFamily: fontFamilies.semibold,
@@ -257,8 +260,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   notificationButton: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -280,12 +283,13 @@ const styles = StyleSheet.create({
   },
   notificationBadgeText: {
     fontFamily: fontFamilies.bold,
-    fontSize: 10,
+    fontSize: fontSizes.micro,
+    lineHeight: lineHeights.micro,
     color: colors.white,
   },
   avatar: {
-    width: 48,
-    height: 48,
+    width: avatarSizes.lg,
+    height: avatarSizes.lg,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.white,
     alignItems: 'center',
