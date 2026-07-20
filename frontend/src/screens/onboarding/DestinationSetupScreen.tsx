@@ -29,6 +29,7 @@ import { isLikelyValidPlaceName } from '../../utils/textValidation';
 import { validationCopy } from '../../data/appCopy';
 import {
   destinationCityOptions,
+  isUniversityValidForCity,
   universityOptionsForCity,
 } from '../../data/ghanaReference';
 
@@ -189,12 +190,21 @@ export default function DestinationSetupScreen({
       return;
     }
 
+    // Drop stale campus selections that belong to another destination.
+    if (university && !isUniversityValidForCity(university, city)) {
+      onUniversityChange?.('');
+    }
+
     setDestinationError(null);
     onContinue?.();
   };
 
   const handleCityChange = (value: string) => {
     onCityChange?.(value);
+    // Never keep a campus that is not listed for the newly selected city.
+    if (university && !isUniversityValidForCity(university, value)) {
+      onUniversityChange?.('');
+    }
     if (destinationError) {
       if (value.trim().length === 0) {
         return;

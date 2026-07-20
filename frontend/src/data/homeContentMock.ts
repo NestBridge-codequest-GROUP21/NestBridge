@@ -96,13 +96,14 @@ export const studentRecommendedMock: ExploreSectionItem[] = [
   },
 ];
 
+/** Must match suggestedGuidesMock[0] (guide-1) — same ID the home CTA opens. */
 export const touristFeaturedGuideMock: Omit<FeaturedHomeCardProps, 'onPress'> = {
   sectionLabel: 'Recommended for you',
-  name: 'Yaw Darko — City Tour',
+  name: 'Kofi Asante — City Tour',
   badge: 'Top rated guide',
-  details: 'English & French · 4.9★ · Available this week',
+  details: 'English & Twi · Accra (Osu & Labadi) · Available this week',
   ctaLabel: 'See all guides →',
-  initials: 'YD',
+  initials: 'KA',
 };
 
 export const touristStatusMock = {

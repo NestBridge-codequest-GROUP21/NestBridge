@@ -231,7 +231,11 @@ import {
   transportApiMock,
   videosApiMock,
 } from '../data/contentLibraryMock';
-import { exploreSectionsMock } from '../data/touristExploreMock';
+import { exploreSectionsForCity } from '../data/touristExploreMock';
+import {
+  touristSiteIdFromCarouselSection,
+  touristSiteSummaryFromId,
+} from '../data/touristSitesMock';
 import { welfareCheckInQuestions } from '../data/welfareMock';
 import type { WelfareCheckInQuestion } from '../data/welfareMock';
 import {
@@ -248,7 +252,10 @@ import {
   demoTopGuideId,
 } from '../data/homeFeeds';
 import { sampleMatchResultsForCity } from '../data/matchResultsMock';
-import { suggestedGuidesMock } from '../data/guideSessionMock';
+import {
+  suggestedGuidesMock,
+  guidesForAttraction,
+} from '../data/guideSessionMock';
 import type { ConversationListItem } from '../types/messaging';
 import type {
   ActiveBookingDetail,
@@ -300,16 +307,6 @@ function getInitials(name: string): string {
     .join('')
     .slice(0, 2)
     .toUpperCase();
-}
-
-function touristSiteIdFromCarouselSection(
-  sectionId: string,
-  knownSiteKeys: string[] = [],
-): string {
-  if (sectionId === 'sites') return 'site-cape-coast';
-  if (sectionId === 'site-food') return 'site-makola';
-  if (knownSiteKeys.includes(sectionId)) return sectionId;
-  return 'site-cape-coast';
 }
 
 function handleStudentQuickAction(
@@ -387,14 +384,17 @@ function handleExploreSectionPress(
   navigation: NativeStackNavigationProp<AppStackParamList>,
   sectionId: string,
 ) {
-  if (sectionId.startsWith('site-') || sectionId === 'sites') {
-    if (sectionId === 'sites') {
+  if (sectionId === 'sites') {
+    navigation.navigate('SitesDirectory');
+    return;
+  }
+  if (sectionId.startsWith('site-')) {
+    const siteId = touristSiteIdFromCarouselSection(sectionId);
+    if (!siteId) {
       navigation.navigate('SitesDirectory');
       return;
     }
-    navigation.navigate('TouristSiteDetail', {
-      siteId: touristSiteIdFromCarouselSection(sectionId),
-    });
+    navigation.navigate('TouristSiteDetail', { siteId });
     return;
   }
   if (sectionId === 'transport') {
@@ -413,9 +413,8 @@ function handleExploreSectionPress(
     navigation.navigate('StudentEvents');
     return;
   }
-  navigation.navigate('TouristSiteDetail', {
-    siteId: touristSiteIdFromCarouselSection(sectionId),
-  });
+  // Unknown section — open sites directory, never a random attraction.
+  navigation.navigate('SitesDirectory');
 }
 
 function defaultCheckIn(arrivalDate: string): string {
@@ -1920,7 +1919,7 @@ export default function AppNavigator() {
         { isLoading: homeApi.isLoading, error: homeApi.error },
       ),
       quickActions: getQuickActionsForRole('BROWSE'),
-      sections: exploreSectionsMock,
+      sections: exploreSectionsForCity(cityLabel),
       exploreSectionTitle: `Explore ${cityLabel.split(',')[0]?.trim() || cityLabel}`,
       recentActivity:
         touristLive.recentActivity.length > 0
@@ -1954,7 +1953,7 @@ export default function AppNavigator() {
       isHomeLoading,
       homeDataError,
       quickActions: getQuickActionsForRole('TOURIST'),
-      sections: exploreSectionsMock,
+      sections: exploreSectionsForCity(cityLabel),
       exploreSectionTitle: `Explore ${cityLabel.split(',')[0]?.trim() || cityLabel}`,
       recentActivity:
         touristLive.recentActivity.length > 0
@@ -3152,19 +3151,37 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="GuideSearch">
-        {({ navigation }) => (
-          <GuideSearchScreen
-            title="Find a guide"
-            subtitle="Tours, orientation, and cultural experiences"
-            cityLabel={cityLabel}
-            guides={guideListForSearch}
-            showMatchScores={showMatchScores}
-            onBack={() => navigation.goBack()}
-            onGuidePress={(guideId) =>
-              navigation.navigate('GuideProfile', { guideId })
-            }
-          />
-        )}
+        {({ navigation, route }) => {
+          const siteId = route.params?.siteId;
+          const siteName = route.params?.siteName;
+          const site = siteId ? touristSiteSummaryFromId(siteId) : null;
+          const attractionGuides = siteId
+            ? guidesForAttraction(
+                guideListForSearch,
+                siteId,
+                site?.city ?? cityLabel,
+                site?.guideKeywords ?? [],
+              )
+            : guideListForSearch;
+
+          return (
+            <GuideSearchScreen
+              title={siteName ? `Guides for ${siteName}` : 'Find a guide'}
+              subtitle={
+                siteName
+                  ? `Local guides who know ${siteName}`
+                  : 'Tours, orientation, and cultural experiences'
+              }
+              cityLabel={site?.city ?? cityLabel}
+              guides={attractionGuides}
+              showMatchScores={showMatchScores}
+              onBack={() => navigation.goBack()}
+              onGuidePress={(guideId) =>
+                navigation.navigate('GuideProfile', { guideId })
+              }
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="GuideProfile">
@@ -3304,13 +3321,21 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="TouristSiteDetail">
-        {({ navigation, route }) => (
-          <SiteDetailRoute
-            siteKey={route.params.siteId}
-            onBack={() => navigation.goBack()}
-            onFindGuidePress={() => navigation.navigate('GuideSearch')}
-          />
-        )}
+        {({ navigation, route }) => {
+          const site = touristSiteSummaryFromId(route.params.siteId);
+          return (
+            <SiteDetailRoute
+              siteKey={route.params.siteId}
+              onBack={() => navigation.goBack()}
+              onFindGuidePress={() =>
+                navigation.navigate('GuideSearch', {
+                  siteId: route.params.siteId,
+                  siteName: site?.name,
+                })
+              }
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="VideoLibrary">
