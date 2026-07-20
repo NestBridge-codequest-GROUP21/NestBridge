@@ -7,7 +7,7 @@ export const allSampleMatchResults: MatchResultHost[] = [
     id: 'host-1',
     hostName: 'Abena Mensah',
     initials: 'AM',
-    compatibilityScore: 92,
+    compatibilityScore: 96,
     trustBadge: 'VERIFIED',
     matchReasons: [
       'Halal meals offered',
@@ -21,9 +21,9 @@ export const allSampleMatchResults: MatchResultHost[] = [
   },
   {
     id: 'host-2',
-    hostName: 'Kwame & Grace',
+    hostName: 'Kwame & Grace Asante',
     initials: 'KG',
-    compatibilityScore: 88,
+    compatibilityScore: 91,
     trustBadge: 'TRUSTED',
     matchReasons: [
       'Social household — family dinners',

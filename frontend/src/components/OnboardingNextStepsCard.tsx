@@ -8,7 +8,11 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
+  shadows,
+  touchTarget,
+  iconSizes,
 } from '../constants/theme';
 
 export interface OnboardingNextStep {
@@ -35,7 +39,11 @@ export default function OnboardingNextStepsCard({
           style={[styles.row, index < steps.length - 1 && styles.rowBorder]}
         >
           <View style={styles.iconWrap}>
-            <AppIcon glyph={step.icon} size={fontSizes.subheading} color={colors.tealDeep} />
+            <AppIcon
+              glyph={step.icon}
+              size={iconSizes.md}
+              color={colors.tealDeep}
+            />
           </View>
           <View style={styles.textBlock}>
             <Text style={styles.stepTitle}>{step.title}</Text>
@@ -52,16 +60,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
-    marginBottom: spacing.lg,
+    ...shadows.card,
   },
   title: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   row: {
     flexDirection: 'row',
@@ -69,20 +77,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   rowBorder: {
-    borderBottomWidth: 1,
+    borderBottomWidth: borderWidths.hairline,
     borderBottomColor: colors.border,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
     borderRadius: borderRadius.md,
     backgroundColor: colors.warmCream,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
-  },
-  icon: {
-    fontSize: fontSizes.subheading,
   },
   textBlock: {
     flex: 1,

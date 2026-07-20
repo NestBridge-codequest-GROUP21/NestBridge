@@ -13,7 +13,7 @@ import QuickActionsGrid, {
 import HomeStatsCarousel, {
   type HomeStatItem,
 } from '../../components/HomeStatsCarousel';
-import ExploreSectionCarousel from '../../components/ExploreSectionCarousel';
+import ExploreSectionList from '../../components/ExploreSectionList';
 import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
@@ -134,9 +134,9 @@ export default function ProviderHomeDashboard({
         ) : null}
 
         {providerRole === 'guide' && tourSuggestions.length > 0 ? (
-          <View style={styles.carouselWrap}>
+          <View style={styles.sectionWrap}>
             <SectionHeader title={tourSuggestionsTitle} />
-            <ExploreSectionCarousel
+            <ExploreSectionList
               sections={tourSuggestions}
               onSectionPress={onTourSuggestionPress}
             />
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  carouselWrap: {
+  sectionWrap: {
     marginBottom: layout.sectionGap,
   },
   requestsSection: {

@@ -13,6 +13,25 @@ import { isDemoFallbackEnabled } from '../config/demoMode';
 export interface DemoFallbackOptions {
   isLoading?: boolean;
   error?: string | null | undefined;
+  /** Property used to identity-match live vs demo rows (default: `id`). */
+  idKey?: string;
+  /**
+   * Custom identity key. Prefer this when live IDs (UUIDs) differ from demo
+   * keys, or when rows have no `id` (e.g. emergency contacts by phone).
+   */
+  matchKey?: (item: unknown) => string;
+}
+
+function resolveMatchKey<T>(
+  item: T,
+  idKey: string,
+  matchKey?: (item: unknown) => string,
+): string {
+  if (matchKey) {
+    return matchKey(item).trim();
+  }
+  const value = (item as Record<string, unknown>)[idKey];
+  return value != null ? String(value).trim() : '';
 }
 
 /** Prefer live rows; when demo mode is on, append demo-only rows so every screen stays full. */
@@ -27,20 +46,28 @@ export function withDemoFallback<T>(
   if (live.length === 0) {
     return demo;
   }
-  const idKey = options?.idKey ?? ('id' as keyof T);
-  const liveIds = new Set(
-    live.map((item) => {
-      const value = item[idKey];
-      return value != null ? String(value) : '';
-    }),
+
+  const idKey = String(options?.idKey ?? 'id');
+  const liveKeys = new Set(
+    live
+      .map((item) => resolveMatchKey(item, idKey, options?.matchKey))
+      .filter((key) => key.length > 0),
   );
+
+  // Live rows with no usable identity keys cannot be safely merged — appending
+  // demo would duplicate every contact/card (seen on SOS when contacts lack `id`).
+  if (liveKeys.size === 0) {
+    return live;
+  }
+
   const extras = demo.filter((item) => {
-    const value = item[idKey];
-    if (value == null) {
-      return true;
+    const key = resolveMatchKey(item, idKey, options?.matchKey);
+    if (!key) {
+      return false;
     }
-    return !liveIds.has(String(value));
+    return !liveKeys.has(key);
   });
+
   return extras.length > 0 ? [...live, ...extras] : live;
 }
 
@@ -79,4 +106,41 @@ export function presentableError(
     return null;
   }
   return isPresentingDemoData(live, display) ? null : error;
+}
+
+/** Normalize phone/SMS dial strings for uniqueness checks. */
+export function normalizeContactNumber(value: string): string {
+  return value.replace(/[^\d+]/g, '');
+}
+
+/** Keep the first contact for each normalized phone number. */
+export function uniqueByContactNumber<T extends { number: string }>(
+  contacts: T[],
+): T[] {
+  const seen = new Set<string>();
+  const unique: T[] = [];
+  for (const contact of contacts) {
+    const key = normalizeContactNumber(contact.number);
+    if (!key || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    unique.push(contact);
+  }
+  return unique;
+}
+
+/** Keep the first item for each match key. */
+export function uniqueByKey<T>(items: T[], matchKey: (item: T) => string): T[] {
+  const seen = new Set<string>();
+  const unique: T[] = [];
+  for (const item of items) {
+    const key = matchKey(item).trim().toLowerCase();
+    if (!key || seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    unique.push(item);
+  }
+  return unique;
 }

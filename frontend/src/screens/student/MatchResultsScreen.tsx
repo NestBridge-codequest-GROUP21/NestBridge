@@ -98,10 +98,10 @@ function HostMatchCard({
           <Avatar initials={host.initials} size="lg" highlighted style={styles.avatar} />
 
           <View style={styles.cardHeaderText}>
-            <Text style={styles.hostName} numberOfLines={1}>
+            <Text style={styles.hostName} numberOfLines={2}>
               {host.hostName}
             </Text>
-            <Text style={styles.hostLocation} numberOfLines={1}>
+            <Text style={styles.hostLocation} numberOfLines={2}>
               {host.location}
             </Text>
           </View>
@@ -225,11 +225,10 @@ export default function MatchResultsScreen({
 
       <ScrollView
         style={styles.scroll}
-        horizontal
-        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingRight: layout.screenPaddingHorizontal + insets.right },
+          { paddingBottom: insets.bottom + spacing.xl },
         ]}
       >
         {results.map((host) => (
@@ -255,12 +254,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
     gap: spacing.md,
-    alignItems: 'flex-start',
   },
   hostCard: {
-    width: layout.listingCardWidth + spacing.xl,
+    width: '100%',
   },
   cardPressed: {
     opacity: 0.94,

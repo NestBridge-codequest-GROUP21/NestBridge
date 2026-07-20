@@ -15,8 +15,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import BackButton from '../../components/BackButton';
-import OnboardingReadyCarousel from '../../components/OnboardingReadyCarousel';
-import type { OnboardingNextStep } from '../../components/OnboardingNextStepsCard';
+import OnboardingNextStepsCard, {
+  type OnboardingNextStep,
+} from '../../components/OnboardingNextStepsCard';
 import AppIcon from '../../components/AppIcon';
 import {
   colors,
@@ -48,7 +49,7 @@ export interface OnboardingReadyScreenProps {
   onBack?: () => void;
 }
 
-const HERO_HEIGHT_RATIO = 0.38;
+const HERO_HEIGHT_RATIO = 0.26;
 
 export default function OnboardingReadyScreen({
   subtitle,
@@ -63,22 +64,37 @@ export default function OnboardingReadyScreen({
 }: OnboardingReadyScreenProps) {
   const insets = useSafeAreaInsets();
   const entrance = useRef(new Animated.Value(0)).current;
+  const checkPulse = useRef(new Animated.Value(0)).current;
   const [heroFailed, setHeroFailed] = useState(false);
   const heroHeight = Dimensions.get('window').height * HERO_HEIGHT_RATIO;
 
   useEffect(() => {
-    Animated.timing(entrance, {
-      toValue: 1,
-      duration: motion.durationNormal,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [entrance]);
+    Animated.parallel([
+      Animated.timing(entrance, {
+        toValue: 1,
+        duration: motion.durationNormal,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.sequence([
+        Animated.timing(checkPulse, {
+          toValue: 1,
+          duration: motion.durationNormal,
+          easing: Easing.out(Easing.back(1.4)),
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [entrance, checkPulse]);
 
   const contentOpacity = entrance;
   const contentTranslateY = entrance.interpolate({
     inputRange: [0, 1],
     outputRange: [spacing.md, 0],
+  });
+  const checkScale = checkPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.6, 1],
   });
 
   return (
@@ -142,10 +158,7 @@ export default function OnboardingReadyScreen({
 
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: insets.bottom + spacing.lg },
-          ]}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <Animated.View
@@ -154,29 +167,51 @@ export default function OnboardingReadyScreen({
               transform: [{ translateY: contentTranslateY }],
             }}
           >
+            <Animated.View
+              style={[
+                styles.checkWrap,
+                { transform: [{ scale: checkScale }] },
+              ]}
+              accessibilityRole="image"
+              accessibilityLabel="Setup complete"
+            >
+              <View style={styles.checkRing}>
+                <AppIcon
+                  name="checkmark"
+                  size={iconSizes.xl}
+                  color={colors.white}
+                />
+              </View>
+            </Animated.View>
+
             <Text style={styles.headline}>You're all set</Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
 
-            <View style={styles.carouselSection}>
-              <OnboardingReadyCarousel cards={carouselCards} />
-            </View>
-
-            <View style={styles.actions}>
-              <PrimaryButton label={ctaLabel} onPress={onPrimaryAction} />
-              <Pressable
-                onPress={onContinueLater}
-                style={({ pressed }) => [
-                  styles.continueLaterButton,
-                  pressed && styles.continueLaterPressed,
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Continue Later"
-              >
-                <Text style={styles.continueLaterLabel}>Continue Later</Text>
-              </Pressable>
+            <View style={styles.stepsSection}>
+              <OnboardingNextStepsCard steps={carouselCards} />
             </View>
           </Animated.View>
         </ScrollView>
+
+        <View
+          style={[
+            styles.footer,
+            { paddingBottom: Math.max(insets.bottom, spacing.md) + spacing.sm },
+          ]}
+        >
+          <PrimaryButton label={ctaLabel} onPress={onPrimaryAction} />
+          <Pressable
+            onPress={onContinueLater}
+            style={({ pressed }) => [
+              styles.continueLaterButton,
+              pressed && styles.continueLaterPressed,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Continue Later"
+          >
+            <Text style={styles.continueLaterLabel}>Continue Later</Text>
+          </Pressable>
+        </View>
       </LinearGradient>
     </View>
   );
@@ -218,7 +253,7 @@ const styles = StyleSheet.create({
   roleBadge: {
     position: 'absolute',
     left: layout.screenPaddingHorizontal,
-    bottom: spacing.lg,
+    bottom: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.navyMid,
@@ -270,7 +305,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+  },
+  checkWrap: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  checkRing: {
+    width: touchTarget + spacing.md,
+    height: touchTarget + spacing.md,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.tealBright,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: borderWidths.strong,
+    borderColor: colors.white,
+    ...shadows.raised,
   },
   headline: {
     fontFamily: fontFamilies.semibold,
@@ -292,13 +343,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  carouselSection: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  actions: {
+  stepsSection: {
     paddingHorizontal: layout.screenPaddingHorizontal,
-    gap: spacing.sm,
+  },
+  footer: {
+    paddingHorizontal: layout.screenPaddingHorizontal,
+    paddingTop: spacing.sm,
+    gap: spacing.xs,
+    borderTopWidth: borderWidths.hairline,
+    borderTopColor: overlays.scrim,
   },
   continueLaterButton: {
     minHeight: touchTarget,

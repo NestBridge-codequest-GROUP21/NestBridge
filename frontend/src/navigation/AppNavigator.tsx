@@ -207,7 +207,15 @@ import {
   notificationsMockForIntent,
 } from '../data/bookingMock';
 import { conversationsMock } from '../data/conversationsMock';
-import { withDemoFallback, withDemoFallbackValue, presentableLoading, presentableError } from '../utils/demoLiveMerge';
+import {
+  withDemoFallback,
+  withDemoFallbackValue,
+  presentableLoading,
+  presentableError,
+  uniqueByContactNumber,
+  uniqueByKey,
+  normalizeContactNumber,
+} from '../utils/demoLiveMerge';
 import {
   confirmDemoBooking,
   isApiBookingId,
@@ -215,7 +223,7 @@ import {
   createDemoHostBookingRequest,
   mergeBookingsWithLocalOverrides,
 } from '../utils/demoBookingFlow';
-import { emergencyContactsMock } from '../data/sosMock';
+import { emergencyContactsMock, localEmergencyNumber } from '../data/sosMock';
 import {
   hostConfirmedStaysMock,
   guideUpcomingToursMock,
@@ -1361,20 +1369,26 @@ export default function AppNavigator() {
 
   const guideListForSearch = useMemo(
     () =>
-      withDemoFallback(
-        homeApi.guideMatches.map(matchToGuideSummary),
-        suggestedGuidesMock,
-        { isLoading: homeApi.isLoading, error: homeApi.error },
+      uniqueByKey(
+        withDemoFallback(
+          homeApi.guideMatches.map(matchToGuideSummary),
+          suggestedGuidesMock,
+          { isLoading: homeApi.isLoading, error: homeApi.error },
+        ),
+        (guide) => guide.id,
       ),
     [homeApi.guideMatches, homeApi.isLoading, homeApi.error],
   );
 
   const suggestedGuidesDisplay = useMemo(
     () =>
-      withDemoFallback(
-        homeApi.suggestedGuides,
-        guideSummariesToDiscoveryItems(suggestedGuidesMock),
-        { isLoading: homeApi.isLoading, error: homeApi.error },
+      uniqueByKey(
+        withDemoFallback(
+          homeApi.suggestedGuides,
+          guideSummariesToDiscoveryItems(suggestedGuidesMock),
+          { isLoading: homeApi.isLoading, error: homeApi.error },
+        ),
+        (guide) => guide.id,
       ),
     [homeApi.suggestedGuides, homeApi.isLoading, homeApi.error],
   );
@@ -1399,20 +1413,26 @@ export default function AppNavigator() {
 
   const exploreStayListings = useMemo(
     () =>
-      withDemoFallback(
-        hostMatchesToStayListings(homeApi.hostMatches),
-        matchResultsToStayListings(sampleMatchResultsForCity(cityLabel)),
-        { isLoading: homeApi.isLoading, error: homeApi.error },
+      uniqueByKey(
+        withDemoFallback(
+          hostMatchesToStayListings(homeApi.hostMatches),
+          matchResultsToStayListings(sampleMatchResultsForCity(cityLabel)),
+          { isLoading: homeApi.isLoading, error: homeApi.error },
+        ),
+        (listing) => listing.id,
       ),
     [homeApi.hostMatches, homeApi.isLoading, homeApi.error, cityLabel],
   );
 
   const suggestedHostsDisplay = useMemo(
     () =>
-      withDemoFallback(homeApi.suggestedHosts, suggestedHostsForCity(cityLabel), {
-        isLoading: homeApi.isLoading,
-        error: homeApi.error,
-      }),
+      uniqueByKey(
+        withDemoFallback(homeApi.suggestedHosts, suggestedHostsForCity(cityLabel), {
+          isLoading: homeApi.isLoading,
+          error: homeApi.error,
+        }),
+        (host) => host.id,
+      ),
     [homeApi.suggestedHosts, homeApi.isLoading, homeApi.error, cityLabel],
   );
 
@@ -1432,10 +1452,20 @@ export default function AppNavigator() {
 
   const emergencyContactsDisplay = useMemo(
     () =>
-      withDemoFallback(contentEmergency.data, emergencyContactsMock, {
-        isLoading: contentEmergency.isLoading,
-        error: contentEmergency.error,
-      }),
+      uniqueByContactNumber(
+        withDemoFallback(contentEmergency.data, emergencyContactsMock, {
+          isLoading: contentEmergency.isLoading,
+          error: contentEmergency.error,
+          matchKey: (item) =>
+            normalizeContactNumber(
+              String((item as { number?: string }).number ?? ''),
+            ),
+        }),
+      ).filter(
+        (contact) =>
+          normalizeContactNumber(contact.number) !==
+          normalizeContactNumber(localEmergencyNumber),
+      ),
     [contentEmergency.data, contentEmergency.isLoading, contentEmergency.error],
   );
 
@@ -1472,47 +1502,72 @@ export default function AppNavigator() {
 
   const transportDisplay = useMemo(
     () =>
-      withDemoFallback(contentTransport.data, transportApiMock, {
-        isLoading: contentTransport.isLoading,
-        error: contentTransport.error,
-      }),
+      uniqueByKey(
+        withDemoFallback(contentTransport.data, transportApiMock, {
+          isLoading: contentTransport.isLoading,
+          error: contentTransport.error,
+          matchKey: (item) => String((item as { id?: string }).id ?? ''),
+        }),
+        (tab) => tab.id,
+      ),
     [contentTransport.data, contentTransport.isLoading, contentTransport.error],
   );
 
   const sitesDisplay = useMemo(
     () =>
-      withDemoFallback(contentSites.data, sitesApiMock, {
-        isLoading: contentSites.isLoading,
-        error: contentSites.error,
-      }),
+      uniqueByKey(
+        withDemoFallback(contentSites.data, sitesApiMock, {
+          isLoading: contentSites.isLoading,
+          error: contentSites.error,
+          matchKey: (item) => {
+            const site = item as { siteKey?: string; name?: string };
+            return site.siteKey || site.name || '';
+          },
+        }),
+        (site) => site.siteKey || site.name,
+      ),
     [contentSites.data, contentSites.isLoading, contentSites.error],
   );
 
   const checklistContentDisplay = useMemo(
     () =>
-      withDemoFallback(contentChecklist.data, checklistApiMock, {
-        isLoading: contentChecklist.isLoading,
-        error: contentChecklist.error,
-      }),
+      uniqueByKey(
+        withDemoFallback(contentChecklist.data, checklistApiMock, {
+          isLoading: contentChecklist.isLoading,
+          error: contentChecklist.error,
+          matchKey: (item) =>
+            String((item as { itemKey?: string }).itemKey ?? ''),
+        }),
+        (item) => item.itemKey,
+      ),
     [contentChecklist.data, contentChecklist.isLoading, contentChecklist.error],
   );
 
   const landmarksDisplay = useMemo(
     () =>
-      withDemoFallback(contentLandmarks.data, landmarksApiMock, {
-        isLoading: contentLandmarks.isLoading,
-        error: contentLandmarks.error,
-      }),
+      uniqueByKey(
+        withDemoFallback(contentLandmarks.data, landmarksApiMock, {
+          isLoading: contentLandmarks.isLoading,
+          error: contentLandmarks.error,
+          matchKey: (item) => String((item as { name?: string }).name ?? ''),
+        }),
+        (landmark) => landmark.name,
+      ),
     [contentLandmarks.data, contentLandmarks.isLoading, contentLandmarks.error],
   );
 
   const videosDisplay = useMemo(
     () =>
       sanitizeVideoResources(
-        withDemoFallback(contentVideos.data, videosApiMock, {
-          isLoading: contentVideos.isLoading,
-          error: contentVideos.error,
-        }),
+        uniqueByKey(
+          withDemoFallback(contentVideos.data, videosApiMock, {
+            isLoading: contentVideos.isLoading,
+            error: contentVideos.error,
+            matchKey: (item) =>
+              String((item as { videoKey?: string }).videoKey ?? ''),
+          }),
+          (video) => video.videoKey,
+        ),
       ),
     [contentVideos.data, contentVideos.isLoading, contentVideos.error],
   );
@@ -1855,7 +1910,9 @@ export default function AppNavigator() {
         studentFeaturedMatchForCity(cityLabel),
         { isLoading: homeApi.isLoading, error: homeApi.error },
       ),
-      suggestedHosts: suggestedHostsDisplay,
+      suggestedHosts: suggestedHostsDisplay.filter(
+        (host) => host.id !== displayTopMatchHostId,
+      ),
       recommendedSectionTitle: 'Prep before you arrive',
       showMatchScores,
       isHomeLoading,
@@ -1875,6 +1932,7 @@ export default function AppNavigator() {
       personalizedGreeting,
       homeApi.featuredMatch,
       suggestedHostsDisplay,
+      displayTopMatchHostId,
       showMatchScores,
       isHomeLoading,
       homeDataError,
@@ -1929,10 +1987,12 @@ export default function AppNavigator() {
       tabBarItems,
       activeTabId: 'home',
       showSetupBanner: false,
-      suggestedGuides: suggestedGuidesDisplay,
+      suggestedGuides: suggestedGuidesDisplay.filter(
+        (guide) => guide.id !== displayTopGuideId,
+      ),
       showMatchScores,
     }),
-    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeDataError, suggestedGuidesDisplay, showMatchScores],
+    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeDataError, suggestedGuidesDisplay, displayTopGuideId, showMatchScores],
   );
 
   const exploreHomeProps = useMemo(
@@ -1948,7 +2008,9 @@ export default function AppNavigator() {
         touristFeaturedGuideMock,
         { isLoading: homeApi.isLoading, error: homeApi.error },
       ),
-      suggestedGuides: suggestedGuidesDisplay,
+      suggestedGuides: suggestedGuidesDisplay.filter(
+        (guide) => guide.id !== displayTopGuideId,
+      ),
       showMatchScores,
       isHomeLoading,
       homeDataError,
@@ -1971,6 +2033,7 @@ export default function AppNavigator() {
       tabBarItems,
       homeApi.featuredGuide,
       suggestedGuidesDisplay,
+      displayTopGuideId,
       showMatchScores,
       isHomeLoading,
       homeDataError,
@@ -3310,7 +3373,7 @@ export default function AppNavigator() {
             onBack={() => navigation.goBack()}
             onCallEmergencyServices={() => {
               void logSos({ contactedEmergency: true });
-              dialPhoneNumber('191');
+              dialPhoneNumber(localEmergencyNumber);
             }}
             onContactCallPress={(contact) => {
               void logSos({ contactedSupport: true });

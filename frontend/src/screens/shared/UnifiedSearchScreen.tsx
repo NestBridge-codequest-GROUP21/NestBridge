@@ -3,11 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
+import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
@@ -72,11 +72,7 @@ export default function UnifiedSearchScreen({
         onBack={onBack}
       />
 
-      <ScrollView
-        style={styles.body}
-        contentContainerStyle={styles.bodyContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScreenScroll withTabBar withSosDock={showSosDock}>
         <Text style={styles.lead}>
           Homestays near campus, verified Ghanaian guides, and hotels when you
           want your own space — start with what you need today.
@@ -110,7 +106,7 @@ export default function UnifiedSearchScreen({
             </Card>
           </Pressable>
         ))}
-      </ScrollView>
+      </ScreenScroll>
 
       <AppTabBar
         items={tabBarItems}
@@ -127,14 +123,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  body: {
-    flex: 1,
-  },
-  bodyContent: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
   },
   lead: {
     fontFamily: fontFamilies.regular,
