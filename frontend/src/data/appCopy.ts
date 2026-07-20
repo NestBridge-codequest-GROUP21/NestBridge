@@ -238,9 +238,9 @@ export const emptyStates = {
     iconGlyph: '🚌',
   } satisfies EmptyStateContent,
   videoLibrary: (city: string): EmptyStateContent => ({
-    title: 'No videos in this category',
-    body: `Try another topic, or check back for new orientation clips about ${city}.`,
-    tip: 'Browse culture, transport, visas, Mobile Money, festivals, and safety.',
+    title: 'Your learning hub is getting ready',
+    body: `Orientation clips for arriving, living, and exploring ${city} will appear here once they are curated.`,
+    tip: 'Check Preparing for Ghana, Living in Ghana, Culture & Communication, and Exploring Ghana when content is available.',
     iconGlyph: '🎬',
   }),
   sponsors: {

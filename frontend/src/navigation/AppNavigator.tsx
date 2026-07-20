@@ -1861,6 +1861,7 @@ export default function AppNavigator() {
   );
   const [liveRecommendations, setLiveRecommendations] =
     useState<HomeRecommendations | null>(null);
+  const [videoProgressRefreshKey, setVideoProgressRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -3834,10 +3835,15 @@ export default function AppNavigator() {
           <VideoLibraryScreen
             cityLabel={cityLabel}
             videos={videosDisplay}
+            userId={user?.userId}
+            viewerIntent={primaryIntent ?? homeRole}
             isLoading={videosLoading}
             errorMessage={videosError}
+            progressRefreshKey={videoProgressRefreshKey}
             onBack={() => navigation.goBack()}
-            onVideoPress={(videoKey) => navigation.navigate('VideoDetail', { videoKey })}
+            onVideoPress={(videoKey) =>
+              navigation.navigate('VideoDetail', { videoKey })
+            }
           />
         )}
       </Stack.Screen>
@@ -3846,7 +3852,11 @@ export default function AppNavigator() {
         {({ navigation, route }) => (
           <VideoDetailRoute
             videoKey={route.params.videoKey}
+            userId={user?.userId}
             onBack={() => navigation.goBack()}
+            onProgressChanged={() =>
+              setVideoProgressRefreshKey((value) => value + 1)
+            }
           />
         )}
       </Stack.Screen>
