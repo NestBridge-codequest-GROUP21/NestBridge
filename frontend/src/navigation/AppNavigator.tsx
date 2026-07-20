@@ -277,6 +277,7 @@ import {
   suggestedGuidesMock,
   guidesForAttraction,
 } from '../data/guideSessionMock';
+import { enrichConversations } from '../utils/enrichConversations';
 import type { ConversationListItem } from '../types/messaging';
 import type {
   ActiveBookingDetail,
@@ -1158,7 +1159,7 @@ export default function AppNavigator() {
     () => buildDemoGuideProfileCache(),
   );
   const conversationsApi = useConversations(user?.userId);
-  const conversations = useMemo(
+  const conversationsRaw = useMemo(
     () =>
       withDemoFallback(conversationsApi.conversations, conversationsMock, {
         isLoading: conversationsApi.isLoading,
@@ -1404,6 +1405,10 @@ export default function AppNavigator() {
         name: string;
         initials: string;
         role: ConversationListItem['participantRole'];
+        profileTargetId?: string;
+        verification?: ConversationListItem['verification'];
+        rating?: number;
+        ratingCount?: number;
       },
     ) => {
       const conv = await createConversation(participant.userId);
@@ -1413,6 +1418,10 @@ export default function AppNavigator() {
         participantName: participant.name,
         participantInitials: participant.initials,
         participantRole: participant.role,
+        profileTargetId: participant.profileTargetId,
+        verification: participant.verification,
+        rating: participant.rating,
+        ratingCount: participant.ratingCount,
         lastMessage: 'Conversation started',
         lastMessageAt: new Date().toISOString(),
         unreadCount: 0,
@@ -1440,6 +1449,11 @@ export default function AppNavigator() {
         name: profile.name,
         initials: profile.initials,
         role: 'host',
+        profileTargetId: profile.id,
+        verification: profile.verification,
+        rating: profile.matchPercentage
+          ? Math.round((profile.matchPercentage / 20) * 10) / 10
+          : undefined,
       });
     },
     [openMessageWithParticipant],
@@ -1461,6 +1475,11 @@ export default function AppNavigator() {
         name: profile.name,
         initials: profile.initials,
         role: 'guide',
+        profileTargetId: profile.id,
+        verification: profile.verification,
+        rating: profile.matchPercentage
+          ? Math.round((profile.matchPercentage / 20) * 10) / 10
+          : undefined,
       });
     },
     [openMessageWithParticipant],
@@ -1491,6 +1510,42 @@ export default function AppNavigator() {
       ),
     [homeApi.suggestedGuides, homeApi.isLoading, homeApi.error],
   );
+
+  const conversations = useMemo(() => {
+    const profiles = [
+      ...Object.values(hostProfileCache).map((host) => ({
+        id: host.id,
+        userId: host.userId,
+        name: host.name,
+        verification: host.verification,
+        rating: host.matchPercentage ? host.matchPercentage / 20 : undefined,
+        role: 'host' as const,
+      })),
+      ...Object.values(guideProfileCache).map((guide) => ({
+        id: guide.id,
+        userId: guide.userId,
+        name: guide.name,
+        verification: guide.verification,
+        rating: guide.matchPercentage ? guide.matchPercentage / 20 : undefined,
+        role: 'guide' as const,
+      })),
+      ...guideListForSearch.map((guide) => ({
+        id: guide.id,
+        userId: guide.userId,
+        name: guide.name,
+        verification: guide.verification,
+        rating: guide.matchPercentage ? guide.matchPercentage / 20 : undefined,
+        role: 'guide' as const,
+      })),
+    ];
+    return enrichConversations(conversationsRaw, mergedBookings, profiles);
+  }, [
+    conversationsRaw,
+    mergedBookings,
+    hostProfileCache,
+    guideProfileCache,
+    guideListForSearch,
+  ]);
 
   const guideTourSections = useMemo(
     () => guideTourSectionsFromTypes(tourTypes),
@@ -2576,6 +2631,17 @@ export default function AppNavigator() {
               currentUserId={user.userId}
               onBack={() => navigation.goBack()}
               onMessageSent={() => conversationsApi.refresh()}
+              onParticipantPress={() => {
+                const targetId =
+                  conversation.profileTargetId ?? conversation.participantId;
+                if (conversation.participantRole === 'host') {
+                  navigation.navigate('HostProfile', { hostId: targetId });
+                  return;
+                }
+                if (conversation.participantRole === 'guide') {
+                  navigation.navigate('GuideProfile', { guideId: targetId });
+                }
+              }}
             />
           );
         }}

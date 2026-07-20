@@ -93,9 +93,9 @@ export const emptyStates = {
     primaryActionLabel: 'View bookings',
   } satisfies EmptyStateContent,
   messages: {
-    title: 'Your inbox is quiet',
-    body: 'Connect with hosts and guides to start conversations about stays, tours, and arrival plans.',
-    tip: 'A short hello after matching goes a long way.',
+    title: 'Your inbox is quiet 💬',
+    body: 'Connect with hosts and guides to start your Ghana journey.',
+    tip: 'Message after matching to confirm arrival plans and ask questions.',
     iconGlyph: '💬',
     primaryActionLabel: 'Start exploring',
   } satisfies EmptyStateContent,
