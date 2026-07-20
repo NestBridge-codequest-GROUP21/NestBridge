@@ -39,6 +39,7 @@ export type StayListing = {
   location: string;
   rating: number;
   pricePerNight: string;
+  /** True only when host identity/provider verification is confirmed. */
   verifiedHost: boolean;
   amenities: string[];
   imageEmoji: string;
@@ -273,7 +274,7 @@ export const exploreStaysMock: StayListing[] = [
     location: 'Cantonments, Accra',
     rating: 4,
     pricePerNight: 'GHS 350/night',
-    verifiedHost: true,
+    verifiedHost: false,
     amenities: ['Wifi', 'Breakfast'],
     imageEmoji: '🏨',
   },
@@ -283,7 +284,7 @@ export const exploreStaysMock: StayListing[] = [
     location: 'University of Ghana, Legon',
     rating: 4,
     pricePerNight: 'GHS 90/night',
-    verifiedHost: true,
+    verifiedHost: false,
     amenities: ['Wifi', 'Laundry'],
     imageEmoji: '🛏️',
   },

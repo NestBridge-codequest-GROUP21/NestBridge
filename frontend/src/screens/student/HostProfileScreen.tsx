@@ -15,6 +15,7 @@ import BackButton from '../../components/BackButton';
 import Card from '../../components/Card';
 import SectionHeader from '../../components/SectionHeader';
 import Avatar from '../../components/Avatar';
+import VerificationBadges from '../../components/VerificationBadges';
 import {
   fontFamilies,
   fontSizes,
@@ -76,6 +77,12 @@ export default function HostProfileScreen({
           </View>
           <Text style={styles.hostName}>{host.name}</Text>
           <Text style={styles.hostLocation}>{host.location}</Text>
+          <VerificationBadges
+            verification={host.verification}
+            variant="host"
+            onDark
+            style={styles.verification}
+          />
           {showMatchScores ? (
             <LinearGradient
               colors={[...gradients.accent]}
@@ -203,6 +210,9 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     lineHeight: lineHeights.body,
     color: colors.white,
     opacity: 0.9,
+    marginBottom: spacing.sm,
+  },
+  verification: {
     marginBottom: spacing.md,
   },
   matchBadge: {

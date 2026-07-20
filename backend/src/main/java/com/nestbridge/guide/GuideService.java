@@ -1,5 +1,6 @@
 package com.nestbridge.guide;
 
+import com.nestbridge.common.ProviderVerificationDto;
 import com.nestbridge.user.User;
 import com.nestbridge.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +90,10 @@ public class GuideService {
                 .availabilitySchedule(guide.getAvailabilitySchedule())
                 .matchPercentage(matchPct)
                 .matchReasons(reasons)
+                .verification(ProviderVerificationDto.forGuide(
+                        user != null && user.isIdentityVerified(),
+                        user != null && user.isPhoneVerified(),
+                        guide.isExperienceVerified()))
                 .build();
     }
 

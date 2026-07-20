@@ -16,6 +16,7 @@ import Card from '../../components/Card';
 import Avatar from '../../components/Avatar';
 import StatusBadge from '../../components/StatusBadge';
 import SectionHeader from '../../components/SectionHeader';
+import VerificationBadges from '../../components/VerificationBadges';
 import {
   fontFamilies,
   fontSizes,
@@ -77,6 +78,12 @@ export default function GuideProfileDetailScreen({
           </View>
           <Text style={styles.name}>{guide.name}</Text>
           <Text style={styles.location}>{guide.location}</Text>
+          <VerificationBadges
+            verification={guide.verification}
+            variant="guide"
+            onDark
+            style={styles.verification}
+          />
           {showMatchScores ? (
             <StatusBadge
               label={`${guide.matchPercentage}% match`}
@@ -185,6 +192,9 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontSize: fontSizes.body,
     color: colors.white,
     opacity: 0.9,
+    marginBottom: spacing.sm,
+  },
+  verification: {
     marginBottom: spacing.md,
   },
   matchHint: {

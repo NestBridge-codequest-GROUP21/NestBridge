@@ -5,6 +5,7 @@ import type {
   PriceBreakdown,
   AppNotification,
 } from '../types/booking';
+import { hostVerification } from '../types/verification';
 
 const FLEXIBLE_POLICY =
   'Free cancellation up to 7 days before check-in. 50% refund within 7 days.';
@@ -21,6 +22,7 @@ export const hostProfileMock: HostProfileSummary = {
   currency: 'GHS',
   cancellationPolicy: FLEXIBLE_POLICY,
   icon: '🏡',
+  verification: hostVerification(),
 };
 
 export const studentBookingsMock: BookingListItem[] = [

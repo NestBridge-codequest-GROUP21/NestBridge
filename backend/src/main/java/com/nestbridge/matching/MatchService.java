@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nestbridge.auth.TokenBlacklistService;
 import com.nestbridge.common.GhanaReference;
+import com.nestbridge.common.ProviderVerificationDto;
 import com.nestbridge.guide.GuideProfile;
 import com.nestbridge.guide.GuideProfileRepository;
 import com.nestbridge.host.HostProfile;
@@ -92,6 +93,10 @@ public class MatchService {
                     .scoreBreakdown(s.breakdown())
                     .matchReasons(s.reasons())
                     .trustBadge(trustBadge(h.getReviewCount(), u != null && u.isIdentityVerified()))
+                    .verification(ProviderVerificationDto.forHost(
+                            u != null && u.isIdentityVerified(),
+                            u != null && u.isPhoneVerified(),
+                            h.isLocationVerified()))
                     .pricePerNight(h.getPricePerNight() != null ? h.getPricePerNight().doubleValue() : null)
                     .distanceKm(dist)
                     .location(h.getCity())
@@ -125,6 +130,10 @@ public class MatchService {
                     .scoreBreakdown(s.breakdown())
                     .matchReasons(s.reasons())
                     .trustBadge(trustBadge(g.getReviewCount(), u != null && u.isIdentityVerified()))
+                    .verification(ProviderVerificationDto.forGuide(
+                            u != null && u.isIdentityVerified(),
+                            u != null && u.isPhoneVerified(),
+                            g.isExperienceVerified()))
                     .pricePerNight(g.getPricePerSession() != null ? g.getPricePerSession().doubleValue() : null)
                     .distanceKm(distanceKm(g.getLat(), g.getLng(), request.getUniversityLat(), request.getUniversityLng()))
                     .location(g.getCity())

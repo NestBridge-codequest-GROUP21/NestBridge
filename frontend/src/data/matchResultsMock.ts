@@ -1,5 +1,6 @@
 import type { MatchResultHost } from '../screens/student/MatchResultsScreen';
 import { normalizeCity } from './ghanaReference';
+import { hostVerification, EMPTY_VERIFICATION } from '../types/verification';
 
 /** All seeded demo hosts — aligned with backend V2 host_profiles across Ghana cities. */
 export const allSampleMatchResults: MatchResultHost[] = [
@@ -9,6 +10,7 @@ export const allSampleMatchResults: MatchResultHost[] = [
     initials: 'AM',
     compatibilityScore: 96,
     trustBadge: 'VERIFIED',
+    verification: hostVerification(),
     matchReasons: [
       'Halal meals offered',
       'Quiet evenings for study',
@@ -25,6 +27,7 @@ export const allSampleMatchResults: MatchResultHost[] = [
     initials: 'KG',
     compatibilityScore: 91,
     trustBadge: 'TRUSTED',
+    verification: hostVerification(),
     matchReasons: [
       'Social household — family dinners',
       'Vegetarian-friendly',
@@ -41,6 +44,7 @@ export const allSampleMatchResults: MatchResultHost[] = [
     initials: 'EB',
     compatibilityScore: 85,
     trustBadge: 'PRO',
+    verification: hostVerification(),
     matchReasons: [
       'Early riser friendly',
       'Quiet household',
@@ -57,6 +61,7 @@ export const allSampleMatchResults: MatchResultHost[] = [
     initials: 'AS',
     compatibilityScore: 90,
     trustBadge: 'VERIFIED',
+    verification: hostVerification(),
     matchReasons: [
       'Warm Ashanti hospitality',
       'Halal and vegetarian meals',
@@ -73,6 +78,7 @@ export const allSampleMatchResults: MatchResultHost[] = [
     initials: 'KM',
     compatibilityScore: 87,
     trustBadge: 'TRUSTED',
+    verification: hostVerification({ phoneVerified: false }),
     matchReasons: [
       'Close to KNUST campus',
       'Study desk in room',
@@ -88,7 +94,8 @@ export const allSampleMatchResults: MatchResultHost[] = [
     hostName: 'Kwame Asante-Boateng',
     initials: 'KA',
     compatibilityScore: 84,
-    trustBadge: 'VERIFIED',
+    trustBadge: 'NEW',
+    verification: { ...EMPTY_VERIFICATION },
     matchReasons: [
       'Breakfast included',
       'Quiet hours after 9pm',
@@ -105,6 +112,7 @@ export const allSampleMatchResults: MatchResultHost[] = [
     initials: 'AM',
     compatibilityScore: 82,
     trustBadge: 'TRUSTED',
+    verification: hostVerification(),
     matchReasons: [
       'Eco-friendly vegan household',
       'Garden and bicycle rental',
@@ -121,6 +129,7 @@ export const allSampleMatchResults: MatchResultHost[] = [
     initials: 'IM',
     compatibilityScore: 80,
     trustBadge: 'VERIFIED',
+    verification: hostVerification(),
     matchReasons: [
       'Halal meals included',
       'Prayer-friendly home',

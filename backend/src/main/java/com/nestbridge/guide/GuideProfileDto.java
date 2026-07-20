@@ -29,4 +29,5 @@ public class GuideProfileDto {
     private Map<String, Object> availabilitySchedule;
     private Integer matchPercentage;
     private List<String> matchReasons;
+    private com.nestbridge.common.ProviderVerificationDto verification;
 }
