@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -18,7 +19,6 @@ import InlineBanner from '../../components/InlineBanner';
 import CheckboxRow from '../../components/CheckboxRow';
 import type { DemoAccount } from '../../data/demoAccounts';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -67,6 +67,8 @@ export default function RegisterScreen({
   onSignInPress,
   onBack,
 }: RegisterScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -153,7 +155,8 @@ export default function RegisterScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -203,3 +206,5 @@ const styles = StyleSheet.create({
     color: colors.teal,
   },
 });
+}
+

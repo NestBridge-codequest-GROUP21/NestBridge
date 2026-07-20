@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -11,7 +12,6 @@ import PrimaryButton from '../../components/PrimaryButton';
 import SectionHeader from '../../components/SectionHeader';
 import type { ChecklistTask } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -38,6 +38,8 @@ export interface PrepChecklistScreenProps {
 }
 
 function ProgressRing({ completed, total }: { completed: number; total: number }) {
+  const styles = useThemedStyles(createStyles);
+
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
@@ -62,6 +64,10 @@ export default function PrepChecklistScreen({
   onDeleteTask,
   onBack,
 }: PrepChecklistScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const [customTasks, setCustomTasks] = useState<ChecklistTask[]>([]);
   const [newItemLabel, setNewItemLabel] = useState('');
 
@@ -205,7 +211,8 @@ export default function PrepChecklistScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -347,4 +354,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
 });
+}
+
 

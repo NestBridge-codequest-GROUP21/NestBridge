@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   Text,
@@ -16,7 +17,6 @@ import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -24,7 +24,6 @@ import {
   borderRadius,
   lineHeights,
   layout,
-  tints,
   iconSizes,
 } from '../../constants/theme';
 
@@ -51,6 +50,10 @@ export default function ResetPasswordScreen({
   onSubmit,
   onBack,
 }: ResetPasswordScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const success = !!statusMessage && !errorMessage;
 
@@ -131,7 +134,8 @@ export default function ResetPasswordScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -168,3 +172,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
 });
+}
+

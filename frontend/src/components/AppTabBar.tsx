@@ -1,10 +1,10 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SosCircleButton from './SosCircleButton';
 import AppIcon, { type IoniconName } from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -39,6 +39,10 @@ export default function AppTabBar({
   onSosPress,
   onTabPress,
 }: AppTabBarProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const showSos = showSosDock && !!onSosPress;
 
@@ -104,7 +108,8 @@ export default function AppTabBar({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   wrapper: {
     backgroundColor: colors.white,
     borderTopWidth: 1,
@@ -165,3 +170,5 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
 });
+}
+

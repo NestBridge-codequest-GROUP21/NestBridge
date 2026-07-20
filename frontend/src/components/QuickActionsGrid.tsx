@@ -1,10 +1,9 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import AppIcon from './AppIcon';
 import SectionHeader from './SectionHeader';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -32,6 +31,10 @@ export default function QuickActionsGrid({
   actions,
   onActionPress,
 }: QuickActionsGridProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={styles.section}>
       <SectionHeader title={title} />
@@ -64,7 +67,8 @@ export default function QuickActionsGrid({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   section: {
     marginBottom: spacing.lg,
   },
@@ -104,3 +108,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+}
+

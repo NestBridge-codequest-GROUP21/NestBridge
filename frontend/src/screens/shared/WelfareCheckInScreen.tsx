@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -16,7 +17,6 @@ import InlineBanner from '../../components/InlineBanner';
 import Card from '../../components/Card';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -56,6 +56,10 @@ export default function WelfareCheckInScreen({
   onSosPress,
   onBack,
 }: WelfareCheckInScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
 
@@ -175,7 +179,8 @@ export default function WelfareCheckInScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -304,3 +309,5 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
   },
 });
+}
+

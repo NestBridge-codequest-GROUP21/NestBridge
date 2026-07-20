@@ -1,16 +1,14 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import AppIcon from './AppIcon';
 import type { DemoAccount } from '../data/demoAccounts';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
-  tints,
-  shadows,
   lineHeights,
   iconSizes,
 } from '../constants/theme';
@@ -39,6 +37,10 @@ export default function DemoActorQuickLogin({
   hint = 'Use a NestBridge sample profile to look around.',
   onSelect,
 }: DemoActorQuickLoginProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   if (accounts.length === 0) {
     return null;
   }
@@ -105,7 +107,8 @@ export default function DemoActorQuickLogin({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   section: {
     marginBottom: spacing.md,
   },
@@ -218,3 +221,5 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 });
+}
+

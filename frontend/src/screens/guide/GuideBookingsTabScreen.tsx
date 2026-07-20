@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -10,7 +11,6 @@ import ProviderBookingCard, {
 import InlineBanner from '../../components/InlineBanner';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import {
-  colors,
   spacing,
 } from '../../constants/theme';
 import type { ProviderBookingItem } from '../../types/providerBooking';
@@ -44,6 +44,8 @@ export default function GuideBookingsTabScreen({
   onBookingPress,
   onTabPress,
 }: GuideBookingsTabScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const subtitle =
     bookings.length === 1 ? '1 upcoming tour' : `${bookings.length} upcoming tours`;
 
@@ -96,7 +98,8 @@ export default function GuideBookingsTabScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -105,3 +108,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 });
+}
+

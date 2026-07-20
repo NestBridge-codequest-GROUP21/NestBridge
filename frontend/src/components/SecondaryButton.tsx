@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import {
   Pressable,
@@ -9,7 +10,6 @@ import {
 } from 'react-native';
 import AppIcon, { type IoniconName } from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -38,6 +38,10 @@ export default function SecondaryButton({
   iconName,
   style,
 }: SecondaryButtonProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const isDisabled = disabled || loading;
 
   return (
@@ -75,7 +79,8 @@ export default function SecondaryButton({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   button: {
     borderWidth: borderWidths.strong,
     borderColor: colors.teal,
@@ -114,3 +119,5 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
 });
+}
+

@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useMemo, useState } from 'react';
 import {
   View,
@@ -17,7 +18,6 @@ import AppIcon from '../../components/AppIcon';
 import KeyboardSafeView from '../../components/KeyboardSafeView';
 import type { MapLandmark } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -25,7 +25,6 @@ import {
   borderRadius,
   borderWidths,
   layout,
-  shadows,
   lineHeights,
   iconSizes,
   touchTarget,
@@ -65,6 +64,10 @@ export default function OfflineMapScreen({
   onLocatePress,
   onBack,
 }: OfflineMapScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const [landmarkQuery, setLandmarkQuery] = useState('');
@@ -224,7 +227,8 @@ export default function OfflineMapScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -372,3 +376,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+}
+

@@ -1,8 +1,8 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import AppIcon from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -10,7 +10,6 @@ import {
   borderRadius,
   borderWidths,
   lineHeights,
-  shadows,
   touchTarget,
   iconSizes,
 } from '../constants/theme';
@@ -30,6 +29,10 @@ export default function OnboardingNextStepsCard({
   title = "Here's what happens next",
   steps,
 }: OnboardingNextStepsCardProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>{title}</Text>
@@ -55,7 +58,8 @@ export default function OnboardingNextStepsCard({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -106,3 +110,4 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
 });
+}

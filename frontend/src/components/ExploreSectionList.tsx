@@ -1,11 +1,10 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import type { ExploreSectionItem } from '../screens/tourist/ExploreHomeScreen';
 import AppIcon from './AppIcon';
 import Card from './Card';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -30,6 +29,10 @@ export default function ExploreSectionList({
   variant = 'list',
   onSectionPress,
 }: ExploreSectionListProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   if (sections.length === 0) {
     return null;
   }
@@ -111,7 +114,8 @@ export default function ExploreSectionList({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   list: {
     gap: spacing.sm,
   },
@@ -193,3 +197,5 @@ const styles = StyleSheet.create({
     opacity: 0.94,
   },
 });
+}
+

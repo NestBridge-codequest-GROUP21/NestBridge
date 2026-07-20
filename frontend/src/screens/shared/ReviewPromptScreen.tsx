@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -16,7 +17,6 @@ import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import FormTextField from '../../components/FormTextField';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -27,7 +27,6 @@ import {
   gradients,
   layout,
   lineHeights,
-  shadows,
 } from '../../constants/theme';
 import { reviewPromptCopy } from '../../data/welfareMock';
 
@@ -44,6 +43,10 @@ export default function ReviewPromptScreen({
   onSkip,
   onBack,
 }: ReviewPromptScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -131,7 +134,8 @@ export default function ReviewPromptScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -222,3 +226,5 @@ const styles = StyleSheet.create({
     height: spacing.sm,
   },
 });
+}
+

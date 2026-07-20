@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -8,7 +9,6 @@ import {
 } from 'react-native';
 import AppIcon from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -41,6 +41,10 @@ export default function SearchField({
   style,
   autoFocus = false,
 }: SearchFieldProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const [focused, setFocused] = useState(false);
   const showClear = value.length > 0 && (onClear || onChangeText);
 
@@ -95,7 +99,8 @@ export default function SearchField({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -131,3 +136,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+}
+

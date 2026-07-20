@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -11,7 +12,6 @@ import InlineBanner from '../../components/InlineBanner';
 import SectionHeader from '../../components/SectionHeader';
 import KeyboardSafeView from '../../components/KeyboardSafeView';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -42,6 +42,10 @@ export default function CreateEventScreen({
   onBack,
   onSubmit,
 }: CreateEventScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const [title, setTitle] = useState('');
   const [type, setType] = useState<StudentEventType>('MEETUP');
   const [organizerKind, setOrganizerKind] =
@@ -207,7 +211,8 @@ export default function CreateEventScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -265,3 +270,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
 });
+}
+

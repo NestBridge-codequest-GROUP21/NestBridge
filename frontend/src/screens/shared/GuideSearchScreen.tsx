@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -15,7 +16,6 @@ import Avatar from '../../components/Avatar';
 import StatusBadge from '../../components/StatusBadge';
 import AppIcon from '../../components/AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -49,6 +49,10 @@ export default function GuideSearchScreen({
   onGuidePress,
   onBack,
 }: GuideSearchScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -136,7 +140,8 @@ export default function GuideSearchScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -228,3 +233,5 @@ const styles = StyleSheet.create({
     color: colors.tealDeep,
   },
 });
+}
+

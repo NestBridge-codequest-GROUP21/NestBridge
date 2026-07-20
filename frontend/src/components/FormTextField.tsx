@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -8,7 +9,6 @@ import {
   TextInputProps,
 } from 'react-native';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -59,6 +59,10 @@ export default function FormTextField({
   onBlur,
   onFocus,
 }: FormTextFieldProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const [visible, setVisible] = useState(false);
   const [focused, setFocused] = useState(false);
   const showToggle = Boolean(secureTextEntry && visibilityToggle);
@@ -126,7 +130,8 @@ export default function FormTextField({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     marginBottom: spacing.md,
   },
@@ -205,3 +210,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
 });
+}
+

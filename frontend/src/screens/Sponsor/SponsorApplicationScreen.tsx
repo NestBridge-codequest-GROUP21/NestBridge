@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -19,7 +20,6 @@ import AppIcon from '../../components/AppIcon';
 import KeyboardSafeView from '../../components/KeyboardSafeView';
 import type { SponsorListing } from '../../data/sponsorsMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -55,6 +55,10 @@ export default function SponsorApplicationScreen({
   onSubmit,
   onReturnToList,
 }: SponsorApplicationScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -211,7 +215,8 @@ export default function SponsorApplicationScreen({
 
 const LOGO_TILE = avatarSizes.lg + spacing.sm;
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -301,3 +306,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
 });
+}
+

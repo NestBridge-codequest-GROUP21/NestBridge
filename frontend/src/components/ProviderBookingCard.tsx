@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme, useTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Avatar from './Avatar';
@@ -5,7 +6,6 @@ import Card from './Card';
 import EmptyState from './EmptyState';
 import StatusBadge, { type StatusBadgeTone } from './StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -53,6 +53,8 @@ export default function ProviderBookingCard({
   isLast = false,
   onPress,
 }: ProviderBookingCardProps) {
+  const styles = useThemedStyles(createStyles);
+
   const status = statusMeta(booking.status);
   const cardBody = (
     <>
@@ -74,6 +76,8 @@ export default function ProviderBookingCard({
   );
 
   if (!onPress) {
+  const styles = useThemedStyles(createStyles);
+
     return (
       <Card style={[styles.card, !isLast && styles.cardSpacing]} padding="lg">
         {cardBody}
@@ -106,6 +110,8 @@ export function ProviderBookingsEmptyBlock({
   body,
   tip,
 }: ProviderBookingsEmptyBlockProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <EmptyState
       title={title}
@@ -117,7 +123,8 @@ export function ProviderBookingsEmptyBlock({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -162,3 +169,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
 });
+}
+

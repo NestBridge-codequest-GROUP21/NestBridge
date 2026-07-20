@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -13,7 +14,6 @@ import SecondaryButton from '../../components/SecondaryButton';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import StatusBadge from '../../components/StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -24,7 +24,6 @@ import {
   iconSizes,
   touchTarget,
   layout,
-  tints,
 } from '../../constants/theme';
 import {
   EVENT_ORGANIZER_META,
@@ -52,6 +51,9 @@ function EventCard({
   joined: boolean;
   onToggleJoin?: (eventId: string) => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   const typeMeta = EVENT_TYPE_META[event.type];
   const organizerMeta = EVENT_ORGANIZER_META[event.organizerKind];
   const attending = event.attending + (joined ? 1 : 0);
@@ -124,6 +126,10 @@ export default function StudentEventsScreen({
   onRetry,
   onToggleJoin,
 }: StudentEventsScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const showLoading = isLoading && events.length === 0;
   const showError = !!error && events.length === 0;
 
@@ -182,7 +188,8 @@ export default function StudentEventsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -288,3 +295,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 });
+}
+

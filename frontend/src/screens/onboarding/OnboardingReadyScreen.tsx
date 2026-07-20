@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -20,7 +21,6 @@ import OnboardingNextStepsCard, {
 } from '../../components/OnboardingNextStepsCard';
 import AppIcon from '../../components/AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -31,8 +31,6 @@ import {
   lineHeights,
   layout,
   motion,
-  overlays,
-  shadows,
   touchTarget,
   iconSizes,
 } from '../../constants/theme';
@@ -62,6 +60,10 @@ export default function OnboardingReadyScreen({
   onContinueLater,
   onBack,
 }: OnboardingReadyScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients, overlays } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const entrance = useRef(new Animated.Value(0)).current;
   const checkPulse = useRef(new Animated.Value(0)).current;
@@ -217,7 +219,8 @@ export default function OnboardingReadyScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows, overlays }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.navy,
@@ -370,3 +373,5 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 });
+}
+

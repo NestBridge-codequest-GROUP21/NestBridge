@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -23,7 +24,6 @@ import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import SectionHeader from '../../components/SectionHeader';
 import {
-  colors,
   spacing,
   layout,
 } from '../../constants/theme';
@@ -106,6 +106,8 @@ export default function StudentHomeDashboard({
   onReminderPress,
   onTabPress,
 }: StudentHomeDashboardProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -208,7 +210,8 @@ export default function StudentHomeDashboard({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -228,3 +231,5 @@ const styles = StyleSheet.create({
   },
   bannerPad: {},
 });
+}
+

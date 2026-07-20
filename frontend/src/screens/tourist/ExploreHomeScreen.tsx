@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -20,7 +21,10 @@ import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
 import ReminderBanner from '../../components/ReminderBanner';
-import { colors, spacing, layout } from '../../constants/theme';
+import {
+  spacing,
+  layout,
+} from '../../constants/theme';
 import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
 
 export interface ExploreSectionItem {
@@ -96,6 +100,8 @@ export default function ExploreHomeScreen({
   onReminderPress,
   onTabPress,
 }: ExploreHomeScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const resolvedStatus =
     statusLabel ??
     (variant === 'browse' ? `Discover ${cityLabel}` : `Exploring ${cityLabel}`);
@@ -176,7 +182,8 @@ export default function ExploreHomeScreen({
 
 export type { SuggestedHostItem };
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -188,3 +195,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 });
+}
+

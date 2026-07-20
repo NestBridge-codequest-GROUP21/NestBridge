@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -9,7 +10,6 @@ import Card from '../../components/Card';
 import ListRow from '../../components/ListRow';
 import SectionHeader from '../../components/SectionHeader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -18,11 +18,9 @@ import {
   borderWidths,
   lineHeights,
   layout,
-  shadows,
   iconSizes,
   controlHeights,
   touchTarget,
-  tints,
 } from '../../constants/theme';
 
 export interface EmergencyContact {
@@ -57,6 +55,10 @@ export default function SOSScreen({
   onCallEmergencyServices,
   onContactCallPress,
 }: SOSScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const contacts = uniqueContacts(emergencyContacts);
 
   return (
@@ -149,7 +151,8 @@ export default function SOSScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -254,3 +257,5 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
 });
+}
+

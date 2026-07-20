@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -8,8 +9,6 @@ import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import type { KYCPromptData } from '../../data/kycPromptMock';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -33,6 +32,10 @@ export default function KYCPromptScreen({
   onVerifyNow,
   onVerifyLater,
 }: KYCPromptScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -70,7 +73,8 @@ export default function KYCPromptScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -131,3 +135,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
 });
+}
+

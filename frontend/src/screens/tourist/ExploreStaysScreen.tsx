@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -11,8 +12,6 @@ import PrimaryButton from '../../components/PrimaryButton';
 import AppIcon from '../../components/AppIcon';
 import type { StayListing } from '../../data/featureScreensMock';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -39,6 +38,9 @@ export interface ExploreStaysScreenProps {
 }
 
 function StarRow({ rating }: { rating: number }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   return (
     <View style={styles.starRow}>
       {Array.from({ length: 5 }).map((_, index) => (
@@ -60,6 +62,9 @@ function StayCard({
   listing: StayListing;
   onBookPress?: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   return (
     <Card padding="none" elevation="card" style={styles.stayCard}>
       <View style={styles.imageTile}>
@@ -115,6 +120,10 @@ export default function ExploreStaysScreen({
   onFilterPress,
   onBack,
 }: ExploreStaysScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -167,7 +176,8 @@ export default function ExploreStaysScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -256,3 +266,5 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
 });
+}
+

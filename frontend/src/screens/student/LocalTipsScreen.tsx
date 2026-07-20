@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -12,8 +13,6 @@ import type {
   CulturalTopicCard,
 } from '../../data/featureScreensMock';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -46,6 +45,9 @@ function PhraseCard({
   phrase: CulturalPhraseCard;
   onPlayAudio?: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   return (
     <Card style={styles.phraseCard} padding="md">
       <View style={styles.iconTile}>
@@ -69,6 +71,9 @@ function PhraseCard({
 }
 
 function TopicCard({ topic }: { topic: CulturalTopicCard }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   return (
     <Card style={styles.topicCard} padding="md">
       <View
@@ -98,6 +103,10 @@ export default function LocalTipsScreen({
   onPlayAudio,
   onBack,
 }: LocalTipsScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const isEmpty = phrases.length === 0 && topics.length === 0;
 
   return (
@@ -161,7 +170,8 @@ export default function LocalTipsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -261,3 +271,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
 });
+}
+

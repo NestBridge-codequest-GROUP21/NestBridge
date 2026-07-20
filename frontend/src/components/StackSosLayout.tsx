@@ -1,8 +1,12 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SosCircleButton from './SosCircleButton';
-import { colors, spacing, layout } from '../constants/theme';
+import {
+  spacing,
+  layout,
+} from '../constants/theme';
 
 export interface StackSosLayoutProps {
   children: React.ReactNode;
@@ -18,6 +22,8 @@ export default function StackSosLayout({
   children,
   onSosPress,
 }: StackSosLayoutProps) {
+  const styles = useThemedStyles(createStyles);
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -37,7 +43,8 @@ export default function StackSosLayout({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
   },
@@ -52,3 +59,5 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
 });
+}
+

@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
@@ -10,7 +11,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -102,6 +102,10 @@ export default function MatchSearchScreen({
   onHostPress,
   onTabPress,
 }: MatchSearchScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const showTabBar = tabBarItems != null && tabBarItems.length > 0;
 
@@ -343,7 +347,8 @@ export default function MatchSearchScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -498,3 +503,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
 });
+}
+

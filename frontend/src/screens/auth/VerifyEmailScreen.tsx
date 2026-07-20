@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -15,7 +16,6 @@ import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -23,7 +23,6 @@ import {
   borderRadius,
   lineHeights,
   layout,
-  tints,
   iconSizes,
 } from '../../constants/theme';
 
@@ -48,6 +47,10 @@ export default function VerifyEmailScreen({
   onResend,
   onBackToSignIn,
 }: VerifyEmailScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -96,7 +99,8 @@ export default function VerifyEmailScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   flex: {
     flex: 1,
     backgroundColor: colors.background,
@@ -158,3 +162,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
 });
+}
+

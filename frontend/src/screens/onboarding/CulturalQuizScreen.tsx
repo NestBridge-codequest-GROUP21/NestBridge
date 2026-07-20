@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -8,7 +9,6 @@ import BackButton from '../../components/BackButton';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -53,6 +53,10 @@ export default function CulturalQuizScreen({
   onContinue,
   onBack,
 }: CulturalQuizScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -127,7 +131,8 @@ export default function CulturalQuizScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -198,3 +203,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
 });
+}
+

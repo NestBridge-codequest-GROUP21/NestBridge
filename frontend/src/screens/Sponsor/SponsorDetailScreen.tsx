@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -16,7 +17,6 @@ import ScreenScroll from '../../components/ScreenScroll';
 import AppIcon from '../../components/AppIcon';
 import type { SponsorListing } from '../../data/sponsorsMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -42,6 +42,10 @@ export default function SponsorDetailScreen({
   onBack,
   onApplyPress,
 }: SponsorDetailScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   const details = [
@@ -131,7 +135,8 @@ export default function SponsorDetailScreen({
 
 const LOGO_TILE = avatarSizes.lg + spacing.md;
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -231,3 +236,5 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
 });
+}
+

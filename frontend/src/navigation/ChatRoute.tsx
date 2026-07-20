@@ -1,9 +1,13 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { ActivityIndicator, View, StyleSheet, Text } from 'react-native';
 import ChatScreen from '../screens/shared/ChatScreen';
 import { useChatMessages } from '../hooks/useChatMessages';
 import type { ConversationListItem } from '../types/messaging';
-import { colors, fontSizes, spacing } from '../constants/theme';
+import {
+  fontSizes,
+  spacing,
+} from '../constants/theme';
 
 export interface ChatRouteProps {
   conversation: ConversationListItem;
@@ -18,6 +22,10 @@ export default function ChatRoute({
   onBack,
   onMessageSent,
 }: ChatRouteProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const chat = useChatMessages(conversation.id, conversation.firebasePath, currentUserId);
 
   if (chat.isLoading && chat.messages.length === 0) {
@@ -48,7 +56,8 @@ export default function ChatRoute({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: { flex: 1 },
   loader: {
     flex: 1,
@@ -66,3 +75,5 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.caption,
   },
 });
+}
+

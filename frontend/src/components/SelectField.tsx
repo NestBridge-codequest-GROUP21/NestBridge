@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -9,7 +10,6 @@ import {
 } from 'react-native';
 import AppIcon from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -18,7 +18,6 @@ import {
   borderWidths,
   controlHeights,
   iconSizes,
-  overlays,
   touchTarget,
   lineHeights,
 } from '../constants/theme';
@@ -38,6 +37,10 @@ export default function SelectField({
   options,
   onSelect,
 }: SelectFieldProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const [open, setOpen] = useState(false);
 
   const handleSelect = (option: string) => {
@@ -114,7 +117,8 @@ export default function SelectField({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, overlays }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     marginBottom: spacing.md,
   },
@@ -201,3 +205,5 @@ const styles = StyleSheet.create({
     color: colors.tealDeep,
   },
 });
+}
+

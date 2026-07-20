@@ -1,8 +1,8 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
 import AppIcon from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -27,6 +27,10 @@ export default function CheckboxRow({
   onPress,
   style,
 }: CheckboxRowProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <Pressable
       onPress={onPress}
@@ -45,7 +49,8 @@ export default function CheckboxRow({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -73,3 +78,5 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
 });
+}
+

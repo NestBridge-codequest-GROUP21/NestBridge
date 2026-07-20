@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
   View,
@@ -14,7 +15,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BrandLogoMark from '../../components/BrandLogoMark';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -40,6 +40,9 @@ export interface SplashScreenProps {
 }
 
 function ShiftingGradientBackground() {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   const shift = useRef(new Animated.Value(0)).current;
   const { width, height } = Dimensions.get('window');
 
@@ -107,6 +110,8 @@ function DriftRing({
   borderColor: string;
   borderOpacity: number;
 }) {
+  const styles = useThemedStyles(createStyles);
+
   const drift = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -169,6 +174,8 @@ function DriftRing({
 }
 
 function LoadingDots() {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.dots} accessibilityRole="progressbar">
       {[0, 1, 2].map((index) => (
@@ -179,6 +186,8 @@ function LoadingDots() {
 }
 
 function PulsingDot({ delayMs, accent }: { delayMs: number; accent?: boolean }) {
+  const styles = useThemedStyles(createStyles);
+
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -225,6 +234,8 @@ function PulsingDot({ delayMs, accent }: { delayMs: number; accent?: boolean }) 
 }
 
 function BrandTitle({ appName }: { appName: string }) {
+  const styles = useThemedStyles(createStyles);
+
   const nestPart = 'Nest';
   const bridgePart = appName.startsWith(nestPart) ? appName.slice(nestPart.length) : null;
 
@@ -244,7 +255,12 @@ function BrandTitle({ appName }: { appName: string }) {
   );
 }
 
-export default function SplashScreen({ appName, onContinue }: SplashScreenProps) {
+export default function SplashScreen({
+ appName, onContinue }: SplashScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = Dimensions.get('window');
   const wordReveal = useRef(new Animated.Value(0)).current;
@@ -357,7 +373,8 @@ export default function SplashScreen({ appName, onContinue }: SplashScreenProps)
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.navy,
@@ -452,3 +469,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+}
+

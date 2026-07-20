@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -10,7 +11,6 @@ import IncomingRequestCard, {
 import InlineBanner from '../../components/InlineBanner';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import {
-  colors,
   spacing,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
@@ -44,6 +44,8 @@ export default function HostRequestsTabScreen({
   onRequestPress,
   onTabPress,
 }: HostRequestsTabScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const pendingLabel =
     requests.length === 1 ? '1 pending request' : `${requests.length} pending requests`;
 
@@ -96,7 +98,8 @@ export default function HostRequestsTabScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -105,3 +108,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 });
+}
+

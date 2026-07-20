@@ -1,9 +1,9 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import AppIcon from './AppIcon';
 import SectionHeader from './SectionHeader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -13,7 +13,6 @@ import {
   layout,
   iconSizes,
   avatarSizes,
-  tints,
   lineHeights,
 } from '../constants/theme';
 
@@ -33,6 +32,10 @@ export default function RecentActivityList({
   title = 'Recent Activity',
   items,
 }: RecentActivityListProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   if (items.length === 0) {
     return null;
   }
@@ -62,7 +65,8 @@ export default function RecentActivityList({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     marginBottom: layout.sectionGap,
   },
@@ -102,3 +106,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
 });
+}
+

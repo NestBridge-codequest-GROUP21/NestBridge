@@ -1,12 +1,11 @@
+import { useThemedStyles, type AppTheme, useTheme } from '../theme';
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, ViewStyle } from 'react-native';
 import {
-  colors,
   borderRadius,
   borderWidths,
   spacing,
   motion,
-  tints,
   avatarSizes,
 } from '../constants/theme';
 
@@ -24,6 +23,8 @@ export function SkeletonBlock({
   borderRadius: radius = borderRadius.md,
   style,
 }: SkeletonLoaderProps) {
+  const styles = useThemedStyles(createStyles);
+
   const opacity = useRef(new Animated.Value(0.45)).current;
 
   useEffect(() => {
@@ -69,7 +70,10 @@ export interface SkeletonCardProps {
 }
 
 /** Card-shaped skeleton used on home and list screens. */
-export default function SkeletonLoader({ style, lines = 3 }: SkeletonCardProps) {
+export default function SkeletonLoader({
+ style, lines = 3 }: SkeletonCardProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View
       style={[styles.card, style]}
@@ -103,7 +107,8 @@ export default function SkeletonLoader({ style, lines = 3 }: SkeletonCardProps) 
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   block: {
     backgroundColor: tints.navy,
   },
@@ -127,3 +132,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
 });
+}
+

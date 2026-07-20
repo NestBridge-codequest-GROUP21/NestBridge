@@ -1,10 +1,10 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Avatar from './Avatar';
 import Card from './Card';
 import StatusBadge from './StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -33,6 +33,8 @@ export default function FeaturedHomeCard({
   initials,
   onPress,
 }: FeaturedHomeCardProps) {
+  const styles = useThemedStyles(createStyles);
+
   const avatarText = initials ?? name.slice(0, 2).toUpperCase();
 
   return (
@@ -74,7 +76,8 @@ export default function FeaturedHomeCard({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   pressable: {
     marginBottom: spacing.lg,
   },
@@ -138,3 +141,5 @@ const styles = StyleSheet.create({
     color: colors.teal,
   },
 });
+}
+

@@ -1,3 +1,4 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Card from './Card';
@@ -5,7 +6,6 @@ import Avatar from './Avatar';
 import SectionHeader from './SectionHeader';
 import EmptyState from './EmptyState';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -43,6 +43,8 @@ export default function DiscoveryListingSection({
   emptyState,
   onItemPress,
 }: DiscoveryListingSectionProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.wrap}>
       <SectionHeader title={title} />
@@ -90,7 +92,8 @@ export default function DiscoveryListingSection({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     marginBottom: layout.sectionGap,
   },
@@ -138,3 +141,5 @@ const styles = StyleSheet.create({
     color: colors.teal,
   },
 });
+}
+

@@ -1,6 +1,10 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
-import { colors, spacing, borderRadius } from '../constants/theme';
+import {
+  spacing,
+  borderRadius,
+} from '../constants/theme';
 
 const iconImage = require('../../assets/logo-icon.png');
 const iconAsset = Image.resolveAssetSource(iconImage);
@@ -20,6 +24,8 @@ export default function BrandLogoMark({
   size = LOGO_MARK_SIZE,
   accessibilityLabel = 'NestBridge logo',
 }: BrandLogoMarkProps) {
+  const styles = useThemedStyles(createStyles);
+
   const innerSize = size - spacing.md * 2;
   const innerHeight = innerSize * iconAspectRatio;
 
@@ -36,7 +42,8 @@ export default function BrandLogoMark({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   logoMark: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -50,3 +57,5 @@ const styles = StyleSheet.create({
     elevation: spacing.sm,
   },
 });
+}
+

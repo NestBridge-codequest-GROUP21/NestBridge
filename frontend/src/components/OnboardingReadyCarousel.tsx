@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React, { useCallback, useRef } from 'react';
 import {
   View,
@@ -11,7 +12,6 @@ import {
 import AppIcon from './AppIcon';
 import type { OnboardingNextStep } from './OnboardingNextStepsCard';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -31,6 +31,10 @@ const CARD_PEEK = spacing.xl + spacing.sm;
 export default function OnboardingReadyCarousel({
   cards,
 }: OnboardingReadyCarouselProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const screenWidth = Dimensions.get('window').width;
   const contentWidth = screenWidth - layout.screenPaddingHorizontal * 2;
   const cardWidth = contentWidth - CARD_PEEK;
@@ -98,7 +102,8 @@ export default function OnboardingReadyCarousel({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     minHeight: layout.carouselMinHeight + spacing.lg,
   },
@@ -155,3 +160,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
 });
+}
+

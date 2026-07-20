@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -9,13 +10,11 @@ import Card from '../../components/Card';
 import StatusBadge from '../../components/StatusBadge';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   lineHeights,
-  shadows,
   layout,
 } from '../../constants/theme';
 import type { VideoResourceApi } from '../../services/api';
@@ -36,6 +35,10 @@ export default function VideoDetailScreen({
   onBack,
   onRetry,
 }: VideoDetailScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   if (isLoading) {
     return (
       <View style={styles.loader}>
@@ -125,7 +128,8 @@ export default function VideoDetailScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
   loader: {
     flex: 1,
@@ -199,3 +203,5 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
 });
+}
+

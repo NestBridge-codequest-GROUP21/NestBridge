@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -9,7 +10,6 @@ import EmptyState from '../../components/EmptyState';
 import SectionHeader from '../../components/SectionHeader';
 import type { TransportTab } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -17,7 +17,6 @@ import {
   borderRadius,
   borderWidths,
   lineHeights,
-  tints,
   iconSizes,
   avatarSizes,
   touchTarget,
@@ -45,6 +44,9 @@ function RouteCard({
 }: {
   route: TransportTab['routes'][number];
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   return (
     <Card padding="md">
       <View style={styles.routeHeader}>
@@ -74,6 +76,10 @@ export default function TransportGuideScreen({
   tabs,
   onBack,
 }: TransportGuideScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const [activeTabId, setActiveTabId] = useState(tabs[0]?.id ?? '');
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
   const routes = activeTab?.routes ?? [];
@@ -156,7 +162,8 @@ export default function TransportGuideScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -256,3 +263,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
 });
+}
+

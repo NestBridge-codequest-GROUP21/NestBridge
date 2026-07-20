@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -14,8 +15,6 @@ import BackButton from '../../components/BackButton';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -66,6 +65,10 @@ export default function IntentSelectScreen({
   onContinue,
   onBack,
 }: IntentSelectScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -156,7 +159,8 @@ export function intentOptionsFromPrimary(): IntentOption[] {
   }));
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -256,3 +260,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
 });
+}
+
