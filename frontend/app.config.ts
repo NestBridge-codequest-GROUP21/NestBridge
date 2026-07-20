@@ -47,6 +47,7 @@ const base: ExpoConfig = {
   plugins: [
     'expo-secure-store',
     'expo-font',
+    'expo-web-browser',
     [
       'expo-image-picker',
       {
