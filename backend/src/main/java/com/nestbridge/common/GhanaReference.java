@@ -17,7 +17,7 @@ public final class GhanaReference {
     public record Region(String name, String capital) {}
 
     public enum UniversityCategory {
-        PUBLIC, TECHNICAL, PRIVATE, SPECIALIZED
+        PUBLIC, TECHNICAL, PRIVATE, SPECIALIZED, NURSING, COLLEGE_OF_EDUCATION
     }
 
     public record University(
@@ -70,6 +70,7 @@ public final class GhanaReference {
             Map.entry("ashanti", "Kumasi"),
             Map.entry("winneba", "Cape Coast"),
             Map.entry("pedu", "Cape Coast"),
+            Map.entry("central region", "Cape Coast"),
             Map.entry("tarkwa", "Sekondi-Takoradi"),
             Map.entry("takoradi", "Sekondi-Takoradi"),
             Map.entry("sekondi", "Sekondi-Takoradi"),
@@ -127,7 +128,56 @@ public final class GhanaReference {
             uni("University of Media, Arts and Communication (UniMAC)", UniversityCategory.SPECIALIZED, "Accra", List.of("Accra"),
                     "Journalism, Languages, Film & Television"),
             uni("Regional Maritime University (RMU)", UniversityCategory.SPECIALIZED, "Accra", List.of("Accra"),
-                    "Maritime Education")
+                    "Maritime Education"),
+            uni("Korle Bu Nursing and Midwifery Training College", UniversityCategory.NURSING, "Accra", List.of("Accra"),
+                    "Nursing, Midwifery"),
+            uni("37 Military Hospital Nurses Training College", UniversityCategory.NURSING, "Accra", List.of("Accra"),
+                    "Nursing"),
+            uni("Komfo Anokye Nursing and Midwifery Training College", UniversityCategory.NURSING, "Kumasi", List.of("Kumasi"),
+                    "Nursing, Midwifery"),
+            uni("Nurses Training College, Cape Coast", UniversityCategory.NURSING, "Cape Coast", List.of("Cape Coast"),
+                    "Nursing, Midwifery"),
+            uni("Nurses Training College, Tamale", UniversityCategory.NURSING, "Tamale", List.of("Tamale"),
+                    "Nursing, Midwifery"),
+            uni("Nurses Training College, Ho", UniversityCategory.NURSING, "Ho", List.of("Ho"),
+                    "Nursing, Midwifery"),
+            uni("Nurses Training College, Sunyani", UniversityCategory.NURSING, "Sunyani", List.of("Sunyani"),
+                    "Nursing, Midwifery"),
+            uni("Nurses Training College, Sekondi", UniversityCategory.NURSING, "Sekondi", List.of("Sekondi-Takoradi"),
+                    "Nursing, Midwifery"),
+            uni("Nurses Training College, Bolgatanga", UniversityCategory.NURSING, "Bolgatanga", List.of("Bolgatanga"),
+                    "Nursing, Midwifery"),
+            uni("Nurses Training College, Wa", UniversityCategory.NURSING, "Wa", List.of("Wa"),
+                    "Nursing, Midwifery"),
+            uni("Accra College of Education", UniversityCategory.COLLEGE_OF_EDUCATION, "Accra", List.of("Accra"),
+                    "Teacher Education"),
+            uni("Wesley College of Education, Kumasi", UniversityCategory.COLLEGE_OF_EDUCATION, "Kumasi", List.of("Kumasi"),
+                    "Teacher Education"),
+            uni("Ola College of Education, Cape Coast", UniversityCategory.COLLEGE_OF_EDUCATION, "Cape Coast", List.of("Cape Coast"),
+                    "Teacher Education"),
+            uni("Tamale College of Education", UniversityCategory.COLLEGE_OF_EDUCATION, "Tamale", List.of("Tamale"),
+                    "Teacher Education"),
+            uni("St. Francis College of Education, Hohoe", UniversityCategory.COLLEGE_OF_EDUCATION, "Hohoe", List.of("Ho"),
+                    "Teacher Education"),
+            uni("St. Joseph College of Education, Bechem", UniversityCategory.COLLEGE_OF_EDUCATION, "Bechem",
+                    List.of("Sunyani", "Goaso"), "Teacher Education"),
+            uni("Holy Child College of Education, Takoradi", UniversityCategory.COLLEGE_OF_EDUCATION, "Takoradi",
+                    List.of("Sekondi-Takoradi"), "Teacher Education"),
+            uni("Kibi College of Education", UniversityCategory.COLLEGE_OF_EDUCATION, "Kibi", List.of("Koforidua"),
+                    "Teacher Education"),
+            uni("Gbewaa College of Education, Pusiga", UniversityCategory.COLLEGE_OF_EDUCATION, "Pusiga",
+                    List.of("Bolgatanga"), "Teacher Education"),
+            uni("N.J. Ahmadiyya College of Education, Wa", UniversityCategory.COLLEGE_OF_EDUCATION, "Wa", List.of("Wa"),
+                    "Teacher Education")
+    );
+
+    private static final Map<String, List<String>> NEARBY_DESTINATION_HUBS = Map.of(
+            "Goaso", List.of("Sunyani", "Kumasi"),
+            "Techiman", List.of("Kumasi", "Sunyani"),
+            "Nalerigu", List.of("Tamale"),
+            "Dambai", List.of("Ho"),
+            "Damongo", List.of("Tamale"),
+            "Sefwi Wiawso", List.of("Sekondi-Takoradi", "Kumasi")
     );
 
     private GhanaReference() {}
@@ -158,13 +208,30 @@ public final class GhanaReference {
     }
 
     public static List<String> universitiesForCity(String city) {
-        String normalized = normalizeToken(normalizeCity(city));
+        if (city == null || city.isBlank()) {
+            return List.of();
+        }
+        String capital = normalizeCity(city);
+        String normalized = normalizeToken(capital);
         List<String> names = new ArrayList<>();
         for (University university : UNIVERSITIES) {
             boolean matches = university.matchDestinations().stream()
                     .anyMatch(destination -> normalizeToken(destination).equals(normalized));
             if (matches) {
                 names.add(university.name());
+            }
+        }
+        if (!names.isEmpty()) {
+            return names;
+        }
+        // Capitals without local campuses: nearby hubs only — never the full national list.
+        List<String> hubs = NEARBY_DESTINATION_HUBS.getOrDefault(capital, List.of());
+        for (String hub : hubs) {
+            for (String name : universitiesForCity(hub)) {
+                String nearbyLabel = "Nearby · " + name;
+                if (!names.contains(nearbyLabel)) {
+                    names.add(nearbyLabel);
+                }
             }
         }
         return names;
