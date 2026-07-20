@@ -214,9 +214,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   stayTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
   },
   stayLocation: {
@@ -246,9 +247,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   priceText: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.teal,
     flexShrink: 1,
   },

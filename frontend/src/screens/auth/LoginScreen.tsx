@@ -16,19 +16,16 @@ import SecondaryButton from '../../components/SecondaryButton';
 import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
-import AppIcon from '../../components/AppIcon';
+import CheckboxRow from '../../components/CheckboxRow';
 import {
   colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
-  borderWidths,
   lineHeights,
   layout,
   touchTarget,
-  iconSizes,
 } from '../../constants/theme';
 import type { DemoAccount } from '../../data/demoAccounts';
 
@@ -77,14 +74,15 @@ export default function LoginScreen({
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : spacing.sm}
     >
       <StatusBar style="dark" />
       <ScrollView
         contentContainerStyle={[
           styles.content,
           {
-            paddingTop: insets.top + spacing.lg,
+            paddingTop: insets.top + layout.authContentTop,
             paddingBottom: insets.bottom + spacing.lg,
           },
         ]}
@@ -139,19 +137,12 @@ export default function LoginScreen({
           </Pressable>
         ) : null}
 
-        <Pressable
+        <CheckboxRow
+          label="Keep me signed in"
+          checked={keepSignedIn}
           onPress={onToggleKeepSignedIn}
-          style={styles.keepSignedInRow}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: keepSignedIn }}
-        >
-          <View style={[styles.checkbox, keepSignedIn && styles.checkboxChecked]}>
-            {keepSignedIn ? (
-              <AppIcon name="checkmark" size={iconSizes.sm} color={colors.white} />
-            ) : null}
-          </View>
-          <Text style={styles.keepSignedInText}>Keep me signed in</Text>
-        </Pressable>
+          style={styles.keepSignedIn}
+        />
 
         {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
@@ -185,6 +176,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
@@ -199,6 +191,7 @@ const styles = StyleSheet.create({
   dividerLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
@@ -207,7 +200,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     minHeight: touchTarget,
     justifyContent: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   forgotText: {
     fontFamily: fontFamilies.semibold,
@@ -215,30 +208,8 @@ const styles = StyleSheet.create({
     color: colors.teal,
     fontWeight: fontWeights.semibold,
   },
-  keepSignedInRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  keepSignedIn: {
     marginBottom: spacing.lg,
-    minHeight: touchTarget,
-  },
-  checkbox: {
-    width: spacing.lg,
-    height: spacing.lg,
-    borderRadius: borderRadius.sm,
-    borderWidth: borderWidths.strong,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  checkboxChecked: {
-    backgroundColor: colors.teal,
-    borderColor: colors.teal,
-  },
-  keepSignedInText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textPrimary,
   },
   spacer: {
     height: spacing.sm,
@@ -247,6 +218,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     textAlign: 'center',
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     fontFamily: fontFamilies.regular,
     color: colors.textTertiary,
   },

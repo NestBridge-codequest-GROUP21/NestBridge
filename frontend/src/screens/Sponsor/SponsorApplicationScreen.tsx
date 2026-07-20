@@ -16,6 +16,7 @@ import FormTextField from '../../components/FormTextField';
 import ScreenScroll from '../../components/ScreenScroll';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
+import KeyboardSafeView from '../../components/KeyboardSafeView';
 import type { SponsorListing } from '../../data/sponsorsMock';
 import {
   colors,
@@ -76,7 +77,12 @@ export default function SponsorApplicationScreen({
 
   if (submitted) {
     return (
-      <View style={styles.successContainer}>
+      <View
+        style={[
+          styles.successContainer,
+          { paddingBottom: insets.bottom + spacing.xl },
+        ]}
+      >
         <StatusBar style="dark" />
         <View style={styles.successIcon}>
           <AppIcon
@@ -96,7 +102,7 @@ export default function SponsorApplicationScreen({
   }
 
   return (
-    <View style={styles.root}>
+    <KeyboardSafeView style={styles.root}>
       <StatusBar style="light" />
 
       <ScreenScroll
@@ -199,7 +205,7 @@ export default function SponsorApplicationScreen({
           </Card>
         </View>
       </ScreenScroll>
-    </View>
+    </KeyboardSafeView>
   );
 }
 
@@ -229,14 +235,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   headerTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.heading,
     color: colors.white,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.tealBright,
     marginTop: spacing.xs,
   },
@@ -277,9 +285,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   successTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.heading,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },

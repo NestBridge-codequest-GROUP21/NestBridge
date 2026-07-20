@@ -12,6 +12,7 @@ import {
   borderRadius,
   iconSizes,
   touchTarget,
+  layout,
 } from '../constants/theme';
 
 export interface QuickActionItem {
@@ -84,8 +85,8 @@ const styles = StyleSheet.create({
     opacity: 0.94,
   },
   iconWrap: {
-    width: 56,
-    height: 56,
+    width: layout.iconTileSize,
+    height: layout.iconTileSize,
     borderRadius: borderRadius.lg,
     backgroundColor: tints.teal,
     alignItems: 'center',

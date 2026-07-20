@@ -3,58 +3,93 @@ import {
   confirmBooking,
   getBookingById,
   initializeBookingPayment,
+  type BookingApi,
 } from './api';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Wait until the booking is CONFIRMED (webhook/callback) or until timeout.
+ * Also re-checks immediately when the app returns to the foreground from Paystack.
+ */
 async function waitUntilBookingConfirmed(
   bookingId: string,
-  maxAttempts = 45,
-): Promise<boolean> {
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const booking = await getBookingById(bookingId);
-    if (booking.status === 'CONFIRMED') {
-      return true;
+  maxAttempts = 60,
+): Promise<BookingApi> {
+  let resolveActive: (() => void) | null = null;
+  const subscription = AppState.addEventListener('change', (state) => {
+    if (state === 'active' && resolveActive) {
+      resolveActive();
+      resolveActive = null;
     }
-    // Pause longer while the app is backgrounded (user is in Paystack browser).
-    const delay = AppState.currentState === 'active' ? 2000 : 3000;
-    await sleep(delay);
+  });
+
+  try {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const booking = await getBookingById(bookingId);
+      if (booking.status === 'CONFIRMED') {
+        return booking;
+      }
+
+      const delay = AppState.currentState === 'active' ? 2000 : 3000;
+      await Promise.race([
+        sleep(delay),
+        new Promise<void>((resolve) => {
+          resolveActive = resolve;
+        }),
+      ]);
+    }
+
+    return getBookingById(bookingId);
+  } finally {
+    subscription.remove();
   }
-  const finalCheck = await getBookingById(bookingId);
-  return finalCheck.status === 'CONFIRMED';
 }
 
+export type PaymentCompletionResult = {
+  booking: BookingApi;
+  /** True when Paystack checkout was opened in the system browser. */
+  usedCheckout: boolean;
+  /** True when local mock confirm path was used (Paystack disabled). */
+  mockPayment: boolean;
+};
+
 /**
- * Uses existing mock confirm when Paystack is off; opens system browser when enabled.
- * Same "Pay now" entry point — no UI changes.
+ * Full payment orchestration for the Bookings "Pay now" CTA.
+ *
+ * - Paystack off → initialize returns mockPayment → confirm booking via API
+ * - Paystack on → open authorization URL → poll/refresh until confirmed
  */
-export async function completeBookingPayment(bookingId: string): Promise<void> {
+export async function completeBookingPayment(
+  bookingId: string,
+): Promise<PaymentCompletionResult> {
   const init = await initializeBookingPayment(bookingId);
 
   if (init.mockPayment) {
-    await confirmBooking(bookingId);
-    return;
+    const booking = await confirmBooking(bookingId);
+    return { booking, usedCheckout: false, mockPayment: true };
   }
 
   if (!init.authorizationUrl) {
-    throw new Error('Payment could not be started.');
+    throw new Error('Payment could not be started. Missing checkout URL.');
   }
 
   const canOpen = await Linking.canOpenURL(init.authorizationUrl);
   if (!canOpen) {
-    throw new Error('Cannot open payment page on this device.');
+    throw new Error('Cannot open the Paystack checkout page on this device.');
   }
+
   await Linking.openURL(init.authorizationUrl);
 
-  const confirmed = await waitUntilBookingConfirmed(bookingId);
-  if (confirmed) {
-    return;
+  const booking = await waitUntilBookingConfirmed(bookingId);
+  if (booking.status === 'CONFIRMED') {
+    return { booking, usedCheckout: true, mockPayment: false };
   }
 
   throw new Error(
-    'Payment is processing. Return to Bookings and pull to refresh in a moment.',
+    'Payment is still processing. Return to Bookings and pull to refresh in a moment.',
   );
 }
 

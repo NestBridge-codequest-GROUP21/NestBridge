@@ -17,6 +17,7 @@ import {
   borderRadius,
   controlHeights,
   iconSizes,
+  lineHeights,
 } from '../constants/theme';
 
 export interface PrimaryButtonProps {
@@ -102,6 +103,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.white,
   },
   labelDisabled: {

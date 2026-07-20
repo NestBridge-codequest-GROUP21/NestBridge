@@ -24,6 +24,7 @@ const TEXT_SIZE: Record<AvatarSize, number> = {
   sm: fontSizes.caption,
   md: fontSizes.body,
   lg: fontSizes.subheading,
+  xl: fontSizes.heading,
 };
 
 /** Initials avatar with standard NestBridge sizing. */

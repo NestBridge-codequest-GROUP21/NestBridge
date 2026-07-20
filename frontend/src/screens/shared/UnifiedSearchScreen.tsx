@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   cardPress: {
-    marginBottom: spacing.md,
+    marginBottom: layout.sectionGap,
   },
   card: {
     flexDirection: 'row',
@@ -155,8 +155,8 @@ const styles = StyleSheet.create({
     opacity: 0.95,
   },
   cardIconTile: {
-    width: touchTarget,
-    height: touchTarget,
+    width: layout.iconTileSize,
+    height: layout.iconTileSize,
     borderRadius: borderRadius.md,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -172,6 +172,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },

@@ -218,8 +218,8 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.heading,
     lineHeight: lineHeights.heading,
     color: colors.textPrimary,
-    fontWeight: fontWeights.bold,
-    fontFamily: fontFamilies.bold,
+    fontWeight: fontWeights.semibold,
+    fontFamily: fontFamilies.semibold,
   },
   description: {
     fontSize: fontSizes.caption,

@@ -15,8 +15,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
-import AppIcon from '../../components/AppIcon';
-import Card from '../../components/Card';
+import CheckboxRow from '../../components/CheckboxRow';
 import type { DemoAccount } from '../../data/demoAccounts';
 import {
   colors,
@@ -24,12 +23,9 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
-  borderWidths,
   lineHeights,
   layout,
   touchTarget,
-  iconSizes,
 } from '../../constants/theme';
 
 export interface RegisterScreenProps {
@@ -76,14 +72,18 @@ export default function RegisterScreen({
   return (
     <KeyboardAvoidingView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : spacing.sm}
     >
       <StatusBar style="dark" />
 
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg },
+          {
+            paddingTop: insets.top + layout.authContentTop,
+            paddingBottom: insets.bottom + spacing.lg,
+          },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -93,48 +93,39 @@ export default function RegisterScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
 
-        <Card style={styles.formCard}>
-          <FormTextField
-            label="Full name"
-            value={fullName}
-            placeholder="e.g. Akosua Darko"
-            onChangeText={onFullNameChange}
-            autoCapitalize="words"
-          />
-          <FormTextField
-            label="Email address"
-            value={email}
-            placeholder="you@example.com"
-            onChangeText={onEmailChange}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <FormTextField
-            label="Password"
-            value={password}
-            placeholder="At least 6 characters"
-            onChangeText={onPasswordChange}
-            secureTextEntry
-            visibilityToggle
-            autoCapitalize="none"
-            autoCorrect={false}
-            textContentType="newPassword"
-          />
+        <FormTextField
+          label="Full name"
+          value={fullName}
+          placeholder="e.g. Akosua Darko"
+          onChangeText={onFullNameChange}
+          autoCapitalize="words"
+        />
+        <FormTextField
+          label="Email address"
+          value={email}
+          placeholder="you@example.com"
+          onChangeText={onEmailChange}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <FormTextField
+          label="Password"
+          value={password}
+          placeholder="At least 6 characters"
+          onChangeText={onPasswordChange}
+          secureTextEntry
+          visibilityToggle
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="newPassword"
+        />
 
-          <Pressable
-            style={styles.checkboxRow}
-            onPress={onToggleKeepSignedIn}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: keepSignedIn }}
-          >
-            <View style={[styles.checkbox, keepSignedIn && styles.checkboxChecked]}>
-              {keepSignedIn ? (
-                <AppIcon name="checkmark" size={iconSizes.sm} color={colors.white} />
-              ) : null}
-            </View>
-            <Text style={styles.checkboxLabel}>Keep me signed in on this device</Text>
-          </Pressable>
-        </Card>
+        <CheckboxRow
+          label="Keep me signed in on this device"
+          checked={keepSignedIn}
+          onPress={onToggleKeepSignedIn}
+          style={styles.checkboxRow}
+        />
 
         {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
@@ -177,6 +168,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
@@ -188,35 +180,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     lineHeight: lineHeights.body,
   },
-  formCard: {
-    marginBottom: spacing.lg,
-  },
   checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.xs,
-    minHeight: touchTarget,
-  },
-  checkbox: {
-    width: spacing.lg,
-    height: spacing.lg,
-    borderRadius: borderRadius.sm,
-    borderWidth: borderWidths.strong,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  checkboxChecked: {
-    backgroundColor: colors.teal,
-    borderColor: colors.teal,
-  },
-  checkboxLabel: {
-    flex: 1,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
+    marginBottom: spacing.lg,
   },
   demoWrap: {
     marginTop: spacing.lg,

@@ -8,6 +8,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import BackButton from '../../components/BackButton';
 import Card from '../../components/Card';
+import KeyboardSafeView from '../../components/KeyboardSafeView';
 import {
   colors,
   fontFamilies,
@@ -20,9 +21,10 @@ import {
   layout,
   shadows,
   touchTarget,
+  avatarSizes,
 } from '../../constants/theme';
 
-const AVATAR_SIZE = spacing.xl * 3;
+const AVATAR_SIZE = avatarSizes.xl + spacing.lg;
 
 export interface ProfileSetupScreenProps {
   currentStep: number;
@@ -60,7 +62,7 @@ export default function ProfileSetupScreen({
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.root}>
+    <KeyboardSafeView style={styles.root}>
       <StatusBar style="dark" />
 
       <ScrollView
@@ -72,6 +74,7 @@ export default function ProfileSetupScreen({
           },
         ]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
       >
         {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
@@ -124,7 +127,7 @@ export default function ProfileSetupScreen({
         <View style={styles.skipSpacer} />
         <SecondaryButton label="Skip for now" onPress={onSkip} />
       </ScrollView>
-    </View>
+    </KeyboardSafeView>
   );
 }
 
@@ -187,6 +190,7 @@ const styles = StyleSheet.create({
   addPhotoHint: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textTertiary,
     marginTop: spacing.xs,
     textAlign: 'center',

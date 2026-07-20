@@ -159,9 +159,10 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   comingSoonTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.white,
     textAlign: 'center',
   },

@@ -202,9 +202,10 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
   },
   lineNet: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.teal,
   },
   lineLabel: {

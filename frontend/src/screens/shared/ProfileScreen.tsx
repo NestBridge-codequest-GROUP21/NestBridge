@@ -55,7 +55,7 @@ export default function ProfileScreen({
         greeting="Profile"
         userName={userName}
         userInitials={userInitials}
-        subtitle={email}
+        subtitle="Account and setup"
       />
 
       <ScreenScroll>
@@ -88,7 +88,7 @@ export default function ProfileScreen({
         <Card padding="none" style={styles.groupCard}>
           <ListRow
             title="Account setup"
-            subtitle={setupSummary}
+            subtitle="View progress and finish remaining steps"
             iconName="person-circle-outline"
             onPress={onAccountSetupPress}
             style={styles.listRowPad}

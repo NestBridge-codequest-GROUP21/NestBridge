@@ -7,12 +7,14 @@ import {
   StyleSheet,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeader from '../../components/ScreenHeader';
 import SearchField from '../../components/SearchField';
 import Card from '../../components/Card';
 import StatusBadge from '../../components/StatusBadge';
 import EmptyState from '../../components/EmptyState';
 import AppIcon from '../../components/AppIcon';
+import KeyboardSafeView from '../../components/KeyboardSafeView';
 import type { SponsorCategory, SponsorListing } from '../../data/sponsorsMock';
 import { SPONSOR_CATEGORIES } from '../../data/sponsorsMock';
 import {
@@ -43,6 +45,7 @@ export default function SponsorListScreen({
   onSponsorPress,
   onBack,
 }: SponsorListScreenProps) {
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<SponsorCategory | 'All'>('All');
 
@@ -75,7 +78,7 @@ export default function SponsorListScreen({
   }, [sponsors]);
 
   return (
-    <View style={styles.container}>
+    <KeyboardSafeView style={styles.container}>
       <StatusBar style="light" />
 
       <ScreenHeader
@@ -102,6 +105,7 @@ export default function SponsorListScreen({
         keyExtractor={(item) => item}
         style={styles.categoryList}
         contentContainerStyle={styles.categoryContent}
+        keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => {
           const count = categoryCounts[item] ?? 0;
           return (
@@ -151,8 +155,13 @@ export default function SponsorListScreen({
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
+          style={styles.list}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingBottom: insets.bottom + spacing.xl },
+          ]}
           renderItem={({ item }) => (
             <Pressable
               style={({ pressed }) => [pressed && styles.pressed]}
@@ -195,7 +204,7 @@ export default function SponsorListScreen({
           )}
         />
       )}
-    </View>
+    </KeyboardSafeView>
   );
 }
 
@@ -242,12 +251,15 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
   },
   emptyWrap: {
+    flex: 1,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
   },
+  list: {
+    flex: 1,
+  },
   listContent: {
     paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingBottom: spacing.xl,
     gap: spacing.md,
   },
   cardTop: {
@@ -269,9 +281,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   sponsorName: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.body,
     color: colors.textPrimary,
   },
   categoryBadge: {
@@ -292,9 +305,10 @@ const styles = StyleSheet.create({
   },
   amount: {
     flex: 1,
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.caption,
     color: colors.gold,
   },
   applyRow: {

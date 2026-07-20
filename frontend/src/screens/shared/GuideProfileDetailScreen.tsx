@@ -200,9 +200,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   priceValue: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.display,
     color: colors.tealDeep,
     marginBottom: spacing.xs,
   },

@@ -134,6 +134,8 @@ export const avatarSizes = {
   sm: 32,
   md: 40,
   lg: 48,
+  /** Profile / detail heroes only. */
+  xl: 72,
 } as const;
 
 export type AvatarSizeToken = keyof typeof avatarSizes;
@@ -148,6 +150,8 @@ export const layout = {
   sosDockHeight: 52,
   sosButtonSize: 56,
   sosRaise: spacing.lg,
+  /** Icon wells on empty states and quick-action tiles. */
+  iconTileSize: 56,
   sectionGap: spacing.lg,
   scrollBottomInset: 72,
   scrollBottomInsetWithSos: 124,
@@ -155,6 +159,8 @@ export const layout = {
   carouselMinHeight: 168,
   cardPadding: spacing.md,
   cardPaddingLarge: spacing.lg,
+  /** Top inset offset below safe area on auth forms. */
+  authContentTop: spacing.lg,
 } as const;
 
 export const gradients = {

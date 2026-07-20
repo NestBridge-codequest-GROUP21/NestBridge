@@ -27,6 +27,7 @@ import {
   layout,
   iconSizes,
   avatarSizes,
+  touchTarget,
 } from '../../constants/theme';
 import type { PrimaryIntent } from '../../types/accountProfile';
 import {
@@ -171,12 +172,13 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   backPlaceholder: {
-    height: spacing.sm,
+    height: touchTarget,
   },
   title: {
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.heading,
     color: colors.white,
     marginBottom: spacing.sm,
   },

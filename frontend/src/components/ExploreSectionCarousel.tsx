@@ -20,9 +20,13 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   layout,
   gradients,
   shadows,
+  iconSizes,
+  controlHeights,
+  lineHeights,
 } from '../constants/theme';
 
 export interface ExploreSectionCarouselProps {
@@ -116,7 +120,7 @@ function CarouselCard({
               <Animated.View
                 style={[styles.iconTile, { transform: [{ scale: iconScale }] }]}
               >
-                <AppIcon glyph={item.icon} size={26} color={colors.tealDeep} />
+                <AppIcon glyph={item.icon} size={iconSizes.lg} color={colors.tealDeep} />
               </Animated.View>
             ) : null}
             <Text style={styles.title}>{item.title}</Text>
@@ -254,7 +258,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
   },
   pressed: {
@@ -269,8 +273,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconTile: {
-    width: 52,
-    height: 52,
+    width: controlHeights.lg,
+    height: controlHeights.lg,
     borderRadius: borderRadius.lg,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -279,10 +283,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.heading,
+    fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
+    lineHeight: lineHeights.subheading,
   },
   subtitle: {
     fontFamily: fontFamilies.regular,

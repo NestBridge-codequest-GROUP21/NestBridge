@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -12,6 +11,7 @@ import ScreenScroll from '../../components/ScreenScroll';
 import Card from '../../components/Card';
 import Avatar from '../../components/Avatar';
 import EmptyState from '../../components/EmptyState';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import {
@@ -115,7 +115,10 @@ export default function LodgingDirectoryScreen({
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
 
         {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
+          <>
+            <SkeletonLoader style={styles.loader} />
+            <SkeletonLoader style={styles.loader} />
+          </>
         ) : null}
 
         {!isLoading && filtered.length === 0 && !errorMessage ? (
@@ -210,9 +213,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   filterLabelActive: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     color: colors.teal,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
   },
   savedHint: {
     fontFamily: fontFamilies.semibold,
@@ -244,9 +247,10 @@ const styles = StyleSheet.create({
   },
   name: {
     flex: 1,
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginRight: spacing.sm,
   },
@@ -256,9 +260,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   rating: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.caption,
     color: colors.warning,
   },
   category: {
@@ -275,6 +280,6 @@ const styles = StyleSheet.create({
     color: colors.tealDeep,
   },
   loader: {
-    marginVertical: layout.cardPadding,
+    marginBottom: spacing.md,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -13,8 +13,7 @@ import EmptyState from '../../components/EmptyState';
 import ScreenHeader from '../../components/ScreenHeader';
 import Card from '../../components/Card';
 import Avatar from '../../components/Avatar';
-import StatusBadge from '../../components/StatusBadge';
-import PrimaryButton from '../../components/PrimaryButton';
+import StatusBadge, { type StatusBadgeTone } from '../../components/StatusBadge';
 import {
   colors,
   fontFamilies,
@@ -54,8 +53,6 @@ export interface MatchResultsScreenProps {
   onSosPress?: () => void;
 }
 
-type ViewMode = 'list' | 'map';
-
 function trustBadgeLabel(badge: string): string {
   switch (badge.toUpperCase()) {
     case 'VERIFIED':
@@ -69,6 +66,19 @@ function trustBadgeLabel(badge: string): string {
   }
 }
 
+function trustBadgeTone(badge: string): StatusBadgeTone {
+  switch (badge.toUpperCase()) {
+    case 'VERIFIED':
+      return 'success';
+    case 'TRUSTED':
+      return 'info';
+    case 'PRO':
+      return 'accent';
+    default:
+      return 'neutral';
+  }
+}
+
 function HostMatchCard({
   host,
   onPress,
@@ -77,62 +87,64 @@ function HostMatchCard({
   onPress: () => void;
 }) {
   return (
-    <Card padding="lg" elevation="card" style={styles.hostCard}>
-      <View style={styles.cardTopRow}>
-        <Avatar initials={host.initials} size="lg" highlighted style={styles.avatar} />
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [pressed && styles.cardPressed]}
+      accessibilityRole="button"
+      accessibilityLabel={`View ${host.hostName}, ${host.compatibilityScore}% match`}
+    >
+      <Card padding="lg" elevation="card" style={styles.hostCard}>
+        <View style={styles.cardTopRow}>
+          <Avatar initials={host.initials} size="lg" highlighted style={styles.avatar} />
 
-        <View style={styles.cardHeaderText}>
-          <Text style={styles.hostName}>{host.hostName}</Text>
-          <Text style={styles.hostLocation}>{host.location}</Text>
-        </View>
-      </View>
-
-      <View style={styles.badgeRow}>
-        <LinearGradient
-          colors={[...gradients.accent]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.compatBadge}
-        >
-          <Text style={styles.compatBadgeText}>{host.compatibilityScore}% match</Text>
-        </LinearGradient>
-
-        <StatusBadge label={trustBadgeLabel(host.trustBadge)} tone="warning" />
-      </View>
-
-      <View style={styles.reasonsBlock}>
-        {host.matchReasons.map((reason) => (
-          <View key={reason} style={styles.reasonRow}>
-            <View style={styles.reasonDot} />
-            <Text style={styles.reasonText}>{reason}</Text>
+          <View style={styles.cardHeaderText}>
+            <Text style={styles.hostName} numberOfLines={1}>
+              {host.hostName}
+            </Text>
+            <Text style={styles.hostLocation} numberOfLines={1}>
+              {host.location}
+            </Text>
           </View>
-        ))}
-      </View>
+        </View>
 
-      <View style={styles.priceRow}>
-        <Text style={styles.priceLabel}>From</Text>
-        <Text style={styles.priceValue}>
-          {formatCurrency(host.pricePerNight, host.currency)}
-          <Text style={styles.priceUnit}> / night</Text>
-        </Text>
-      </View>
+        <View style={styles.badgeRow}>
+          <LinearGradient
+            colors={[...gradients.accent]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.compatBadge}
+          >
+            <Text style={styles.compatBadgeText}>
+              {host.compatibilityScore}% match
+            </Text>
+          </LinearGradient>
 
-      <PrimaryButton label="View host" onPress={onPress} />
-    </Card>
-  );
-}
+          <StatusBadge
+            label={trustBadgeLabel(host.trustBadge)}
+            tone={trustBadgeTone(host.trustBadge)}
+          />
+        </View>
 
-function MapComingSoon() {
-  return (
-    <View style={styles.mapPlaceholder}>
-      <EmptyState
-        title="Map view unavailable"
-        body="Browse matched hosts in the list for now. Map pins will appear here once location view is ready."
-        tip="List order is still your best-to-least match ranking."
-        iconName="map-outline"
-        carded
-      />
-    </View>
+        <View style={styles.reasonsBlock}>
+          {host.matchReasons.map((reason) => (
+            <View key={reason} style={styles.reasonRow}>
+              <View style={styles.reasonDot} />
+              <Text style={styles.reasonText}>{reason}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.priceRow}>
+          <Text style={styles.priceLabel}>From</Text>
+          <Text style={styles.priceValue}>
+            {formatCurrency(host.pricePerNight, host.currency)}
+            <Text style={styles.priceUnit}> / night</Text>
+          </Text>
+        </View>
+
+        <Text style={styles.listAction}>View host</Text>
+      </Card>
+    </Pressable>
   );
 }
 
@@ -146,7 +158,6 @@ export default function MatchResultsScreen({
   onRetry,
 }: MatchResultsScreenProps) {
   const insets = useSafeAreaInsets();
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const countLabel =
     resultsCountLabel ?? `${results.length} host${results.length === 1 ? '' : 's'} matched to you`;
@@ -212,60 +223,23 @@ export default function MatchResultsScreen({
         onBack={onBack}
       />
 
-      <View style={styles.toggleWrap}>
-        <View style={styles.viewToggle}>
-          <Pressable
-            style={[styles.toggleButton, viewMode === 'list' && styles.toggleButtonActive]}
-            onPress={() => setViewMode('list')}
-            accessibilityRole="button"
-            accessibilityState={{ selected: viewMode === 'list' }}
-            accessibilityLabel="List view"
-          >
-            <Text
-              style={[styles.toggleLabel, viewMode === 'list' && styles.toggleLabelActive]}
-            >
-              List
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.toggleButton, viewMode === 'map' && styles.toggleButtonActive]}
-            onPress={() => setViewMode('map')}
-            accessibilityRole="button"
-            accessibilityState={{ selected: viewMode === 'map' }}
-            accessibilityLabel="Map view"
-          >
-            <Text
-              style={[styles.toggleLabel, viewMode === 'map' && styles.toggleLabelActive]}
-            >
-              Map
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {viewMode === 'list' ? (
-        <ScrollView
-          style={styles.scroll}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingRight: layout.screenPaddingHorizontal + insets.right },
-          ]}
-        >
-          {results.map((host) => (
-            <HostMatchCard
-              key={host.id}
-              host={host}
-              onPress={() => handleHostPress(host.id)}
-            />
-          ))}
-        </ScrollView>
-      ) : (
-        <View style={[styles.mapContainer, { paddingBottom: insets.bottom + spacing.lg }]}>
-          <MapComingSoon />
-        </View>
-      )}
+      <ScrollView
+        style={styles.scroll}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingRight: layout.screenPaddingHorizontal + insets.right },
+        ]}
+      >
+        {results.map((host) => (
+          <HostMatchCard
+            key={host.id}
+            host={host}
+            onPress={() => handleHostPress(host.id)}
+          />
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -275,52 +249,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  toggleWrap: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingTop: spacing.md,
-  },
-  viewToggle: {
-    flexDirection: 'row',
-    alignSelf: 'flex-start',
-    backgroundColor: colors.navyMid,
-    borderRadius: borderRadius.pill,
-    padding: spacing.xs,
-    gap: spacing.xs,
-  },
-  toggleButton: {
-    minWidth: 72,
-    minHeight: touchTarget,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toggleButtonActive: {
-    backgroundColor: colors.white,
-  },
-  toggleLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.white,
-    opacity: 0.85,
-  },
-  toggleLabelActive: {
-    color: colors.teal,
-    opacity: 1,
-  },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingTop: spacing.md,
+    paddingTop: spacing.lg,
     paddingBottom: spacing.xl,
     gap: spacing.md,
     alignItems: 'flex-start',
   },
   hostCard: {
     width: layout.listingCardWidth + spacing.xl,
+  },
+  cardPressed: {
+    opacity: 0.94,
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -334,9 +277,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   hostName: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
@@ -344,6 +288,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
   },
   badgeRow: {
@@ -359,9 +304,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   compatBadgeText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.caption,
     color: colors.white,
   },
   reasonsBlock: {
@@ -373,20 +319,20 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   reasonDot: {
-    width: 6,
-    height: 6,
+    width: spacing.sm,
+    height: spacing.sm,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.tealBright,
-    marginTop: spacing.sm,
+    marginTop: spacing.sm - spacing.xs,
     marginRight: spacing.sm,
   },
   reasonText: {
     flex: 1,
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
     color: colors.textPrimary,
-    lineHeight: lineHeights.body,
+    lineHeight: lineHeights.caption,
   },
   priceRow: {
     flexDirection: 'row',
@@ -404,9 +350,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   priceValue: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
   priceUnit: {
@@ -415,14 +361,14 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
-  mapContainer: {
-    flex: 1,
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingTop: spacing.lg,
-  },
-  mapPlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
+  listAction: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.teal,
+    minHeight: touchTarget,
+    textAlignVertical: 'center',
+    lineHeight: touchTarget,
   },
   errorWrap: {
     flex: 1,

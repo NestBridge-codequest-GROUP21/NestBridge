@@ -75,6 +75,46 @@ export function readMaxGroupSize(schedule: Record<string, unknown> | undefined):
   return '8';
 }
 
+export function getProviderCalendarMonth(referenceDate: Date = new Date()): {
+  year: number;
+  month: number;
+  monthLabel: string;
+  startWeekday: number;
+} {
+  const year = referenceDate.getFullYear();
+  const month = referenceDate.getMonth() + 1;
+  const monthLabel = referenceDate.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+  const startWeekday = new Date(year, month - 1, 1).getDay();
+  return { year, month, monthLabel, startWeekday };
+}
+
+export function buildEmptyHostMonthDays(
+  year: number,
+  month: number,
+): HostCalendarDay[] {
+  const daysInMonth = new Date(year, month, 0).getDate();
+  return Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return { date, day, status: 'available' as const };
+  });
+}
+
+export function buildEmptyGuideMonthDays(
+  year: number,
+  month: number,
+): GuideCalendarDay[] {
+  const daysInMonth = new Date(year, month, 0).getDate();
+  return Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1;
+    const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return { date, day, shifts: [] as GuideCalendarDay['shifts'] };
+  });
+}
+
 export function mapHostCalendarDays(
   days: Array<{ date?: string; day?: number; status?: string }>,
 ): HostCalendarDay[] {

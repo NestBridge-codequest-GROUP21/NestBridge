@@ -8,6 +8,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  iconSizes,
+  lineHeights,
 } from '../constants/theme';
 
 export interface StatusPillProps {
@@ -19,7 +21,7 @@ export default function StatusPill({ icon, label }: StatusPillProps) {
   return (
     <View style={styles.pill} accessibilityRole="text">
       {icon ? (
-        <AppIcon glyph={icon} size={fontSizes.body} color={colors.white} />
+        <AppIcon glyph={icon} size={iconSizes.sm} color={colors.white} />
       ) : null}
       <Text style={styles.label}>{label}</Text>
     </View>
@@ -45,6 +47,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.caption,
     color: colors.white,
   },
 });

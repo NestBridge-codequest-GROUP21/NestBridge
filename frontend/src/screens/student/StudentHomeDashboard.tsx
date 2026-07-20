@@ -192,7 +192,7 @@ export default function StudentHomeDashboard({
             <InlineBanner message={homeDataError} tone="error" />
           </View>
         ) : reminder ? (
-          <ReminderBanner icon="🔔" message={reminder} onPress={onReminderPress} />
+          <ReminderBanner message={reminder} onPress={onReminderPress} />
         ) : null}
       </ScreenScroll>
 
@@ -213,21 +213,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   carouselSection: {
-    marginTop: spacing.md,
+    marginBottom: layout.sectionGap,
   },
   sectionHeader: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
     marginBottom: spacing.md,
   },
   loadingWrap: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
     marginBottom: spacing.lg,
     gap: spacing.md,
   },
   skeletonCard: {
     width: '100%',
   },
-  bannerPad: {
-    paddingHorizontal: spacing.lg,
-  },
+  bannerPad: {},
 });

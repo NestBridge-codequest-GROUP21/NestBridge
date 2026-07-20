@@ -26,19 +26,8 @@ import {
   touchTarget,
   lineHeights,
 } from '../../constants/theme';
+import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import type { ConversationListItem } from '../../types/messaging';
-
-function formatRelativeTime(iso: string): string {
-  const date = new Date(iso);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return 'Yesterday';
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
 
 function roleLabel(role: ConversationListItem['participantRole']): string {
   switch (role) {
@@ -133,6 +122,12 @@ export default function MessagesTabScreen({
                         {formatRelativeTime(conversation.lastMessageAt)}
                       </Text>
                     </View>
+                    <View style={styles.metaRow}>
+                      <StatusBadge
+                        label={roleLabel(conversation.participantRole)}
+                        tone="info"
+                      />
+                    </View>
                     <View style={styles.bottomRow}>
                       <Text style={styles.preview} numberOfLines={1}>
                         {conversation.lastMessage}
@@ -145,11 +140,6 @@ export default function MessagesTabScreen({
                         </View>
                       ) : null}
                     </View>
-                    <StatusBadge
-                      label={roleLabel(conversation.participantRole)}
-                      tone="info"
-                      style={styles.roleBadge}
-                    />
                   </View>
                 </Card>
               </Pressable>
@@ -200,33 +190,38 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     gap: spacing.sm,
   },
+  metaRow: {
+    marginBottom: spacing.xs,
+  },
   name: {
     flex: 1,
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.body,
     color: colors.textPrimary,
   },
   time: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textTertiary,
   },
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.xs,
   },
   preview: {
     flex: 1,
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
   },
   unreadBadge: {
-    minWidth: 20,
-    height: 20,
+    minWidth: spacing.lg,
+    height: spacing.lg,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.danger,
     alignItems: 'center',
@@ -236,12 +231,10 @@ const styles = StyleSheet.create({
     borderColor: colors.danger,
   },
   unreadText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    lineHeight: lineHeights.caption,
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.micro,
+    lineHeight: lineHeights.micro,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
-  },
-  roleBadge: {
-    alignSelf: 'flex-start',
   },
 });

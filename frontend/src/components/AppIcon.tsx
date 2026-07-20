@@ -113,7 +113,12 @@ export interface AppIconProps {
 
 export function iconForGlyph(glyph?: string): IoniconName {
   if (!glyph) return DEFAULT_ICON;
-  return GLYPH_TO_ICON[glyph] ?? DEFAULT_ICON;
+  if (GLYPH_TO_ICON[glyph]) return GLYPH_TO_ICON[glyph];
+  // Allow Ionicon names (e.g. search-outline) passed through legacy glyph props.
+  if (glyph.includes('-') || glyph.endsWith('outline')) {
+    return glyph as IoniconName;
+  }
+  return DEFAULT_ICON;
 }
 
 export default function AppIcon({

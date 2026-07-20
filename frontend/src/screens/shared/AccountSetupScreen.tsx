@@ -289,6 +289,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.heading,
     color: colors.white,
   },
   headerSubtitle: {
@@ -322,12 +323,14 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   userHint: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
   },
   changeIntentButton: {
@@ -380,7 +383,7 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
   cardPressable: {
-    marginBottom: spacing.md,
+    marginBottom: layout.sectionGap,
   },
   cardDisabled: {
     opacity: 0.65,

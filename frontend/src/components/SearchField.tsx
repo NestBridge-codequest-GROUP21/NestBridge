@@ -17,6 +17,7 @@ import {
   borderWidths,
   controlHeights,
   iconSizes,
+  lineHeights,
   touchTarget,
 } from '../constants/theme';
 
@@ -118,6 +119,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
+    lineHeight: lineHeights.body,
     color: colors.textPrimary,
     paddingVertical: spacing.sm,
     minHeight: controlHeights.md,

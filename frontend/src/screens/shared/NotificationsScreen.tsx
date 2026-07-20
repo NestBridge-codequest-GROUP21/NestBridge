@@ -25,19 +25,8 @@ import {
   tints,
   lineHeights,
 } from '../../constants/theme';
+import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import type { AppNotification } from '../../types/booking';
-
-function formatRelativeTime(iso: string): string {
-  const date = new Date(iso);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return 'Yesterday';
-  return date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
-}
 
 export interface NotificationsScreenProps {
   userName: string;
@@ -168,15 +157,16 @@ const styles = StyleSheet.create({
   cardTitle: {
     flex: 1,
     fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
+    fontSize: fontSizes.body,
+    lineHeight: lineHeights.body,
     color: colors.textPrimary,
     fontWeight: fontWeights.semibold,
   },
   cardBody: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.caption,
     color: colors.textSecondary,
-    lineHeight: lineHeights.body,
+    lineHeight: lineHeights.caption,
     marginBottom: spacing.sm,
   },
   cardTime: {

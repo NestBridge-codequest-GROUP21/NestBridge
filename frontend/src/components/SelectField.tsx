@@ -19,6 +19,8 @@ import {
   controlHeights,
   iconSizes,
   overlays,
+  touchTarget,
+  lineHeights,
 } from '../constants/theme';
 
 export interface SelectFieldProps {
@@ -135,13 +137,14 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md - 2,
-    minHeight: controlHeights.md,
+    minHeight: touchTarget,
   },
   fieldText: {
     flex: 1,
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
+    lineHeight: lineHeights.body,
     color: colors.textPrimary,
     marginRight: spacing.sm,
   },
@@ -180,7 +183,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
-    minHeight: controlHeights.md,
+    minHeight: touchTarget,
   },
   optionSelected: {
     backgroundColor: colors.warmCream,
