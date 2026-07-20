@@ -4,20 +4,18 @@ export type ChecklistTask = {
   completed: boolean;
 };
 
-export type CulturalPhraseCard = {
-  id: string;
-  emoji: string;
-  phrase: string;
-  translation: string;
-  hasAudio: boolean;
-};
-
-export type CulturalTopicCard = {
-  id: string;
-  emoji: string;
-  title: string;
-  description: string;
-};
+export type {
+  CulturalPhraseCard,
+  CulturalTopicCard,
+  PhraseGuideSection,
+  TopicGuideSection,
+} from './cultureLanguageGuide';
+import {
+  culturePhraseSections,
+  cultureTopicSections,
+  flattenCulturePhrases,
+  flattenCultureTopics,
+} from './cultureLanguageGuide';
 
 export type TransportRoute = {
   id: string;
@@ -97,95 +95,13 @@ export const prepChecklistMock: ChecklistTask[] = [
   { id: 'sim', label: 'Secure a local SIM card', completed: false },
 ];
 
-export const localTipsPhrasesMock: CulturalPhraseCard[] = [
-  {
-    id: 'akwaaba',
-    emoji: '👋',
-    phrase: 'Akwaaba',
-    translation: 'Welcome — say this when you arrive at a home or shop',
-    hasAudio: false,
-  },
-  {
-    id: 'eti-sen',
-    emoji: '😊',
-    phrase: 'Ɛte sɛn?',
-    translation: 'How are you? (Twi) — a friendly everyday greeting',
-    hasAudio: false,
-  },
-  {
-    id: 'medaase',
-    emoji: '🙏',
-    phrase: 'Medaase',
-    translation: 'Thank you — use liberally with hosts, drivers, and vendors',
-    hasAudio: false,
-  },
-  {
-    id: 'mepa-kyew',
-    emoji: '✋',
-    phrase: 'Mepa wo kyɛw',
-    translation: 'Please / excuse me — useful in trotros and markets',
-    hasAudio: false,
-  },
-  {
-    id: 'me-din-de',
-    emoji: '🗣️',
-    phrase: 'Me din de…',
-    translation: 'My name is… — introduce yourself to your host family',
-    hasAudio: false,
-  },
-  {
-    id: 'eye',
-    emoji: '👍',
-    phrase: 'Ɛyɛ',
-    translation: 'It’s fine / okay — casual agreement you’ll hear often',
-    hasAudio: false,
-  },
-];
+/** @deprecated Prefer culturePhraseSections — kept for API mock mapping. */
+export const localTipsPhrasesMock = flattenCulturePhrases(culturePhraseSections);
 
-export const localTipsTopicsMock: CulturalTopicCard[] = [
-  {
-    id: 'handshake',
-    emoji: '🤝',
-    title: 'Greet before you ask',
-    description:
-      'Always greet before business. Use your right hand for handshakes, money, and food. Greet elders first.',
-  },
-  {
-    id: 'trotro',
-    emoji: '🚌',
-    title: 'Trotro & “mate” talk',
-    description:
-      'The mate collects fares and calls stops. Say your stop early, keep small notes ready, and ask locals which park serves your route.',
-  },
-  {
-    id: 'mobile-money',
-    emoji: '📱',
-    title: 'Mobile money basics',
-    description:
-      'MTN MoMo and Vodafone Cash are everyday payment tools. Register with your passport and keep your PIN private.',
-  },
-  {
-    id: 'meals',
-    emoji: '🍽️',
-    title: 'Sharing meals at home',
-    description:
-      'Wait to be invited to eat. Washing hands before a shared meal is common. Trying the food is a warm way to show respect.',
-  },
-  {
-    id: 'dress',
-    emoji: '👕',
-    title: 'Dress for the setting',
-    description:
-      'Accra is casual, but cover shoulders and knees for churches, mosques, and formal family visits. Light fabrics help in the heat.',
-  },
-  {
-    id: 'safety',
-    emoji: '🛡️',
-    title: 'Street-smart habits',
-    description:
-      'Use Bolt or Yango at night, agree fares before unmarked taxis, and keep phones pocketed in crowded markets like Makola.',
-  },
-];
+/** Culture/etiquette topics only — practical living moved to practicalLocalTips. */
+export const localTipsTopicsMock = flattenCultureTopics(cultureTopicSections);
+
+export { culturePhraseSections, cultureTopicSections };
 
 export const transportTabsMock: TransportTab[] = [
   {

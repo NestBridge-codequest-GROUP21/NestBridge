@@ -101,19 +101,21 @@ export default function JourneyProgressCard({
                       styles.stepTitle,
                       step.completed && styles.stepTitleDone,
                     ]}
-                    numberOfLines={1}
+                    numberOfLines={2}
                   >
                     {step.title}
                   </Text>
-                  <Text style={styles.stepSubtitle} numberOfLines={1}>
+                  <Text style={styles.stepSubtitle} numberOfLines={2}>
                     {step.completed ? 'Complete' : step.subtitle}
                   </Text>
                 </View>
-                <AppIcon
-                  name={step.completed ? 'checkmark-circle' : 'chevron-forward'}
-                  size={iconSizes.md}
-                  color={step.completed ? colors.success : colors.textTertiary}
-                />
+                <View style={styles.stepChevron}>
+                  <AppIcon
+                    name={step.completed ? 'checkmark-circle' : 'chevron-forward'}
+                    size={iconSizes.md}
+                    color={step.completed ? colors.success : colors.textTertiary}
+                  />
+                </View>
               </Pressable>
             );
           })}
@@ -196,7 +198,7 @@ function createStyles({ colors, tints }: AppTheme) {
     },
     stepRow: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       gap: spacing.md,
       minHeight: touchTarget,
       paddingHorizontal: spacing.md,
@@ -216,18 +218,26 @@ function createStyles({ colors, tints }: AppTheme) {
       backgroundColor: tints.cream,
       alignItems: 'center',
       justifyContent: 'center',
+      marginTop: spacing.xs,
+      flexShrink: 0,
     },
     stepIconDone: {
       backgroundColor: colors.success,
     },
     stepCopy: {
       flex: 1,
+      minWidth: 0,
+    },
+    stepChevron: {
+      marginTop: spacing.xs,
+      flexShrink: 0,
     },
     stepTitle: {
       fontFamily: fontFamilies.semibold,
       fontSize: fontSizes.caption,
       fontWeight: fontWeights.semibold,
       color: colors.textPrimary,
+      lineHeight: lineHeights.caption,
     },
     stepTitleDone: {
       color: colors.textSecondary,
@@ -237,6 +247,7 @@ function createStyles({ colors, tints }: AppTheme) {
       fontSize: fontSizes.micro,
       color: colors.textTertiary,
       marginTop: spacing.xs,
+      lineHeight: lineHeights.micro,
     },
   });
 }

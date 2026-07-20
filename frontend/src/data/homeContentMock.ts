@@ -73,8 +73,8 @@ export const studentRecentActivityMock: RecentActivityItem[] = [
 export const studentRecommendedMock: ExploreSectionItem[] = [
   {
     id: 'greetings',
-    title: 'Local greetings',
-    subtitle: 'Twi phrases for newcomers',
+    title: 'Culture & language',
+    subtitle: 'Twi phrases and etiquette for newcomers',
     icon: '👋',
   },
   {

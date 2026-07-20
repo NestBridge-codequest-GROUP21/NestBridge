@@ -36,9 +36,15 @@ const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
   },
   {
     id: 'cultural-tips',
-    label: 'Local tips',
-    description: 'Greetings, customs, and everyday etiquette',
+    label: 'Culture & language',
+    description: 'Greetings, Twi phrases, etiquette, and customs',
     icon: '👋',
+  },
+  {
+    id: 'practical-tips',
+    label: 'Local tips',
+    description: 'Transport, money, SIM cards, safety, and daily living',
+    icon: '📍',
   },
   {
     id: 'sponsors',
@@ -76,9 +82,15 @@ const TOURIST_CULTURAL_ITEMS: ProfileHubItem[] = [
   },
   {
     id: 'cultural-tips',
-    label: 'Local tips',
-    description: 'Phrases and cultural pointers for visitors',
+    label: 'Culture & language',
+    description: 'Phrases, greetings, and cultural etiquette',
     icon: '👋',
+  },
+  {
+    id: 'practical-tips',
+    label: 'Local tips',
+    description: 'Money, SIM cards, safety, and getting around',
+    icon: '📍',
   },
   {
     id: 'sponsors',

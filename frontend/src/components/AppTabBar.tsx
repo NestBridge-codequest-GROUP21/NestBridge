@@ -70,7 +70,10 @@ export default function AppTabBar({
             style={styles.tabIcon}
           />
         ) : null}
-        <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+        <Text
+          style={[styles.tabLabel, active && styles.tabLabelActive]}
+          numberOfLines={2}
+        >
           {tab.label}
         </Text>
         {tab.badgeCount && tab.badgeCount > 0 ? (
@@ -125,13 +128,16 @@ function createStyles({ colors }: AppTheme) {
   },
   tabItem: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 44,
     position: 'relative',
+    paddingHorizontal: spacing.xs,
   },
   sosSlot: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -144,7 +150,10 @@ function createStyles({ colors }: AppTheme) {
   tabLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textTertiary,
+    textAlign: 'center',
+    width: '100%',
   },
   tabLabelActive: {
     fontFamily: fontFamilies.semibold,

@@ -148,7 +148,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: lineHeights.body,
-    maxWidth: 320,
+    alignSelf: 'stretch',
   },
   tip: {
     fontFamily: fontFamilies.regular,

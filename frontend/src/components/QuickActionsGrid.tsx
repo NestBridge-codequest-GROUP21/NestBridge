@@ -12,6 +12,7 @@ import {
   iconSizes,
   touchTarget,
   layout,
+  lineHeights,
 } from '../constants/theme';
 
 export interface QuickActionItem {
@@ -106,8 +107,10 @@ function createStyles({ colors, tints }: AppTheme) {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
+    lineHeight: lineHeights.caption,
     color: colors.textPrimary,
     textAlign: 'center',
+    width: '100%',
   },
 });
 }

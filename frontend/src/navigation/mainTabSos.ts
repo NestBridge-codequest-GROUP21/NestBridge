@@ -44,6 +44,10 @@ export function handleProfileCulturalItem(
     navigation.navigate('LocalTips');
     return;
   }
+  if (itemId === 'practical-tips') {
+    navigation.navigate('PracticalTips');
+    return;
+  }
   if (itemId === 'transport') {
     navigation.navigate('TransportGuide');
     return;

@@ -163,7 +163,7 @@ export default function LodgingDirectoryScreen({
                 />
                 <View style={styles.body}>
                   <View style={styles.topRow}>
-                    <Text style={styles.name} numberOfLines={1}>
+                    <Text style={styles.name} numberOfLines={2}>
                       {listing.name}
                     </Text>
                     <View style={styles.ratingRow}>
@@ -252,20 +252,23 @@ function createStyles({ colors }: AppTheme) {
   },
   body: {
     flex: 1,
+    minWidth: 0,
   },
   topRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: spacing.xs,
+    gap: spacing.sm,
   },
   name: {
     flex: 1,
+    minWidth: 0,
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
-    marginRight: spacing.sm,
   },
   ratingRow: {
     flexDirection: 'row',

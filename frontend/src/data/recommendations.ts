@@ -395,7 +395,7 @@ export function buildDemoHomeRecommendations(
       section('accommodation', `Homestays near ${capital}`, 'list', hostItems(capital)),
       section('transport', `Getting to ${capital}`, 'list', transportItems(capital)),
       section('guides', 'Local guides', 'list', guideItems(capital)),
-      section('culture', 'Culture & local tips', 'grid', cultureItems(capital)),
+      section('culture', 'Culture & language', 'grid', cultureItems(capital)),
       section('resources', 'Arrival resources', 'list', studentResources(capital)),
     ].filter((s) => s.items.length > 0);
 
@@ -426,7 +426,7 @@ export function buildDemoHomeRecommendations(
       'list',
       lodgingItems(capital).length > 0 ? lodgingItems(capital) : hostItems(capital),
     ),
-    section('culture', 'Culture & local tips', 'grid', cultureItems(capital)),
+    section('culture', 'Culture & language', 'grid', cultureItems(capital)),
   ].filter((s) => s.items.length > 0);
 
   return {

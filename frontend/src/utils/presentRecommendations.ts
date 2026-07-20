@@ -80,7 +80,7 @@ const SECTION_PRESENTATION: Record<string, SectionPresentation> = {
   },
   culture: {
     group: 'explore',
-    title: 'Culture & local tips',
+    title: 'Culture & language',
     layout: 'grid',
     previewCount: 4,
   },

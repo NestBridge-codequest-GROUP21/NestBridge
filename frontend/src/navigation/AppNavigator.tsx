@@ -68,7 +68,25 @@ import CreateEventScreen from '../screens/student/CreateEventScreen';
 import { useStudentEvents } from '../hooks/useStudentEvents';
 import { studentEventsMock, type StudentEventDraft } from '../data/studentEventsMock';
 import LocalTipsScreen from '../screens/student/LocalTipsScreen';
+import PracticalLocalTipsScreen from '../screens/student/PracticalLocalTipsScreen';
 import TransportGuideScreen from '../screens/student/TransportGuideScreen';
+import {
+  culturePhraseSections,
+  cultureTopicSections,
+  hasCompletedCultureTips,
+  hasCompletedLanguageBasics,
+  summarizeCultureGuideProgress,
+} from '../data/cultureLanguageGuide';
+import { practicalLocalTipSections } from '../data/practicalLocalTips';
+import {
+  EMPTY_CULTURE_GUIDE_PROGRESS,
+  loadCultureGuideProgress,
+  markCulturePhraseCompleted,
+  markCulturePhrasePracticed,
+  markCultureTopicCompleted,
+  type CultureGuideProgress,
+} from '../services/cultureGuideProgress';
+import { speakPhrase } from '../utils/speakPhrase';
 import ExploreStaysScreen from '../screens/tourist/ExploreStaysScreen';
 import SitesDirectoryScreen from '../screens/tourist/SitesDirectoryScreen';
 import WelfareCheckInScreen from '../screens/shared/WelfareCheckInScreen';
@@ -123,8 +141,6 @@ import { useHomeApiData } from '../hooks/useHomeApiData';
 import { useProviderTabData } from '../hooks/useProviderTabData';
 import { useConversations } from '../hooks/useConversations';
 import {
-  usePhrases,
-  useTopics,
   useTransport,
   useSites,
   useChecklist,
@@ -238,9 +254,7 @@ import { lodgingListingsForCity, listingFromId } from '../data/lodgingDirectoryM
 import {
   checklistApiMock,
   landmarksApiMock,
-  phrasesApiMock,
   sitesApiMock,
-  topicsApiMock,
   transportApiMock,
   videosApiMock,
 } from '../data/contentLibraryMock';
@@ -350,6 +364,9 @@ function handleStudentQuickAction(
   if (actionId === 'cultural-tips') {
     navigation.navigate('LocalTips');
   }
+  if (actionId === 'practical-tips') {
+    navigation.navigate('PracticalTips');
+  }
   if (actionId === 'sponsors') {
     navigation.navigate('SponsorList');
   }
@@ -373,6 +390,9 @@ function handleTouristQuickAction(
   }
   if (actionId === 'cultural-tips') {
     navigation.navigate('LocalTips');
+  }
+  if (actionId === 'practical-tips') {
+    navigation.navigate('PracticalTips');
   }
 }
 
@@ -1195,6 +1215,8 @@ export default function AppNavigator() {
   const [journeyMilestones, setJourneyMilestones] = useState<JourneyMilestones>(
     EMPTY_JOURNEY_MILESTONES,
   );
+  const [cultureGuideProgress, setCultureGuideProgress] =
+    useState<CultureGuideProgress>(EMPTY_CULTURE_GUIDE_PROGRESS);
   const [tourTypes, setTourTypes] = useState(tourTypesMock);
   const [tourBaseRate, setTourBaseRate] = useState('45');
   const [tourMaxGroupSize, setTourMaxGroupSize] = useState('8');
@@ -1653,8 +1675,6 @@ export default function AppNavigator() {
   const displayTopGuideId = homeApi.topGuideTargetId ?? demoTopGuideId;
 
   const lodgingApi = useLodgingPartners(cityLabel, !!user);
-  const contentPhrases = usePhrases(cityLabel, !!user);
-  const contentTopics = useTopics(cityLabel, !!user);
   const contentTransport = useTransport(cityLabel, !!user);
   const contentSites = useSites(cityLabel, !!user);
   const contentChecklist = useChecklist(cityLabel, !!user);
@@ -1690,28 +1710,6 @@ export default function AppNavigator() {
       }),
     [lodgingApi.listings, lodgingApi.isLoading, lodgingApi.error, cityLabel],
   );
-
-  const phrasesDisplay = useMemo(() => {
-    // Prefer the richer curated Ghana phrase set in demo builds so thin DB
-    // seeds do not replace useful relocation content.
-    if (phrasesApiMock.length > 0) {
-      return phrasesApiMock;
-    }
-    return withDemoFallback(contentPhrases.data, phrasesApiMock, {
-      isLoading: contentPhrases.isLoading,
-      error: contentPhrases.error,
-    });
-  }, [contentPhrases.data, contentPhrases.isLoading, contentPhrases.error]);
-
-  const topicsDisplay = useMemo(() => {
-    if (topicsApiMock.length > 0) {
-      return topicsApiMock;
-    }
-    return withDemoFallback(contentTopics.data, topicsApiMock, {
-      isLoading: contentTopics.isLoading,
-      error: contentTopics.error,
-    });
-  }, [contentTopics.data, contentTopics.isLoading, contentTopics.error]);
 
   const transportDisplay = useMemo(
     () =>
@@ -1821,12 +1819,18 @@ export default function AppNavigator() {
   useEffect(() => {
     if (!user?.userId) {
       setJourneyMilestones(EMPTY_JOURNEY_MILESTONES);
+      setCultureGuideProgress(EMPTY_CULTURE_GUIDE_PROGRESS);
       return;
     }
     let cancelled = false;
     void loadJourneyMilestones(user.userId).then((milestones) => {
       if (!cancelled) {
         setJourneyMilestones(milestones);
+      }
+    });
+    void loadCultureGuideProgress(user.userId).then((progress) => {
+      if (!cancelled) {
+        setCultureGuideProgress(progress);
       }
     });
     return () => {
@@ -1843,6 +1847,48 @@ export default function AppNavigator() {
       setJourneyMilestones(next);
     },
     [user?.userId],
+  );
+
+  const cultureGuideSummary = useMemo(
+    () =>
+      summarizeCultureGuideProgress({
+        phraseSections: culturePhraseSections,
+        topicSections: cultureTopicSections,
+        completedPhraseIds: cultureGuideProgress.completedPhraseIds,
+        practicedPhraseIds: cultureGuideProgress.practicedPhraseIds,
+        completedTopicIds: cultureGuideProgress.completedTopicIds,
+      }),
+    [cultureGuideProgress],
+  );
+
+  const syncCultureJourneyMilestones = useCallback(
+    async (progress: CultureGuideProgress) => {
+      const summary = summarizeCultureGuideProgress({
+        phraseSections: culturePhraseSections,
+        topicSections: cultureTopicSections,
+        completedPhraseIds: progress.completedPhraseIds,
+        practicedPhraseIds: progress.practicedPhraseIds,
+        completedTopicIds: progress.completedTopicIds,
+      });
+      if (
+        hasCompletedCultureTips({
+          completedTopicIds: progress.completedTopicIds,
+          topicsTotal: summary.topicsTotal,
+        })
+      ) {
+        await markJourney('cultureTipsCompleted');
+      }
+      if (
+        hasCompletedLanguageBasics({
+          completedPhraseIds: progress.completedPhraseIds,
+          practicedPhraseIds: progress.practicedPhraseIds,
+          phrasesTotal: summary.phrasesTotal,
+        })
+      ) {
+        await markJourney('languageBasicsCompleted');
+      }
+    },
+    [markJourney],
   );
 
   const checkIn = defaultCheckIn(arrivalDate || profileFields.arrivalDate);
@@ -4102,25 +4148,65 @@ export default function AppNavigator() {
             statusIcon={studentHomeMockData.statusIcon}
             statusLabel={studentLive.statusLabel}
             focus={route.params?.focus}
-            phrases={phrasesDisplay.map((phrase) => ({
-              id: phrase.id,
-              emoji: phrase.emoji,
-              phrase: phrase.phrase,
-              translation: phrase.translation,
-              hasAudio: phrase.hasAudio,
-            }))}
-            topics={topicsDisplay.map((topic) => ({
-              id: topic.id,
-              emoji: topic.emoji,
-              title: topic.title,
-              description: topic.description,
-            }))}
-            onTopicPress={() => {
-              void markJourney('cultureTipsCompleted');
+            phraseSections={culturePhraseSections}
+            topicSections={cultureTopicSections}
+            completedPhraseIds={cultureGuideProgress.completedPhraseIds}
+            practicedPhraseIds={cultureGuideProgress.practicedPhraseIds}
+            completedTopicIds={cultureGuideProgress.completedTopicIds}
+            progressPercent={cultureGuideSummary.percent}
+            progressLabel={`${cultureGuideSummary.phrasesCompleted}/${cultureGuideSummary.phrasesTotal} phrases · ${cultureGuideSummary.topicsCompleted}/${cultureGuideSummary.topicsTotal} culture notes · ${cultureGuideSummary.pronunciationPracticed} practiced`}
+            onPhrasePress={(phraseId) => {
+              if (!user?.userId) {
+                return;
+              }
+              void markCulturePhraseCompleted(user.userId, phraseId).then(
+                (next) => {
+                  setCultureGuideProgress(next);
+                  void syncCultureJourneyMilestones(next);
+                },
+              );
             }}
-            onPhrasePress={() => {
-              void markJourney('languageBasicsCompleted');
+            onPhrasePracticePress={(phraseId) => {
+              const match = culturePhraseSections
+                .flatMap((section) => section.phrases)
+                .find((item) => item.id === phraseId);
+              void speakPhrase(match?.phrase ?? '');
+              if (!user?.userId) {
+                return;
+              }
+              void markCulturePhrasePracticed(user.userId, phraseId).then(
+                (next) => {
+                  setCultureGuideProgress(next);
+                  void syncCultureJourneyMilestones(next);
+                },
+              );
             }}
+            onTopicPress={(topicId) => {
+              if (!user?.userId) {
+                return;
+              }
+              void markCultureTopicCompleted(user.userId, topicId).then(
+                (next) => {
+                  setCultureGuideProgress(next);
+                  void syncCultureJourneyMilestones(next);
+                },
+              );
+            }}
+            onBack={() => navigation.goBack()}
+            onEmptyPrimaryAction={() => navigation.navigate('AccountSetup')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="PracticalTips">
+        {({ navigation }) => (
+          <PracticalLocalTipsScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            statusIcon="📍"
+            statusLabel={studentLive.statusLabel}
+            sections={practicalLocalTipSections}
             onBack={() => navigation.goBack()}
             onEmptyPrimaryAction={() => navigation.navigate('AccountSetup')}
           />

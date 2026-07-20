@@ -47,7 +47,7 @@ export interface OfflineMapScreenProps {
 
 const MAP_GRID_ROWS = 6;
 const MAP_GRID_COLS = 4;
-const LANDMARK_CARD_MAX_WIDTH = layout.listingCardWidth / 2 - spacing.md;
+const LANDMARK_CARD_MAX_WIDTH = layout.listingCardWidth * 0.55;
 const LOCATION_DOT = spacing.md;
 const LOCATION_DOT_BORDER = borderWidths.strong + borderWidths.hairline;
 
@@ -139,7 +139,7 @@ export default function OfflineMapScreen({
                 />
                 <View style={styles.landmarkCard}>
                   <View style={styles.landmarkDot} />
-                  <Text style={styles.landmarkName} numberOfLines={1}>
+                  <Text style={styles.landmarkName} numberOfLines={2}>
                     {landmark.name}
                   </Text>
                 </View>
@@ -284,7 +284,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   },
   landmarkCard: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
@@ -293,12 +293,15 @@ function createStyles({ colors, shadows }: AppTheme) {
     gap: spacing.xs,
     borderWidth: borderWidths.hairline,
     borderColor: colors.border,
+    maxWidth: '100%',
   },
   landmarkDot: {
     width: spacing.sm,
     height: spacing.sm,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.success,
+    marginTop: spacing.xs,
+    flexShrink: 0,
   },
   landmarkName: {
     fontFamily: fontFamilies.semibold,
@@ -307,6 +310,8 @@ function createStyles({ colors, shadows }: AppTheme) {
     lineHeight: lineHeights.caption,
     color: colors.textPrimary,
     flexShrink: 1,
+    flexGrow: 1,
+    minWidth: 0,
   },
   currentLocation: {
     position: 'absolute',

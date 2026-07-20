@@ -48,21 +48,23 @@ export default function ListRow({
         </View>
       ) : null}
       <View style={styles.textBlock}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={styles.title} numberOfLines={2}>
           {title}
         </Text>
         {subtitle ? (
-          <Text style={styles.subtitle} numberOfLines={2}>
+          <Text style={styles.subtitle} numberOfLines={3}>
             {subtitle}
           </Text>
         ) : null}
       </View>
       {showChevron ? (
-        <AppIcon
-          name="chevron-forward"
-          size={iconSizes.md}
-          color={colors.textTertiary}
-        />
+        <View style={styles.chevron}>
+          <AppIcon
+            name="chevron-forward"
+            size={iconSizes.md}
+            color={colors.textTertiary}
+          />
+        </View>
       ) : null}
     </>
   );
@@ -94,7 +96,7 @@ function createStyles({ colors, tints }: AppTheme) {
   return StyleSheet.create({
   row: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     minHeight: touchTarget + spacing.sm,
     paddingVertical: spacing.md,
     gap: spacing.md,
@@ -113,9 +115,15 @@ function createStyles({ colors, tints }: AppTheme) {
     backgroundColor: tints.teal,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: spacing.xs,
   },
   textBlock: {
     flex: 1,
+    minWidth: 0,
+  },
+  chevron: {
+    marginTop: spacing.xs,
+    flexShrink: 0,
   },
   title: {
     fontFamily: fontFamilies.semibold,
