@@ -10,6 +10,7 @@ import {
 } from '@expo-google-fonts/poppins';
 import { AuthProvider } from './src/context/AuthContext';
 import { AccountProfileProvider } from './src/context/AccountProfileContext';
+import { ThemeProvider } from './src/theme';
 import RootNavigator from './src/navigation/RootNavigator';
 import {
   recordBootError,
@@ -22,11 +23,13 @@ function AppProviders() {
   }, []);
 
   return (
-    <AuthProvider>
-      <AccountProfileProvider>
-        <RootNavigator />
-      </AccountProfileProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AccountProfileProvider>
+          <RootNavigator />
+        </AccountProfileProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
@@ -59,7 +62,9 @@ export default function App() {
   if (!fontsLoaded && !fontWaitTimedOut) {
     return (
       <SafeAreaProvider>
-        <BootLoader />
+        <ThemeProvider>
+          <BootLoader />
+        </ThemeProvider>
       </SafeAreaProvider>
     );
   }

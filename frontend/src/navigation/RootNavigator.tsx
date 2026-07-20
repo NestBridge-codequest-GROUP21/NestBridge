@@ -16,7 +16,12 @@ import {
   setBootStage,
 } from '../services/bootDiagnostics';
 import {
-  colors,
+  useTheme,
+  useThemedStyles,
+  navigationThemeFromTokens,
+  type AppTheme,
+} from '../theme';
+import {
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -37,6 +42,11 @@ const SPLASH_FORCE_MS = 10000;
 export default function RootNavigator() {
   const { user, isLoading: authLoading, signOut } = useAuth();
   const { isLoading: profileLoading } = useAccountProfile();
+  const theme = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+  const navTheme = navigationThemeFromTokens(theme);
   const [splashDismissed, setSplashDismissed] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
   const [forceBoot, setForceBoot] = useState(false);
@@ -130,7 +140,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
       {priorBootError ? (
         <View style={styles.banner} accessibilityRole="alert">
           <Text style={styles.bannerTitle}>Previous startup issue</Text>
@@ -150,7 +160,7 @@ export default function RootNavigator() {
           </Pressable>
         </View>
       ) : null}
-      <NavigationContainer>
+      <NavigationContainer theme={navTheme}>
         {user ? (
           <Suspense fallback={<BootLoader />}>
             <AppNavigator key={user.userId} />
@@ -167,44 +177,46 @@ export default function RootNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  banner: {
-    backgroundColor: colors.warmCream,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-  },
-  bannerTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.danger,
-  },
-  bannerBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
-  },
-  bannerButton: {
-    alignSelf: 'flex-start',
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.tealBright,
-  },
-  bannerButtonLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.white,
-  },
-  pressed: {
-    opacity: 0.9,
-  },
-});
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    banner: {
+      backgroundColor: colors.warmCream,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      gap: spacing.xs,
+    },
+    bannerTitle: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.caption,
+      fontWeight: fontWeights.semibold,
+      color: colors.danger,
+    },
+    bannerBody: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.textSecondary,
+    },
+    bannerButton: {
+      alignSelf: 'flex-start',
+      minHeight: 44,
+      justifyContent: 'center',
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.md,
+      backgroundColor: colors.tealBright,
+    },
+    bannerButtonLabel: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.caption,
+      fontWeight: fontWeights.semibold,
+      color: colors.white,
+    },
+    pressed: {
+      opacity: 0.9,
+    },
+  });
+}
