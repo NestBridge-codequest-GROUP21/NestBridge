@@ -1,7 +1,7 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -38,7 +38,10 @@ export interface MonthCalendarGridProps {
   onNextMonth?: () => void;
 }
 
-function statusColor(status: CalendarDayStatus): string {
+function statusColor(
+  status: CalendarDayStatus,
+  colors: AppTheme['colors'],
+): string {
   switch (status) {
     case 'available':
       return colors.success;
@@ -60,11 +63,14 @@ function HostDayCell({
   selected: boolean;
   onPress?: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   if (!cell.isCurrentMonth) {
     return <View style={styles.dayCell} />;
   }
 
-  const bg = statusColor(cell.status);
+  const bg = statusColor(cell.status, colors);
 
   return (
     <Pressable
@@ -89,6 +95,9 @@ function GuideDayCell({
   selected: boolean;
   onPress?: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   if (!cell.isCurrentMonth) {
     return <View style={styles.dayCell} />;
   }
@@ -129,6 +138,10 @@ export default function MonthCalendarGrid({
   onPrevMonth,
   onNextMonth,
 }: MonthCalendarGridProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const days = mode === 'host' ? hostDays : guideDays;
 
   return (
@@ -261,7 +274,8 @@ export function buildGuideCalendarGrid(
   return cells;
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   container: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -371,3 +385,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
 });
+}
+

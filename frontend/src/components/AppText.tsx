@@ -1,7 +1,8 @@
 import React from 'react';
 import { Text, TextProps, StyleSheet } from 'react-native';
+import { useTheme } from '../theme';
+import type { ColorPalette } from '../theme';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   lineHeights,
@@ -19,7 +20,7 @@ export type AppTextVariant =
 export interface AppTextProps extends TextProps {
   variant?: AppTextVariant;
   weight?: 'regular' | 'semibold' | 'bold';
-  color?: keyof typeof colors;
+  color?: keyof ColorPalette;
 }
 
 export default function AppText({
@@ -29,6 +30,8 @@ export default function AppText({
   style,
   ...rest
 }: AppTextProps) {
+  const { colors } = useTheme();
+
   return (
     <Text
       style={[

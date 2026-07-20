@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React, { useCallback, useRef } from 'react';
 import {
   View,
@@ -13,8 +14,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ExploreSectionItem } from '../screens/tourist/ExploreHomeScreen';
 import AppIcon from './AppIcon';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -22,8 +21,6 @@ import {
   borderRadius,
   borderWidths,
   layout,
-  gradients,
-  shadows,
   iconSizes,
   controlHeights,
   lineHeights,
@@ -37,7 +34,11 @@ export interface ExploreSectionCarouselProps {
 
 const CARD_GAP = spacing.md;
 
-function sectionGradient(sectionId: string): readonly [string, string, ...string[]] {
+function sectionGradient(
+  sectionId: string,
+  colors: AppTheme['colors'],
+  gradients: AppTheme['gradients'],
+): readonly [string, string, ...string[]] {
   if (sectionId === 'guides') {
     return gradients.accent;
   }
@@ -66,6 +67,9 @@ function CarouselCard({
   savedLodgingCount,
   onSectionPress,
 }: CarouselCardProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
   const inputRange = [
     (index - 1) * snapWidth,
     index * snapWidth,
@@ -110,7 +114,7 @@ function CarouselCard({
           accessibilityHint="Swipe for more options"
         >
           <LinearGradient
-            colors={[...sectionGradient(item.id)]}
+            colors={[...sectionGradient(item.id, colors, gradients)]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradientStrip}
@@ -145,6 +149,10 @@ export default function ExploreSectionCarousel({
   savedLodgingCount = 0,
   onSectionPress,
 }: ExploreSectionCarouselProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const screenWidth = Dimensions.get('window').width;
   const contentWidth = screenWidth - layout.screenPaddingHorizontal * 2;
   const cardWidth = contentWidth * 0.88;
@@ -237,7 +245,8 @@ export default function ExploreSectionCarousel({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     marginBottom: layout.sectionGap,
     marginHorizontal: -layout.screenPaddingHorizontal,
@@ -331,3 +340,5 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
 });
+}
+

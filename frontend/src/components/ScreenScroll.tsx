@@ -2,10 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, ScrollViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  colors,
-  fontFamilies,
-  fontSizes,
-  fontWeights,
   spacing,
   layout,
 } from '../constants/theme';

@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -12,7 +13,6 @@ import MonthCalendarGrid, {
 import type { GuideCalendarDay, GuideShiftBlock } from '../../data/featureScreensMock';
 import { GUIDE_SHIFT_LABELS } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -50,6 +50,9 @@ function ShiftDetailCard({
   editable?: boolean;
   onShiftToggle?: (shift: GuideShiftBlock, enabled: boolean) => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   if (!editable) {
     if (shifts.length === 0) {
       return (
@@ -65,7 +68,7 @@ function ShiftDetailCard({
         <Text style={styles.shiftTitle}>Working shifts</Text>
         {shifts.map((shift) => (
           <View key={shift} style={styles.shiftRow}>
-            <View style={[styles.shiftDot, shiftDotStyle(shift)]} />
+            <View style={[styles.shiftDot, shiftDotStyle(shift, colors)]} />
             <Text style={styles.shiftDetail}>{GUIDE_SHIFT_LABELS[shift]}</Text>
           </View>
         ))}
@@ -81,7 +84,7 @@ function ShiftDetailCard({
         return (
           <View key={shift} style={styles.shiftToggleRow}>
             <View style={styles.shiftToggleInfo}>
-              <View style={[styles.shiftDot, shiftDotStyle(shift)]} />
+              <View style={[styles.shiftDot, shiftDotStyle(shift, colors)]} />
               <Text style={styles.shiftDetail}>{GUIDE_SHIFT_LABELS[shift]}</Text>
             </View>
             <Switch
@@ -98,7 +101,10 @@ function ShiftDetailCard({
   );
 }
 
-function shiftDotStyle(shift: GuideShiftBlock) {
+function shiftDotStyle(
+  shift: GuideShiftBlock,
+  colors: AppTheme['colors'],
+) {
   switch (shift) {
     case 'morning':
       return { backgroundColor: colors.success };
@@ -127,6 +133,10 @@ export default function GuideAvailabilityScreen({
   onShiftToggle,
   onBack,
 }: GuideAvailabilityScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const [selectedDay, setSelectedDay] = useState(11);
 
   const gridDays = useMemo(
@@ -186,7 +196,8 @@ export default function GuideAvailabilityScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -246,3 +257,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
 });
+}
+

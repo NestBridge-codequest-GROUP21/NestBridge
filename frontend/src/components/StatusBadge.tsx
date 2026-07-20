@@ -1,13 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { useTheme } from '../theme';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
-  tints,
   lineHeights,
 } from '../constants/theme';
 
@@ -25,25 +24,22 @@ export interface StatusBadgeProps {
   style?: ViewStyle;
 }
 
-const TONE_STYLES: Record<
-  StatusBadgeTone,
-  { background: string; text: string }
-> = {
-  neutral: { background: tints.navy, text: colors.textSecondary },
-  success: { background: tints.teal, text: colors.success },
-  warning: { background: tints.gold, text: colors.textPrimary },
-  danger: { background: tints.terracotta, text: colors.danger },
-  info: { background: tints.teal, text: colors.tealDeep },
-  accent: { background: tints.gold, text: colors.tealDeep },
-};
-
 /** Compact status chip for list and booking cards. */
 export default function StatusBadge({
   label,
   tone = 'neutral',
   style,
 }: StatusBadgeProps) {
-  const toneStyle = TONE_STYLES[tone];
+  const { colors, tints } = useTheme();
+  const toneStyles: Record<StatusBadgeTone, { background: string; text: string }> = {
+    neutral: { background: tints.navy, text: colors.textSecondary },
+    success: { background: tints.teal, text: colors.success },
+    warning: { background: tints.gold, text: colors.textPrimary },
+    danger: { background: tints.terracotta, text: colors.danger },
+    info: { background: tints.teal, text: colors.tealDeep },
+    accent: { background: tints.gold, text: colors.tealDeep },
+  };
+  const toneStyle = toneStyles[tone];
 
   return (
     <View
