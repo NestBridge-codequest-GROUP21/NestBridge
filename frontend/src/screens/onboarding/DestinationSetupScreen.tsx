@@ -9,6 +9,7 @@ import OnboardingProgress from '../../components/OnboardingProgress';
 import SelectField from '../../components/SelectField';
 import PrimaryButton from '../../components/PrimaryButton';
 import BackButton from '../../components/BackButton';
+import Card from '../../components/Card';
 import {
   colors,
   fontFamilies,
@@ -16,10 +17,13 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
   layout,
   shadows,
   overlays,
+  controlHeights,
+  touchTarget,
 } from '../../constants/theme';
 import { isLikelyValidPlaceName } from '../../utils/textValidation';
 import { validationCopy } from '../../data/appCopy';
@@ -227,7 +231,7 @@ export default function DestinationSetupScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
 
-        <View style={styles.formCard}>
+        <Card style={styles.formCard}>
           <SelectField
             label="Destination city"
             value={city}
@@ -266,7 +270,7 @@ export default function DestinationSetupScreen({
               />
             </View>
           </View>
-        </View>
+        </Card>
 
         <PrimaryButton label="Continue" onPress={handleContinue} />
       </ScrollView>
@@ -286,9 +290,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   title: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     lineHeight: lineHeights.display,
     marginBottom: spacing.sm,
@@ -302,18 +306,12 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   formCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   fieldError: {
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.danger,
     marginTop: -spacing.sm,
     marginBottom: spacing.sm,
@@ -340,12 +338,12 @@ const styles = StyleSheet.create({
   dateField: {
     justifyContent: 'center',
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md - 2,
-    minHeight: 48,
+    minHeight: controlHeights.md,
   },
   dateText: {
     fontFamily: fontFamilies.regular,
@@ -370,16 +368,16 @@ const styles = StyleSheet.create({
   },
   pickerDoneBtn: {
     alignSelf: 'flex-end',
-    minHeight: 44,
-    minWidth: 44,
+    minHeight: touchTarget,
+    minWidth: touchTarget,
     paddingHorizontal: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pickerDoneText: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
 });

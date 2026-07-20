@@ -1,10 +1,17 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppIcon from '../../components/AppIcon';
+import Avatar from '../../components/Avatar';
+import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
+import ListRow from '../../components/ListRow';
+import PrimaryButton from '../../components/PrimaryButton';
+import SecondaryButton from '../../components/SecondaryButton';
+import SkeletonLoader from '../../components/SkeletonLoader';
+import StatusBadge from '../../components/StatusBadge';
 import {
   colors,
   fontFamilies,
@@ -12,8 +19,12 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
-  shadows,
+  iconSizes,
+  touchTarget,
+  layout,
+  tints,
 } from '../../constants/theme';
 import {
   EVENT_ORGANIZER_META,
@@ -48,37 +59,31 @@ function EventCard({
   const isFull = spotsLeft === 0 && !joined;
 
   return (
-    <View style={styles.card}>
+    <Card style={styles.card} padding="lg">
       <View style={styles.tagRow}>
         <View style={styles.typeTag}>
-          <AppIcon glyph={typeMeta.icon} size={fontSizes.caption} color={colors.textPrimary} />
+          <AppIcon glyph={typeMeta.icon} size={iconSizes.sm} color={colors.textPrimary} />
           <Text style={styles.typeTagText}>{typeMeta.label}</Text>
         </View>
-        <View style={styles.organizerTag}>
-          <Text style={styles.organizerTagText}>{organizerMeta.label}</Text>
-        </View>
+        <StatusBadge label={organizerMeta.label} tone="neutral" />
         {event.hostedByYou ? (
-          <View style={styles.yoursTag}>
-            <Text style={styles.yoursTagText}>Your event</Text>
-          </View>
+          <StatusBadge label="Your event" tone="info" />
         ) : null}
       </View>
 
       <Text style={styles.title}>{event.title}</Text>
 
       <View style={styles.organizerRow}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{event.organizerInitials}</Text>
-        </View>
+        <Avatar initials={event.organizerInitials} size="sm" />
         <Text style={styles.organizerName}>{event.organizerName}</Text>
       </View>
 
       <View style={styles.metaRow}>
-        <AppIcon name="calendar-outline" size={fontSizes.caption} color={colors.textSecondary} />
+        <AppIcon name="calendar-outline" size={iconSizes.sm} color={colors.textSecondary} />
         <Text style={styles.metaText}>{event.dateLabel}</Text>
       </View>
       <View style={styles.metaRow}>
-        <AppIcon name="location-outline" size={fontSizes.caption} color={colors.textSecondary} />
+        <AppIcon name="location-outline" size={iconSizes.sm} color={colors.textSecondary} />
         <Text style={styles.metaText}>{event.location}</Text>
       </View>
 
@@ -89,34 +94,23 @@ function EventCard({
           {attending} going{spotsLeft > 0 ? ` · ${spotsLeft} spot${spotsLeft === 1 ? '' : 's'} left` : ' · Full'}
         </Text>
         {event.hostedByYou ? (
-          <View style={styles.hostingPill}>
-            <Text style={styles.hostingPillText}>Hosting</Text>
-          </View>
+          <StatusBadge label="Hosting" tone="neutral" style={styles.hostingBadge} />
+        ) : joined ? (
+          <SecondaryButton
+            label="Joined"
+            onPress={() => onToggleJoin?.(event.id)}
+            style={styles.joinButton}
+          />
         ) : (
-          <Pressable
-            style={({ pressed }) => [
-              styles.joinButton,
-              joined && styles.joinButtonJoined,
-              isFull && styles.joinButtonDisabled,
-              pressed && styles.joinButtonPressed,
-            ]}
+          <PrimaryButton
+            label={isFull ? 'Full' : 'Join'}
             onPress={() => onToggleJoin?.(event.id)}
             disabled={isFull}
-            accessibilityRole="button"
-            accessibilityState={{ selected: joined, disabled: isFull }}
-            accessibilityLabel={
-              joined ? `Leave ${event.title}` : `Join ${event.title}`
-            }
-          >
-            <Text
-              style={[styles.joinButtonText, joined && styles.joinButtonTextJoined]}
-            >
-              {joined ? 'Joined' : isFull ? 'Full' : 'Join'}
-            </Text>
-          </Pressable>
+            style={styles.joinButton}
+          />
         )}
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -143,29 +137,21 @@ export default function StudentEventsScreen({
       />
 
       <ScreenScroll>
-        <Pressable
-          style={({ pressed }) => [styles.createCard, pressed && styles.createCardPressed]}
-          onPress={onCreatePress}
-          accessibilityRole="button"
-          accessibilityLabel="Create an event"
-        >
-          <View style={styles.createIconWrap}>
-            <AppIcon name="add" size={28} color={colors.white} />
-          </View>
-          <View style={styles.createTextWrap}>
-            <Text style={styles.createTitle}>Host your own</Text>
-            <Text style={styles.createSubtitle}>
-              Post a cook-out, trip, or hangout for other students to join
-            </Text>
-          </View>
-          <AppIcon name="chevron-forward" size={fontSizes.body} color={colors.teal} />
-        </Pressable>
+        <Card padding="none" style={styles.createCard}>
+          <ListRow
+            title="Host your own"
+            subtitle="Post a cook-out, trip, or hangout for other students to join"
+            iconName="add-circle-outline"
+            onPress={onCreatePress}
+            bordered={false}
+          />
+        </Card>
 
         {showLoading ? (
-          <View style={styles.stateBlock}>
-            <ActivityIndicator color={colors.teal} />
-            <Text style={styles.stateText}>Loading events…</Text>
-          </View>
+          <>
+            <SkeletonLoader style={styles.skeleton} />
+            <SkeletonLoader style={styles.skeleton} lines={2} />
+          </>
         ) : showError ? (
           <EmptyState
             iconName="cloud-offline-outline"
@@ -202,55 +188,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   createCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: layout.sectionGap,
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    gap: spacing.md,
-    minHeight: 72,
-    ...shadows.card,
-  },
-  createCardPressed: {
-    opacity: 0.92,
-  },
-  createIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.tealBright,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  createTextWrap: {
-    flex: 1,
-  },
-  createTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-    lineHeight: lineHeights.subheading,
-  },
-  createSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    lineHeight: lineHeights.caption,
   },
   card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
     marginBottom: spacing.md,
-    ...shadows.card,
   },
   tagRow: {
     flexDirection: 'row',
@@ -262,7 +204,7 @@ const styles = StyleSheet.create({
   typeTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: tints.navy,
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
@@ -274,34 +216,10 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
-  organizerTag: {
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  organizerTagText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-  },
-  yoursTag: {
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  yoursTagText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.white,
-  },
   title: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
     lineHeight: lineHeights.subheading,
@@ -311,20 +229,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.tealDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
   },
   organizerName: {
     fontFamily: fontFamilies.regular,
@@ -359,7 +263,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     paddingTop: spacing.md,
     gap: spacing.sm,
@@ -372,57 +276,15 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   joinButton: {
-    minHeight: 44,
-    minWidth: 88,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.tealBright,
-    alignItems: 'center',
-    justifyContent: 'center',
+    minWidth: spacing.xxl + spacing.xl,
+    minHeight: touchTarget,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
-  joinButtonJoined: {
-    backgroundColor: colors.success,
+  hostingBadge: {
+    alignSelf: 'center',
   },
-  joinButtonDisabled: {
-    backgroundColor: colors.border,
-  },
-  joinButtonPressed: {
-    opacity: 0.9,
-  },
-  joinButtonText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  joinButtonTextJoined: {
-    color: colors.white,
-  },
-  hostingPill: {
-    minHeight: 44,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  hostingPillText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.textSecondary,
-  },
-  stateBlock: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xl,
-    gap: spacing.sm,
-  },
-  stateText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    lineHeight: lineHeights.body,
+  skeleton: {
+    marginBottom: spacing.md,
   },
 });

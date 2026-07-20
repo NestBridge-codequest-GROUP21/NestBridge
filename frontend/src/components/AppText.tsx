@@ -8,7 +8,13 @@ import {
   fontWeights,
 } from '../constants/theme';
 
-export type AppTextVariant = 'display' | 'heading' | 'subheading' | 'body' | 'caption';
+export type AppTextVariant =
+  | 'display'
+  | 'heading'
+  | 'subheading'
+  | 'body'
+  | 'caption'
+  | 'micro';
 
 export interface AppTextProps extends TextProps {
   variant?: AppTextVariant;
@@ -61,6 +67,10 @@ const styles = StyleSheet.create({
   caption: {
     fontSize: fontSizes.caption,
     lineHeight: lineHeights.caption,
+  },
+  micro: {
+    fontSize: fontSizes.micro,
+    lineHeight: lineHeights.micro,
   },
   semibold: {
     fontFamily: fontFamilies.semibold,

@@ -13,6 +13,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import {
   colors,
   fontFamilies,
@@ -22,8 +23,8 @@ import {
   borderRadius,
   lineHeights,
   layout,
-  shadows,
   tints,
+  iconSizes,
 } from '../../constants/theme';
 
 export interface VerifyEmailScreenProps {
@@ -63,16 +64,16 @@ export default function VerifyEmailScreen({
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.iconCircle}>
-          <AppIcon name="mail-outline" size={32} color={colors.tealDeep} />
+          <AppIcon name="mail-outline" size={iconSizes.xl} color={colors.tealDeep} />
         </View>
 
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
 
-        <View style={styles.emailCard}>
+        <Card style={styles.emailCard}>
           <Text style={styles.emailLabel}>Sent to</Text>
           <Text style={styles.emailValue}>{email}</Text>
-        </View>
+        </Card>
 
         {statusMessage ? <InlineBanner message={statusMessage} tone="success" /> : null}
         {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
@@ -82,9 +83,9 @@ export default function VerifyEmailScreen({
         </Text>
 
         <PrimaryButton
-          label={resendBusy ? 'Sending…' : 'Resend verification email'}
+          label="Resend verification email"
           onPress={onResend}
-          disabled={resendBusy}
+          loading={resendBusy}
         />
 
         <View style={styles.secondaryWrap}>
@@ -106,8 +107,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   iconCircle: {
-    width: 72,
-    height: 72,
+    width: spacing.xxl + spacing.xl,
+    height: spacing.xxl + spacing.xl,
     borderRadius: borderRadius.pill,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -116,9 +117,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   title: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     textAlign: 'center',
   },
@@ -130,13 +131,7 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   emailCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
     marginTop: spacing.sm,
-    ...shadows.card,
   },
   emailLabel: {
     fontFamily: fontFamilies.regular,

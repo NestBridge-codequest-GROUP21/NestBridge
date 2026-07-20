@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import AppIcon from './AppIcon';
+import SectionHeader from './SectionHeader';
 import {
   colors,
   tints,
@@ -9,6 +10,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  iconSizes,
+  touchTarget,
 } from '../constants/theme';
 
 export interface QuickActionItem {
@@ -30,7 +33,7 @@ export default function QuickActionsGrid({
 }: QuickActionsGridProps) {
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <SectionHeader title={title} />
       <View style={styles.grid}>
         {actions.map((action) => (
           <Pressable
@@ -48,7 +51,7 @@ export default function QuickActionsGrid({
             >
               <AppIcon
                 glyph={action.icon}
-                size={26}
+                size={iconSizes.xl}
                 color={action.id === 'sos' ? colors.white : colors.teal}
               />
             </View>
@@ -64,13 +67,6 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: spacing.lg,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -82,7 +78,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xs,
     marginBottom: spacing.sm,
-    minHeight: 88,
+    minHeight: touchTarget * 2,
   },
   pressed: {
     opacity: 0.94,
@@ -100,10 +96,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.danger,
   },
   label: {
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.textSecondary,
+    fontWeight: fontWeights.regular,
+    color: colors.textPrimary,
     textAlign: 'center',
   },
 });

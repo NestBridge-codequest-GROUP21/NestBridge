@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -20,13 +20,12 @@ import RecentActivityList, {
 import ReminderBanner from '../../components/ReminderBanner';
 import InlineBanner from '../../components/InlineBanner';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
+import SkeletonLoader from '../../components/SkeletonLoader';
+import SectionHeader from '../../components/SectionHeader';
 import {
   colors,
   spacing,
-  fontFamilies,
-  fontSizes,
-  fontWeights,
-  lineHeights,
+  layout,
 } from '../../constants/theme';
 import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 
@@ -130,9 +129,13 @@ export default function StudentHomeDashboard({
         ) : null}
 
         {isHomeLoading ? (
-          <View style={styles.loadingWrap} accessibilityRole="progressbar" accessibilityLabel="Loading your home">
-            <ActivityIndicator size="large" color={colors.teal} />
-            <Text style={styles.loadingLabel}>Loading your home…</Text>
+          <View
+            style={styles.loadingWrap}
+            accessibilityRole="progressbar"
+            accessibilityLabel="Loading your home"
+          >
+            <SkeletonLoader lines={3} style={styles.skeletonCard} />
+            <SkeletonLoader lines={2} style={styles.skeletonCard} />
           </View>
         ) : null}
 
@@ -171,7 +174,10 @@ export default function StudentHomeDashboard({
 
         {recommendedSections.length > 0 ? (
           <View style={styles.carouselSection}>
-            <Text style={styles.sectionTitle}>{recommendedSectionTitle}</Text>
+            <SectionHeader
+              title={recommendedSectionTitle}
+              style={styles.sectionHeader}
+            />
             <ExploreSectionCarousel
               sections={recommendedSections}
               onSectionPress={onRecommendedSectionPress}
@@ -209,25 +215,17 @@ const styles = StyleSheet.create({
   carouselSection: {
     marginTop: spacing.md,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
+  sectionHeader: {
+    paddingHorizontal: layout.screenPaddingHorizontal,
     marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
   },
   loadingWrap: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     marginBottom: spacing.lg,
     gap: spacing.md,
   },
-  loadingLabel: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    lineHeight: lineHeights.body,
+  skeletonCard: {
+    width: '100%',
   },
   bannerPad: {
     paddingHorizontal: spacing.lg,

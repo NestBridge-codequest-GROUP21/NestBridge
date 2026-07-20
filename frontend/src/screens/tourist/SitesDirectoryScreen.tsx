@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
 import AppIcon from '../../components/AppIcon';
 import {
@@ -11,9 +12,9 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
   lineHeights,
-  shadows,
+  iconSizes,
+  touchTarget,
 } from '../../constants/theme';
 
 export interface SiteDirectoryItem {
@@ -60,26 +61,28 @@ export default function SitesDirectoryScreen({
           sites.map((site) => (
             <Pressable
               key={site.id}
-              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+              style={({ pressed }) => [styles.cardWrap, pressed && styles.cardPressed]}
               onPress={() => onSitePress?.(site.id)}
               accessibilityRole="button"
               accessibilityLabel={site.name}
             >
-              <View style={styles.cardHeader}>
-                <View style={styles.cardTitleBlock}>
-                  <Text style={styles.cardTitle}>{site.name}</Text>
-                  <Text style={styles.cardCity}>{site.city}</Text>
+              <Card padding="lg" elevation="card" style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.cardTitleBlock}>
+                    <Text style={styles.cardTitle}>{site.name}</Text>
+                    <Text style={styles.cardCity}>{site.city}</Text>
+                  </View>
+                  <AppIcon
+                    name="chevron-forward"
+                    size={iconSizes.md}
+                    color={colors.teal}
+                  />
                 </View>
-                <AppIcon
-                  name="chevron-forward"
-                  size={fontSizes.subheading}
-                  color={colors.teal}
-                />
-              </View>
-              <Text style={styles.cardDescription} numberOfLines={2}>
-                {site.description}
-              </Text>
-              <Text style={styles.cardAdmission}>{site.admission}</Text>
+                <Text style={styles.cardDescription} numberOfLines={2}>
+                  {site.description}
+                </Text>
+                <Text style={styles.cardAdmission}>{site.admission}</Text>
+              </Card>
             </Pressable>
           ))
         )}
@@ -93,15 +96,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+  cardWrap: {
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 44,
-    ...shadows.card,
+    minHeight: touchTarget,
+  },
+  card: {
+    minHeight: touchTarget,
   },
   cardPressed: {
     opacity: 0.95,

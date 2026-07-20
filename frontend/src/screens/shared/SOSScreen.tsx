@@ -5,6 +5,9 @@ import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import EmptyState from '../../components/EmptyState';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
+import ListRow from '../../components/ListRow';
+import SectionHeader from '../../components/SectionHeader';
 import {
   colors,
   fontFamilies,
@@ -12,10 +15,13 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
   layout,
   shadows,
-  tints,
+  iconSizes,
+  controlHeights,
+  touchTarget,
 } from '../../constants/theme';
 
 export interface EmergencyContact {
@@ -58,7 +64,8 @@ export default function SOSScreen({
           accessibilityLabel="Call emergency services"
         >
           <View style={styles.emergencyIconWrap}>
-            <AppIcon name="call" size={26} color={colors.white} />
+            <View style={styles.emergencyIconTint} />
+            <AppIcon name="call" size={iconSizes.lg} color={colors.white} />
           </View>
           <View style={styles.emergencyTextBlock}>
             <Text style={styles.emergencyTitle}>Call emergency services</Text>
@@ -66,10 +73,10 @@ export default function SOSScreen({
               Reach Ghana’s national emergency line (112)
             </Text>
           </View>
-          <AppIcon name="chevron-forward" size={22} color={colors.white} />
+          <AppIcon name="chevron-forward" size={iconSizes.lg} color={colors.white} />
         </Pressable>
 
-        <Text style={styles.listHeading}>Your emergency contacts</Text>
+        <SectionHeader title="Your emergency contacts" />
 
         {emergencyContacts.length === 0 ? (
           <EmptyState
@@ -79,7 +86,7 @@ export default function SOSScreen({
             iconName="people-outline"
           />
         ) : (
-          <View style={styles.contactList}>
+          <Card padding="none" elevation="card">
             {emergencyContacts.map((contact, index) => {
               const isLast = index === emergencyContacts.length - 1;
 
@@ -88,13 +95,14 @@ export default function SOSScreen({
                   key={`${contact.label}-${contact.number}`}
                   style={[styles.contactRow, !isLast && styles.contactRowBorder]}
                 >
-                  <View style={styles.contactAvatar}>
-                    <AppIcon name="person-outline" size={20} color={colors.tealDeep} />
-                  </View>
-                  <View style={styles.contactInfo}>
-                    <Text style={styles.contactLabel}>{contact.label}</Text>
-                    <Text style={styles.contactNumber}>{contact.number}</Text>
-                  </View>
+                  <ListRow
+                    title={contact.label}
+                    subtitle={contact.number}
+                    iconName="person-outline"
+                    showChevron={false}
+                    bordered={false}
+                    style={styles.contactListRow}
+                  />
                   <Pressable
                     style={({ pressed }) => [
                       styles.callAction,
@@ -104,13 +112,13 @@ export default function SOSScreen({
                     accessibilityRole="button"
                     accessibilityLabel={`Call ${contact.label}`}
                   >
-                    <AppIcon name="call-outline" size={18} color={colors.white} />
+                    <AppIcon name="call-outline" size={iconSizes.sm} color={colors.white} />
                     <Text style={styles.callActionText}>Call</Text>
                   </Pressable>
                 </View>
               );
             })}
-          </View>
+          </Card>
         )}
 
         <View style={styles.footerSpacer} />
@@ -138,9 +146,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.danger,
     borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+    padding: layout.cardPaddingLarge,
     marginBottom: layout.sectionGap,
-    minHeight: 88,
+    minHeight: controlHeights.lg + spacing.xl,
     ...shadows.raised,
   },
   pressed: {
@@ -148,13 +156,18 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.99 }],
   },
   emergencyIconWrap: {
-    width: 52,
-    height: 52,
+    width: controlHeights.lg,
+    height: controlHeights.lg,
     borderRadius: borderRadius.pill,
-    backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
+    overflow: 'hidden',
+  },
+  emergencyIconTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.white,
+    opacity: 0.18,
   },
   emergencyTextBlock: {
     flex: 1,
@@ -174,63 +187,25 @@ const styles = StyleSheet.create({
     color: colors.white,
     opacity: 0.9,
   },
-  listHeading: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-  },
-  contactList: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    ...shadows.card,
-  },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    minHeight: 72,
+    paddingRight: spacing.md,
+    minHeight: touchTarget + spacing.md,
   },
   contactRowBorder: {
-    borderBottomWidth: 1,
+    borderBottomWidth: borderWidths.hairline,
     borderBottomColor: colors.border,
   },
-  contactAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.pill,
-    backgroundColor: tints.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  contactInfo: {
+  contactListRow: {
     flex: 1,
-    paddingRight: spacing.sm,
-  },
-  contactLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  contactNumber: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    lineHeight: lineHeights.caption,
-    color: colors.textSecondary,
+    paddingHorizontal: spacing.md,
   },
   callAction: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    minHeight: 44,
+    minHeight: touchTarget,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.lg,

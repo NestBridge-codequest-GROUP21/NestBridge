@@ -25,12 +25,15 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   lineHeights,
   layout,
   motion,
   overlays,
   shadows,
+  touchTarget,
+  iconSizes,
 } from '../../constants/theme';
 
 export interface OnboardingReadyScreenProps {
@@ -116,7 +119,7 @@ export default function OnboardingReadyScreen({
           {roleIcon ? (
             <AppIcon
               glyph={roleIcon}
-              size={fontSizes.body}
+              size={iconSizes.md}
               color={colors.white}
               style={styles.roleBadgeIcon}
             />
@@ -210,7 +213,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   topSpacer: {
-    width: 44,
+    width: touchTarget,
   },
   roleBadge: {
     position: 'absolute',
@@ -222,7 +225,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.tealBright,
     zIndex: 2,
     ...shadows.card,
@@ -270,9 +273,9 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   headline: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
     lineHeight: lineHeights.display,
     textAlign: 'center',
@@ -281,9 +284,9 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.subheading,
+    fontSize: fontSizes.body,
     color: colors.white,
-    lineHeight: lineHeights.subheading,
+    lineHeight: lineHeights.body,
     textAlign: 'center',
     opacity: 0.92,
     marginBottom: spacing.lg,
@@ -298,7 +301,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   continueLaterButton: {
-    minHeight: 44,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.sm,

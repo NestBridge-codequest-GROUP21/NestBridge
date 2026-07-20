@@ -8,7 +8,18 @@ import {
   ScrollView,
 } from 'react-native';
 import AppIcon from './AppIcon';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../constants/theme';
+import {
+  colors,
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  borderWidths,
+  controlHeights,
+  iconSizes,
+  overlays,
+} from '../constants/theme';
 
 export interface SelectFieldProps {
   label: string;
@@ -45,7 +56,11 @@ export default function SelectField({
         <Text style={[styles.fieldText, !value && styles.placeholderText]}>
           {value || placeholder}
         </Text>
-        <Text style={styles.chevron}>▾</Text>
+        <AppIcon
+          name="chevron-down"
+          size={iconSizes.md}
+          color={colors.textSecondary}
+        />
       </Pressable>
 
       <Modal
@@ -80,7 +95,11 @@ export default function SelectField({
                       {option}
                     </Text>
                     {selected ? (
-                      <AppIcon name="checkmark" size={18} color={colors.teal} />
+                      <AppIcon
+                        name="checkmark"
+                        size={iconSizes.md}
+                        color={colors.teal}
+                      />
                     ) : null}
                   </Pressable>
                 );
@@ -98,6 +117,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   label: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
@@ -110,30 +130,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md - 2,
-    minHeight: 48,
+    minHeight: controlHeights.md,
   },
   fieldText: {
     flex: 1,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textPrimary,
+    marginRight: spacing.sm,
   },
   placeholderText: {
     color: colors.textTertiary,
   },
-  chevron: {
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    marginLeft: spacing.sm,
-  },
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: overlays.scrim,
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
   },
@@ -144,6 +161,7 @@ const styles = StyleSheet.create({
     maxHeight: '70%',
   },
   sheetTitle: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
@@ -162,18 +180,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
-    minHeight: 48,
+    minHeight: controlHeights.md,
   },
   optionSelected: {
     backgroundColor: colors.warmCream,
   },
   optionText: {
     flex: 1,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textPrimary,
   },
   optionTextSelected: {
+    fontFamily: fontFamilies.semibold,
     fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
   },

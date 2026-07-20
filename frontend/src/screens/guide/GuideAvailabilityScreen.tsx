@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import Card from '../../components/Card';
 import InlineBanner from '../../components/InlineBanner';
+import SectionHeader from '../../components/SectionHeader';
 import MonthCalendarGrid, {
   buildGuideCalendarGrid,
 } from '../../components/MonthCalendarGrid';
@@ -17,7 +19,7 @@ import {
   spacing,
   borderRadius,
   lineHeights,
-  shadows,
+  touchTarget,
 } from '../../constants/theme';
 
 export interface GuideAvailabilityScreenProps {
@@ -51,15 +53,15 @@ function ShiftDetailCard({
   if (!editable) {
     if (shifts.length === 0) {
       return (
-        <View style={styles.shiftCard}>
+        <Card padding="lg" style={styles.shiftCard}>
           <Text style={styles.shiftTitle}>No shifts scheduled</Text>
           <Text style={styles.shiftDetailMuted}>Tap a day to manage availability</Text>
-        </View>
+        </Card>
       );
     }
 
     return (
-      <View style={styles.shiftCard}>
+      <Card padding="lg" style={styles.shiftCard}>
         <Text style={styles.shiftTitle}>Working shifts</Text>
         {shifts.map((shift) => (
           <View key={shift} style={styles.shiftRow}>
@@ -67,12 +69,12 @@ function ShiftDetailCard({
             <Text style={styles.shiftDetail}>{GUIDE_SHIFT_LABELS[shift]}</Text>
           </View>
         ))}
-      </View>
+      </Card>
     );
   }
 
   return (
-    <View style={styles.shiftCard}>
+    <Card padding="lg" style={styles.shiftCard}>
       <Text style={styles.shiftTitle}>Shifts for selected day</Text>
       {GUIDE_SHIFTS.map((shift) => {
         const enabled = shifts.includes(shift);
@@ -92,7 +94,7 @@ function ShiftDetailCard({
           </View>
         );
       })}
-    </View>
+    </Card>
   );
 }
 
@@ -153,12 +155,14 @@ export default function GuideAvailabilityScreen({
       />
 
       <ScreenScroll>
-        <Text style={styles.screenTitle}>{calendarTitle}</Text>
-        <Text style={styles.screenSubtitle}>
-          {editable
-            ? 'Tap a day, then toggle Morning, Afternoon, or Evening shifts below.'
-            : 'Manage Morning, Afternoon, and Evening availability blocks.'}
-        </Text>
+        <SectionHeader
+          title={calendarTitle}
+          subtitle={
+            editable
+              ? 'Tap a day, then toggle Morning, Afternoon, or Evening shifts below.'
+              : 'Manage Morning, Afternoon, and Evening availability blocks.'
+          }
+        />
 
         <MonthCalendarGrid
           monthLabel={monthLabel}
@@ -187,32 +191,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  screenTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  screenSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-    lineHeight: lineHeights.body,
-  },
   statusBanner: {
     marginTop: spacing.md,
   },
   shiftCard: {
     marginTop: spacing.lg,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    ...shadows.card,
   },
   shiftTitle: {
     fontFamily: fontFamilies.semibold,
@@ -228,7 +211,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   shiftToggleRow: {
     flexDirection: 'row',
@@ -236,7 +219,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.sm,
     marginBottom: spacing.sm,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   shiftToggleInfo: {
     flexDirection: 'row',

@@ -12,6 +12,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import Avatar from '../../components/Avatar';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -22,9 +25,14 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   lineHeights,
   shadows,
+  layout,
+  iconSizes,
+  touchTarget,
+  avatarSizes,
 } from '../../constants/theme';
 import type { LodgingListing } from '../../types/lodging';
 import { lodgingCategoryLabel } from '../../data/lodgingDirectoryMock';
@@ -75,17 +83,17 @@ export default function LodgingDetailScreen({
         <BackButton onPress={onBack} color={colors.white} style={styles.backButton} />
 
         <View style={styles.heroContent}>
-          <View style={styles.heroAvatar}>
-            <Text style={styles.heroInitials}>
-              {listing.name.slice(0, 2).toUpperCase()}
-            </Text>
-          </View>
+          <Avatar
+            initials={listing.name.slice(0, 2)}
+            size="lg"
+            style={styles.heroAvatar}
+          />
           <Text style={styles.name}>{listing.name}</Text>
           <Text style={styles.meta}>
             {lodgingCategoryLabel(listing.category)} · {listing.area}, {listing.city}
           </Text>
           <View style={styles.ratingRow}>
-            <AppIcon name="star" size={fontSizes.body} color={colors.gold} />
+            <AppIcon name="star" size={iconSizes.md} color={colors.gold} />
             <Text style={styles.rating}>{listing.rating}</Text>
             <Text style={styles.price}>{listing.priceHint}</Text>
           </View>
@@ -94,7 +102,7 @@ export default function LodgingDetailScreen({
 
       <ScreenScroll
         contentContainerStyle={{
-          paddingBottom: insets.bottom + 200,
+          paddingBottom: insets.bottom + layout.scrollBottomInsetWithSos,
         }}
       >
         <InlineBanner
@@ -102,21 +110,21 @@ export default function LodgingDetailScreen({
           message="Book on the provider’s site or by phone — not inside NestBridge."
         />
 
-        <Text style={styles.sectionTitle}>About</Text>
+        <SectionHeader title="About" />
         <Text style={styles.description}>{listing.description}</Text>
 
         {listing.phone ? (
-          <View style={styles.contactRow}>
+          <Card padding="md" elevation="card" style={styles.contactCard}>
             <Text style={styles.contactLabel}>Phone</Text>
             <Text style={styles.contactValue}>{listing.phone}</Text>
-          </View>
+          </Card>
         ) : null}
 
         {listing.email ? (
-          <View style={styles.contactRow}>
+          <Card padding="md" elevation="card" style={styles.contactCard}>
             <Text style={styles.contactLabel}>Email</Text>
             <Text style={styles.contactValue}>{listing.email}</Text>
-          </View>
+          </Card>
         ) : null}
       </ScreenScroll>
 
@@ -149,7 +157,7 @@ export default function LodgingDetailScreen({
         >
           <AppIcon
             name={isSaved ? 'checkmark-circle' : 'bookmark-outline'}
-            size={fontSizes.body}
+            size={iconSizes.md}
             color={colors.teal}
           />
           <Text style={styles.saveButtonText}>
@@ -161,13 +169,15 @@ export default function LodgingDetailScreen({
   );
 }
 
+const HERO_AVATAR = avatarSizes.lg + spacing.lg;
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   hero: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingBottom: spacing.xl,
   },
   backButton: {
@@ -178,20 +188,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   heroAvatar: {
-    width: 72,
-    height: 72,
+    width: HERO_AVATAR,
+    height: HERO_AVATAR,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: spacing.md,
     ...shadows.card,
-  },
-  heroInitials: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   name: {
     fontFamily: fontFamilies.bold,
@@ -226,13 +227,6 @@ const styles = StyleSheet.create({
     color: colors.white,
     opacity: 0.92,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
   description: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
@@ -240,14 +234,8 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
   },
-  contactRow: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
+  contactCard: {
     marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   contactLabel: {
     fontFamily: fontFamilies.regular,
@@ -267,9 +255,9 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     gap: spacing.sm,
     ...shadows.raised,
@@ -282,7 +270,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   saveButton: {
-    minHeight: 44,
+    minHeight: touchTarget,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

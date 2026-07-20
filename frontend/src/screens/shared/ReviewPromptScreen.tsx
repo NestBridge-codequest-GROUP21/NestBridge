@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -14,13 +13,17 @@ import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
+import FormTextField from '../../components/FormTextField';
 import {
   colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  borderWidths,
+  iconSizes,
+  touchTarget,
   gradients,
   layout,
   lineHeights,
@@ -84,7 +87,7 @@ export default function ReviewPromptScreen({
               >
                 <AppIcon
                   name={filled ? 'star' : 'star-outline'}
-                  size={fontSizes.display}
+                  size={iconSizes.xl}
                   color={filled ? colors.gold : colors.border}
                 />
               </Pressable>
@@ -92,24 +95,22 @@ export default function ReviewPromptScreen({
           })}
         </View>
 
-        <Text style={styles.sectionLabel}>Comments</Text>
-        <TextInput
-          style={styles.commentInput}
+        <FormTextField
+          label="Comments"
           value={comment}
           onChangeText={setComment}
           placeholder={reviewPromptCopy.commentPlaceholder}
-          placeholderTextColor={colors.textTertiary}
           multiline
-          textAlignVertical="top"
+          numberOfLines={4}
         />
 
-        <View style={styles.sealedCard}>
+        <Card style={styles.sealedCard} padding="lg">
           <Text style={styles.sealedTitle}>Sealed review</Text>
           <Text style={styles.sealedBody}>
             Your rating stays hidden until your host submits their feedback too.
             NestBridge moderates reviews before they appear on profiles.
           </Text>
-        </View>
+        </Card>
       </ScrollView>
 
       <View
@@ -181,37 +182,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   starButton: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  star: {
-    fontSize: 32,
-    color: colors.border,
-  },
-  starFilled: {
-    color: colors.warning,
-  },
-  commentInput: {
-    minHeight: 120,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textPrimary,
-    marginBottom: spacing.lg,
-  },
   sealedCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   sealedTitle: {
     fontFamily: fontFamilies.bold,
@@ -234,7 +211,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     ...shadows.raised,
   },

@@ -9,8 +9,12 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AppIcon from '../../components/AppIcon';
 import EmptyState from '../../components/EmptyState';
+import ScreenHeader from '../../components/ScreenHeader';
+import Card from '../../components/Card';
+import Avatar from '../../components/Avatar';
+import StatusBadge from '../../components/StatusBadge';
+import PrimaryButton from '../../components/PrimaryButton';
 import {
   colors,
   fontFamilies,
@@ -18,10 +22,11 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   layout,
-  shadows,
   lineHeights,
+  touchTarget,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
 export { sampleMatchResults } from '../../data/matchResultsMock';
@@ -72,18 +77,9 @@ function HostMatchCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      style={({ pressed }) => [styles.hostCard, pressed && styles.hostCardPressed]}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${host.hostName}, ${host.compatibilityScore} percent match, ${host.location}, ${formatCurrency(host.pricePerNight, host.currency)} per night`}
-    >
+    <Card padding="lg" elevation="card" style={styles.hostCard}>
       <View style={styles.cardTopRow}>
-        <View style={styles.avatarRing}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarInitials}>{host.initials}</Text>
-          </View>
-        </View>
+        <Avatar initials={host.initials} size="lg" highlighted style={styles.avatar} />
 
         <View style={styles.cardHeaderText}>
           <Text style={styles.hostName}>{host.hostName}</Text>
@@ -101,9 +97,7 @@ function HostMatchCard({
           <Text style={styles.compatBadgeText}>{host.compatibilityScore}% match</Text>
         </LinearGradient>
 
-        <View style={styles.trustBadge}>
-          <Text style={styles.trustBadgeText}>{trustBadgeLabel(host.trustBadge)}</Text>
-        </View>
+        <StatusBadge label={trustBadgeLabel(host.trustBadge)} tone="warning" />
       </View>
 
       <View style={styles.reasonsBlock}>
@@ -122,7 +116,9 @@ function HostMatchCard({
           <Text style={styles.priceUnit}> / night</Text>
         </Text>
       </View>
-    </Pressable>
+
+      <PrimaryButton label="View host" onPress={onPress} />
+    </Card>
   );
 }
 
@@ -163,21 +159,11 @@ export default function MatchResultsScreen({
     return (
       <View style={styles.root}>
         <StatusBar style="light" />
-        <LinearGradient
-          colors={[...gradients.headerCompact]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-        >
-          {onBack ? (
-            <Pressable onPress={onBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
-              <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
-            </Pressable>
-          ) : (
-            <View style={styles.backButtonSpacer} />
-          )}
-          <Text style={styles.headerTitle}>{destinationLabel}</Text>
-        </LinearGradient>
+        <ScreenHeader
+          title={destinationLabel}
+          compact
+          onBack={onBack}
+        />
         <View style={styles.errorWrap}>
           <EmptyState
             title="Could not load matches"
@@ -195,22 +181,12 @@ export default function MatchResultsScreen({
     return (
       <View style={styles.root}>
         <StatusBar style="light" />
-        <LinearGradient
-          colors={[...gradients.headerCompact]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-        >
-          {onBack ? (
-            <Pressable onPress={onBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
-              <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
-            </Pressable>
-          ) : (
-            <View style={styles.backButtonSpacer} />
-          )}
-          <Text style={styles.headerTitle}>{destinationLabel}</Text>
-          <Text style={styles.headerSubtitle}>No hosts matched your search yet</Text>
-        </LinearGradient>
+        <ScreenHeader
+          title={destinationLabel}
+          subtitle="No hosts matched your search yet"
+          compact
+          onBack={onBack}
+        />
         <View style={styles.errorWrap}>
           <EmptyState
             title="No matches found"
@@ -229,28 +205,14 @@ export default function MatchResultsScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.headerCompact]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-      >
-        {onBack ? (
-          <Pressable
-            onPress={onBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
-          </Pressable>
-        ) : (
-          <View style={styles.backButtonSpacer} />
-        )}
+      <ScreenHeader
+        title={destinationLabel}
+        subtitle={countLabel}
+        compact
+        onBack={onBack}
+      />
 
-        <Text style={styles.headerTitle}>{destinationLabel}</Text>
-        <Text style={styles.headerSubtitle}>{countLabel}</Text>
-
+      <View style={styles.toggleWrap}>
         <View style={styles.viewToggle}>
           <Pressable
             style={[styles.toggleButton, viewMode === 'list' && styles.toggleButtonActive]}
@@ -279,7 +241,7 @@ export default function MatchResultsScreen({
             </Text>
           </Pressable>
         </View>
-      </LinearGradient>
+      </View>
 
       {viewMode === 'list' ? (
         <ScrollView
@@ -313,39 +275,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  toggleWrap: {
     paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  backButtonSpacer: {
-    height: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
-  },
-  headerTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    marginBottom: spacing.xs,
-  },
-  headerSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.white,
-    opacity: 0.88,
-    marginBottom: spacing.md,
+    paddingTop: spacing.md,
   },
   viewToggle: {
     flexDirection: 'row',
@@ -357,7 +289,7 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     minWidth: 72,
-    minHeight: 44,
+    minHeight: touchTarget,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.pill,
     alignItems: 'center',
@@ -382,52 +314,21 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
     paddingBottom: spacing.xl,
     gap: spacing.md,
     alignItems: 'flex-start',
   },
   hostCard: {
     width: layout.listingCardWidth + spacing.xl,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.raised,
-  },
-  hostCardPressed: {
-    opacity: 0.96,
-    transform: [{ scale: 0.995 }],
   },
   cardTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  avatarRing: {
-    width: 64,
-    height: 64,
-    borderRadius: borderRadius.pill,
-    borderWidth: 2,
-    borderColor: colors.tealBright,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitials: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.teal,
+    marginRight: spacing.md,
   },
   cardHeaderText: {
     flex: 1,
@@ -463,20 +364,6 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: colors.white,
   },
-  trustBadge: {
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.warmCream,
-    borderWidth: 1,
-    borderColor: colors.gold,
-  },
-  trustBadgeText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-  },
   reasonsBlock: {
     marginBottom: spacing.md,
     gap: spacing.sm,
@@ -506,8 +393,9 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     justifyContent: 'space-between',
     paddingTop: spacing.sm,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
+    marginBottom: spacing.md,
   },
   priceLabel: {
     fontFamily: fontFamilies.regular,

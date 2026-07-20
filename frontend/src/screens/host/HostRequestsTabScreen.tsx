@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -8,10 +8,10 @@ import IncomingRequestCard, {
   IncomingRequestsEmptyBlock,
 } from '../../components/IncomingRequestCard';
 import InlineBanner from '../../components/InlineBanner';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import {
   colors,
   spacing,
-  borderRadius,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
 
@@ -62,14 +62,9 @@ export default function HostRequestsTabScreen({
           <InlineBanner message={errorMessage} tone="error" />
         ) : null}
         {isLoading ? (
-          <View
-            style={styles.loadingWrap}
-            accessibilityRole="progressbar"
-            accessibilityLabel="Loading requests"
-          >
-            <View style={styles.loadingTile}>
-              <ActivityIndicator size="large" color={colors.teal} />
-            </View>
+          <View accessibilityRole="progressbar" accessibilityLabel="Loading requests">
+            <SkeletonLoader lines={2} style={styles.skeleton} />
+            <SkeletonLoader lines={2} style={styles.skeleton} />
           </View>
         ) : null}
         {!isLoading && requests.length === 0 ? (
@@ -79,14 +74,16 @@ export default function HostRequestsTabScreen({
             tip={emptyState.tip}
           />
         ) : null}
-        {requests.map((request, index) => (
-          <IncomingRequestCard
-            key={request.id}
-            request={request}
-            isLast={index === requests.length - 1}
-            onPress={onRequestPress}
-          />
-        ))}
+        {!isLoading
+          ? requests.map((request, index) => (
+              <IncomingRequestCard
+                key={request.id}
+                request={request}
+                isLast={index === requests.length - 1}
+                onPress={onRequestPress}
+              />
+            ))
+          : null}
       </ScreenScroll>
       <AppTabBar
         items={tabBarItems}
@@ -104,18 +101,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loadingWrap: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-  },
-  loadingTile: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+  skeleton: {
+    marginBottom: spacing.md,
   },
 });

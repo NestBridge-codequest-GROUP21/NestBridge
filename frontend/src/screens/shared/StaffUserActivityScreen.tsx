@@ -1,10 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import EmptyState from '../../components/EmptyState';
 import InlineBanner from '../../components/InlineBanner';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import StatusBadge from '../../components/StatusBadge';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import type { AdminBookingActivity, AdminSosActivity } from '../../services/api';
 import {
   colors,
@@ -12,8 +16,7 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
-  shadows,
+  borderWidths,
 } from '../../constants/theme';
 
 export interface StaffUserActivityScreenProps {
@@ -36,6 +39,16 @@ function formatDate(value?: string | null): string {
   });
 }
 
+function bookingTone(
+  status: string,
+): 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('confirm') || normalized.includes('paid')) return 'success';
+  if (normalized.includes('pending') || normalized.includes('request')) return 'warning';
+  if (normalized.includes('cancel') || normalized.includes('fail')) return 'danger';
+  return 'info';
+}
+
 export default function StaffUserActivityScreen({
   userName,
   bookings,
@@ -54,15 +67,13 @@ export default function StaffUserActivityScreen({
         onBack={onBack}
       />
       <ScreenScroll>
-        {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
-        ) : null}
+        {isLoading ? <SkeletonLoader style={styles.loader} lines={4} /> : null}
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
 
         {!isLoading ? (
           <>
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Recent bookings</Text>
+            <SectionHeader title="Recent bookings" />
+            <Card style={styles.card} padding="lg">
               {bookings.length === 0 ? (
                 <EmptyState
                   title="No recent bookings"
@@ -71,11 +82,21 @@ export default function StaffUserActivityScreen({
                   carded={false}
                 />
               ) : (
-                bookings.map((booking) => (
-                  <View key={booking.bookingId} style={styles.item}>
-                    <Text style={styles.itemTitle}>
-                      {booking.bookingType} · {booking.status}
-                    </Text>
+                bookings.map((booking, index) => (
+                  <View
+                    key={booking.bookingId}
+                    style={[
+                      styles.item,
+                      index > 0 && styles.itemBorder,
+                    ]}
+                  >
+                    <View style={styles.itemHeader}>
+                      <Text style={styles.itemTitle}>{booking.bookingType}</Text>
+                      <StatusBadge
+                        label={booking.status}
+                        tone={bookingTone(booking.status)}
+                      />
+                    </View>
                     <Text style={styles.itemMeta}>
                       {[
                         booking.checkIn
@@ -98,10 +119,10 @@ export default function StaffUserActivityScreen({
                   </View>
                 ))
               )}
-            </View>
+            </Card>
 
-            <View style={styles.card}>
-              <Text style={styles.sectionTitle}>SOS alerts</Text>
+            <SectionHeader title="SOS alerts" />
+            <Card style={styles.card} padding="lg">
               {sosAlerts.length === 0 ? (
                 <EmptyState
                   title="No SOS alerts"
@@ -110,11 +131,20 @@ export default function StaffUserActivityScreen({
                   carded={false}
                 />
               ) : (
-                sosAlerts.map((alert) => (
-                  <View key={alert.sosId} style={styles.item}>
-                    <Text style={styles.itemTitle}>
-                      SOS · {formatDate(alert.triggeredAt)}
-                    </Text>
+                sosAlerts.map((alert, index) => (
+                  <View
+                    key={alert.sosId}
+                    style={[
+                      styles.item,
+                      index > 0 && styles.itemBorder,
+                    ]}
+                  >
+                    <View style={styles.itemHeader}>
+                      <Text style={styles.itemTitle}>
+                        SOS · {formatDate(alert.triggeredAt)}
+                      </Text>
+                      <StatusBadge label="Logged" tone="danger" />
+                    </View>
                     <Text style={styles.itemMeta}>
                       {[
                         alert.contactedEmergency ? 'Emergency contacted' : null,
@@ -129,7 +159,7 @@ export default function StaffUserActivityScreen({
                   </View>
                 ))
               )}
-            </View>
+            </Card>
           </>
         ) : null}
       </ScreenScroll>
@@ -146,32 +176,28 @@ const styles = StyleSheet.create({
     marginVertical: spacing.xl,
   },
   card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
-    ...shadows.card,
-  },
-  sectionTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
   },
   item: {
     paddingVertical: spacing.sm,
-    borderTopWidth: 1,
+  },
+  itemBorder: {
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
   },
+  itemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
   itemTitle: {
+    flex: 1,
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
   },
   itemMeta: {
     fontFamily: fontFamilies.regular,

@@ -6,9 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '../../components/BackButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import InlineBanner from '../../components/InlineBanner';
+import Card from '../../components/Card';
 import { devTestingCopy } from '../../data/appCopy';
 import type { DemoAccount } from '../../data/demoAccounts';
-import { DEMO_ACTOR_ACCOUNTS, DEMO_PASSWORD } from '../../data/demoAccounts';
+import { DEMO_ACTOR_ACCOUNTS } from '../../data/demoAccounts';
 import {
   colors,
   fontFamilies,
@@ -16,6 +17,8 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  touchTarget,
   gradients,
   lineHeights,
 } from '../../constants/theme';
@@ -48,10 +51,10 @@ export interface DevTestingScreenProps {
 
 function DevSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <View style={styles.section}>
+    <Card style={styles.section} padding="lg">
       <Text style={styles.sectionTitle}>{title}</Text>
       {children}
-    </View>
+    </Card>
   );
 }
 
@@ -245,8 +248,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   backPlaceholder: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
   },
   headerTitle: {
     fontFamily: fontFamilies.bold,
@@ -270,12 +273,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   section: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   sectionTitle: {
     fontFamily: fontFamilies.semibold,
@@ -292,16 +290,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   devButton: {
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
     backgroundColor: colors.warmCream,
     marginBottom: spacing.sm,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.border,
   },
   devButtonDanger: {
     backgroundColor: colors.danger,
+    borderColor: colors.danger,
   },
   devButtonPressed: {
     opacity: 0.9,

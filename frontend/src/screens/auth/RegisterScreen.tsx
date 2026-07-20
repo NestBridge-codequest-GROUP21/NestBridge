@@ -16,6 +16,7 @@ import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import type { DemoAccount } from '../../data/demoAccounts';
 import {
   colors,
@@ -24,9 +25,11 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
   layout,
-  shadows,
+  touchTarget,
+  iconSizes,
 } from '../../constants/theme';
 
 export interface RegisterScreenProps {
@@ -90,7 +93,7 @@ export default function RegisterScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
 
-        <View style={styles.formCard}>
+        <Card style={styles.formCard}>
           <FormTextField
             label="Full name"
             value={fullName}
@@ -126,12 +129,12 @@ export default function RegisterScreen({
           >
             <View style={[styles.checkbox, keepSignedIn && styles.checkboxChecked]}>
               {keepSignedIn ? (
-                <AppIcon name="checkmark" size={14} color={colors.white} />
+                <AppIcon name="checkmark" size={iconSizes.sm} color={colors.white} />
               ) : null}
             </View>
             <Text style={styles.checkboxLabel}>Keep me signed in on this device</Text>
           </Pressable>
-        </View>
+        </Card>
 
         {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
@@ -186,25 +189,19 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   formCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: spacing.xs,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   checkbox: {
-    width: 22,
-    height: 22,
+    width: spacing.lg,
+    height: spacing.lg,
     borderRadius: borderRadius.sm,
-    borderWidth: 1.5,
+    borderWidth: borderWidths.strong,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
@@ -227,7 +224,7 @@ const styles = StyleSheet.create({
   footerLink: {
     alignItems: 'center',
     paddingVertical: spacing.lg,
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
   },
   footerText: {
@@ -236,8 +233,8 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   footerLinkBold: {
-    fontFamily: fontFamilies.bold,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
 });

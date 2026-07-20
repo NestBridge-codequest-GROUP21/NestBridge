@@ -1,20 +1,21 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
 import InlineBanner from '../../components/InlineBanner';
+import SectionHeader from '../../components/SectionHeader';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import {
   colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
   lineHeights,
-  shadows,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
 import type { EarningsLineItem, EarningsSummary } from '../../types/providerBooking';
@@ -61,31 +62,26 @@ export default function HostEarningsTabScreen({
         compact
       />
       <ScreenScroll withTabBar withSosDock={showSosDock}>
-        <View style={styles.escrowCard}>
+        <Card padding="lg" elevation="none" style={styles.escrowCard}>
           <Text style={styles.escrowTitle}>Held in escrow</Text>
           <Text style={styles.escrowBody}>
             Guest payments stay in escrow until 24 hours after check-in. Payouts
             move here once stays are confirmed.
           </Text>
-        </View>
+        </Card>
 
         {errorMessage ? (
           <InlineBanner message={errorMessage} tone="error" />
         ) : null}
         {isLoading ? (
-          <View
-            style={styles.loadingWrap}
-            accessibilityRole="progressbar"
-            accessibilityLabel="Loading earnings"
-          >
-            <View style={styles.loadingTile}>
-              <ActivityIndicator size="large" color={colors.teal} />
-            </View>
+          <View accessibilityRole="progressbar" accessibilityLabel="Loading earnings">
+            <SkeletonLoader lines={3} style={styles.skeleton} />
+            <SkeletonLoader lines={2} style={styles.skeleton} />
           </View>
         ) : null}
 
         {!isLoading && hasEarnings ? (
-          <View style={styles.summaryCard}>
+          <Card padding="lg" style={styles.summaryCard}>
             <Text style={styles.summaryLabel}>Net payout</Text>
             <Text style={styles.summaryValue}>
               {formatCurrency(summary.netPayout, summary.currency)}
@@ -108,7 +104,7 @@ export default function HostEarningsTabScreen({
                 <Text style={styles.metaValue}>{summary.sessionCount}</Text>
               </View>
             </View>
-          </View>
+          </Card>
         ) : null}
 
         {!isLoading && !hasEarnings ? (
@@ -120,21 +116,27 @@ export default function HostEarningsTabScreen({
           />
         ) : null}
 
-        {lineItems.map((item) => (
-          <View key={item.id} style={styles.lineItem}>
-            <View style={styles.lineItemHeader}>
-              <Text style={styles.lineGuest}>{item.guestName}</Text>
-              <Text style={styles.lineNet}>
-                {formatCurrency(item.net, item.currency)}
-              </Text>
-            </View>
-            <Text style={styles.lineLabel}>{item.label}</Text>
-            <Text style={styles.lineMeta}>
-              Gross {formatCurrency(item.gross, item.currency)} · Fee{' '}
-              {formatCurrency(item.fee, item.currency)}
-            </Text>
-          </View>
-        ))}
+        {!isLoading && hasEarnings ? (
+          <SectionHeader title="Payout history" />
+        ) : null}
+
+        {!isLoading
+          ? lineItems.map((item) => (
+              <Card key={item.id} padding="lg" style={styles.lineItem}>
+                <View style={styles.lineItemHeader}>
+                  <Text style={styles.lineGuest}>{item.guestName}</Text>
+                  <Text style={styles.lineNet}>
+                    {formatCurrency(item.net, item.currency)}
+                  </Text>
+                </View>
+                <Text style={styles.lineLabel}>{item.label}</Text>
+                <Text style={styles.lineMeta}>
+                  Gross {formatCurrency(item.gross, item.currency)} · Fee{' '}
+                  {formatCurrency(item.fee, item.currency)}
+                </Text>
+              </Card>
+            ))
+          : null}
       </ScreenScroll>
       <AppTabBar
         items={tabBarItems}
@@ -154,10 +156,6 @@ const styles = StyleSheet.create({
   },
   escrowCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.lg,
   },
   escrowTitle: {
@@ -174,28 +172,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: lineHeights.body,
   },
-  loadingWrap: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-  },
-  loadingTile: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+  skeleton: {
+    marginBottom: spacing.md,
   },
   summaryCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.lg,
-    ...shadows.card,
   },
   summaryLabel: {
     fontFamily: fontFamilies.regular,
@@ -234,13 +215,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   lineItem: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.md,
-    ...shadows.card,
   },
   lineItemHeader: {
     flexDirection: 'row',

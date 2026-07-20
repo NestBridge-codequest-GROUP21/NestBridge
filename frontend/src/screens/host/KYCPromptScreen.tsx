@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import type { KYCPromptData } from '../../data/kycPromptMock';
@@ -16,6 +17,8 @@ import {
   borderRadius,
   layout,
   lineHeights,
+  iconSizes,
+  avatarSizes,
 } from '../../constants/theme';
 
 export interface KYCPromptScreenProps {
@@ -39,7 +42,7 @@ export default function KYCPromptScreen({
       <View
         style={[
           styles.topSection,
-          { paddingTop: insets.top + spacing.xl },
+          { paddingTop: insets.top + spacing.xxl },
         ]}
       >
         <Text style={styles.roleLabel}>{data.roleLabel}</Text>
@@ -48,15 +51,15 @@ export default function KYCPromptScreen({
       </View>
 
       <View style={styles.iconContainer} accessibilityLabel="Identity verification">
-        <View style={styles.iconTile}>
-          <AppIcon name="card-outline" size={64} color={colors.tealDeep} />
-        </View>
+        <Card padding="none" elevation="none" style={styles.iconTile}>
+          <AppIcon name="card-outline" size={avatarSizes.lg + iconSizes.lg} color={colors.tealDeep} />
+        </Card>
       </View>
 
       <View
         style={[
           styles.buttonContainer,
-          { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.xl },
+          { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.xxl },
         ]}
       >
         <PrimaryButton label="Verify now" onPress={onVerifyNow} />
@@ -108,8 +111,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconTile: {
-    width: 120,
-    height: 120,
+    width: spacing.xxl * 3,
+    height: spacing.xxl * 3,
     borderRadius: borderRadius.lg,
     backgroundColor: tints.teal,
     alignItems: 'center',

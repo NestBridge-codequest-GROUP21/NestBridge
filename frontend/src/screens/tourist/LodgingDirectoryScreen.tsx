@@ -9,6 +9,8 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import Card from '../../components/Card';
+import Avatar from '../../components/Avatar';
 import EmptyState from '../../components/EmptyState';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
@@ -18,10 +20,11 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  borderWidths,
   lineHeights,
-  shadows,
-  tints,
+  iconSizes,
+  touchTarget,
+  layout,
 } from '../../constants/theme';
 import type { LodgingListing, LodgingCategoryFilter } from '../../types/lodging';
 import { lodgingCategoryLabel } from '../../data/lodgingDirectoryMock';
@@ -130,7 +133,6 @@ export default function LodgingDirectoryScreen({
             <Pressable
               key={listing.id}
               style={({ pressed }) => [
-                styles.card,
                 !isLast && styles.cardSpacing,
                 pressed && styles.pressed,
               ]}
@@ -138,31 +140,37 @@ export default function LodgingDirectoryScreen({
               accessibilityRole="button"
               accessibilityLabel={listing.name}
             >
-              <View style={styles.iconWrap}>
-                <Text style={styles.iconInitials}>
-                  {listing.name.slice(0, 2).toUpperCase()}
-                </Text>
-              </View>
-              <View style={styles.body}>
-                <View style={styles.topRow}>
-                  <Text style={styles.name} numberOfLines={1}>
-                    {listing.name}
-                  </Text>
-                  <View style={styles.ratingRow}>
-                    <AppIcon name="star" size={fontSizes.caption} color={colors.warning} />
-                    <Text style={styles.rating}>{listing.rating}</Text>
+              <Card padding="lg" elevation="card" style={styles.card}>
+                <Avatar
+                  initials={listing.name.slice(0, 2)}
+                  size="lg"
+                  style={styles.avatar}
+                />
+                <View style={styles.body}>
+                  <View style={styles.topRow}>
+                    <Text style={styles.name} numberOfLines={1}>
+                      {listing.name}
+                    </Text>
+                    <View style={styles.ratingRow}>
+                      <AppIcon
+                        name="star"
+                        size={iconSizes.sm}
+                        color={colors.warning}
+                      />
+                      <Text style={styles.rating}>{listing.rating}</Text>
+                    </View>
                   </View>
+                  <Text style={styles.category}>
+                    {lodgingCategoryLabel(listing.category)} · {listing.area}
+                  </Text>
+                  <Text style={styles.price}>{listing.priceHint}</Text>
                 </View>
-                <Text style={styles.category}>
-                  {lodgingCategoryLabel(listing.category)} · {listing.area}
-                </Text>
-                <Text style={styles.price}>{listing.priceHint}</Text>
-              </View>
-              <AppIcon
-                name="chevron-forward"
-                size={fontSizes.subheading}
-                color={colors.teal}
-              />
+                <AppIcon
+                  name="chevron-forward"
+                  size={iconSizes.md}
+                  color={colors.teal}
+                />
+              </Card>
             </Pressable>
           );
         })}
@@ -179,18 +187,18 @@ const styles = StyleSheet.create({
   filterBar: {
     flexDirection: 'row',
     marginBottom: spacing.sm,
-    borderBottomWidth: 1,
+    borderBottomWidth: borderWidths.hairline,
     borderBottomColor: colors.border,
   },
   filterTab: {
     flex: 1,
-    minHeight: 44,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.sm,
-    borderBottomWidth: 2,
+    borderBottomWidth: borderWidths.strong,
     borderBottomColor: colors.background,
-    marginBottom: -1,
+    marginBottom: -borderWidths.hairline,
   },
   filterTabActive: {
     borderBottomColor: colors.teal,
@@ -216,12 +224,6 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   cardSpacing: {
     marginBottom: spacing.md,
@@ -229,20 +231,8 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.94,
   },
-  iconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.md,
-    backgroundColor: tints.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
+  avatar: {
     marginRight: spacing.md,
-  },
-  iconInitials: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
   },
   body: {
     flex: 1,
@@ -285,6 +275,6 @@ const styles = StyleSheet.create({
     color: colors.tealDeep,
   },
   loader: {
-    marginVertical: spacing.md,
+    marginVertical: layout.cardPadding,
   },
 });

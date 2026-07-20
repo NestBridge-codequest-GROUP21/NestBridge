@@ -15,6 +15,7 @@ import SecondaryButton from '../../components/SecondaryButton';
 import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import {
   colors,
   fontFamilies,
@@ -24,8 +25,8 @@ import {
   borderRadius,
   lineHeights,
   layout,
-  shadows,
   tints,
+  iconSizes,
 } from '../../constants/theme';
 
 export interface ForgotPasswordScreenProps {
@@ -71,7 +72,7 @@ export default function ForgotPasswordScreen({
 
         {sent ? (
           <View style={styles.iconTile}>
-            <AppIcon name="mail-open-outline" size={28} color={colors.tealDeep} />
+            <AppIcon name="mail-open-outline" size={iconSizes.xl} color={colors.tealDeep} />
           </View>
         ) : null}
 
@@ -83,10 +84,10 @@ export default function ForgotPasswordScreen({
         </Text>
 
         {sent ? (
-          <View style={styles.emailCard}>
+          <Card style={styles.emailCard}>
             <Text style={styles.emailLabel}>Sent to</Text>
             <Text style={styles.emailValue}>{email}</Text>
-          </View>
+          </Card>
         ) : (
           <FormTextField
             label="Email"
@@ -105,9 +106,9 @@ export default function ForgotPasswordScreen({
           <SecondaryButton label="Back to sign in" onPress={onBack} />
         ) : (
           <PrimaryButton
-            label={submitting ? 'Sending…' : 'Send reset link'}
+            label="Send reset link"
             onPress={onSubmit}
-            disabled={submitting}
+            loading={submitting}
           />
         )}
       </ScrollView>
@@ -127,8 +128,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   iconTile: {
-    width: 64,
-    height: 64,
+    width: spacing.xl * 2,
+    height: spacing.xl * 2,
     borderRadius: borderRadius.pill,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -151,13 +152,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   emailCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
     marginBottom: spacing.lg,
-    ...shadows.card,
   },
   emailLabel: {
     fontFamily: fontFamilies.regular,

@@ -13,6 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import BackButton from '../../components/BackButton';
+import Card from '../../components/Card';
 import {
   colors,
   fontFamilies,
@@ -20,9 +21,12 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
   layout,
   shadows,
+  controlHeights,
+  touchTarget,
 } from '../../constants/theme';
 import { isLikelyValidPlaceName, isLikelyValidText } from '../../utils/textValidation';
 import {
@@ -501,17 +505,23 @@ export default function QuizPage({
                 <Pressable
                   key={option}
                   style={({ pressed }) => [
-                    styles.optionCard,
-                    selected && styles.optionCardSelected,
+                    styles.optionPressable,
                     pressed && styles.optionCardPressed,
                   ]}
                   onPress={() => setAnswer(question.id, option)}
                   accessibilityRole="radio"
                   accessibilityState={{ selected }}
                 >
-                  <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
-                    {option}
-                  </Text>
+                  <Card
+                    style={[
+                      styles.optionCard,
+                      selected && styles.optionCardSelected,
+                    ]}
+                  >
+                    <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
+                      {option}
+                    </Text>
+                  </Card>
                 </Pressable>
               );
             })}
@@ -685,17 +695,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   question: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     lineHeight: lineHeights.heading,
     marginBottom: spacing.md,
   },
   fieldError: {
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.danger,
     marginTop: spacing.sm,
   },
@@ -708,10 +718,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    borderWidth: 1.5,
+    borderWidth: borderWidths.strong,
     borderColor: colors.border,
     backgroundColor: colors.white,
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
     ...shadows.card,
   },
@@ -723,42 +733,43 @@ const styles = StyleSheet.create({
     opacity: 0.95,
   },
   chipLabel: {
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
   },
   chipLabelSelected: {
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
   },
   otherSpecifyWrap: {
     marginTop: spacing.md,
   },
-  optionCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
+  optionPressable: {
     marginBottom: spacing.sm,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    minHeight: 52,
+  },
+  optionCard: {
+    minHeight: controlHeights.lg,
     justifyContent: 'center',
-    ...shadows.card,
   },
   optionCardSelected: {
     borderColor: colors.teal,
+    borderWidth: borderWidths.strong,
     backgroundColor: colors.warmCream,
   },
   optionCardPressed: {
     opacity: 0.95,
   },
   optionLabel: {
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
   },
   optionLabelSelected: {
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
     color: colors.tealDeep,
   },
   sliderWrap: {
@@ -770,17 +781,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   sliderLabel: {
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
   sliderTrackPressable: {
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
   },
   sliderTrack: {
-    height: spacing.sm - 2,
+    height: spacing.sm - borderWidths.strong,
     backgroundColor: colors.border,
     borderRadius: borderRadius.pill,
     position: 'relative',
@@ -801,13 +812,13 @@ const styles = StyleSheet.create({
     marginLeft: -(spacing.sm + spacing.xs),
     borderRadius: borderRadius.pill,
     backgroundColor: colors.tealBright,
-    borderWidth: 3,
+    borderWidth: borderWidths.strong + borderWidths.hairline,
     borderColor: colors.white,
     ...shadows.card,
   },
   textInput: {
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
@@ -816,16 +827,16 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textPrimary,
-    minHeight: 48,
+    minHeight: controlHeights.md,
     ...shadows.card,
   },
   textInputMultiline: {
-    minHeight: spacing.xl * 3,
+    minHeight: controlHeights.lg + spacing.lg,
     textAlignVertical: 'top',
   },
   skipLink: {
     marginTop: spacing.md,
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
     alignItems: 'center',
   },

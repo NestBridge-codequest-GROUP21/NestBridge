@@ -58,6 +58,8 @@ export const fontSizes = {
   subheading: 17,
   body: 16,
   caption: 13,
+  /** Badges and dense chrome only — never body copy. */
+  micro: 10,
 } as const;
 
 export type FontSizeToken = keyof typeof fontSizes;
@@ -68,6 +70,7 @@ export const lineHeights = {
   subheading: 24,
   body: 24,
   caption: 18,
+  micro: 12,
 } as const;
 
 export type LineHeightToken = keyof typeof lineHeights;
@@ -86,6 +89,7 @@ export const spacing = {
   md: 16,
   lg: 24,
   xl: 32,
+  xxl: 40,
 } as const;
 
 export type SpacingToken = keyof typeof spacing;
@@ -99,6 +103,44 @@ export const borderRadius = {
 
 export type BorderRadiusToken = keyof typeof borderRadius;
 
+export const borderWidths = {
+  hairline: 1,
+  strong: 1.5,
+} as const;
+
+export type BorderWidthToken = keyof typeof borderWidths;
+
+/** Minimum interactive control heights. */
+export const controlHeights = {
+  sm: 40,
+  md: 48,
+  lg: 52,
+} as const;
+
+export type ControlHeightToken = keyof typeof controlHeights;
+
+/** Standard icon sizes for AppIcon / Ionicons. */
+export const iconSizes = {
+  sm: 16,
+  md: 20,
+  lg: 24,
+  xl: 28,
+} as const;
+
+export type IconSizeToken = keyof typeof iconSizes;
+
+/** Initials avatar diameters. */
+export const avatarSizes = {
+  sm: 32,
+  md: 40,
+  lg: 48,
+} as const;
+
+export type AvatarSizeToken = keyof typeof avatarSizes;
+
+/** Minimum touch target edge length (pt). */
+export const touchTarget = 44;
+
 export const layout = {
   screenPaddingHorizontal: spacing.lg,
   tabBarHeight: 56,
@@ -111,6 +153,8 @@ export const layout = {
   scrollBottomInsetWithSos: 124,
   listingCardWidth: 272,
   carouselMinHeight: 168,
+  cardPadding: spacing.md,
+  cardPaddingLarge: spacing.lg,
 } as const;
 
 export const gradients = {
@@ -173,6 +217,11 @@ const theme = {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  controlHeights,
+  iconSizes,
+  avatarSizes,
+  touchTarget,
   layout,
   gradients,
   motion,

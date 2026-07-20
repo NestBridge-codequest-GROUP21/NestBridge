@@ -14,6 +14,8 @@ import {
   layout,
   lineHeights,
   tints,
+  iconSizes,
+  borderWidths,
 } from '../constants/theme';
 
 export interface RouteErrorStateProps {
@@ -57,7 +59,7 @@ export default function RouteErrorState({
       ]}
     >
       <View style={styles.iconTile}>
-        <AppIcon name="cloud-offline-outline" size={28} color={colors.tealDeep} />
+        <AppIcon name="cloud-offline-outline" size={iconSizes.xl} color={colors.tealDeep} />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
@@ -79,11 +81,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPaddingHorizontal,
   },
   loadingTile: {
-    width: 72,
-    height: 72,
+    width: 56,
+    height: 56,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
@@ -95,8 +97,8 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   iconTile: {
-    width: 64,
-    height: 64,
+    width: 56,
+    height: 56,
     borderRadius: borderRadius.pill,
     backgroundColor: tints.cream,
     alignItems: 'center',

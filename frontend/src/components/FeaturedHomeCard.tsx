@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Avatar from './Avatar';
+import StatusBadge from './StatusBadge';
 import {
   colors,
   fontFamilies,
@@ -7,8 +9,10 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
   shadows,
+  layout,
 } from '../constants/theme';
 
 export interface FeaturedHomeCardProps {
@@ -44,20 +48,14 @@ export default function FeaturedHomeCard({
       <Text style={styles.sectionLabel}>{sectionLabel}</Text>
 
       <View style={styles.body}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{avatarText}</Text>
-        </View>
+        <Avatar initials={avatarText} size="lg" style={styles.avatar} />
 
         <View style={styles.content}>
           <View style={styles.titleRow}>
             <Text style={styles.name} numberOfLines={1}>
               {name}
             </Text>
-            {badge ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{badge}</Text>
-              </View>
-            ) : null}
+            {badge ? <StatusBadge label={badge} tone="info" /> : null}
           </View>
           <Text style={styles.details}>{details}</Text>
           {matchReasons && matchReasons.length > 0 ? (
@@ -81,11 +79,11 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+    padding: layout.cardPaddingLarge,
     marginBottom: spacing.lg,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
-    ...shadows.raised,
+    ...shadows.card,
   },
   pressed: {
     opacity: 0.94,
@@ -105,18 +103,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: spacing.md,
-  },
-  avatarText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    color: colors.tealDeep,
   },
   content: {
     flex: 1,
@@ -130,22 +117,10 @@ const styles = StyleSheet.create({
   },
   name: {
     flexShrink: 1,
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-  },
-  badge: {
-    backgroundColor: colors.teal,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-  },
-  badgeText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
   },
   details: {
     fontFamily: fontFamilies.regular,

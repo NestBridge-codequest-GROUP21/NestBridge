@@ -25,6 +25,7 @@ import {
   lineHeights,
   layout,
   tints,
+  iconSizes,
 } from '../../constants/theme';
 
 export interface ResetPasswordScreenProps {
@@ -74,7 +75,11 @@ export default function ResetPasswordScreen({
 
         {success ? (
           <View style={styles.iconTile}>
-            <AppIcon name="checkmark-circle-outline" size={28} color={colors.success} />
+            <AppIcon
+              name="checkmark-circle-outline"
+              size={iconSizes.xl}
+              color={colors.success}
+            />
           </View>
         ) : null}
 
@@ -115,9 +120,9 @@ export default function ResetPasswordScreen({
             {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
             <PrimaryButton
-              label={submitting ? 'Saving…' : 'Update password'}
+              label="Update password"
               onPress={onSubmit}
-              disabled={submitting}
+              loading={submitting}
             />
           </>
         )}
@@ -138,8 +143,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   iconTile: {
-    width: 64,
-    height: 64,
+    width: spacing.xl * 2,
+    height: spacing.xl * 2,
     borderRadius: borderRadius.pill,
     backgroundColor: tints.teal,
     alignItems: 'center',

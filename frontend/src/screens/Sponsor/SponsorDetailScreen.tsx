@@ -9,6 +9,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import StatusBadge from '../../components/StatusBadge';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppIcon from '../../components/AppIcon';
 import type { SponsorListing } from '../../data/sponsorsMock';
@@ -19,10 +22,12 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   layout,
   lineHeights,
   gradients,
-  shadows,
+  iconSizes,
+  avatarSizes,
 } from '../../constants/theme';
 
 export interface SponsorDetailScreenProps {
@@ -54,7 +59,7 @@ export default function SponsorDetailScreen({
 
       <ScreenScroll
         contentContainerStyle={{
-          paddingBottom: insets.bottom + spacing.xl * 4,
+          paddingBottom: insets.bottom + layout.scrollBottomInset,
           paddingHorizontal: 0,
           paddingTop: 0,
         }}
@@ -67,46 +72,54 @@ export default function SponsorDetailScreen({
         >
           <BackButton onPress={onBack} color={colors.white} style={styles.backBtn} />
           <View style={styles.logoTile}>
-            <AppIcon glyph={sponsor.logo} size={32} color={colors.white} />
+            <AppIcon
+              glyph={sponsor.logo}
+              size={iconSizes.xl}
+              color={colors.white}
+            />
           </View>
           <Text style={styles.name}>{sponsor.name}</Text>
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{sponsor.category}</Text>
-          </View>
+          <StatusBadge label={sponsor.category} tone="accent" style={styles.categoryBadge} />
           <Text style={styles.amount}>{sponsor.amountLabel}</Text>
         </LinearGradient>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About this sponsor</Text>
+        <Card padding="lg" elevation="card" style={styles.section}>
+          <SectionHeader title="About this sponsor" style={styles.sectionHeader} />
           <Text style={styles.description}>
             {sponsor.description} {sponsor.aboutExtra}
           </Text>
-        </View>
+        </Card>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sponsorship details</Text>
-          {details.map((item) => (
-            <View key={item.label} style={styles.detailRow}>
+        <Card padding="lg" elevation="card" style={styles.section}>
+          <SectionHeader title="Sponsorship details" style={styles.sectionHeader} />
+          {details.map((item, index) => (
+            <View
+              key={item.label}
+              style={[
+                styles.detailRow,
+                index === details.length - 1 && styles.detailRowLast,
+              ]}
+            >
               <Text style={styles.detailLabel}>{item.label}</Text>
               <Text style={styles.detailValue}>{item.value}</Text>
             </View>
           ))}
-        </View>
+        </Card>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Requirements</Text>
+        <Card padding="lg" elevation="card" style={styles.section}>
+          <SectionHeader title="Requirements" style={styles.sectionHeader} />
           {sponsor.requirements.map((requirement) => (
             <View key={requirement} style={styles.requirementRow}>
               <AppIcon
                 name="checkmark-circle"
-                size={fontSizes.body}
+                size={iconSizes.md}
                 color={colors.teal}
                 style={styles.bullet}
               />
               <Text style={styles.requirementText}>{requirement}</Text>
             </View>
           ))}
-        </View>
+        </Card>
 
         <View style={styles.footer}>
           <PrimaryButton label="Apply for sponsorship" onPress={onApplyPress} />
@@ -115,6 +128,8 @@ export default function SponsorDetailScreen({
     </View>
   );
 }
+
+const LOGO_TILE = avatarSizes.lg + spacing.md;
 
 const styles = StyleSheet.create({
   root: {
@@ -131,8 +146,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   logoTile: {
-    width: 64,
-    height: 64,
+    width: LOGO_TILE,
+    height: LOGO_TILE,
     borderRadius: borderRadius.lg,
     backgroundColor: colors.navyMid,
     alignItems: 'center',
@@ -147,17 +162,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   categoryBadge: {
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
     marginTop: spacing.sm,
-  },
-  categoryText: {
-    fontFamily: fontFamilies.semibold,
-    color: colors.white,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
   },
   amount: {
     fontFamily: fontFamilies.bold,
@@ -167,20 +172,10 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   section: {
-    backgroundColor: colors.white,
     marginHorizontal: spacing.md,
     marginTop: spacing.md,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
+  sectionHeader: {
     marginBottom: spacing.sm,
   },
   description: {
@@ -193,9 +188,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
+    borderBottomWidth: borderWidths.hairline,
     borderBottomColor: colors.border,
     gap: spacing.sm,
+  },
+  detailRowLast: {
+    borderBottomWidth: 0,
   },
   detailLabel: {
     fontFamily: fontFamilies.regular,
@@ -218,7 +216,7 @@ const styles = StyleSheet.create({
   },
   bullet: {
     marginRight: spacing.sm,
-    marginTop: 2,
+    marginTop: borderWidths.hairline,
   },
   requirementText: {
     fontFamily: fontFamilies.regular,

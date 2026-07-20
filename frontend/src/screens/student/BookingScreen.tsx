@@ -5,25 +5,27 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GatedPrimaryButton } from '../../components/ProfileIncompleteBanner';
-import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
+import ScreenHeader from '../../components/ScreenHeader';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import Avatar from '../../components/Avatar';
+import StatusBadge from '../../components/StatusBadge';
 import {
   colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
-  gradients,
+  borderWidths,
   lineHeights,
   shadows,
   layout,
-  tints,
+  iconSizes,
 } from '../../constants/theme';
 import type { HostProfileSummary, PriceBreakdown } from '../../types/booking';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
@@ -90,18 +92,12 @@ export default function BookingScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.headerCompact]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-      >
-        <BackButton onPress={onBack} color={colors.white} style={styles.back} />
-        <Text style={styles.headerTitle}>Request to book</Text>
-        <Text style={styles.headerSubtitle}>
-          Review your stay details before sending a request to the host
-        </Text>
-      </LinearGradient>
+      <ScreenHeader
+        title="Request to book"
+        subtitle="Review your stay details before sending a request to the host"
+        compact
+        onBack={onBack}
+      />
 
       <ScrollView
         style={styles.scroll}
@@ -111,41 +107,43 @@ export default function BookingScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.hostCard}>
-          <View style={styles.hostIconWrap}>
-            <Text style={styles.hostInitials}>{host.initials}</Text>
+        <Card padding="lg" elevation="card" style={styles.hostCard}>
+          <View style={styles.hostRow}>
+            <Avatar initials={host.initials} size="lg" style={styles.hostAvatar} />
+            <View style={styles.hostInfo}>
+              <Text style={styles.hostName}>{host.name}</Text>
+              <Text style={styles.hostLocation}>{host.location}</Text>
+              {showMatchScores ? (
+                <StatusBadge
+                  label={`${host.matchPercentage}% match`}
+                  tone="success"
+                  style={styles.matchBadge}
+                />
+              ) : null}
+            </View>
           </View>
-          <View style={styles.hostInfo}>
-            <Text style={styles.hostName}>{host.name}</Text>
-            <Text style={styles.hostLocation}>{host.location}</Text>
-            {showMatchScores ? (
-              <View style={styles.matchRow}>
-                <View style={styles.matchBadge}>
-                  <Text style={styles.matchBadgeText}>{host.matchPercentage}% match</Text>
-                </View>
-              </View>
-            ) : null}
-          </View>
-        </View>
+        </Card>
 
-        <Text style={styles.sectionLabel}>Your stay</Text>
-        <View style={styles.datesCard}>
-          <View style={styles.dateBlock}>
-            <Text style={styles.dateLabel}>Check-in</Text>
-            <Text style={styles.dateValue}>{formatBookingDate(checkIn)}</Text>
+        <SectionHeader title="Your stay" />
+        <Card padding="lg" elevation="card" style={styles.datesCard}>
+          <View style={styles.datesInner}>
+            <View style={styles.dateBlock}>
+              <Text style={styles.dateLabel}>Check-in</Text>
+              <Text style={styles.dateValue}>{formatBookingDate(checkIn)}</Text>
+            </View>
+            <View style={styles.dateDivider} />
+            <View style={styles.dateBlock}>
+              <Text style={styles.dateLabel}>Check-out</Text>
+              <Text style={styles.dateValue}>{formatBookingDate(checkOut)}</Text>
+            </View>
           </View>
-          <View style={styles.dateDivider} />
-          <View style={styles.dateBlock}>
-            <Text style={styles.dateLabel}>Check-out</Text>
-            <Text style={styles.dateValue}>{formatBookingDate(checkOut)}</Text>
-          </View>
-        </View>
+        </Card>
         <Text style={styles.nightsHint}>
           {nights} {nights === 1 ? 'night' : 'nights'} · Host will review before you pay
         </Text>
 
-        <Text style={styles.sectionLabel}>Price summary</Text>
-        <View style={styles.priceCard}>
+        <SectionHeader title="Price summary" />
+        <Card padding="lg" elevation="card" style={styles.priceCard}>
           <PriceRow
             label={`${formatCurrency(nightlyRate, currency)} × ${nights} nights`}
             value={formatCurrency(subtotal, currency)}
@@ -162,24 +160,24 @@ export default function BookingScreen({
             bold
             accent
           />
-        </View>
+        </Card>
 
-        <Text style={styles.sectionLabel}>Cancellation policy</Text>
-        <View style={styles.policyCard}>
+        <SectionHeader title="Cancellation policy" />
+        <Card padding="lg" elevation="card" style={styles.policyCard}>
           <AppIcon
             name="document-text-outline"
-            size={fontSizes.subheading}
+            size={iconSizes.md}
             color={colors.tealDeep}
             style={styles.policyIcon}
           />
           <Text style={styles.policyText}>{host.cancellationPolicy}</Text>
-        </View>
+        </Card>
 
-        <View style={styles.escrowCard}>
+        <Card padding="lg" elevation="card" style={styles.escrowCard}>
           <View style={styles.escrowTitleRow}>
             <AppIcon
               name="shield-checkmark-outline"
-              size={fontSizes.subheading}
+              size={iconSizes.md}
               color={colors.tealDeep}
             />
             <Text style={styles.escrowTitle}>Held in escrow</Text>
@@ -188,7 +186,7 @@ export default function BookingScreen({
             Payment is held securely until 24 hours after check-in. You are only
             charged after the host accepts your request.
           </Text>
-        </View>
+        </Card>
 
         {submitErrorMessage ? (
           <InlineBanner message={submitErrorMessage} tone="error" style={styles.errorBanner} />
@@ -221,63 +219,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingBottom: spacing.lg,
-  },
-  back: {
-    marginBottom: spacing.sm,
-    marginLeft: -spacing.sm,
-  },
-  headerTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    marginBottom: spacing.sm,
-    lineHeight: lineHeights.display,
-  },
-  headerSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.white,
-    opacity: 0.88,
-    lineHeight: lineHeights.body,
-  },
   scroll: {
     flex: 1,
-    marginTop: -spacing.sm,
   },
   scrollContent: {
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
   },
   hostCard: {
+    marginBottom: spacing.xl,
+  },
+  hostRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
-  hostIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: borderRadius.lg,
-    backgroundColor: tints.cream,
-    alignItems: 'center',
-    justifyContent: 'center',
+  hostAvatar: {
     marginRight: spacing.md,
-  },
-  hostInitials: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   hostInfo: {
     flex: 1,
@@ -298,39 +255,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     lineHeight: lineHeights.body,
   },
-  matchRow: {
-    flexDirection: 'row',
-  },
   matchBadge: {
-    backgroundColor: colors.teal,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-  },
-  matchBadgeText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  sectionLabel: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: spacing.sm,
+    alignSelf: 'flex-start',
   },
   datesCard: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.sm,
-    ...shadows.card,
+  },
+  datesInner: {
+    flexDirection: 'row',
   },
   dateBlock: {
     flex: 1,
@@ -351,7 +283,7 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.subheading,
   },
   dateDivider: {
-    width: 1,
+    width: borderWidths.hairline,
     backgroundColor: colors.border,
     marginHorizontal: spacing.md,
   },
@@ -365,11 +297,7 @@ const styles = StyleSheet.create({
   },
   priceCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   priceRow: {
     flexDirection: 'row',
@@ -405,19 +333,13 @@ const styles = StyleSheet.create({
     color: colors.tealDeep,
   },
   priceDivider: {
-    height: 1,
+    height: borderWidths.hairline,
     backgroundColor: colors.border,
     opacity: 0.6,
   },
   policyCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   policyIcon: {
     marginRight: spacing.md,
@@ -432,13 +354,7 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   escrowCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginTop: spacing.lg,
-    ...shadows.card,
   },
   escrowTitleRow: {
     flexDirection: 'row',
@@ -472,7 +388,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     ...shadows.raised,
   },

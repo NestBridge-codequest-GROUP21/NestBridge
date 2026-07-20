@@ -13,6 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BackButton from '../../components/BackButton';
 import EmptyState from '../../components/EmptyState';
+import Avatar from '../../components/Avatar';
 import AppIcon from '../../components/AppIcon';
 import {
   colors,
@@ -21,6 +22,10 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  controlHeights,
+  iconSizes,
+  touchTarget,
   layout,
   shadows,
 } from '../../constants/theme';
@@ -79,9 +84,7 @@ export default function ChatScreen({
         ) : (
           <View style={styles.backPlaceholder} />
         )}
-        <View style={styles.headerAvatar}>
-          <Text style={styles.headerAvatarText}>{participantInitials}</Text>
-        </View>
+        <Avatar initials={participantInitials} size="md" highlighted />
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>{participantName}</Text>
           <Text style={styles.headerSubtitle}>NestBridge message</Text>
@@ -158,7 +161,7 @@ export default function ChatScreen({
           accessibilityRole="button"
           accessibilityLabel="Send message"
         >
-          <AppIcon name="send" size={fontSizes.body} color={colors.white} />
+          <AppIcon name="send" size={iconSizes.md} color={colors.white} />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -179,21 +182,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   backPlaceholder: {
-    width: 44,
-  },
-  headerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerAvatarText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    width: touchTarget,
   },
   headerText: {
     flex: 1,
@@ -240,7 +229,7 @@ const styles = StyleSheet.create({
   },
   bubbleOther: {
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     ...shadows.card,
   },
@@ -267,15 +256,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.sm,
     backgroundColor: colors.white,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
   },
   input: {
     flex: 1,
-    minHeight: 44,
-    maxHeight: 120,
+    minHeight: controlHeights.md,
+    maxHeight: controlHeights.lg + spacing.xxl,
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -285,8 +274,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   sendButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: touchTarget,
+    minHeight: touchTarget,
     borderRadius: borderRadius.lg,
     backgroundColor: colors.teal,
     alignItems: 'center',

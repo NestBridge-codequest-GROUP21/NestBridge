@@ -4,11 +4,12 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  TextInput,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeader from '../../components/ScreenHeader';
+import SearchField from '../../components/SearchField';
+import FormTextField from '../../components/FormTextField';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import type { MapLandmark } from '../../data/featureScreensMock';
@@ -19,9 +20,13 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   layout,
   shadows,
   lineHeights,
+  iconSizes,
+  touchTarget,
+  controlHeights,
 } from '../../constants/theme';
 
 export interface OfflineMapScreenProps {
@@ -38,6 +43,12 @@ export interface OfflineMapScreenProps {
   onBack?: () => void;
 }
 
+const MAP_GRID_ROWS = 6;
+const MAP_GRID_COLS = 4;
+const LANDMARK_CARD_MAX_WIDTH = layout.listingCardWidth / 2 - spacing.md;
+const LOCATION_DOT = spacing.md;
+const LOCATION_DOT_BORDER = borderWidths.strong + borderWidths.hairline;
+
 export default function OfflineMapScreen({
   greeting,
   userName,
@@ -52,6 +63,7 @@ export default function OfflineMapScreen({
   onBack,
 }: OfflineMapScreenProps) {
   const insets = useSafeAreaInsets();
+  const [landmarkQuery, setLandmarkQuery] = useState('');
   const [routeFrom, setRouteFrom] = useState('');
   const [routeTo, setRouteTo] = useState('');
 
@@ -76,9 +88,9 @@ export default function OfflineMapScreen({
 
         <View style={styles.mapCanvas}>
           <View style={styles.mapGrid}>
-            {Array.from({ length: 6 }).map((_, row) => (
+            {Array.from({ length: MAP_GRID_ROWS }).map((_, row) => (
               <View key={`row-${row}`} style={styles.mapGridRow}>
-                {Array.from({ length: 4 }).map((__, col) => (
+                {Array.from({ length: MAP_GRID_COLS }).map((__, col) => (
                   <View key={`cell-${row}-${col}`} style={styles.mapGridCell} />
                 ))}
               </View>
@@ -96,7 +108,11 @@ export default function OfflineMapScreen({
               accessibilityRole="button"
               accessibilityLabel={landmark.name}
             >
-              <AppIcon name="location" size={fontSizes.subheading} color={colors.danger} />
+              <AppIcon
+                name="location"
+                size={iconSizes.md}
+                color={colors.danger}
+              />
               <View style={styles.landmarkCard}>
                 <View style={styles.landmarkDot} />
                 <Text style={styles.landmarkName}>{landmark.name}</Text>
@@ -114,7 +130,7 @@ export default function OfflineMapScreen({
             accessibilityRole="button"
             accessibilityLabel="Center on current location"
           >
-            <AppIcon name="locate" size={fontSizes.subheading} color={colors.teal} />
+            <AppIcon name="locate" size={iconSizes.md} color={colors.teal} />
           </Pressable>
         </View>
       </View>
@@ -126,39 +142,42 @@ export default function OfflineMapScreen({
           style={styles.infoBanner}
         />
 
-        <View style={styles.searchBar}>
-          <AppIcon name="search" size={fontSizes.body} color={colors.textTertiary} />
-          <Text style={styles.searchPlaceholder}>Search landmarks</Text>
-        </View>
+        <SearchField
+          value={landmarkQuery}
+          placeholder="Search landmarks"
+          onChangeText={setLandmarkQuery}
+          onClear={() => setLandmarkQuery('')}
+          style={styles.searchField}
+        />
 
         <Text style={styles.routingLabel}>Plan a route offline</Text>
 
-        <View style={styles.routeInputRow}>
-          <AppIcon name="location-outline" size={fontSizes.body} color={colors.textSecondary} />
-          <TextInput
-            style={styles.routeInput}
-            placeholder="Starting point"
-            placeholderTextColor={colors.textTertiary}
-            value={routeFrom}
-            onChangeText={setRouteFrom}
-          />
-        </View>
+        <FormTextField
+          label="Starting point"
+          value={routeFrom}
+          placeholder="Starting point"
+          onChangeText={setRouteFrom}
+        />
 
-        <View style={styles.routeInputRow}>
-          <AppIcon name="flag-outline" size={fontSizes.body} color={colors.textSecondary} />
-          <TextInput
-            style={styles.routeInput}
-            placeholder="Destination"
-            placeholderTextColor={colors.textTertiary}
-            value={routeTo}
-            onChangeText={setRouteTo}
-          />
+        <View style={styles.destinationRow}>
+          <View style={styles.destinationField}>
+            <FormTextField
+              label="Destination"
+              value={routeTo}
+              placeholder="Destination"
+              onChangeText={setRouteTo}
+            />
+          </View>
           <Pressable
             style={styles.routeGoButton}
             accessibilityRole="button"
             accessibilityLabel="Calculate offline route"
           >
-            <AppIcon name="arrow-forward" size={fontSizes.subheading} color={colors.white} />
+            <AppIcon
+              name="arrow-forward"
+              size={iconSizes.md}
+              color={colors.white}
+            />
           </Pressable>
         </View>
       </View>
@@ -182,6 +201,7 @@ const styles = StyleSheet.create({
   bannerText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
     textAlign: 'center',
   },
@@ -190,7 +210,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warmCream,
     margin: layout.screenPaddingHorizontal,
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     overflow: 'hidden',
     position: 'relative',
@@ -209,16 +229,13 @@ const styles = StyleSheet.create({
   },
   mapGridCell: {
     flex: 1,
-    borderWidth: 0.5,
+    borderWidth: borderWidths.hairline / 2,
     borderColor: colors.border,
   },
   pinWrap: {
     position: 'absolute',
     alignItems: 'center',
-    maxWidth: 120,
-  },
-  pinIcon: {
-    fontSize: fontSizes.subheading,
+    maxWidth: LANDMARK_CARD_MAX_WIDTH,
   },
   landmarkCard: {
     flexDirection: 'row',
@@ -229,18 +246,19 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     marginTop: spacing.xs,
     gap: spacing.xs,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
   },
   landmarkDot: {
-    width: 8,
-    height: 8,
+    width: spacing.sm,
+    height: spacing.sm,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.success,
   },
   landmarkName: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.caption,
     color: colors.textPrimary,
     flexShrink: 1,
@@ -249,11 +267,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '48%',
     left: '55%',
-    width: 16,
-    height: 16,
+    width: LOCATION_DOT,
+    height: LOCATION_DOT,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.tealBright,
-    borderWidth: 3,
+    borderWidth: LOCATION_DOT_BORDER,
     borderColor: colors.white,
   },
   currentDot: {
@@ -263,20 +281,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: spacing.md,
     right: spacing.md,
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.white,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.floating,
-  },
-  locateIcon: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    color: colors.teal,
   },
   searchPanel: {
     backgroundColor: colors.white,
@@ -284,68 +297,35 @@ const styles = StyleSheet.create({
     borderTopRightRadius: borderRadius.lg,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     ...shadows.raised,
   },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minHeight: 44,
-    gap: spacing.sm,
+  searchField: {
     marginBottom: spacing.md,
-  },
-  searchIcon: {
-    fontSize: fontSizes.body,
-  },
-  searchPlaceholder: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textTertiary,
   },
   routingLabel: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
-  routeInputRow: {
+  destinationRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     gap: spacing.sm,
-    marginBottom: spacing.sm,
   },
-  routePin: {
-    fontSize: fontSizes.body,
-  },
-  routeInput: {
+  destinationField: {
     flex: 1,
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minHeight: 44,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textPrimary,
   },
   routeGoButton: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: controlHeights.md,
+    marginBottom: spacing.md,
     borderRadius: borderRadius.md,
     backgroundColor: colors.tealBright,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  routeGoIcon: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    color: colors.white,
   },
 });

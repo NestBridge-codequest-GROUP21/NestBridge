@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import {
   colors,
   fontFamilies,
@@ -12,11 +13,13 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   motion,
   lineHeights,
   shadows,
   layout,
+  iconSizes,
 } from '../../constants/theme';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
 
@@ -84,7 +87,7 @@ export default function BookingConfirmedScreen({
             },
           ]}
         >
-          <AppIcon name="checkmark" size={40} color={colors.white} />
+          <AppIcon name="checkmark" size={iconSizes.xl} color={colors.white} />
         </Animated.View>
 
         <Animated.View
@@ -101,7 +104,7 @@ export default function BookingConfirmedScreen({
             your host family so they can welcome you.
           </Text>
 
-          <View style={styles.summaryCard}>
+          <Card padding="lg" elevation="card" style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Host</Text>
               <Text style={styles.summaryValue}>{hostName}</Text>
@@ -120,7 +123,7 @@ export default function BookingConfirmedScreen({
                 {formatCurrency(totalAmount, currency)}
               </Text>
             </View>
-          </View>
+          </Card>
         </Animated.View>
       </View>
 
@@ -148,7 +151,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
-    borderWidth: 4,
+    borderWidth: spacing.xs,
     borderColor: colors.white,
     ...shadows.raised,
   },
@@ -174,10 +177,6 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     width: '100%',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    ...shadows.raised,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -206,7 +205,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
   },
   summaryDivider: {
-    height: 1,
+    height: borderWidths.hairline,
     backgroundColor: colors.border,
   },
 });

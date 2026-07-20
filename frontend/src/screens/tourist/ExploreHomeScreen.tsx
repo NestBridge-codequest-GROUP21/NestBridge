@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import SectionHeader from '../../components/SectionHeader';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import FeaturedHomeCard, {
@@ -19,14 +20,7 @@ import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
 import ReminderBanner from '../../components/ReminderBanner';
-import {
-  colors,
-  fontFamilies,
-  fontSizes,
-  fontWeights,
-  spacing,
-  lineHeights,
-} from '../../constants/theme';
+import { colors, spacing, layout } from '../../constants/theme';
 import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
 
 export interface ExploreSectionItem {
@@ -151,7 +145,10 @@ export default function ExploreHomeScreen({
 
         {sections.length > 0 ? (
           <View style={styles.carouselWrap}>
-            <Text style={styles.sectionTitle}>{exploreSectionTitle}</Text>
+            <SectionHeader
+              title={exploreSectionTitle}
+              style={styles.sectionHeader}
+            />
             <ExploreSectionCarousel
               sections={sections}
               onSectionPress={onSectionPress}
@@ -185,15 +182,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   carouselWrap: {
-    marginBottom: spacing.lg,
+    marginBottom: layout.sectionGap,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    lineHeight: lineHeights.heading,
+  sectionHeader: {
     marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
   },
 });

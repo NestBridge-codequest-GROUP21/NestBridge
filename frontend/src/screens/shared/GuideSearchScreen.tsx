@@ -10,6 +10,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeader from '../../components/ScreenHeader';
 import EmptyState from '../../components/EmptyState';
+import Card from '../../components/Card';
+import Avatar from '../../components/Avatar';
+import StatusBadge from '../../components/StatusBadge';
 import {
   colors,
   fontFamilies,
@@ -17,8 +20,10 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  touchTarget,
   lineHeights,
-  shadows,
+  layout,
 } from '../../constants/theme';
 import type { GuideProfileSummary } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -83,7 +88,7 @@ export default function GuideSearchScreen({
           {guides.map((guide) => (
             <Pressable
               key={guide.id}
-              style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.cardPress, pressed && styles.pressed]}
               onPress={() => onGuidePress?.(guide.id)}
               accessibilityRole="button"
               accessibilityLabel={
@@ -92,28 +97,29 @@ export default function GuideSearchScreen({
                   : guide.name
               }
             >
-              <View style={styles.topRow}>
-                <View style={styles.iconWrap}>
-                  <Text style={styles.iconInitials}>{guide.initials}</Text>
+              <Card style={styles.card} padding="lg">
+                <View style={styles.topRow}>
+                  <Avatar initials={guide.initials} size="lg" />
+                  {showMatchScores ? (
+                    <StatusBadge
+                      label={`${guide.matchPercentage}%`}
+                      tone="success"
+                    />
+                  ) : null}
                 </View>
-                {showMatchScores ? (
-                  <View style={styles.matchBadge}>
-                    <Text style={styles.matchText}>{guide.matchPercentage}%</Text>
-                  </View>
-                ) : null}
-              </View>
-              <Text style={styles.name} numberOfLines={1}>
-                {guide.name}
-              </Text>
-              <Text style={styles.location} numberOfLines={1}>
-                {guide.location}
-              </Text>
-              <Text style={styles.services} numberOfLines={1}>
-                {guide.serviceTypes.slice(0, 2).join(' · ')}
-              </Text>
-              <Text style={styles.price}>
-                {formatCurrency(guide.pricePerSession, guide.currency)} / session
-              </Text>
+                <Text style={styles.name} numberOfLines={1}>
+                  {guide.name}
+                </Text>
+                <Text style={styles.location} numberOfLines={1}>
+                  {guide.location}
+                </Text>
+                <Text style={styles.services} numberOfLines={1}>
+                  {guide.serviceTypes.slice(0, 2).join(' · ')}
+                </Text>
+                <Text style={styles.price}>
+                  {formatCurrency(guide.pricePerSession, guide.currency)} / session
+                </Text>
+              </Card>
             </Pressable>
           ))}
         </ScrollView>
@@ -128,7 +134,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   cityRow: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
   },
   cityPill: {
@@ -137,9 +143,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
-    ...shadows.card,
+    minHeight: touchTarget,
+    justifyContent: 'center',
   },
   cityPillText: {
     fontFamily: fontFamilies.semibold,
@@ -148,44 +155,25 @@ const styles = StyleSheet.create({
     color: colors.tealDeep,
   },
   emptyWrap: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
     gap: spacing.md,
     alignItems: 'flex-start',
   },
+  cardPress: {},
   card: {
-    width: 240,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
+    width: layout.listingCardWidth - spacing.md,
   },
   pressed: {
     opacity: 0.94,
     transform: [{ scale: 0.995 }],
-  },
-  iconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconInitials: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   topRow: {
     flexDirection: 'row',
@@ -199,18 +187,6 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
-  },
-  matchBadge: {
-    backgroundColor: colors.teal,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-  },
-  matchText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
   },
   location: {
     fontFamily: fontFamilies.regular,

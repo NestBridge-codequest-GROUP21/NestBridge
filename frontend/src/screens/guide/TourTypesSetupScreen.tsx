@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import Card from '../../components/Card';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
+import SectionHeader from '../../components/SectionHeader';
 import type { TourTypeOption } from '../../data/featureScreensMock';
 import {
   colors,
@@ -12,9 +14,9 @@ import {
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  borderWidths,
   lineHeights,
-  shadows,
+  touchTarget,
 } from '../../constants/theme';
 
 export interface TourTypesSetupScreenProps {
@@ -87,12 +89,12 @@ export default function TourTypesSetupScreen({
       />
 
       <ScreenScroll>
-        <Text style={styles.screenTitle}>Tour types</Text>
-        <Text style={styles.screenSubtitle}>
-          Choose the experiences you offer and set your base pricing.
-        </Text>
+        <SectionHeader
+          title="Tour types"
+          subtitle="Choose the experiences you offer and set your base pricing."
+        />
 
-        <View style={styles.section}>
+        <Card padding="md" style={styles.section}>
           {tourTypes.map((tourType, index) => (
             <TourTypeRow
               key={tourType.id}
@@ -101,9 +103,9 @@ export default function TourTypesSetupScreen({
               onToggle={(enabled) => onToggleTourType?.(tourType.id, enabled)}
             />
           ))}
-        </View>
+        </Card>
 
-        <View style={styles.section}>
+        <Card padding="md" style={styles.section}>
           <Text style={styles.sectionTitle}>Pricing & capacity</Text>
           <FormTextField
             label="Base rate (GHS)"
@@ -119,7 +121,7 @@ export default function TourTypesSetupScreen({
             keyboardType="numeric"
             onChangeText={onMaxGroupSizeChange}
           />
-        </View>
+        </Card>
 
         <PrimaryButton label="Save tour settings" onPress={onSavePress} />
       </ScreenScroll>
@@ -132,29 +134,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  screenTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  screenSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-    lineHeight: lineHeights.body,
-  },
   section: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
     marginBottom: spacing.lg,
-    ...shadows.card,
   },
   sectionTitle: {
     fontFamily: fontFamilies.semibold,
@@ -170,10 +151,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
+    borderBottomWidth: borderWidths.hairline,
     borderBottomColor: colors.border,
     gap: spacing.md,
-    minHeight: 56,
+    minHeight: touchTarget + spacing.md,
   },
   tourRowLast: {
     borderBottomWidth: 0,

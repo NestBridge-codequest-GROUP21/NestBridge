@@ -16,6 +16,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import type { DemoAccount } from '../../data/demoAccounts';
 import {
   colors,
@@ -25,11 +26,14 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   lineHeights,
   layout,
   motion,
-  shadows,
+  touchTarget,
+  iconSizes,
+  avatarSizes,
 } from '../../constants/theme';
 
 const WELCOME_LOGO_SIZE = spacing.xl * 3;
@@ -176,12 +180,12 @@ export default function WelcomeScreen({
         >
           <View style={styles.pillsWrap}>
             {valuePills.map((pill) => (
-              <View key={pill.label} style={styles.pill}>
+              <Card key={pill.label} style={styles.pill} padding="md">
                 <View style={styles.pillIconTile}>
-                  <AppIcon glyph={pill.icon} size={20} color={colors.tealDeep} />
+                  <AppIcon glyph={pill.icon} size={iconSizes.md} color={colors.tealDeep} />
                 </View>
                 <Text style={styles.pillLabel}>{pill.label}</Text>
-              </View>
+              </Card>
             ))}
           </View>
         </Animated.View>
@@ -237,24 +241,24 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   driftRing: {
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.white,
     opacity: 0.1,
     backgroundColor: 'transparent',
   },
   tagline: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.gold,
     letterSpacing: spacing.xs,
     textTransform: 'uppercase',
     textAlign: 'center',
   },
   headline: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.white,
     lineHeight: lineHeights.heading,
     marginTop: spacing.sm,
@@ -283,18 +287,12 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
     gap: spacing.md,
-    minHeight: 44,
-    ...shadows.card,
+    minHeight: touchTarget,
   },
   pillIconTile: {
-    width: 40,
-    height: 40,
+    width: avatarSizes.md,
+    height: avatarSizes.md,
     borderRadius: borderRadius.md,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -311,7 +309,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     backgroundColor: colors.background,
   },

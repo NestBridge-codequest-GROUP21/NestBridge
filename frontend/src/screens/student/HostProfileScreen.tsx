@@ -11,6 +11,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import BackButton from '../../components/BackButton';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import Avatar from '../../components/Avatar';
 import {
   colors,
   fontFamilies,
@@ -18,10 +21,13 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   lineHeights,
   layout,
   shadows,
+  tints,
+  touchTarget,
 } from '../../constants/theme';
 import type { HostProfileSummary } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -53,6 +59,7 @@ export default function HostProfileScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
+      {/* Profile hero with large avatar — not a clean ScreenHeader map. */}
       <LinearGradient
         colors={[...gradients.header]}
         start={{ x: 0, y: 0 }}
@@ -63,9 +70,7 @@ export default function HostProfileScreen({
 
         <View style={styles.heroContent}>
           <View style={styles.avatarRing}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarInitials}>{host.initials}</Text>
-            </View>
+            <Avatar initials={host.initials} size="lg" style={styles.heroAvatar} />
           </View>
           <Text style={styles.hostName}>{host.name}</Text>
           <Text style={styles.hostLocation}>{host.location}</Text>
@@ -94,35 +99,45 @@ export default function HostProfileScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.priceCard}>
-          <Text style={styles.priceLabel}>From</Text>
+        <Card padding="lg" elevation="card" style={styles.priceCard}>
+          <Text style={styles.priceLabel}>Nightly rate</Text>
           <Text style={styles.priceValue}>
             {formatCurrency(host.pricePerNight, host.currency)}
             <Text style={styles.priceUnit}> / night</Text>
           </Text>
-        </View>
+          <Text style={styles.priceHint}>
+            Platform fee and total appear before you pay on the booking screen.
+          </Text>
+        </Card>
 
         {about ? (
-          <>
-            <Text style={styles.sectionTitle}>About this host</Text>
-            <Text style={styles.aboutText}>{about}</Text>
-          </>
+          <View style={styles.sectionBlock}>
+            <SectionHeader title="About this host" />
+            <Card padding="lg" elevation="card">
+              <Text style={styles.aboutText}>{about}</Text>
+            </Card>
+          </View>
         ) : null}
 
         {highlights.length > 0 ? (
-          <View style={styles.highlights}>
-            {highlights.map((label) => (
-              <View key={label} style={styles.highlightChip}>
-                <Text style={styles.highlightLabel}>{label}</Text>
-              </View>
-            ))}
+          <View style={styles.sectionBlock}>
+            <SectionHeader title="Highlights" />
+            <View style={styles.highlights}>
+              {highlights.map((label) => (
+                <View key={label} style={styles.highlightChip}>
+                  <Text style={styles.highlightLabel}>{label}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         ) : null}
 
         {host.cancellationPolicy ? (
-          <View style={styles.policyCard}>
-            <Text style={styles.policyTitle}>Cancellation</Text>
-            <Text style={styles.policyBody}>{host.cancellationPolicy}</Text>
+          <View style={styles.sectionBlock}>
+            <SectionHeader title="Cancellation" />
+            <Card padding="md" elevation="none" style={styles.policyCard}>
+              <Text style={styles.policyBody}>{host.cancellationPolicy}</Text>
+            </Card>
           </View>
         ) : null}
       </ScrollView>
@@ -165,23 +180,15 @@ const styles = StyleSheet.create({
   avatarRing: {
     padding: spacing.xs,
     borderRadius: borderRadius.pill,
-    borderWidth: 2,
+    borderWidth: borderWidths.strong,
     borderColor: colors.white,
     marginBottom: spacing.md,
+    backgroundColor: tints.cream,
   },
-  avatar: {
+  heroAvatar: {
     width: 88,
     height: 88,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitials: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   hostName: {
     fontFamily: fontFamilies.bold,
@@ -224,13 +231,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPaddingHorizontal,
   },
   priceCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.card,
   },
   priceLabel: {
     fontFamily: fontFamilies.regular,
@@ -250,25 +251,26 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
+  priceHint: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
+    marginTop: spacing.sm,
+  },
+  sectionBlock: {
+    marginBottom: spacing.lg,
   },
   aboutText: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     lineHeight: lineHeights.body,
-    marginBottom: spacing.lg,
   },
   highlights: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
-    marginBottom: spacing.lg,
   },
   highlightChip: {
     flexDirection: 'row',
@@ -277,9 +279,9 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   highlightLabel: {
     fontFamily: fontFamilies.semibold,
@@ -289,17 +291,6 @@ const styles = StyleSheet.create({
   },
   policyCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  policyTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
   },
   policyBody: {
     fontFamily: fontFamilies.regular,
@@ -315,7 +306,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     ...shadows.raised,
   },

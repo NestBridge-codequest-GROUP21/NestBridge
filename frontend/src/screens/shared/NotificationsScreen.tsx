@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Pressable,
-  ActivityIndicator,
   StyleSheet,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -11,15 +10,19 @@ import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import EmptyState from '../../components/EmptyState';
 import InlineBanner from '../../components/InlineBanner';
+import Card from '../../components/Card';
+import StatusBadge from '../../components/StatusBadge';
+import SectionHeader from '../../components/SectionHeader';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import {
   colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  borderWidths,
+  touchTarget,
   tints,
-  shadows,
   lineHeights,
 } from '../../constants/theme';
 import type { AppNotification } from '../../types/booking';
@@ -77,17 +80,17 @@ export default function NotificationsScreen({
       <ScreenScroll>
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
         {unreadCount > 0 && onMarkAllRead ? (
-          <Pressable
-            onPress={onMarkAllRead}
-            style={({ pressed }) => [styles.markAll, pressed && styles.pressed]}
-            accessibilityRole="button"
-            accessibilityLabel="Mark all as read"
-          >
-            <Text style={styles.markAllText}>Mark all as read</Text>
-          </Pressable>
+          <SectionHeader
+            title="Inbox"
+            actionLabel="Mark all as read"
+            onActionPress={onMarkAllRead}
+          />
         ) : null}
         {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
+          <View style={styles.skeletonWrap}>
+            <SkeletonLoader />
+            <SkeletonLoader style={styles.skeletonGap} />
+          </View>
         ) : null}
         {!isLoading && notifications.length === 0 ? (
           <EmptyState
@@ -97,27 +100,38 @@ export default function NotificationsScreen({
             iconName="notifications-outline"
           />
         ) : null}
-        {notifications.map((notification, index) => (
-          <Pressable
-            key={notification.id}
-            style={({ pressed }) => [
-              styles.card,
-              !notification.read && styles.cardUnread,
-              index < notifications.length - 1 && styles.cardSpacing,
-              pressed && styles.pressed,
-            ]}
-            onPress={() => onNotificationPress?.(notification)}
-            accessibilityRole="button"
-            accessibilityLabel={notification.title}
-          >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>{notification.title}</Text>
-              {!notification.read ? <View style={styles.unreadDot} /> : null}
-            </View>
-            <Text style={styles.cardBody}>{notification.body}</Text>
-            <Text style={styles.cardTime}>{formatRelativeTime(notification.createdAt)}</Text>
-          </Pressable>
-        ))}
+        {!isLoading
+          ? notifications.map((notification) => (
+              <Pressable
+                key={notification.id}
+                style={({ pressed }) => [
+                  styles.cardPress,
+                  pressed && styles.pressed,
+                ]}
+                onPress={() => onNotificationPress?.(notification)}
+                accessibilityRole="button"
+                accessibilityLabel={notification.title}
+              >
+                <Card
+                  style={[
+                    styles.card,
+                    !notification.read && styles.cardUnread,
+                  ]}
+                >
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>{notification.title}</Text>
+                    {!notification.read ? (
+                      <StatusBadge label="New" tone="info" />
+                    ) : null}
+                  </View>
+                  <Text style={styles.cardBody}>{notification.body}</Text>
+                  <Text style={styles.cardTime}>
+                    {formatRelativeTime(notification.createdAt)}
+                  </Text>
+                </Card>
+              </Pressable>
+            ))
+          : null}
       </ScreenScroll>
     </View>
   );
@@ -128,42 +142,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  markAll: {
-    alignSelf: 'flex-end',
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
+  skeletonWrap: {
+    marginBottom: spacing.md,
+  },
+  skeletonGap: {
+    marginTop: spacing.sm,
+  },
+  cardPress: {
     marginBottom: spacing.sm,
+    minHeight: touchTarget,
   },
-  markAllText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    color: colors.teal,
-    fontWeight: fontWeights.semibold,
-  },
-  loader: {
-    marginVertical: spacing.xl,
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    ...shadows.card,
-  },
+  card: {},
   cardUnread: {
     backgroundColor: tints.teal,
     borderColor: colors.teal,
-  },
-  cardSpacing: {
-    marginBottom: spacing.sm,
+    borderWidth: borderWidths.strong,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.xs,
+    gap: spacing.sm,
   },
   cardTitle: {
     flex: 1,
@@ -171,13 +171,6 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.subheading,
     color: colors.textPrimary,
     fontWeight: fontWeights.semibold,
-  },
-  unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.tealBright,
-    marginLeft: spacing.sm,
   },
   cardBody: {
     fontFamily: fontFamilies.regular,

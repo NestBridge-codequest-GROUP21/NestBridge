@@ -5,7 +5,10 @@ import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import ProgressBar from '../../components/ProgressBar';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
+import PrimaryButton from '../../components/PrimaryButton';
+import SectionHeader from '../../components/SectionHeader';
 import type { ChecklistTask } from '../../data/featureScreensMock';
 import {
   colors,
@@ -14,8 +17,12 @@ import {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
-  shadows,
+  iconSizes,
+  touchTarget,
+  controlHeights,
+  layout,
 } from '../../constants/theme';
 
 export interface PrepChecklistScreenProps {
@@ -34,13 +41,13 @@ function ProgressRing({ completed, total }: { completed: number; total: number }
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
-    <View style={styles.progressRing}>
+    <Card style={styles.progressRing} padding="md">
       <Text style={styles.progressCount}>
         {completed}/{total}
       </Text>
       <Text style={styles.progressLabel}>Done</Text>
       <Text style={styles.progressPercent}>{percent}%</Text>
-    </View>
+    </Card>
   );
 }
 
@@ -92,7 +99,7 @@ export default function PrepChecklistScreen({
     onToggle: (id: string) => void,
     onDelete: (id: string) => void,
   ) => (
-    <View key={task.id} style={styles.taskRow}>
+    <Card key={task.id} style={styles.taskRow} padding="none">
       <Pressable
         style={styles.taskMain}
         onPress={() => onToggle(task.id)}
@@ -102,7 +109,7 @@ export default function PrepChecklistScreen({
       >
         <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
           {task.completed ? (
-            <AppIcon name="checkmark" size={fontSizes.caption} color={colors.white} />
+            <AppIcon name="checkmark" size={iconSizes.sm} color={colors.white} />
           ) : null}
         </View>
         <Text
@@ -118,9 +125,9 @@ export default function PrepChecklistScreen({
         accessibilityRole="button"
         accessibilityLabel={`Delete ${task.label}`}
       >
-        <AppIcon name="close" size={fontSizes.body} color={colors.textTertiary} />
+        <AppIcon name="close" size={iconSizes.md} color={colors.textTertiary} />
       </Pressable>
-    </View>
+    </Card>
   );
 
   return (
@@ -138,10 +145,11 @@ export default function PrepChecklistScreen({
       <ScreenScroll keyboardShouldPersistTaps="handled">
         <View style={styles.titleRow}>
           <View style={styles.titleTextWrap}>
-            <Text style={styles.screenTitle}>Prep & packing</Text>
-            <Text style={styles.screenSubtitle}>
-              Get ready for your stay — adapters, documents, and local essentials.
-            </Text>
+            <SectionHeader
+              title="Prep & packing"
+              subtitle="Get ready for your stay — adapters, documents, and local essentials."
+              style={styles.sectionHeader}
+            />
           </View>
           <ProgressRing completed={completedCount} total={allTasks.length} />
         </View>
@@ -171,7 +179,7 @@ export default function PrepChecklistScreen({
           </View>
         )}
 
-        <View style={styles.addCard}>
+        <Card style={styles.addCard} padding="md">
           <Text style={styles.addTitle}>Add your own item</Text>
           <View style={styles.addRow}>
             <TextInput
@@ -184,20 +192,14 @@ export default function PrepChecklistScreen({
               returnKeyType="done"
               accessibilityLabel="New checklist item"
             />
-            <Pressable
-              style={[
-                styles.addButton,
-                newItemLabel.trim().length === 0 && styles.addButtonDisabled,
-              ]}
+            <PrimaryButton
+              label="Add"
               onPress={handleAddItem}
               disabled={newItemLabel.trim().length === 0}
-              accessibilityRole="button"
-              accessibilityLabel="Add item"
-            >
-              <Text style={styles.addButtonText}>Add</Text>
-            </Pressable>
+              style={styles.addButton}
+            />
           </View>
-        </View>
+        </Card>
       </ScreenScroll>
     </View>
   );
@@ -212,41 +214,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     gap: spacing.md,
   },
   titleTextWrap: {
     flex: 1,
   },
-  screenTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    lineHeight: lineHeights.heading,
-    marginBottom: spacing.xs,
-  },
-  screenSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    lineHeight: lineHeights.caption,
+  sectionHeader: {
+    marginBottom: 0,
   },
   progressRing: {
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    minWidth: 88,
-    ...shadows.card,
+    minWidth: spacing.xxl + spacing.xl,
   },
   progressCount: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
     lineHeight: lineHeights.subheading,
   },
@@ -267,10 +251,10 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.caption,
   },
   progressBar: {
-    marginBottom: spacing.lg,
+    marginBottom: layout.sectionGap,
   },
   emptyState: {
-    marginBottom: spacing.lg,
+    marginBottom: layout.sectionGap,
   },
   taskList: {
     gap: spacing.sm,
@@ -278,28 +262,23 @@ const styles = StyleSheet.create({
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
     paddingVertical: spacing.sm,
-    paddingLeft: spacing.md,
+    paddingLeft: layout.cardPadding,
     paddingRight: spacing.sm,
-    minHeight: 56,
+    minHeight: controlHeights.lg + spacing.sm,
     gap: spacing.xs,
-    ...shadows.card,
   },
   taskMain: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    minHeight: 44,
+    minHeight: touchTarget,
     paddingVertical: spacing.xs,
   },
   deleteButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: touchTarget,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -307,10 +286,10 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   checkbox: {
-    width: 28,
-    height: 28,
+    width: iconSizes.xl,
+    height: iconSizes.xl,
     borderRadius: borderRadius.sm,
-    borderWidth: 2,
+    borderWidth: borderWidths.strong,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
@@ -332,13 +311,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   addCard: {
-    marginTop: spacing.lg,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    ...shadows.card,
+    marginTop: layout.sectionGap,
   },
   addTitle: {
     fontFamily: fontFamilies.semibold,
@@ -357,7 +330,7 @@ const styles = StyleSheet.create({
   addInput: {
     flex: 1,
     backgroundColor: colors.background,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
@@ -365,23 +338,13 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textPrimary,
-    minHeight: 48,
+    minHeight: controlHeights.md,
   },
   addButton: {
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.lg,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButtonDisabled: {
-    opacity: 0.5,
-  },
-  addButtonText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    minHeight: controlHeights.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    alignSelf: 'stretch',
   },
 });
+

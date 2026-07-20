@@ -12,6 +12,9 @@ import {
   borderRadius,
   lineHeights,
   shadows,
+  iconSizes,
+  tints,
+  borderWidths,
 } from '../constants/theme';
 
 export interface EmptyStateProps {
@@ -50,9 +53,9 @@ export default function EmptyState({
     <View style={[carded ? styles.card : styles.plain, style]}>
       <View style={styles.iconTile}>
         {iconGlyph ? (
-          <AppIcon glyph={iconGlyph} size={fontSizes.heading} color={colors.tealDeep} />
+          <AppIcon glyph={iconGlyph} size={iconSizes.xl} color={colors.tealDeep} />
         ) : (
-          <AppIcon name={iconName} size={fontSizes.heading} color={colors.tealDeep} />
+          <AppIcon name={iconName} size={iconSizes.xl} color={colors.tealDeep} />
         )}
       </View>
       <Text style={styles.title}>{title}</Text>
@@ -78,7 +81,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     alignItems: 'center',
     ...shadows.card,
@@ -92,7 +95,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
+    backgroundColor: tints.cream,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
