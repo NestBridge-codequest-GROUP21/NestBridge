@@ -1,7 +1,8 @@
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import type { StyleProp, TextStyle } from 'react-native';
-import { colors, fontSizes } from '../constants/theme';
+import { useTheme } from '../theme';
+import { fontSizes } from '../constants/theme';
 
 export type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -125,9 +126,17 @@ export default function AppIcon({
   glyph,
   name,
   size = fontSizes.subheading,
-  color = colors.tealDeep,
+  color,
   style,
 }: AppIconProps) {
+  const { colors } = useTheme();
   const resolved = name ?? iconForGlyph(glyph);
-  return <Ionicons name={resolved} size={size} color={color} style={style} />;
+  return (
+    <Ionicons
+      name={resolved}
+      size={size}
+      color={color ?? colors.tealDeep}
+      style={style}
+    />
+  );
 }

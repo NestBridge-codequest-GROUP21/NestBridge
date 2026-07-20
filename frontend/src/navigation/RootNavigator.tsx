@@ -44,7 +44,7 @@ export default function RootNavigator() {
   const { isLoading: profileLoading } = useAccountProfile();
   const theme = useTheme();
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors } = theme;
 
   const navTheme = navigationThemeFromTokens(theme);
   const [splashDismissed, setSplashDismissed] = useState(false);

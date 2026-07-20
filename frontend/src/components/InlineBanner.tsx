@@ -1,15 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import AppIcon from './AppIcon';
+import { useTheme } from '../theme';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
   lineHeights,
-  tints,
 } from '../constants/theme';
 
 export type InlineBannerTone = 'error' | 'success' | 'info' | 'warning';
@@ -20,48 +19,52 @@ export interface InlineBannerProps {
   style?: ViewStyle;
 }
 
-const TONE_STYLES: Record<
-  InlineBannerTone,
-  {
-    border: string;
-    background: string;
-    text: string;
-    icon: 'alert-circle-outline' | 'checkmark-circle-outline' | 'information-circle-outline' | 'warning-outline';
-  }
-> = {
-  error: {
-    border: colors.danger,
-    background: tints.terracotta,
-    text: colors.danger,
-    icon: 'alert-circle-outline',
-  },
-  success: {
-    border: colors.success,
-    background: tints.teal,
-    text: colors.success,
-    icon: 'checkmark-circle-outline',
-  },
-  info: {
-    border: colors.teal,
-    background: tints.teal,
-    text: colors.tealDeep,
-    icon: 'information-circle-outline',
-  },
-  warning: {
-    border: colors.warning,
-    background: tints.gold,
-    text: colors.textPrimary,
-    icon: 'warning-outline',
-  },
-};
-
 /** Designed inline feedback for forms and partial-page messages. */
 export default function InlineBanner({
   message,
   tone = 'error',
   style,
 }: InlineBannerProps) {
-  const toneStyle = TONE_STYLES[tone];
+  const { colors, tints } = useTheme();
+  const toneStyles: Record<
+    InlineBannerTone,
+    {
+      border: string;
+      background: string;
+      text: string;
+      icon:
+        | 'alert-circle-outline'
+        | 'checkmark-circle-outline'
+        | 'information-circle-outline'
+        | 'warning-outline';
+    }
+  > = {
+    error: {
+      border: colors.danger,
+      background: tints.terracotta,
+      text: colors.danger,
+      icon: 'alert-circle-outline',
+    },
+    success: {
+      border: colors.success,
+      background: tints.teal,
+      text: colors.success,
+      icon: 'checkmark-circle-outline',
+    },
+    info: {
+      border: colors.teal,
+      background: tints.teal,
+      text: colors.tealDeep,
+      icon: 'information-circle-outline',
+    },
+    warning: {
+      border: colors.warning,
+      background: tints.gold,
+      text: colors.textPrimary,
+      icon: 'warning-outline',
+    },
+  };
+  const toneStyle = toneStyles[tone];
 
   return (
     <View

@@ -83,7 +83,7 @@ export default function ProfileScreen({
   showStaffTools = false,
   onStaffToolsPress,
 }: ProfileScreenProps) {
-  const { preference, setPreference, scheme } = useTheme();
+  const { preference, setPreference, scheme, colors } = useTheme();
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -129,7 +129,7 @@ export default function ProfileScreen({
                   <AppIcon
                     name={option.icon}
                     size={iconSizes.md}
-                    color={selected ? styles._teal : styles._muted}
+                    color={selected ? colors.teal : colors.textTertiary}
                   />
                 </View>
                 <View style={styles.appearanceText}>
@@ -145,7 +145,7 @@ export default function ProfileScreen({
                   <AppIcon
                     name="checkmark-circle"
                     size={iconSizes.lg}
-                    color={styles._teal}
+                    color={colors.teal}
                   />
                 ) : (
                   <View style={styles.radioIdle} />
@@ -236,7 +236,7 @@ export default function ProfileScreen({
 }
 
 function createStyles({ colors }: AppTheme) {
-  const sheet = StyleSheet.create({
+  return StyleSheet.create({
     root: {
       flex: 1,
       backgroundColor: colors.background,
@@ -341,10 +341,4 @@ function createStyles({ colors }: AppTheme) {
       marginBottom: spacing.xl,
     },
   });
-
-  return {
-    ...sheet,
-    _teal: colors.teal,
-    _muted: colors.textTertiary,
-  };
 }

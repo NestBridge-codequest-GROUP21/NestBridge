@@ -1,7 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, ViewStyle } from 'react-native';
 import AppIcon from './AppIcon';
-import { colors, spacing, iconSizes, touchTarget } from '../constants/theme';
+import { useTheme } from '../theme';
+import { spacing, iconSizes, touchTarget } from '../constants/theme';
 
 export interface BackButtonProps {
   onPress?: () => void;
@@ -14,10 +15,13 @@ export interface BackButtonProps {
 /** Consistent 44×44 back control — chevron icon, never text arrows. */
 export default function BackButton({
   onPress,
-  color = colors.textPrimary,
+  color,
   accessibilityLabel = 'Go back',
   style,
 }: BackButtonProps) {
+  const { colors } = useTheme();
+  const iconColor = color ?? colors.textPrimary;
+
   return (
     <Pressable
       onPress={onPress}
@@ -26,7 +30,7 @@ export default function BackButton({
       accessibilityLabel={accessibilityLabel}
       hitSlop={spacing.xs}
     >
-      <AppIcon name="chevron-back" size={iconSizes.lg} color={color} />
+      <AppIcon name="chevron-back" size={iconSizes.lg} color={iconColor} />
     </Pressable>
   );
 }

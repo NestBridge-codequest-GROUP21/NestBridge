@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,13 +9,11 @@ import StatusPill from './StatusPill';
 import AppIcon from './AppIcon';
 import type { AppStackParamList } from '../navigation/types';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
-  gradients,
   lineHeights,
   iconSizes,
   touchTarget,
@@ -50,6 +49,10 @@ export default function ScreenHeader({
   onHelpPress,
   onNotificationPress,
 }: ScreenHeaderProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
@@ -177,7 +180,8 @@ export default function ScreenHeader({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   header: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
@@ -320,3 +324,5 @@ const styles = StyleSheet.create({
     borderColor: colors.navy,
   },
 });
+}
+

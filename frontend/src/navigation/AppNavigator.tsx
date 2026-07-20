@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, View, StyleSheet } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { pickProfileImage } from '../services/imagePicker';
-import { colors, spacing } from '../constants/theme';
 
 import IntentSelectScreen, {
   intentOptionsFromPrimary,
@@ -3781,13 +3780,3 @@ export default function AppNavigator() {
     </Stack.Navigator>
   );
 }
-
-const routeLoaderStyle = StyleSheet.create({
-  loader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-  },
-});
