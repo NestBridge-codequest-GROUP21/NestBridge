@@ -35,8 +35,9 @@ export const browseGateCopy = {
 };
 
 export const bookingGateCopy = {
-  homestay: 'Add your travel details to send a booking request.',
-  guide: 'Add your travel details to book a guide session.',
+  homestay: 'Complete your travel profile to send a booking request or message hosts.',
+  guide: 'Complete your travel profile to book a guide session or message guides.',
+  messaging: 'Complete your travel profile before messaging hosts and guides.',
 };
 
 /** Shared shape for polished empty experiences (icon + copy + optional CTA label). */
@@ -141,7 +142,7 @@ export const emptyStates = {
     body: 'Add your home so students and travellers can discover you on NestBridge.',
     tip: 'A clear photo and neighbourhood note help guests feel at home before they arrive.',
     iconGlyph: '🏡',
-    primaryActionLabel: 'Add listing',
+    primaryActionLabel: 'Finish host setup',
   } satisfies EmptyStateContent,
   matchResults: {
     title: 'No matches this time',
@@ -158,11 +159,11 @@ export const emptyStates = {
     primaryActionLabel: 'Browse stays instead',
   }),
   discoveryHosts: (city: string): EmptyStateContent => ({
-    title: `No homestays in ${city} yet`,
-    body: 'Host families in this area are still joining NestBridge. Try Accra or Kumasi, or check back soon.',
-    tip: 'Finish your profile to see better matches when listings appear.',
+    title: `No homestays near ${city.split(',')[0]?.trim() || city} yet`,
+    body: 'We are still onboarding host families for this destination. Search nearby hubs or finish your profile so we can match you when listings open.',
+    tip: 'Try Accra, Kumasi, Cape Coast, or Tamale — or widen your search dates.',
     iconGlyph: '🏠',
-    primaryActionLabel: 'Search hosts',
+    primaryActionLabel: 'Search all hosts',
   }),
   discoveryGuides: (city: string): EmptyStateContent => ({
     title: `No guides in ${city} yet`,

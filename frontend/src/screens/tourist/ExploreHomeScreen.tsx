@@ -4,7 +4,6 @@ import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
-import SectionHeader from '../../components/SectionHeader';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import FeaturedHomeCard, {
@@ -13,7 +12,6 @@ import FeaturedHomeCard, {
 import QuickActionsGrid, {
   type QuickActionItem,
 } from '../../components/QuickActionsGrid';
-import ExploreSectionList from '../../components/ExploreSectionList';
 import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
@@ -23,10 +21,6 @@ import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
 import ReminderBanner from '../../components/ReminderBanner';
-import {
-  spacing,
-  layout,
-} from '../../constants/theme';
 import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
 import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 import type { EmptyStateContent } from '../../data/appCopy';
@@ -52,7 +46,8 @@ export interface ExploreHomeScreenProps {
   notificationCount?: number;
   featuredGuide?: Omit<FeaturedHomeCardProps, 'onPress'>;
   quickActions: QuickActionItem[];
-  sections: ExploreSectionItem[];
+  /** Kept for callers; site grids live on Sites / Explore hub. */
+  sections?: ExploreSectionItem[];
   exploreSectionTitle?: string;
   suggestedGuides?: DiscoveryListingItem[];
   suggestedGuidesTitle?: string;
@@ -93,14 +88,12 @@ export default function ExploreHomeScreen({
   notificationCount = 0,
   featuredGuide,
   quickActions,
-  sections,
-  exploreSectionTitle = 'Explore Accra',
   suggestedGuides = [],
-  suggestedGuidesTitle = 'Recommended nearby',
+  suggestedGuidesTitle = 'Guides nearby',
   guidesEmptyState,
   showMatchScores = false,
   recommendationSections = [],
-  recommendationHeadline = 'Recommended for you',
+  recommendationHeadline = 'Nearby for you',
   journeyProgress = null,
   recentActivity = [],
   reminder,
@@ -114,7 +107,6 @@ export default function ExploreHomeScreen({
   onFeaturedGuidePress,
   onSuggestedGuidePress,
   onGuidesEmptyPrimaryAction,
-  onSectionPress,
   onRecommendationItemPress,
   onRecommendationsEmptyPress,
   onJourneyStepPress,
@@ -145,7 +137,8 @@ export default function ExploreHomeScreen({
       <ScreenScroll withTabBar withSosDock={showSosDock}>
         {showSetupBanner ? (
           <ProfileIncompleteBanner
-            message="Add your travel dates and city to unlock booking in Ghana."
+            message="Complete your travel profile to unlock messaging, bookings, and trip recommendations."
+            continueLabel="Complete Profile"
             onContinueSetup={onSetupPress}
           />
         ) : null}
@@ -176,29 +169,19 @@ export default function ExploreHomeScreen({
           emptyState={guidesEmptyState}
           onEmptyPrimaryAction={onGuidesEmptyPrimaryAction}
           onItemPress={onSuggestedGuidePress}
+          actionLabel="See all"
+          onActionPress={onGuidesEmptyPrimaryAction}
         />
 
-        <RecommendedForYou
-          headline={recommendationHeadline}
-          city={cityLabel}
-          sections={recommendationSections}
-          emptyState={emptyStates.recommendations}
-          onEmptyPrimaryAction={onRecommendationsEmptyPress}
-          onItemPress={onRecommendationItemPress}
-        />
-
-        {sections.length > 0 ? (
-          <View style={styles.sectionWrap}>
-            <SectionHeader
-              title={exploreSectionTitle}
-              style={styles.sectionHeader}
-            />
-            <ExploreSectionList
-              sections={sections}
-              variant="grid"
-              onSectionPress={onSectionPress}
-            />
-          </View>
+        {recommendationSections.length > 0 ? (
+          <RecommendedForYou
+            headline={recommendationHeadline}
+            city={cityLabel}
+            sections={recommendationSections}
+            emptyState={emptyStates.recommendations}
+            onEmptyPrimaryAction={onRecommendationsEmptyPress}
+            onItemPress={onRecommendationItemPress}
+          />
         ) : null}
 
         <RecentActivityList items={recentActivity} />
@@ -223,16 +206,10 @@ export type { SuggestedHostItem };
 
 function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  sectionWrap: {
-    marginBottom: layout.sectionGap,
-  },
-  sectionHeader: {
-    marginBottom: spacing.md,
-  },
-});
+    root: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+  });
 }
 

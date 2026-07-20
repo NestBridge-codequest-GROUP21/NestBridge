@@ -43,7 +43,7 @@ function institutionItems(city: string, university?: string): RecommendationItem
         ? 'Matches your selected university'
         : `Recommended because you selected ${normalizeCity(city)}`,
     actionLabel: 'View',
-    routeHint: 'PrepChecklist',
+    routeHint: 'MatchSearch',
   }));
   if (local.length > 0) {
     return local;
@@ -56,8 +56,8 @@ function institutionItems(city: string, university?: string): RecommendationItem
     location: normalizeCity(city),
     icon: '🎓',
     reason: 'Closest campuses for this destination',
-    actionLabel: 'View',
-    routeHint: 'PrepChecklist',
+    actionLabel: 'Find stays',
+    routeHint: 'MatchSearch',
   }));
 }
 
@@ -356,7 +356,7 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
             title: 'Highlight local attractions',
             subtitle: `Pair tours with sites near ${capital}`,
             icon: '🏛️',
-            routeHint: 'SitesDirectory',
+            routeHint: 'TourTypesSetup',
           },
         ];
 

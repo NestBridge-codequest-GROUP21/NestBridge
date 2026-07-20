@@ -31,6 +31,8 @@ export interface DiscoveryListingSectionProps {
   emptyState?: EmptyStateContent;
   onEmptyPrimaryAction?: () => void;
   onItemPress?: (itemId: string) => void;
+  actionLabel?: string;
+  onActionPress?: () => void;
 }
 
 export default function DiscoveryListingSection({
@@ -40,12 +42,18 @@ export default function DiscoveryListingSection({
   emptyState,
   onEmptyPrimaryAction,
   onItemPress,
+  actionLabel,
+  onActionPress,
 }: DiscoveryListingSectionProps) {
   const styles = useThemedStyles(createStyles);
 
   return (
     <View style={styles.wrap}>
-      <SectionHeader title={title} />
+      <SectionHeader
+        title={title}
+        actionLabel={actionLabel}
+        onActionPress={onActionPress}
+      />
 
       {items.length === 0 && emptyState ? (
         <EmptyState

@@ -21,6 +21,12 @@ const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
     icon: '✅',
   },
   {
+    id: 'student-events',
+    label: 'Student events',
+    description: 'Meetups, orientation, and campus gatherings',
+    icon: '📅',
+  },
+  {
     id: 'cultural-tips',
     label: 'Local tips',
     description: 'Greetings, customs, and everyday etiquette',

@@ -16,6 +16,7 @@ import Card from '../../components/Card';
 import SectionHeader from '../../components/SectionHeader';
 import Avatar from '../../components/Avatar';
 import VerificationBadges from '../../components/VerificationBadges';
+import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import {
   fontFamilies,
   fontSizes,
@@ -38,6 +39,9 @@ export interface HostProfileScreenProps {
   about?: string;
   /** Amenity / lifestyle chips — pass from parent/API. */
   highlights?: string[];
+  setupIncomplete?: boolean;
+  setupMessage?: string;
+  onContinueSetup?: () => void;
   onMessagePress?: () => void;
   onBookPress?: () => void;
   onBack?: () => void;
@@ -48,6 +52,9 @@ export default function HostProfileScreen({
   showMatchScores = false,
   about,
   highlights = [],
+  setupIncomplete = false,
+  setupMessage = 'Complete your travel profile to message hosts and request a stay.',
+  onContinueSetup,
   onMessagePress,
   onBookPress,
   onBack,
@@ -157,15 +164,24 @@ export default function HostProfileScreen({
           { paddingBottom: Math.max(insets.bottom, spacing.md) },
         ]}
       >
+        {setupIncomplete ? (
+          <View style={styles.setupBanner}>
+            <ProfileIncompleteBanner
+              message={setupMessage}
+              continueLabel="Complete Profile"
+              onContinueSetup={onContinueSetup}
+            />
+          </View>
+        ) : null}
         <View style={styles.footerRow}>
           <SecondaryButton
             label="Message"
-            onPress={onMessagePress}
+            onPress={setupIncomplete ? onContinueSetup : onMessagePress}
             style={styles.messageButton}
           />
           <PrimaryButton
             label="Request to book"
-            onPress={onBookPress}
+            onPress={setupIncomplete ? onContinueSetup : onBookPress}
             style={styles.bookButton}
           />
         </View>
@@ -324,6 +340,9 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     ...shadows.raised,
+  },
+  setupBanner: {
+    marginBottom: spacing.sm,
   },
   footerRow: {
     flexDirection: 'row',

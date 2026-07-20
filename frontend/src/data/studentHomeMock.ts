@@ -10,10 +10,9 @@ import {
   studentStatusMock,
   studentReminderMock,
   studentRecentActivityMock,
-  studentRecommendedMock,
 } from './homeContentMock';
 import { DEMO_ACTOR_ACCOUNTS, demoFirstName, demoInitials } from './demoAccounts';
-import { normalizeCity } from './ghanaReference';
+import { normalizeCity, recommendationSearchCities } from './ghanaReference';
 
 const studentDemoAccount =
   DEMO_ACTOR_ACCOUNTS.find((account) => account.id === 'student') ??
@@ -58,15 +57,35 @@ export const allSuggestedHostsMock: SuggestedHostItem[] = [
     location: 'Pedu, Cape Coast',
     pricePerNight: 'GHS 95/night',
   },
+  {
+    id: 'host-damongo-1',
+    name: 'Issah & Mariama Fuseini',
+    matchPercentage: 88,
+    location: 'Damongo, Savannah Region',
+    pricePerNight: 'GHS 110/night',
+  },
+  {
+    id: 'host-tamale-1',
+    name: 'Abdul & Fatima Seidu',
+    matchPercentage: 85,
+    location: 'Tamale, Northern Region',
+    pricePerNight: 'GHS 120/night',
+  },
 ];
 
 export function suggestedHostsForCity(city: string): SuggestedHostItem[] {
   const normalized = normalizeCity(city).toLowerCase();
   if (!normalized) return allSuggestedHostsMock;
 
-  const filtered = allSuggestedHostsMock.filter((host) =>
-    host.location.toLowerCase().includes(normalized),
+  const cluster = recommendationSearchCities(city).map((entry) =>
+    entry.toLowerCase(),
   );
+  const filtered = allSuggestedHostsMock.filter((host) => {
+    const location = host.location.toLowerCase();
+    return cluster.some(
+      (hub) => location.includes(hub) || hub.includes(normalized),
+    );
+  });
   return filtered;
 }
 
@@ -78,7 +97,6 @@ export const studentHomeMockData: Omit<
   StudentHomeDashboardProps,
   | 'onNotificationPress'
   | 'onFeaturedMatchPress'
-  | 'onRecommendedSectionPress'
   | 'onQuickActionPress'
   | 'onReminderPress'
   | 'onTabPress'
@@ -91,8 +109,6 @@ export const studentHomeMockData: Omit<
   notificationCount: 2,
   featuredMatch: studentFeaturedMatchMock,
   quickActions: getQuickActionsForRole('STUDENT'),
-  recommendedSections: studentRecommendedMock,
-  recommendedSectionTitle: 'Recommended for you',
   recentActivity: studentRecentActivityMock,
   reminder: studentReminderMock,
   tabBarItems: getTabBarForRole('STUDENT'),

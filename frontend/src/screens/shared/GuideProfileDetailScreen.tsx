@@ -17,6 +17,7 @@ import Avatar from '../../components/Avatar';
 import StatusBadge from '../../components/StatusBadge';
 import SectionHeader from '../../components/SectionHeader';
 import VerificationBadges from '../../components/VerificationBadges';
+import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import {
   fontFamilies,
   fontSizes,
@@ -34,6 +35,9 @@ import { formatCurrency } from '../../data/bookingMock';
 export interface GuideProfileDetailScreenProps {
   guide: GuideProfileSummary;
   showMatchScores?: boolean;
+  setupIncomplete?: boolean;
+  setupMessage?: string;
+  onContinueSetup?: () => void;
   onMessagePress?: () => void;
   onBookPress?: () => void;
   onBack?: () => void;
@@ -42,6 +46,9 @@ export interface GuideProfileDetailScreenProps {
 export default function GuideProfileDetailScreen({
   guide,
   showMatchScores = false,
+  setupIncomplete = false,
+  setupMessage = 'Complete your travel profile to message guides and book a session.',
+  onContinueSetup,
   onMessagePress,
   onBookPress,
   onBack,
@@ -136,15 +143,24 @@ export default function GuideProfileDetailScreen({
           { paddingBottom: Math.max(insets.bottom, spacing.md) },
         ]}
       >
+        {setupIncomplete ? (
+          <View style={styles.setupBanner}>
+            <ProfileIncompleteBanner
+              message={setupMessage}
+              continueLabel="Complete Profile"
+              onContinueSetup={onContinueSetup}
+            />
+          </View>
+        ) : null}
         <View style={styles.footerRow}>
           <SecondaryButton
             label="Message"
-            onPress={onMessagePress}
+            onPress={setupIncomplete ? onContinueSetup : onMessagePress}
             style={styles.messageButton}
           />
           <PrimaryButton
             label="Book session"
-            onPress={onBookPress}
+            onPress={setupIncomplete ? onContinueSetup : onBookPress}
             style={styles.bookButton}
           />
         </View>
@@ -259,6 +275,9 @@ function createStyles({ colors, shadows }: AppTheme) {
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: spacing.sm,
+  },
+  setupBanner: {
+    marginBottom: spacing.sm,
   },
   messageButton: {
     flexGrow: 0,

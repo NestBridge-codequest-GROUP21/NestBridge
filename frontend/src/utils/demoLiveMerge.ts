@@ -76,9 +76,9 @@ export function withDemoFallbackValue<T>(
   live: T | null | undefined,
   demo: T,
   _options?: DemoFallbackOptions,
-): T {
+): T | null {
   if (!isDemoFallbackEnabled()) {
-    return (live !== null && live !== undefined ? live : demo) as T;
+    return live !== null && live !== undefined ? live : null;
   }
   return live ?? demo;
 }

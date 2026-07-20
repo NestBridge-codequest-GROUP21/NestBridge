@@ -187,7 +187,6 @@ import {
 } from '../data/homeNavigation';
 import {
   hostFeaturedRequestMock,
-  guideFeaturedTourMock,
   studentRecentActivityMock,
   touristRecentActivityMock,
   hostPerformanceMock,
@@ -241,6 +240,7 @@ import {
 } from '../data/contentLibraryMock';
 import { exploreSectionsForCity } from '../data/touristExploreMock';
 import { buildDemoHomeRecommendations } from '../data/recommendations';
+import { slimHomeRecommendations } from '../utils/slimHomeRecommendations';
 import type { RecommendationItem } from '../types/recommendations';
 import type { HomeRecommendations } from '../types/recommendations';
 import {
@@ -338,6 +338,9 @@ function handleStudentQuickAction(
   if (actionId === 'checklist') {
     navigation.navigate('PrepChecklist');
   }
+  if (actionId === 'events') {
+    navigation.navigate('StudentEvents');
+  }
   if (actionId === 'cultural-tips') {
     navigation.navigate('LocalTips');
   }
@@ -405,6 +408,9 @@ function handleRecommendationItemPress(
       return;
     case 'PrepChecklist':
       navigation.navigate('PrepChecklist');
+      return;
+    case 'MatchSearch':
+      navigation.navigate('MatchSearch');
       return;
     case 'VideoLibrary':
       navigation.navigate('VideoLibrary');
@@ -654,8 +660,8 @@ function HostListingsStackScreen({
       emptyState={emptyStates.hostListings}
       onAddListingPress={() => {
         Alert.alert(
-          'Add listing',
-          'Listing creation opens from account setup. Update your host profile to publish a stay.',
+          'Finish host setup',
+          'Complete your host profile to publish your stay. Listing details are managed from account setup.',
         );
         navigation.navigate('AccountSetup');
       }}
@@ -1443,7 +1449,13 @@ export default function AppNavigator() {
         profile = await getHostProfile(host.id);
         setHostProfileCache((prev) => ({ ...prev, [host.id]: profile }));
       }
-      if (!profile.userId) return;
+      if (!profile.userId) {
+        Alert.alert(
+          'Messaging unavailable',
+          'This host account is not ready for chat yet. Try again shortly or request a booking first.',
+        );
+        return;
+      }
       await openMessageWithParticipant(navigation, {
         userId: profile.userId,
         name: profile.name,
@@ -1469,7 +1481,13 @@ export default function AppNavigator() {
         profile = await getGuideProfile(guide.id);
         setGuideProfileCache((prev) => ({ ...prev, [guide.id]: profile }));
       }
-      if (!profile.userId) return;
+      if (!profile.userId) {
+        Alert.alert(
+          'Messaging unavailable',
+          'This guide account is not ready for chat yet. Try again shortly or book a session first.',
+        );
+        return;
+      }
       await openMessageWithParticipant(navigation, {
         userId: profile.userId,
         name: profile.name,
@@ -1889,6 +1907,10 @@ export default function AppNavigator() {
   }, [user, cityLabel, primaryIntent]);
 
   const homeRecommendations = liveRecommendations ?? demoRecommendations;
+  const dashboardRecommendations = useMemo(
+    () => slimHomeRecommendations(homeRecommendations),
+    [homeRecommendations],
+  );
 
   const tabBarItems = tabBarWithBadgesForRole(
     homeRole,
@@ -2157,38 +2179,42 @@ export default function AppNavigator() {
   );
 
   const homeProps = useMemo(
-    () => ({
+    () => {
+      const nearbyHosts = suggestedHostsDisplay.filter(
+        (host) => host.id !== displayTopMatchHostId,
+      );
+      return {
       ...studentHomeMockData,
       greeting: personalizedGreeting,
       userName: firstName,
       userInitials: resolvedInitials,
       activeTabId: 'home',
       tabBarItems,
-      featuredMatch: withDemoFallbackValue(
-        homeApi.featuredMatch,
-        studentFeaturedMatchForCity(cityLabel),
-        { isLoading: homeApi.isLoading, error: homeApi.error },
-      ),
-      suggestedHosts: suggestedHostsDisplay.filter(
-        (host) => host.id !== displayTopMatchHostId,
-      ),
-      recommendedSectionTitle: 'Prepare for arrival',
-      recommendationSections: homeRecommendations.sections,
-      recommendationHeadline: homeRecommendations.headline,
+      featuredMatch:
+        withDemoFallbackValue(
+          homeApi.featuredMatch,
+          studentFeaturedMatchForCity(cityLabel),
+          { isLoading: homeApi.isLoading, error: homeApi.error },
+        ) ?? undefined,
+      suggestedHosts:
+        nearbyHosts.length > 0
+          ? nearbyHosts
+          : suggestedHostsDisplay.slice(0, 2),
+      recommendedSections: [],
+      recommendationSections: dashboardRecommendations.sections,
+      recommendationHeadline: dashboardRecommendations.headline,
       recommendationCity: cityLabel,
-      suggestedHostsTitle: 'Recommended nearby',
+      suggestedHostsTitle: 'Homestays nearby',
       journeyProgress,
       showMatchScores,
       isHomeLoading,
       homeDataError,
       statusLabel: studentLive.statusLabel,
       reminder: studentLive.reminder,
-      recentActivity:
-        studentLive.recentActivity.length > 0
-          ? studentLive.recentActivity
-          : studentRecentActivityMock,
+      recentActivity: studentLive.recentActivity,
       showSetupBanner: seekerSetupIncomplete && primaryIntent === 'STUDENT',
-    }),
+    };
+    },
     [
       firstName,
       resolvedInitials,
@@ -2206,7 +2232,7 @@ export default function AppNavigator() {
       seekerSetupIncomplete,
       primaryIntent,
       cityLabel,
-      homeRecommendations,
+      dashboardRecommendations,
       journeyProgress,
     ],
   );
@@ -2230,76 +2256,78 @@ export default function AppNavigator() {
   );
 
   const browseHomeProps = useMemo(
-    () => ({
+    () => {
+      const nearbyGuides = suggestedGuidesDisplay.filter(
+        (guide) => guide.id !== displayTopGuideId,
+      );
+      return {
       greeting: personalizedGreeting,
       userName: firstName,
       userInitials: resolvedInitials,
       cityLabel,
       statusIcon: '🌍',
       statusLabel: touristLive.statusLabel,
-      featuredGuide: withDemoFallbackValue(
-        homeApi.featuredGuide,
-        touristFeaturedGuideMock,
-        { isLoading: homeApi.isLoading, error: homeApi.error },
-      ),
+      featuredGuide:
+        withDemoFallbackValue(
+          homeApi.featuredGuide,
+          touristFeaturedGuideMock,
+          { isLoading: homeApi.isLoading, error: homeApi.error },
+        ) ?? undefined,
       quickActions: getQuickActionsForRole('BROWSE'),
-      sections: exploreSectionsForCity(cityLabel),
-      exploreSectionTitle: `Explore ${cityLabel.split(',')[0]?.trim() || cityLabel}`,
-      recentActivity:
-        touristLive.recentActivity.length > 0
-          ? touristLive.recentActivity
-          : touristRecentActivityMock,
+      recentActivity: touristLive.recentActivity,
       reminder: touristLive.reminder,
       tabBarItems,
       activeTabId: 'home',
       showSetupBanner: false,
-      suggestedGuides: suggestedGuidesDisplay.filter(
-        (guide) => guide.id !== displayTopGuideId,
-      ),
-      suggestedGuidesTitle: 'Recommended nearby',
+      suggestedGuides:
+        nearbyGuides.length > 0
+          ? nearbyGuides
+          : suggestedGuidesDisplay.slice(0, 2),
+      suggestedGuidesTitle: 'Guides nearby',
       showMatchScores,
-      recommendationSections: homeRecommendations.sections,
-      recommendationHeadline: homeRecommendations.headline,
+      recommendationSections: dashboardRecommendations.sections,
+      recommendationHeadline: dashboardRecommendations.headline,
       journeyProgress,
-    }),
-    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeDataError, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, homeRecommendations, journeyProgress],
+    };
+    },
+    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, dashboardRecommendations, journeyProgress],
   );
 
   const exploreHomeProps = useMemo(
-    () => ({
+    () => {
+      const nearbyGuides = suggestedGuidesDisplay.filter(
+        (guide) => guide.id !== displayTopGuideId,
+      );
+      return {
       greeting: getPersonalizedGreeting(firstName),
       userName: firstName,
       userInitials: resolvedInitials,
       cityLabel,
       statusIcon: '🌍',
       statusLabel: touristLive.statusLabel,
-      featuredGuide: withDemoFallbackValue(
-        homeApi.featuredGuide,
-        touristFeaturedGuideMock,
-        { isLoading: homeApi.isLoading, error: homeApi.error },
-      ),
-      suggestedGuides: suggestedGuidesDisplay.filter(
-        (guide) => guide.id !== displayTopGuideId,
-      ),
-      suggestedGuidesTitle: 'Recommended nearby',
+      featuredGuide:
+        withDemoFallbackValue(
+          homeApi.featuredGuide,
+          touristFeaturedGuideMock,
+          { isLoading: homeApi.isLoading, error: homeApi.error },
+        ) ?? undefined,
+      suggestedGuides:
+        nearbyGuides.length > 0
+          ? nearbyGuides
+          : suggestedGuidesDisplay.slice(0, 2),
+      suggestedGuidesTitle: 'Guides nearby',
       showMatchScores,
-      isHomeLoading,
-      recommendationSections: homeRecommendations.sections,
-      recommendationHeadline: homeRecommendations.headline,
+      recommendationSections: dashboardRecommendations.sections,
+      recommendationHeadline: dashboardRecommendations.headline,
       journeyProgress,
-      homeDataError,
       quickActions: getQuickActionsForRole('TOURIST'),
-      sections: exploreSectionsForCity(cityLabel),
-      exploreSectionTitle: `Explore ${cityLabel.split(',')[0]?.trim() || cityLabel}`,
-      recentActivity:
-        touristLive.recentActivity.length > 0
-          ? touristLive.recentActivity
-          : touristRecentActivityMock,
+      recentActivity: touristLive.recentActivity,
       reminder: touristLive.reminder,
       tabBarItems,
       activeTabId: 'home',
       showSetupBanner: seekerSetupIncomplete && primaryIntent === 'TOURIST',
-    }),
+    };
+    },
     [
       firstName,
       resolvedInitials,
@@ -2309,11 +2337,9 @@ export default function AppNavigator() {
       suggestedGuidesDisplay,
       displayTopGuideId,
       showMatchScores,
-      isHomeLoading,
-      homeDataError,
       seekerSetupIncomplete,
       primaryIntent,
-      homeRecommendations,
+      dashboardRecommendations,
       journeyProgress,
       touristLive,
     ],
@@ -2566,14 +2592,17 @@ export default function AppNavigator() {
           <BrowseHomeScreen
             {...browseHomeProps}
             guidesEmptyState={emptyStates.discoveryGuides(cityLabel)}
-            onSectionPress={(sectionId) => handleExploreSectionPress(navigation, sectionId)}
-            onFeaturedGuidePress={() =>
-              navigation.navigate('GuideProfile', { guideId: displayTopGuideId })
-            }
+            {...homeTabSosProps(navigation)}
+            notificationCount={unreadNotifications}
+            onNotificationPress={() => openNotifications(navigation)}
+            onFeaturedGuidePress={() => navigation.navigate('GuideSearch')}
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
             }
             onGuidesEmptyPrimaryAction={() => navigation.navigate('GuideSearch')}
+            onRecommendationItemPress={(item) =>
+              handleRecommendationItemPress(navigation, item)
+            }
             onRecommendationsEmptyPress={() => navigation.navigate('GuideSearch')}
             onJourneyStepPress={(step) => handleJourneyStepPress(navigation, step)}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
@@ -2600,7 +2629,7 @@ export default function AppNavigator() {
                 navigation.reset({ index: 0, routes: [{ name: 'GuideHome' }] });
                 return;
               }
-              if (primaryIntent === 'TOURIST') {
+              if (primaryIntent === 'TOURIST' || homeRole === 'BROWSE') {
                 navigation.navigate('GuideSearch');
                 return;
               }
@@ -2686,6 +2715,14 @@ export default function AppNavigator() {
             onEmptyPrimaryAction={() =>
               navigation.reset({ index: 0, routes: [{ name: 'HostRequestsTab' }] })
             }
+            onBookingPress={(bookingId) => {
+              const pending = hostIncoming.find((r) => r.id === bookingId);
+              if (pending) {
+                navigation.navigate('MatchRequestReview', { requestId: bookingId });
+                return;
+              }
+              navigation.reset({ index: 0, routes: [{ name: 'MessagesTab' }] });
+            }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'HostHome')}
           />
         )}
@@ -2699,7 +2736,7 @@ export default function AppNavigator() {
             summary={hostEarningsDisplay.summary}
             lineItems={hostEarningsDisplay.lineItems}
             tabBarItems={hostTabBarItems}
-            activeTabId="earnings"
+            activeTabId="home"
             isLoading={hostEarningsLoading}
             errorMessage={hostEarningsError}
             emptyState={emptyStates.hostEarnings}
@@ -2723,9 +2760,15 @@ export default function AppNavigator() {
             errorMessage={guideBookingsError}
             emptyState={emptyStates.guideBookings}
             onEmptyPrimaryAction={() => navigation.navigate('GuideAvailability')}
-            onBookingPress={(requestId) =>
-              navigation.navigate('SessionReview', { requestId })
-            }
+            onBookingPress={(bookingId) => {
+              const pending = guideIncoming.find((r) => r.id === bookingId);
+              if (pending) {
+                navigation.navigate('SessionReview', { requestId: bookingId });
+                return;
+              }
+              // Confirmed tours are not SessionReview requests — open inbox to coordinate.
+              navigation.reset({ index: 0, routes: [{ name: 'MessagesTab' }] });
+            }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'GuideHome')}
           />
         )}
@@ -2785,6 +2828,37 @@ export default function AppNavigator() {
               })();
             }}
             onNotificationPress={(notification) => {
+              const openRelatedBooking = (relatedBookingId: string) => {
+                if (primaryIntent === 'HOST') {
+                  const incoming = hostIncoming.find((r) => r.id === relatedBookingId);
+                  if (incoming) {
+                    navigation.navigate('MatchRequestReview', {
+                      requestId: relatedBookingId,
+                    });
+                    return;
+                  }
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'HostBookingsTab' }],
+                  });
+                  return;
+                }
+                if (primaryIntent === 'GUIDE') {
+                  const incoming = guideIncoming.find((r) => r.id === relatedBookingId);
+                  if (incoming) {
+                    navigation.navigate('SessionReview', {
+                      requestId: relatedBookingId,
+                    });
+                    return;
+                  }
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'GuideBookingsTab' }],
+                  });
+                  return;
+                }
+                navigation.navigate('StudentBookings');
+              };
               void (async () => {
                 try {
                   if (!notification.read) {
@@ -2792,12 +2866,11 @@ export default function AppNavigator() {
                     await refreshNotificationState();
                   }
                   if (notification.relatedBookingId) {
-                    navigation.navigate('StudentBookings');
+                    openRelatedBooking(notification.relatedBookingId);
                   }
                 } catch {
-                  // still allow navigation
                   if (notification.relatedBookingId) {
-                    navigation.navigate('StudentBookings');
+                    openRelatedBooking(notification.relatedBookingId);
                   }
                 }
               })();
@@ -2871,6 +2944,7 @@ export default function AppNavigator() {
               hubItems={profileCulturalItems}
               tabBarItems={getTabBarForRole(homeRole)}
               activeTabId={isProvider ? 'home' : 'explore'}
+              {...homeTabSosProps(navigation)}
               onPrimaryActionPress={() => {
                 if (homeRole === 'STUDENT') {
                   navigation.navigate('MatchSearch');
@@ -2995,14 +3069,23 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="UnifiedSearch">
-        {({ navigation }) => (
+        {({ navigation }) => {
+          const isHost = homeRole === 'HOST';
+          const isGuide = homeRole === 'GUIDE';
+          return (
           <UnifiedSearchScreen
             userName={firstName}
             userInitials={resolvedInitials}
             cityLabel={cityLabel}
             categories={SEARCH_CATEGORIES}
-            tabBarItems={tabBarItems}
-            activeTabId="explore"
+            tabBarItems={
+              isHost
+                ? hostTabBarItems
+                : isGuide
+                  ? guideTabBarItems
+                  : tabBarItems
+            }
+            activeTabId={isHost || isGuide ? 'home' : 'explore'}
             onBack={() => navigation.goBack()}
             onCategoryPress={(categoryId) => {
               if (categoryId === 'homestays') {
@@ -3019,9 +3102,16 @@ export default function AppNavigator() {
                 navigation.navigate('LodgingDirectory');
               }
             }}
-            onTabPress={(tabId) => routeTabPress(navigation, tabId)}
+            onTabPress={(tabId) =>
+              routeTabPress(
+                navigation,
+                tabId,
+                isHost ? 'HostHome' : isGuide ? 'GuideHome' : homeRouteKey,
+              )
+            }
           />
-        )}
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="Destination">
@@ -3281,9 +3371,6 @@ export default function AppNavigator() {
               navigation.navigate('HostProfile', { hostId })
             }
             onHostsEmptyPrimaryAction={() => navigation.navigate('MatchSearch')}
-            onRecommendedSectionPress={(sectionId) =>
-              handleExploreSectionPress(navigation, sectionId)
-            }
             onRecommendationItemPress={(item) =>
               handleRecommendationItemPress(navigation, item)
             }
@@ -3306,16 +3393,11 @@ export default function AppNavigator() {
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
-            onFeaturedGuidePress={() => {
-              navigation.navigate('GuideProfile', {
-                guideId: displayTopGuideId,
-              });
-            }}
+            onFeaturedGuidePress={() => navigation.navigate('GuideSearch')}
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
             }
             onGuidesEmptyPrimaryAction={() => navigation.navigate('GuideSearch')}
-            onSectionPress={(sectionId) => handleExploreSectionPress(navigation, sectionId)}
             onRecommendationItemPress={(item) =>
               handleRecommendationItemPress(navigation, item)
             }
@@ -3339,7 +3421,7 @@ export default function AppNavigator() {
                 ctaLabel: 'Review request →',
                 initials: firstRequest.studentInitials,
               }
-            : hostFeaturedRequestMock;
+            : undefined;
 
           return (
             <ProviderHomeDashboard
@@ -3351,9 +3433,9 @@ export default function AppNavigator() {
               statusLabel={hostLive.statusLabel}
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('HOST')}
-              performanceStats={hostPerformanceMock}
-              recommendationSections={homeRecommendations.sections}
-              recommendationHeadline={homeRecommendations.headline}
+              performanceStats={[]}
+              recommendationSections={dashboardRecommendations.sections}
+              recommendationHeadline={dashboardRecommendations.headline}
               recommendationCity={cityLabel}
               requests={hostIncoming}
               emptyState={emptyStates.hostRequests}
@@ -3404,17 +3486,19 @@ export default function AppNavigator() {
           const firstRequest = guideIncoming[0];
           const sessionLabel = firstRequest?.session
             ? `${firstRequest.session.sessionDate} · ${firstRequest.session.sessionStartTime}`
-            : 'City tour';
+            : 'Pending request';
           const featuredCard = firstRequest
             ? {
                 sectionLabel: 'Upcoming tour',
                 name: `${firstRequest.studentName} — Guide session`,
-                badge: guideFeaturedTourMock.badge,
-                details: sessionLabel,
+                badge: sessionLabel,
+                details: firstRequest.session
+                  ? `${firstRequest.session.durationHours}h session`
+                  : 'Guide session request',
                 ctaLabel: 'View details →',
                 initials: firstRequest.studentInitials,
               }
-            : guideFeaturedTourMock;
+            : undefined;
 
           return (
             <ProviderHomeDashboard
@@ -3426,10 +3510,9 @@ export default function AppNavigator() {
               statusLabel={guideLive.statusLabel}
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('GUIDE')}
-              tourSuggestions={guideTourSections}
-              tourSuggestionsTitle="Your tour types"
-              recommendationSections={homeRecommendations.sections}
-              recommendationHeadline={homeRecommendations.headline}
+              tourSuggestions={[]}
+              recommendationSections={dashboardRecommendations.sections}
+              recommendationHeadline={dashboardRecommendations.headline}
               recommendationCity={cityLabel}
               requests={guideIncoming}
               emptyState={emptyStates.guideRequests}
@@ -3489,7 +3572,14 @@ export default function AppNavigator() {
                   bookingId,
                   hostName: booking.hostName,
                 });
+                return;
               }
+              // Pending / accepted / other statuses — open the provider profile.
+              if (booking.bookingType === 'GUIDE') {
+                navigation.navigate('GuideProfile', { guideId: booking.hostId });
+                return;
+              }
+              navigation.navigate('HostProfile', { hostId: booking.hostId });
             }}
             payBlocked={!canBookHomestay && !canBookGuideSession}
             payBlockedMessage="Complete your travel profile to pay for bookings."
@@ -3529,6 +3619,14 @@ export default function AppNavigator() {
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
             onEmptyPrimaryAction={() => {
               if (primaryIntent === 'TOURIST') {
+                if (bookingFilter === 'active') {
+                  navigation.navigate('ExploreStays');
+                  return;
+                }
+                if (bookingFilter === 'pending') {
+                  navigation.navigate('MatchSearch');
+                  return;
+                }
                 navigation.navigate('GuideSearch');
                 return;
               }
@@ -3970,14 +4068,16 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="OfflineMap">
-        {({ navigation }) => (
+        {({ navigation }) => {
+          const regionCity = cityLabel.split(',')[0]?.trim() || cityLabel;
+          return (
           <OfflineMapScreen
             greeting={personalizedGreeting}
             userName={firstName}
             userInitials={resolvedInitials}
             statusIcon="📍"
             statusLabel={touristLive.statusLabel}
-            regionLabel="Greater Accra Region"
+            regionLabel={`${regionCity} area`}
             downloadSize="Offline landmarks from NestBridge"
             landmarks={landmarksDisplay.map((landmark) => ({
               id: landmark.id,
@@ -3985,9 +4085,42 @@ export default function AppNavigator() {
               topPercent: landmark.topPercent,
               leftPercent: landmark.leftPercent,
             }))}
+            onLandmarkPress={(landmarkId) => {
+              const landmark = landmarksDisplay.find((item) => item.id === landmarkId);
+              const site = sitesDisplay.find(
+                (item) =>
+                  item.name === landmark?.name ||
+                  item.siteKey === landmarkId ||
+                  item.id === landmarkId,
+              );
+              if (site) {
+                navigation.navigate('TouristSiteDetail', {
+                  siteId: site.siteKey || site.id,
+                });
+                return;
+              }
+              Alert.alert(
+                landmark?.name ?? 'Landmark',
+                'Browse the sites directory for full details and guide options.',
+                [
+                  {
+                    text: 'Browse sites',
+                    onPress: () => navigation.navigate('SitesDirectory'),
+                  },
+                  { text: 'OK', style: 'cancel' },
+                ],
+              );
+            }}
+            onLocatePress={() => {
+              Alert.alert(
+                'Offline map',
+                'This map shows curated landmarks for offline use. Live GPS centering is not available here.',
+              );
+            }}
             onBack={() => navigation.goBack()}
           />
-        )}
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="HostCalendar">

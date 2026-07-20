@@ -11,7 +11,6 @@ import FeaturedHomeCard, {
 import QuickActionsGrid, {
   type QuickActionItem,
 } from '../../components/QuickActionsGrid';
-import ExploreSectionList from '../../components/ExploreSectionList';
 import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
@@ -24,12 +23,10 @@ import ReminderBanner from '../../components/ReminderBanner';
 import InlineBanner from '../../components/InlineBanner';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import SkeletonLoader from '../../components/SkeletonLoader';
-import SectionHeader from '../../components/SectionHeader';
 import {
   spacing,
   layout,
 } from '../../constants/theme';
-import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 import type { EmptyStateContent } from '../../data/appCopy';
 import { emptyStates } from '../../data/appCopy';
@@ -56,9 +53,7 @@ export interface StudentHomeDashboardProps {
   notificationCount?: number;
   featuredMatch?: Omit<FeaturedHomeCardProps, 'onPress'>;
   quickActions: QuickActionItem[];
-  recommendedSections?: ExploreSectionItem[];
-  recommendedSectionTitle?: string;
-  /** Personalized destination-aware recommendations. */
+  /** Personalized destination-aware recommendations (slim nearby only). */
   recommendationSections?: RecommendationSection[];
   recommendationHeadline?: string;
   recommendationCity?: string;
@@ -81,7 +76,6 @@ export interface StudentHomeDashboardProps {
   onFeaturedMatchPress?: () => void;
   onSuggestedHostPress?: (hostId: string) => void;
   onHostsEmptyPrimaryAction?: () => void;
-  onRecommendedSectionPress?: (sectionId: string) => void;
   onRecommendationItemPress?: (item: RecommendationItem) => void;
   onRecommendationsEmptyPress?: () => void;
   onJourneyStepPress?: (step: JourneyStep) => void;
@@ -99,13 +93,11 @@ export default function StudentHomeDashboard({
   notificationCount = 0,
   featuredMatch,
   quickActions,
-  recommendedSections = [],
-  recommendedSectionTitle = 'Prepare for arrival',
   recommendationSections = [],
-  recommendationHeadline = 'Recommended for you',
+  recommendationHeadline = 'Nearby for you',
   recommendationCity,
   suggestedHosts = [],
-  suggestedHostsTitle = 'Recommended nearby',
+  suggestedHostsTitle = 'Homestays nearby',
   hostsEmptyState,
   showMatchScores = false,
   journeyProgress = null,
@@ -123,7 +115,6 @@ export default function StudentHomeDashboard({
   onFeaturedMatchPress,
   onSuggestedHostPress,
   onHostsEmptyPrimaryAction,
-  onRecommendedSectionPress,
   onRecommendationItemPress,
   onRecommendationsEmptyPress,
   onJourneyStepPress,
@@ -150,7 +141,8 @@ export default function StudentHomeDashboard({
       <ScreenScroll withTabBar withSosDock={showSosDock}>
         {showSetupBanner ? (
           <ProfileIncompleteBanner
-            message="Complete your travel profile to unlock homestay booking."
+            message="Complete your travel profile to unlock messaging, bookings, and personalized matches."
+            continueLabel="Complete Profile"
             onContinueSetup={onSetupPress}
           />
         ) : null}
@@ -204,29 +196,19 @@ export default function StudentHomeDashboard({
           emptyState={hostsEmptyState}
           onEmptyPrimaryAction={onHostsEmptyPrimaryAction}
           onItemPress={onSuggestedHostPress}
+          actionLabel="See all"
+          onActionPress={onHostsEmptyPrimaryAction}
         />
 
-        <RecommendedForYou
-          headline={recommendationHeadline}
-          city={recommendationCity}
-          sections={recommendationSections}
-          emptyState={emptyStates.recommendations}
-          onEmptyPrimaryAction={onRecommendationsEmptyPress}
-          onItemPress={onRecommendationItemPress}
-        />
-
-        {recommendedSections.length > 0 ? (
-          <View style={styles.sectionBlock}>
-            <SectionHeader
-              title={recommendedSectionTitle}
-              style={styles.sectionHeader}
-            />
-            <ExploreSectionList
-              sections={recommendedSections}
-              variant="grid"
-              onSectionPress={onRecommendedSectionPress}
-            />
-          </View>
+        {recommendationSections.length > 0 ? (
+          <RecommendedForYou
+            headline={recommendationHeadline}
+            city={recommendationCity}
+            sections={recommendationSections}
+            emptyState={emptyStates.recommendations}
+            onEmptyPrimaryAction={onRecommendationsEmptyPress}
+            onItemPress={onRecommendationItemPress}
+          />
         ) : null}
 
         <RecentActivityList items={recentActivity} />
