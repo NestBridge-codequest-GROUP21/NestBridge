@@ -1,15 +1,17 @@
 /**
  * Demo presentation layer for CodeQuest / pre-launch judging.
  *
- * Live API data wins when the backend returns real rows. For seeded demo
- * actor accounts only, curated Ghana mock content fills empty screens so
- * judges see a populated experience.
- *
- * Real Create Account users never receive mock rows — empty API responses
- * surface as genuine empty states.
+ * Two merge modes:
+ * - {@link withCatalogFallback} — platform content for every signed-in user
+ *   (videos, tourist sites, transport, landmarks, checklist, emergency numbers).
+ *   Live API wins; catalog fills gaps.
+ * - {@link withDemoFallback} — location-personalized or personal rows (lodging
+ *   partners, explore stays, bookings, messages, notifications, match
+ *   hosts/guides, provider inbox). Only for seeded demo actor accounts when
+ *   the global flag is on; real accounts see genuine empty states.
  *
  * Global kill switch: EXPO_PUBLIC_ENABLE_DEMO_FALLBACK=false
- * Per-account gate: shouldUseDemoFallbackForAccount(email)
+ * Per-account gate (demo merge only): shouldUseDemoFallbackForAccount(email)
  */
 
 import { shouldUseDemoFallbackForAccount } from '../config/demoMode';

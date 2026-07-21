@@ -70,8 +70,11 @@ export default function LodgingDirectoryScreen({
 }: LodgingDirectoryScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-  const empty = emptyStates.lodgingDirectory(cityLabel);
   const filterActive = activeFilter !== 'ALL';
+  const empty =
+    listings.length === 0
+      ? emptyStates.lodgingDirectory(cityLabel)
+      : emptyStates.lodgingDirectoryFiltered(cityLabel);
 
   const filtered = filterListings(listings, activeFilter);
 

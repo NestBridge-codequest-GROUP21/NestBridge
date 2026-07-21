@@ -1781,7 +1781,7 @@ export default function AppNavigator() {
       enrichEmergencyContact(contact),
     );
     return uniqueByContactNumber(
-      withDemoFallback(liveContacts, emergencyContactsMock, {
+      withCatalogFallback(liveContacts, emergencyContactsMock, {
         isLoading: contentEmergency.isLoading,
         error: contentEmergency.error,
         matchKey: (item) =>
@@ -1808,7 +1808,7 @@ export default function AppNavigator() {
   const transportDisplay = useMemo(
     () =>
       uniqueByKey(
-        withDemoFallback(contentTransport.data, transportApiMock, {
+        withCatalogFallback(contentTransport.data, transportApiMock, {
           isLoading: contentTransport.isLoading,
           error: contentTransport.error,
           matchKey: (item) => String((item as { id?: string }).id ?? ''),
@@ -1821,7 +1821,7 @@ export default function AppNavigator() {
   const sitesDisplay = useMemo(
     () =>
       uniqueByKey(
-        withDemoFallback(contentSites.data, sitesApiMock, {
+        withCatalogFallback(contentSites.data, sitesApiMock, {
           isLoading: contentSites.isLoading,
           error: contentSites.error,
           matchKey: (item) => {
@@ -1837,7 +1837,7 @@ export default function AppNavigator() {
   const checklistContentDisplay = useMemo(
     () =>
       uniqueByKey(
-        withDemoFallback(contentChecklist.data, checklistApiMock, {
+        withCatalogFallback(contentChecklist.data, checklistApiMock, {
           isLoading: contentChecklist.isLoading,
           error: contentChecklist.error,
           matchKey: (item) =>
@@ -1851,7 +1851,7 @@ export default function AppNavigator() {
   const landmarksDisplay = useMemo(
     () =>
       uniqueByKey(
-        withDemoFallback(contentLandmarks.data, landmarksApiMock, {
+        withCatalogFallback(contentLandmarks.data, landmarksApiMock, {
           isLoading: contentLandmarks.isLoading,
           error: contentLandmarks.error,
           matchKey: (item) => String((item as { name?: string }).name ?? ''),
@@ -4300,7 +4300,18 @@ export default function AppNavigator() {
         {({ navigation, route }) => {
           const listing =
             lodgingListingFromId(route.params.listingId, lodgingListingsDisplay) ??
-            listingFromId(route.params.listingId);
+            (demoFallbackEnabled
+              ? listingFromId(route.params.listingId)
+              : null);
+          if (!listing) {
+            return (
+              <RouteErrorState
+                title="Listing not found"
+                message={`No lodging partner is available near ${cityLabel} for this link.`}
+                onBack={() => navigation.goBack()}
+              />
+            );
+          }
           const isSaved = savedLodgingIds.includes(listing.id);
           return (
             <LodgingDetailScreen
