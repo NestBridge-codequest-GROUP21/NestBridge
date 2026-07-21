@@ -587,7 +587,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   rowPayButton: {
     marginTop: spacing.md,

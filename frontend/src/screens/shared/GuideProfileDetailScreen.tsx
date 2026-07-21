@@ -238,7 +238,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontSize: fontSizes.display,
     fontWeight: fontWeights.semibold,
     lineHeight: lineHeights.display,
-    color: colors.tealDeep,
+    color: colors.onAccent,
     marginBottom: spacing.xs,
   },
   duration: {

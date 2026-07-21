@@ -62,7 +62,7 @@ export default function RouteErrorState({
       ]}
     >
       <View style={styles.iconTile}>
-        <AppIcon name="cloud-offline-outline" size={iconSizes.xl} color={colors.tealDeep} />
+        <AppIcon name="cloud-offline-outline" size={iconSizes.xl} color={colors.onAccent} />
       </View>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>

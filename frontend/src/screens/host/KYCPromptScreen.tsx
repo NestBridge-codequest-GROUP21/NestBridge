@@ -55,7 +55,7 @@ export default function KYCPromptScreen({
 
       <View style={styles.iconContainer} accessibilityLabel="Identity verification">
         <Card padding="none" elevation="none" style={styles.iconTile}>
-          <AppIcon name="card-outline" size={avatarSizes.lg + iconSizes.lg} color={colors.tealDeep} />
+          <AppIcon name="card-outline" size={avatarSizes.lg + iconSizes.lg} color={colors.onAccent} />
         </Card>
       </View>
 

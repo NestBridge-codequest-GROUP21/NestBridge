@@ -169,7 +169,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
     marginBottom: spacing.md,
   },
   summaryRow: {

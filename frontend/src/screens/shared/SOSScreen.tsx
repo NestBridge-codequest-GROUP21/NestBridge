@@ -172,7 +172,7 @@ export default function SOSScreen({
                       <AppIcon
                         name="person-outline"
                         size={iconSizes.md}
-                        color={colors.tealDeep}
+                        color={colors.onAccent}
                       />
                     </View>
                     <View style={styles.contactText}>

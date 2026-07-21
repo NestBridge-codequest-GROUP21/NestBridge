@@ -89,7 +89,7 @@ export default function OnboardingReadyCarousel({
                   <AppIcon
                     glyph={item.icon}
                     size={fontSizes.heading}
-                    color={colors.tealDeep}
+                    color={colors.onAccent}
                   />
                 </View>
                 <Text style={styles.cardTitle}>{item.title}</Text>

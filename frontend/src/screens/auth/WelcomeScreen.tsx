@@ -190,7 +190,7 @@ export default function WelcomeScreen({
             {valuePills.map((pill) => (
               <Card key={pill.label} style={styles.pill} padding="md">
                 <View style={styles.pillIconTile}>
-                  <AppIcon glyph={pill.icon} size={iconSizes.md} color={colors.tealDeep} />
+                  <AppIcon glyph={pill.icon} size={iconSizes.md} color={colors.onAccent} />
                 </View>
                 <Text style={styles.pillLabel}>{pill.label}</Text>
               </Card>

@@ -86,7 +86,7 @@ function ListSection({
                 <AppIcon
                   glyph={item.icon ?? '📍'}
                   size={iconSizes.md}
-                  color={colors.tealDeep}
+                  color={colors.onAccent}
                 />
               </View>
             )}
@@ -171,7 +171,7 @@ function GridSection({
               <AppIcon
                 glyph={item.icon ?? '📍'}
                 size={iconSizes.md}
-                color={colors.tealDeep}
+                color={colors.onAccent}
               />
             </View>
             <Text style={styles.gridTitle} numberOfLines={2}>
@@ -240,7 +240,7 @@ function FeaturedSection({
               <AppIcon
                 glyph={item.icon ?? '✨'}
                 size={iconSizes.lg}
-                color={colors.tealDeep}
+                color={colors.onAccent}
               />
             </View>
             <Text style={styles.featuredTitle} numberOfLines={2}>
@@ -397,7 +397,7 @@ function createStyles({ colors, tints }: AppTheme) {
       fontFamily: fontFamilies.semibold,
       fontSize: fontSizes.caption,
       fontWeight: fontWeights.semibold,
-      color: colors.tealDeep,
+      color: colors.onAccent,
     },
     listIcon: {
       width: touchTarget,
@@ -449,7 +449,7 @@ function createStyles({ colors, tints }: AppTheme) {
       fontFamily: fontFamilies.semibold,
       fontSize: fontSizes.caption,
       fontWeight: fontWeights.semibold,
-      color: colors.tealDeep,
+      color: colors.onAccent,
       flexShrink: 0,
       textAlign: 'right',
       marginTop: spacing.xs,

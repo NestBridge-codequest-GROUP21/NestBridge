@@ -274,7 +274,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   priceUnit: {
     fontFamily: fontFamilies.regular,

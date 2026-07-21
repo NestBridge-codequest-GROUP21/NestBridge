@@ -122,7 +122,7 @@ export default function IntentSelectScreen({
                   <AppIcon
                     glyph={option.icon}
                     size={iconSizes.lg}
-                    color={colors.tealDeep}
+                    color={colors.onAccent}
                   />
                 </View>
                 <View style={styles.optionText}>

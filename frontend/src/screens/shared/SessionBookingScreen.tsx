@@ -175,7 +175,7 @@ export default function SessionBookingScreen({
           <AppIcon
             name="document-text-outline"
             size={iconSizes.md}
-            color={colors.tealDeep}
+            color={colors.onAccent}
             style={styles.policyIcon}
           />
           <Text style={styles.policyText}>{guide.cancellationPolicy}</Text>
@@ -311,7 +311,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontSize: fontSizes.subheading,
   },
   priceValueAccent: {
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   priceDivider: {
     height: borderWidths.hairline,

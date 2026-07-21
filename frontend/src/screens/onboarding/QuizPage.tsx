@@ -742,7 +742,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   chipLabelSelected: {
     fontFamily: fontFamilies.semibold,
     fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   otherSpecifyWrap: {
     marginTop: spacing.md,
@@ -771,7 +771,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   optionLabelSelected: {
     fontFamily: fontFamilies.semibold,
     fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   sliderWrap: {
     marginTop: spacing.sm,

@@ -135,7 +135,7 @@ export default function PracticalLocalTipsScreen({
                             <AppIcon
                               glyph={tip.emoji}
                               size={iconSizes.md}
-                              color={colors.tealDeep}
+                              color={colors.onAccent}
                             />
                           </View>
                           <Text style={styles.tipTitle}>{tip.title}</Text>

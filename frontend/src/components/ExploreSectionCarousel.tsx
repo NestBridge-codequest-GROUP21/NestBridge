@@ -320,7 +320,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
   savedBadgeText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   cta: {
     fontFamily: fontFamilies.semibold,

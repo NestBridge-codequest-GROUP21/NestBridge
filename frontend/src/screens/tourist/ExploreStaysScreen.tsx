@@ -74,7 +74,7 @@ function StayCard({
         <AppIcon
           glyph={listing.imageEmoji}
           size={iconSizes.xl}
-          color={colors.tealDeep}
+          color={colors.onAccent}
         />
       </View>
 

@@ -94,7 +94,7 @@ export default function UnifiedSearchScreen({
                 <AppIcon
                   glyph={category.icon}
                   size={iconSizes.lg}
-                  color={colors.tealDeep}
+                  color={colors.onAccent}
                 />
               </View>
               <View style={styles.cardText}>

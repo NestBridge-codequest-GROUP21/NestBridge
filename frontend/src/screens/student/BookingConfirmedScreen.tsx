@@ -206,7 +206,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   },
   summaryHighlight: {
     fontFamily: fontFamilies.semibold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
     fontWeight: fontWeights.semibold,
   },
   summaryDivider: {

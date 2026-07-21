@@ -65,7 +65,7 @@ export default function TouristSiteDetailScreen({
             <AppIcon
               name="library-outline"
               size={iconSizes.xl}
-              color={colors.tealDeep}
+              color={colors.onAccent}
             />
           </View>
         </View>

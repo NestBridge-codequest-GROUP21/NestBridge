@@ -64,7 +64,7 @@ function ListingCard({
   return (
     <Card padding="none" style={styles.listingCard}>
       <View style={styles.thumbnail}>
-        <AppIcon glyph={listing.imageEmoji} size={iconSizes.xl} color={colors.tealDeep} />
+        <AppIcon glyph={listing.imageEmoji} size={iconSizes.xl} color={colors.onAccent} />
       </View>
 
       <View style={styles.listingBody}>

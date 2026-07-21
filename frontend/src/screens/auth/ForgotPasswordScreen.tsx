@@ -68,7 +68,7 @@ export default function ForgotPasswordScreen({
 
         {sent ? (
           <View style={styles.iconTile}>
-            <AppIcon name="mail-open-outline" size={iconSizes.xl} color={colors.tealDeep} />
+            <AppIcon name="mail-open-outline" size={iconSizes.xl} color={colors.onAccent} />
           </View>
         ) : null}
 

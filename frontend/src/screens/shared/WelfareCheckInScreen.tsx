@@ -280,7 +280,7 @@ function createStyles({ colors }: AppTheme) {
     fontWeight: fontWeights.semibold,
   },
   answerLabelSelected: {
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   sosLink: {
     minHeight: touchTarget,
