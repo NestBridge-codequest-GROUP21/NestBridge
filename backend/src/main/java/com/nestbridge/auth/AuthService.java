@@ -26,6 +26,7 @@ public class AuthService {
     private final EmailVerificationService emailVerificationService;
     private final EmailService emailService;
     private final PlatformTransactionManager transactionManager;
+    private final AdminEmailAllowlist adminEmailAllowlist;
 
     @Value("${jwt.refresh-expiry-ms}")
     private long refreshExpiryMs;
@@ -95,6 +96,7 @@ public class AuthService {
     private User persistNewUser(RegisterRequest request, String email, boolean emailVerified) {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
+            boolean grantStaff = adminEmailAllowlist.contains(email);
             User user = User.builder()
                     .fullName(request.getFullName().trim())
                     .email(email)
@@ -102,11 +104,16 @@ public class AuthService {
                     .activeExchangeStudent(true)
                     .identityVerified(false)
                     .emailVerified(emailVerified)
+                    .staff(grantStaff)
                     .build();
             if (emailVerified) {
                 user.setEmailVerifiedAt(java.time.OffsetDateTime.now());
             }
-            return userRepository.save(user);
+            User saved = userRepository.save(user);
+            if (grantStaff) {
+                log.info("Granted staff access to {} via allowlist", email);
+            }
+            return saved;
         });
     }
 
