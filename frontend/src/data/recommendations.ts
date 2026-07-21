@@ -43,7 +43,7 @@ function institutionItems(city: string, university?: string): RecommendationItem
         ? 'Matches your selected university'
         : `Recommended because you selected ${normalizeCity(city)}`,
     actionLabel: 'View',
-    routeHint: 'MatchSearch',
+    routeHint: 'UniversitiesDirectory',
   }));
   if (local.length > 0) {
     return local;
@@ -56,8 +56,8 @@ function institutionItems(city: string, university?: string): RecommendationItem
     location: normalizeCity(city),
     icon: '🎓',
     reason: 'Closest campuses for this destination',
-    actionLabel: 'Find stays',
-    routeHint: 'MatchSearch',
+    actionLabel: 'View',
+    routeHint: 'UniversitiesDirectory',
   }));
 }
 
@@ -390,8 +390,8 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
             title: 'New tour requests waiting',
             subtitle: `Session bookings near ${capital}`,
             icon: '📩',
-            routeHint: 'GuideBookingsTab',
-            actionLabel: 'Open bookings',
+            routeHint: 'IncomingSessionRequests',
+            actionLabel: 'Open requests',
           },
           {
             id: 'opp-guide-sites',
@@ -399,8 +399,8 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
             title: 'Pair tours with local attractions',
             subtitle: `Highlight sites near ${capital}`,
             icon: '🏛️',
-            routeHint: 'TourTypesSetup',
-            actionLabel: 'Edit tours',
+            routeHint: 'SitesDirectory',
+            actionLabel: 'Browse sites',
           },
         ];
 

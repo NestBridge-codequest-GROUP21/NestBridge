@@ -205,9 +205,13 @@ function enrichItem(
   item: RecommendationItem,
   city?: string,
 ): RecommendationItem {
+  const skipInferredLocation =
+    item.type === 'OPPORTUNITY' || item.type === 'PROFILE_TIP';
   return {
     ...item,
-    location: extractLocation(item, city),
+    location: skipInferredLocation
+      ? item.location?.trim() || undefined
+      : extractLocation(item, city),
     actionLabel: actionLabelFor(item),
   };
 }

@@ -327,17 +327,17 @@ public class RecommendationService {
         opportunities.add(item(
                 "opp-guide-sessions",
                 "OPPORTUNITY",
-                "Open more session slots",
-                "Travellers in " + city + " are looking for local guides",
-                "🗓️",
+                "New tour requests waiting",
+                "Session bookings near " + city,
+                "📩",
                 "Demand nearby",
                 null,
-                "GuideAvailability"));
+                "IncomingSessionRequests"));
         opportunities.add(item(
                 "opp-guide-sites",
                 "OPPORTUNITY",
-                "Highlight local attractions",
-                "Pair your tours with popular sites near " + city,
+                "Pair tours with local attractions",
+                "Highlight sites near " + city,
                 "🏛️",
                 "Local inventory",
                 null,
@@ -375,7 +375,7 @@ public class RecommendationService {
                     .reason(preferred
                             ? "Matches your selected university"
                             : (nearby ? "Closest campuses for this destination" : "Local to your destination"))
-                    .routeHint("PrepChecklist")
+                    .routeHint("UniversitiesDirectory")
                     .build());
             if (items.size() >= SECTION_LIMIT) {
                 break;

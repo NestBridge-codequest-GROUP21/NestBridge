@@ -73,6 +73,7 @@ export type AppStackParamList = {
   TourTypesSetup: undefined;
   GuideAvailability: undefined;
   SitesDirectory: undefined;
+  UniversitiesDirectory: undefined;
   StudentEvents: undefined;
   CreateEvent: undefined;
   VideoLibrary: undefined;
