@@ -2,8 +2,8 @@ import Constants from 'expo-constants';
 import { ALL_DEMO_ACCOUNTS } from '../data/demoAccounts';
 
 /**
- * When true (default), empty API responses show Ghana demo data for CodeQuest judges.
- * Set EXPO_PUBLIC_ENABLE_DEMO_FALLBACK=false in EAS production profile before real launch.
+ * Global kill switch for demo UX (Quick sign-in tiles + mock fallbacks).
+ * Set EXPO_PUBLIC_ENABLE_DEMO_FALLBACK=false in EAS production to disable for everyone.
  */
 export function isDemoFallbackEnabled(): boolean {
   try {
@@ -12,20 +12,44 @@ export function isDemoFallbackEnabled(): boolean {
       return false;
     }
   } catch {
-    // Keep demo fallback on if Constants is unavailable.
+    // Keep demo fallback on if Constants is unavailable (dev / Expo Go).
   }
   return true;
 }
 
-/** Demo actor buttons on Welcome / Login / Register — same flag as demo fallback. */
+/** Demo actor buttons on Welcome / Login / Register — same global kill switch. */
 export function isDemoQuickLoginEnabled(): boolean {
   return isDemoFallbackEnabled();
 }
 
+/**
+ * Demo accounts are identified by exact email match against the seeded list in
+ * `data/demoAccounts.ts` (ALL_DEMO_ACCOUNTS):
+ *   - akosua.demo@nestbridge.app (Student)
+ *   - zara.tourist@nestbridge.app (Tourist)
+ *   - abena.host@nestbridge.app (Host family)
+ *   - kofi.guide@nestbridge.app (Local guide)
+ *   - admin@nestbridge.app (Staff — ops only, not Quick sign-in)
+ *
+ * Not by domain alone: a real user who registers with any other address
+ * (including a non-seeded *@nestbridge.app address) is treated as a production account.
+ */
 export function isDemoActorEmail(email: string | null | undefined): boolean {
   if (!email) {
     return false;
   }
   const normalized = email.trim().toLowerCase();
   return ALL_DEMO_ACCOUNTS.some((account) => account.email.toLowerCase() === normalized);
+}
+
+/**
+ * Per-account gate for mock/fallback content.
+ * Requires BOTH the global flag and a seeded demo actor email for the
+ * currently signed-in user. Real Create Account users always get live data
+ * (or genuine empty states) even when the global flag is still on for judges.
+ */
+export function shouldUseDemoFallbackForAccount(
+  email: string | null | undefined,
+): boolean {
+  return isDemoFallbackEnabled() && isDemoActorEmail(email);
 }

@@ -29,6 +29,65 @@ export function createDefaultAccountProfileState(): AccountProfileState {
   };
 }
 
+/** Higher = more onboarding progress (used when merging local vs remote). */
+export function profileCompletenessScore(state: AccountProfileState): number {
+  let score = 0;
+  if (state.primaryIntent) {
+    score += 20;
+  }
+  const tracks = [state.seekerSetup, state.hostProvider, state.guideProvider];
+  for (const track of tracks) {
+    score += track.stepsCompleted.length * 3;
+    if (track.status === 'IN_PROGRESS') {
+      score += 2;
+    }
+    if (track.status === 'COMPLETE') {
+      score += 10;
+    }
+    score += Object.keys(track.data ?? {}).length;
+  }
+  return score;
+}
+
+/**
+ * Prefer the richer of local SecureStore vs remote API profile so a failed
+ * remote sync cannot wipe completed onboarding on the next cold start.
+ */
+export function preferRicherAccountProfile(
+  local: AccountProfileState | null | undefined,
+  remote: AccountProfileState | null | undefined,
+): AccountProfileState {
+  if (!local && !remote) {
+    return createDefaultAccountProfileState();
+  }
+  if (!local) {
+    return remote!;
+  }
+  if (!remote) {
+    return local;
+  }
+  return profileCompletenessScore(local) > profileCompletenessScore(remote)
+    ? local
+    : remote;
+}
+
+/**
+ * Strip host/guide payloads for active exchange students so PUT /profile
+ * never trips the server-side provider block when syncing seeker progress.
+ */
+export function sanitizeProfileForRemoteSync(
+  state: AccountProfileState,
+): AccountProfileState {
+  if (!isActiveExchangeStudent(state)) {
+    return state;
+  }
+  return {
+    ...state,
+    hostProvider: createEmptyProgress(),
+    guideProvider: createEmptyProgress(),
+  };
+}
+
 export function isProfileComplete(progress: ProfileProgress): boolean {
   return progress.status === 'COMPLETE';
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
@@ -82,9 +83,6 @@ export default function AuthNavigator({
   }, [initialResetToken]);
 
   const handleDemoLogin = async (account: DemoAccount) => {
-    setLoginError('');
-    setRegisterError('');
-    setStaffLoginError('');
     setDemoLoginBusy(true);
     try {
       const signedIn = await signIn(account.email, DEMO_PASSWORD, keepSignedIn);
@@ -94,10 +92,12 @@ export default function AuthNavigator({
       }
       await applyDevPreset(demoPresetForAccount(account));
       await setPrimaryIntent(account.intent);
-    } catch {
-      const message = `Could not sign in as ${account.name}. Make sure the backend is running and Flyway seeds have applied.`;
-      setLoginError(message);
-      setRegisterError(message);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : `Could not sign in as ${account.name}. Make sure the backend is running.`;
+      Alert.alert('Quick sign-in failed', message);
     } finally {
       setDemoLoginBusy(false);
     }
@@ -187,11 +187,6 @@ export default function AuthNavigator({
             password={password}
             keepSignedIn={keepSignedIn}
             errorMessage={registerError}
-            demoAccounts={demoAccounts}
-            demoLoginBusy={demoLoginBusy}
-            onDemoLogin={(account) => {
-              void handleDemoLogin(account);
-            }}
             onFullNameChange={setFullName}
             onEmailChange={setEmail}
             onPasswordChange={setPassword}
@@ -403,8 +398,6 @@ export default function AuthNavigator({
             showResendVerification={loginNeedsVerification}
             resendBusy={resendBusy}
             appVersion={APP_VERSION}
-            demoAccounts={demoAccounts}
-            demoLoginBusy={demoLoginBusy}
             onEmailChange={(value) => {
               setEmail(value);
               setLoginNeedsVerification(false);
@@ -458,9 +451,6 @@ export default function AuthNavigator({
               } finally {
                 setResendBusy(false);
               }
-            }}
-            onDemoLogin={(account) => {
-              void handleDemoLogin(account);
             }}
             onForgotPasswordPress={() => {
               setForgotError('');

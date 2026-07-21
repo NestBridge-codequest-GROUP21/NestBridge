@@ -12,11 +12,9 @@ import FormTextField from '../../components/FormTextField';
 import ScreenScroll from '../../components/ScreenScroll';
 import BrandLogo from '../../components/BrandLogo';
 import PrimaryButton from '../../components/PrimaryButton';
-import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
 import CheckboxRow from '../../components/CheckboxRow';
-import type { DemoAccount } from '../../data/demoAccounts';
 import {
   fontFamilies,
   fontSizes,
@@ -35,9 +33,6 @@ export interface RegisterScreenProps {
   password: string;
   keepSignedIn: boolean;
   errorMessage?: string;
-  demoAccounts?: DemoAccount[];
-  demoLoginBusy?: boolean;
-  onDemoLogin?: (account: DemoAccount) => void;
   onFullNameChange?: (value: string) => void;
   onEmailChange?: (value: string) => void;
   onPasswordChange?: (value: string) => void;
@@ -55,9 +50,6 @@ export default function RegisterScreen({
   password,
   keepSignedIn,
   errorMessage,
-  demoAccounts = [],
-  demoLoginBusy = false,
-  onDemoLogin,
   onFullNameChange,
   onEmailChange,
   onPasswordChange,
@@ -126,18 +118,6 @@ export default function RegisterScreen({
 
         <PrimaryButton label="Create account" onPress={onSubmit} />
 
-        {demoAccounts.length > 0 ? (
-          <View style={styles.demoWrap}>
-            <DemoActorQuickLogin
-              accounts={demoAccounts}
-              busy={demoLoginBusy}
-              variant="tabs"
-              title="Or use quick sign-in"
-              onSelect={onDemoLogin}
-            />
-          </View>
-        ) : null}
-
         <Pressable onPress={onSignInPress} style={styles.footerLink}>
           <Text style={styles.footerText}>
             Already have an account? <Text style={styles.footerLinkBold}>Sign in</Text>
@@ -183,9 +163,6 @@ function createStyles({ colors }: AppTheme) {
   checkboxRow: {
     marginBottom: spacing.lg,
   },
-  demoWrap: {
-    marginTop: spacing.lg,
-  },
   footerLink: {
     alignItems: 'center',
     paddingVertical: spacing.lg,
@@ -204,4 +181,3 @@ function createStyles({ colors }: AppTheme) {
   },
 });
 }
-

@@ -38,6 +38,9 @@ import {
   isGuideComplete,
   isHostComplete,
   isSeekerComplete,
+  preferRicherAccountProfile,
+  profileCompletenessScore,
+  sanitizeProfileForRemoteSync,
 } from '../utils/accountProfile';
 import { useAuth } from './AuthContext';
 import {
@@ -171,22 +174,36 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
       setBootStage('profile_hydrate_start');
       setIsLoading(true);
       try {
-        const remote = await api.getMyProfile();
-        if (mounted) {
-          setState(remote);
-        }
-        await saveAccountProfile(user.userId, remote);
-      } catch (remoteError) {
+        const local = await loadAccountProfile(user.userId).catch(() => null);
+        let remote: AccountProfileState | null = null;
         try {
-          const saved = await loadAccountProfile(user.userId);
-          if (mounted) {
-            setState(saved);
+          remote = await api.getMyProfile();
+        } catch (remoteError) {
+          await recordBootError('profile_hydrate_remote', remoteError);
+        }
+
+        const chosen = preferRicherAccountProfile(local, remote);
+        if (mounted) {
+          setState(chosen);
+        }
+        await saveAccountProfile(user.userId, chosen);
+
+        // Local won because remote was empty/stale — push completed onboarding back up.
+        if (
+          remote &&
+          local &&
+          profileCompletenessScore(local) > profileCompletenessScore(remote)
+        ) {
+          try {
+            await api.updateMyProfile(sanitizeProfileForRemoteSync(local));
+          } catch {
+            // Keep richer local cache; next successful sync will catch up.
           }
-        } catch (localError) {
-          await recordBootError('profile_hydrate', localError ?? remoteError);
-          if (mounted) {
-            setState(createDefaultAccountProfileState());
-          }
+        }
+      } catch (error) {
+        await recordBootError('profile_hydrate', error);
+        if (mounted) {
+          setState(createDefaultAccountProfileState());
         }
       } finally {
         clearTimeout(timeout);
@@ -209,7 +226,7 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
         await saveAccountProfile(user.userId, next);
         if (syncRemote) {
           try {
-            await api.updateMyProfile(next);
+            await api.updateMyProfile(sanitizeProfileForRemoteSync(next));
           } catch {
             // local cache remains; home screens surface API errors separately
           }
