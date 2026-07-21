@@ -1,8 +1,8 @@
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
-import { Linking, Text, View, StyleSheet, Pressable } from 'react-native';
+import { Linking, Text, View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
 import SplashScreen from '../screens/auth/SplashScreen';
-import BootLoader from '../components/BootLoader';
 import { splashMock } from '../data/studentOnboardingMock';
 import { useAuth } from '../context/AuthContext';
 import { useAccountProfile } from '../context/AccountProfileContext';
@@ -36,7 +36,7 @@ const AppNavigator = lazy(() => import('./AppNavigator'));
 const SPLASH_FORCE_MS = 10000;
 
 /**
- * Cold start: branded Splash once per JS session, then Auth or App.
+ * Cold start: one branded Splash (≤5s, tap to skip), then Auth or App.
  * Background resume keeps React state — Splash does not show again.
  */
 export default function RootNavigator() {
@@ -131,6 +131,14 @@ export default function RootNavigator() {
   }, [splashDone, user?.userId]);
 
   if (!splashDone) {
+    if (splashDismissed) {
+      return (
+        <View style={[styles.lazyHold, { backgroundColor: colors.navy }]}>
+          <StatusBar style="light" />
+          <ActivityIndicator color={colors.tealBright} size="large" />
+        </View>
+      );
+    }
     return (
       <SplashScreen
         {...splashMock}
@@ -162,7 +170,13 @@ export default function RootNavigator() {
       ) : null}
       <NavigationContainer theme={navTheme}>
         {user ? (
-          <Suspense fallback={<BootLoader />}>
+          <Suspense
+            fallback={
+              <View style={[styles.lazyHold, { backgroundColor: colors.navy }]}>
+                <ActivityIndicator color={colors.tealBright} size="large" />
+              </View>
+            }
+          >
             <AppNavigator key={user.userId} />
           </Suspense>
         ) : (
@@ -181,6 +195,11 @@ function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
     root: {
       flex: 1,
+    },
+    lazyHold: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     banner: {
       backgroundColor: colors.warmCream,
