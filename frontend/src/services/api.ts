@@ -102,6 +102,53 @@ export interface AdminUserActivity {
   recentSosAlerts: AdminSosActivity[];
 }
 
+export interface AdminOverview {
+  totalUsers: number;
+  studentCount: number;
+  touristCount: number;
+  hostCount: number;
+  guideCount: number;
+  staffCount: number;
+  suspendedCount: number;
+  unverifiedIdentityCount: number;
+  unverifiedEmailCount: number;
+  activeHostListings: number;
+  activeGuideListings: number;
+  hiddenHostListings: number;
+  hiddenGuideListings: number;
+  pendingBookings: number;
+  confirmedBookings: number;
+  sosLast24Hours: number;
+  sosLast7Days: number;
+  recentBookings: AdminBookingActivity[];
+  recentSosAlerts: AdminSosActivity[];
+}
+
+export interface AdminListingModeration {
+  listingId: string;
+  type: string;
+  ownerUserId: string;
+  ownerName: string;
+  ownerEmail?: string | null;
+  city?: string | null;
+  active: boolean;
+  hidden: boolean;
+}
+
+export interface AdminListingVisibilityResult {
+  listingId: string;
+  type: string;
+  active: boolean;
+  hidden: boolean;
+}
+
+export interface StaffAuditResult {
+  auditId: string;
+  action: string;
+  detail?: string | null;
+  createdAt?: string | null;
+}
+
 function authUserFromPayload(payload: AuthTokenPayload): AuthUser {
   return {
     userId: payload.userId,
@@ -679,6 +726,43 @@ export async function getAdminUserActivity(userId: string): Promise<AdminUserAct
   const { data } = await api.get<ApiResponse<AdminUserActivity>>(
     `/api/admin/users/${userId}/activity`,
   );
+  return unwrap({ data });
+}
+
+export async function getAdminOverview(): Promise<AdminOverview> {
+  const { data } = await api.get<ApiResponse<AdminOverview>>('/api/admin/overview');
+  return unwrap({ data });
+}
+
+export async function listAdminListings(params?: {
+  type?: string;
+  hidden?: boolean;
+}): Promise<AdminListingModeration[]> {
+  const { data } = await api.get<ApiResponse<AdminListingModeration[]>>('/api/admin/listings', {
+    params,
+  });
+  return unwrap({ data });
+}
+
+export async function setAdminListingVisibility(
+  listingId: string,
+  hidden: boolean,
+): Promise<AdminListingVisibilityResult> {
+  const { data } = await api.patch<ApiResponse<AdminListingVisibilityResult>>(
+    `/api/admin/listings/${listingId}/visibility`,
+    { hidden },
+  );
+  return unwrap({ data });
+}
+
+export async function recordStaffAudit(
+  action: string,
+  detail?: string,
+): Promise<StaffAuditResult> {
+  const { data } = await api.post<ApiResponse<StaffAuditResult>>('/api/admin/audit', {
+    action,
+    detail,
+  });
   return unwrap({ data });
 }
 

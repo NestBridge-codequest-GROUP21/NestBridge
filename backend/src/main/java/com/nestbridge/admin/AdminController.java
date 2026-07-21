@@ -17,6 +17,25 @@ public class AdminController {
 
     private final AdminService adminService;
 
+    @GetMapping("/overview")
+    public ResponseEntity<ApiResponse<AdminOverviewDto>> getOverview(Authentication authentication) {
+        UUID actorId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(ApiResponse.success(
+                "Overview retrieved",
+                adminService.getOverview(actorId)));
+    }
+
+    @GetMapping("/listings")
+    public ResponseEntity<ApiResponse<List<AdminListingModerationDto>>> listListings(
+            Authentication authentication,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Boolean hidden) {
+        UUID actorId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(ApiResponse.success(
+                "Listings retrieved",
+                adminService.listListings(actorId, type, hidden)));
+    }
+
     @GetMapping("/users/search")
     public ResponseEntity<ApiResponse<List<AdminUserSummaryDto>>> searchUsers(
             Authentication authentication,
@@ -101,6 +120,18 @@ public class AdminController {
                 adminService.getUserActivity(actorId, id)));
     }
 
+    @PatchMapping("/listings/{id}/visibility")
+    public ResponseEntity<ApiResponse<AdminListingHideResultDto>> setListingVisibility(
+            Authentication authentication,
+            @PathVariable UUID id,
+            @Valid @RequestBody ListingVisibilityRequest request) {
+        UUID actorId = (UUID) authentication.getPrincipal();
+        boolean hidden = Boolean.TRUE.equals(request.getHidden());
+        return ResponseEntity.ok(ApiResponse.success(
+                hidden ? "Listing hidden" : "Listing restored",
+                adminService.setListingVisibility(actorId, id, hidden)));
+    }
+
     @PatchMapping("/listings/{id}/hide")
     public ResponseEntity<ApiResponse<AdminListingHideResultDto>> hideListing(
             Authentication authentication,
@@ -109,5 +140,15 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Listing hidden",
                 adminService.hideListing(actorId, id)));
+    }
+
+    @PostMapping("/audit")
+    public ResponseEntity<ApiResponse<StaffAuditResultDto>> recordAudit(
+            Authentication authentication,
+            @Valid @RequestBody StaffAuditRequest request) {
+        UUID actorId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(ApiResponse.success(
+                "Audit recorded",
+                adminService.recordAudit(actorId, request.getAction(), request.getDetail())));
     }
 }

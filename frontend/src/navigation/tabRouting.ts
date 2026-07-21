@@ -18,7 +18,14 @@ function resetToTab<K extends keyof AppStackParamList>(
 
 function homeRouteToScreenName(
   route: HomeRoute,
-): 'IntentSelect' | 'BrowseHome' | 'StudentHome' | 'ExploreHome' | 'HostHome' | 'GuideHome' {
+):
+  | 'IntentSelect'
+  | 'BrowseHome'
+  | 'StudentHome'
+  | 'ExploreHome'
+  | 'HostHome'
+  | 'GuideHome'
+  | 'AdminHome' {
   switch (route) {
     case 'StudentHome':
       return 'StudentHome';
@@ -28,6 +35,8 @@ function homeRouteToScreenName(
       return 'HostHome';
     case 'GuideHome':
       return 'GuideHome';
+    case 'AdminHome':
+      return 'AdminHome';
     case 'IntentSelect':
       return 'IntentSelect';
     default:
@@ -51,6 +60,25 @@ export function handleTabPress(
   if (tabId === 'home') {
     navigateToHome(navigation, contextHomeRoute);
     return;
+  }
+
+  if (role === 'STAFF') {
+    if (tabId === 'users') {
+      resetToTab(navigation, 'StaffUserSearch');
+      return;
+    }
+    if (tabId === 'moderation') {
+      resetToTab(navigation, 'AdminModeration');
+      return;
+    }
+    if (tabId === 'preview') {
+      resetToTab(navigation, 'AdminPreview');
+      return;
+    }
+    if (tabId === 'profile') {
+      resetToTab(navigation, 'Profile');
+      return;
+    }
   }
 
   if (tabId === 'explore' || tabId === 'search') {

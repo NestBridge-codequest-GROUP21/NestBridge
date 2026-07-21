@@ -153,7 +153,8 @@ export type HomeRoute =
   | 'StudentHome'
   | 'ExploreHome'
   | 'HostHome'
-  | 'GuideHome';
+  | 'GuideHome'
+  | 'AdminHome';
 
 export function getHomeRoute(state: AccountProfileState): HomeRoute {
   if (!state.primaryIntent) {
@@ -171,6 +172,24 @@ export function getHomeRoute(state: AccountProfileState): HomeRoute {
     default:
       return 'BrowseHome';
   }
+}
+
+/**
+ * Staff land on the ops shell unless they deliberately entered app preview.
+ * Preview uses a local role override and does not change the staff account intent.
+ */
+export function getStaffAwareHomeRoute(
+  isStaff: boolean,
+  previewRole: PrimaryIntent | null | undefined,
+  state: AccountProfileState,
+): HomeRoute {
+  if (isStaff && !previewRole) {
+    return 'AdminHome';
+  }
+  if (isStaff && previewRole) {
+    return getHomeRoute({ ...state, primaryIntent: previewRole });
+  }
+  return getHomeRoute(state);
 }
 
 export function getBookingContext(

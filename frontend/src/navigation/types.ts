@@ -4,6 +4,7 @@ export type AuthStackParamList = {
   Welcome: undefined;
   Register: undefined;
   Login: undefined;
+  StaffSignIn: undefined;
   VerifyEmail: { email: string };
   ForgotPassword: undefined;
   ResetPassword: { token: string };
@@ -16,6 +17,9 @@ export type AppStackParamList = {
   ExploreHome: undefined;
   HostHome: undefined;
   GuideHome: undefined;
+  AdminHome: undefined;
+  AdminModeration: undefined;
+  AdminPreview: undefined;
   Profile: undefined;
   ExploreHub: undefined;
   DevTesting: undefined;

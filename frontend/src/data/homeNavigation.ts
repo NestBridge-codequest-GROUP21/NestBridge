@@ -2,13 +2,20 @@ import type { TabBarItem } from '../components/AppTabBar';
 import type { QuickActionItem } from '../components/QuickActionsGrid';
 import type { PrimaryIntent } from '../types/accountProfile';
 
-export type HomeRole = PrimaryIntent | 'BROWSE';
+export type HomeRole = PrimaryIntent | 'BROWSE' | 'STAFF';
 
 export const SEEKER_TAB_ITEMS: TabBarItem[] = [
   { id: 'home', label: 'Home', icon: 'home-outline' },
   { id: 'explore', label: 'Explore', icon: 'compass-outline' },
   { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
+];
+
+export const STAFF_TAB_ITEMS: TabBarItem[] = [
+  { id: 'home', label: 'Ops', icon: 'grid-outline' },
+  { id: 'users', label: 'Users', icon: 'people-outline' },
+  { id: 'moderation', label: 'Moderation', icon: 'shield-checkmark-outline' },
+  { id: 'preview', label: 'Preview', icon: 'eye-outline' },
 ];
 
 export const HOST_TAB_ITEMS: TabBarItem[] = [
@@ -57,6 +64,8 @@ export const GUIDE_QUICK_ACTIONS: QuickActionItem[] = [
 
 export function getTabBarForRole(role: HomeRole): TabBarItem[] {
   switch (role) {
+    case 'STAFF':
+      return STAFF_TAB_ITEMS;
     case 'HOST':
       return HOST_TAB_ITEMS;
     case 'GUIDE':
@@ -93,4 +102,15 @@ export function homeRoleFromIntent(
   if (intent === 'TOURIST') return 'TOURIST';
   if (intent === 'STUDENT') return 'STUDENT';
   return 'BROWSE';
+}
+
+/** Effective tab role for staff shell vs consumer preview. */
+export function homeRoleForSession(
+  isStaffShell: boolean,
+  previewRole: PrimaryIntent | null | undefined,
+  intent: PrimaryIntent | null | undefined,
+): HomeRole {
+  if (isStaffShell) return 'STAFF';
+  if (previewRole) return homeRoleFromIntent(previewRole);
+  return homeRoleFromIntent(intent);
 }

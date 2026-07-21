@@ -17,6 +17,7 @@ import Avatar from '../../components/Avatar';
 import StatusBadge from '../../components/StatusBadge';
 import SearchField from '../../components/SearchField';
 import SkeletonLoader from '../../components/SkeletonLoader';
+import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import type { AdminUserSummary } from '../../services/api';
 import {
   fontFamilies,
@@ -39,10 +40,13 @@ export interface StaffUserSearchScreenProps {
   isLoading?: boolean;
   errorMessage?: string | null;
   hasSearched?: boolean;
+  tabBarItems?: TabBarItem[];
   onQueryChange: (query: string) => void;
   onSearch: () => void;
   onSelectUser: (userId: string) => void;
+  onTabPress?: (tabId: string) => void;
   onBack?: () => void;
+  onSosPress?: () => void;
 }
 
 export default function StaffUserSearchScreen({
@@ -51,10 +55,13 @@ export default function StaffUserSearchScreen({
   isLoading = false,
   errorMessage,
   hasSearched = false,
+  tabBarItems,
   onQueryChange,
   onSearch,
   onSelectUser,
+  onTabPress,
   onBack,
+  onSosPress,
 }: StaffUserSearchScreenProps) {
   const styles = useThemedStyles(createStyles);
 
@@ -62,8 +69,8 @@ export default function StaffUserSearchScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
       <ScreenHeader
-        title="Staff tools"
-        subtitle="Search users by name or email"
+        title="Users"
+        subtitle="Search accounts across every role"
         compact
         onBack={onBack}
       />
@@ -133,6 +140,15 @@ export default function StaffUserSearchScreen({
             ))
           : null}
       </ScreenScroll>
+      {tabBarItems ? (
+        <AppTabBar
+          items={tabBarItems}
+          activeTabId="users"
+          showSosDock
+          onSosPress={onSosPress}
+          onTabPress={onTabPress}
+        />
+      ) : null}
     </View>
   );
 }

@@ -37,6 +37,8 @@ export interface ProfileScreenProps {
   email: string;
   setupSummary: string;
   showTravelBooking?: boolean;
+  /** When false, hide consumer account-setup entry (staff shell). */
+  showAccountSetup?: boolean;
   onBack?: () => void;
   onAccountSetupPress?: () => void;
   onTravelBookingPress?: () => void;
@@ -45,6 +47,12 @@ export interface ProfileScreenProps {
   onDevTestingPress?: () => void;
   showStaffTools?: boolean;
   onStaffToolsPress?: () => void;
+  showReturnToOps?: boolean;
+  onReturnToOpsPress?: () => void;
+  showAppPreview?: boolean;
+  onAppPreviewPress?: () => void;
+  showExitPreview?: boolean;
+  onExitPreviewPress?: () => void;
 }
 
 const APPEARANCE_OPTIONS: {
@@ -80,6 +88,7 @@ export default function ProfileScreen({
   email,
   setupSummary,
   showTravelBooking = false,
+  showAccountSetup = true,
   onBack,
   onAccountSetupPress,
   onTravelBookingPress,
@@ -88,6 +97,12 @@ export default function ProfileScreen({
   onDevTestingPress,
   showStaffTools = false,
   onStaffToolsPress,
+  showReturnToOps = false,
+  onReturnToOpsPress,
+  showAppPreview = false,
+  onAppPreviewPress,
+  showExitPreview = false,
+  onExitPreviewPress,
 }: ProfileScreenProps) {
   const { preference, setPreference, colors } = useTheme();
   const styles = useThemedStyles(createStyles);
@@ -196,28 +211,70 @@ export default function ProfileScreen({
 
         <SectionHeader title="Account" />
         <Card padding="none" style={styles.groupCard}>
-          <ListRow
-            title="Account setup"
-            subtitle="View progress and finish remaining steps"
-            iconName="person-circle-outline"
-            onPress={onAccountSetupPress}
-            style={styles.listRowPad}
-            bordered={false}
-          />
+          {showAccountSetup ? (
+            <ListRow
+              title="Account setup"
+              subtitle="View progress and finish remaining steps"
+              iconName="person-circle-outline"
+              onPress={onAccountSetupPress}
+              style={styles.listRowPad}
+              bordered={false}
+            />
+          ) : (
+            <ListRow
+              title="Staff account"
+              subtitle="Ops access — consumer onboarding is not shown here"
+              iconName="shield-checkmark-outline"
+              style={styles.listRowPad}
+              bordered={false}
+            />
+          )}
         </Card>
 
-        {showStaffTools ? (
+        {showExitPreview || showReturnToOps || showAppPreview || showStaffTools ? (
           <>
             <SectionHeader title="Staff" />
             <Card padding="none" style={styles.groupCard}>
-              <ListRow
-                title="Staff tools"
-                subtitle="Search users, suspend accounts, and review activity"
-                iconName="shield-checkmark-outline"
-                onPress={onStaffToolsPress}
-                style={styles.listRowPad}
-                bordered={false}
-              />
+              {showExitPreview ? (
+                <ListRow
+                  title="Exit app preview"
+                  subtitle="Return to the ops dashboard"
+                  iconName="exit-outline"
+                  onPress={onExitPreviewPress}
+                  style={styles.listRowPad}
+                  bordered={showReturnToOps || showAppPreview || showStaffTools}
+                />
+              ) : null}
+              {showReturnToOps ? (
+                <ListRow
+                  title="Ops dashboard"
+                  subtitle="Platform overview, users, and moderation"
+                  iconName="grid-outline"
+                  onPress={onReturnToOpsPress}
+                  style={styles.listRowPad}
+                  bordered={showAppPreview || showStaffTools}
+                />
+              ) : null}
+              {showAppPreview ? (
+                <ListRow
+                  title="Switch to app preview"
+                  subtitle="Inspect what each role sees (logged)"
+                  iconName="eye-outline"
+                  onPress={onAppPreviewPress}
+                  style={styles.listRowPad}
+                  bordered={showStaffTools}
+                />
+              ) : null}
+              {showStaffTools ? (
+                <ListRow
+                  title="Manage users"
+                  subtitle="Search, suspend, KYC, and activity"
+                  iconName="people-outline"
+                  onPress={onStaffToolsPress}
+                  style={styles.listRowPad}
+                  bordered={false}
+                />
+              ) : null}
             </Card>
           </>
         ) : null}

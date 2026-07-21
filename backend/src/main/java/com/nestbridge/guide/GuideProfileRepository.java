@@ -13,4 +13,8 @@ public interface GuideProfileRepository extends JpaRepository<GuideProfile, UUID
     List<GuideProfile> findByCityIgnoreCaseAndActiveTrue(String city);
 
     List<GuideProfile> findByActiveTrue();
+
+    long countByActiveTrue();
+
+    long countByActiveFalse();
 }

@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
+import StaffSignInScreen from '../screens/auth/StaffSignInScreen';
 import VerifyEmailScreen, {
   openNestBridgeSupportEmail,
 } from '../screens/auth/VerifyEmailScreen';
@@ -42,7 +43,7 @@ export default function AuthNavigator({
   initialResetToken,
   onResetTokenConsumed,
 }: AuthNavigatorProps) {
-  const { register, signIn } = useAuth();
+  const { register, signIn, signOut } = useAuth();
   const { applyDevPreset, setPrimaryIntent } = useAccountProfile();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -51,6 +52,8 @@ export default function AuthNavigator({
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [loginError, setLoginError] = useState('');
+  const [staffLoginError, setStaffLoginError] = useState('');
+  const [staffLoginBusy, setStaffLoginBusy] = useState(false);
   const [registerError, setRegisterError] = useState('');
   const [demoLoginBusy, setDemoLoginBusy] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState('');
@@ -81,9 +84,14 @@ export default function AuthNavigator({
   const handleDemoLogin = async (account: DemoAccount) => {
     setLoginError('');
     setRegisterError('');
+    setStaffLoginError('');
     setDemoLoginBusy(true);
     try {
-      await signIn(account.email, DEMO_PASSWORD, keepSignedIn);
+      const signedIn = await signIn(account.email, DEMO_PASSWORD, keepSignedIn);
+      if (account.id === 'staff' || signedIn.isStaff) {
+        // Staff lands on the ops shell — do not apply a tourist consumer preset.
+        return;
+      }
       await applyDevPreset(demoPresetForAccount(account));
       await setPrimaryIntent(account.intent);
     } catch {
@@ -113,6 +121,59 @@ export default function AuthNavigator({
             }}
             onCreateAccount={() => navigation.navigate('Register')}
             onSignIn={() => navigation.navigate('Login')}
+            onStaffSignIn={() => {
+              setStaffLoginError('');
+              navigation.navigate('StaffSignIn');
+            }}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="StaffSignIn">
+        {({ navigation }) => (
+          <StaffSignInScreen
+            email={email}
+            password={password}
+            keepSignedIn={keepSignedIn}
+            errorMessage={staffLoginError}
+            submitting={staffLoginBusy}
+            onEmailChange={(value) => {
+              setEmail(value);
+              setStaffLoginError('');
+            }}
+            onPasswordChange={setPassword}
+            onToggleKeepSignedIn={() => setKeepSignedIn((value) => !value)}
+            onSubmit={async () => {
+              setStaffLoginError('');
+              if (!email.trim()) {
+                setStaffLoginError('Enter your staff email address.');
+                return;
+              }
+              if (!password) {
+                setStaffLoginError('Enter your password.');
+                return;
+              }
+              setStaffLoginBusy(true);
+              try {
+                const signedIn = await signIn(email, password, keepSignedIn);
+                if (!signedIn.isStaff) {
+                  await signOut();
+                  setStaffLoginError(
+                    'This portal is for NestBridge staff only. Use the regular Sign in for student, host, guide, or tourist accounts.',
+                  );
+                }
+              } catch (error) {
+                const message =
+                  error instanceof Error ? error.message : 'Email or password is incorrect.';
+                setStaffLoginError(message);
+              } finally {
+                setStaffLoginBusy(false);
+              }
+            }}
+            onBack={() => {
+              setStaffLoginError('');
+              navigation.goBack();
+            }}
           />
         )}
       </Stack.Screen>
