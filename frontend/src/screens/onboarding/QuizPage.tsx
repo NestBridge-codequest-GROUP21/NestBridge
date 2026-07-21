@@ -4,9 +4,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
-  TextInput,
   LayoutChangeEvent,
   GestureResponderEvent,
 } from 'react-native';
@@ -15,6 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import BackButton from '../../components/BackButton';
 import Card from '../../components/Card';
+import ScreenScroll from '../../components/ScreenScroll';
+import FocusAwareTextInput from '../../components/FocusAwareTextInput';
 import {
   fontFamilies,
   fontSizes,
@@ -454,7 +454,7 @@ export default function QuizPage({
     const specifyQuestion = getOtherSpecifyQuestion(question);
     return (
       <View style={styles.otherSpecifyWrap}>
-        <TextInput
+        <FocusAwareTextInput
           style={styles.textInput}
           value={String(answers[specifyId] ?? '')}
           placeholder={specifyQuestion.placeholder}
@@ -550,7 +550,7 @@ export default function QuizPage({
 
       case 'number':
         return (
-          <TextInput
+          <FocusAwareTextInput
             style={styles.textInput}
             value={String(value ?? '')}
             placeholder={question.placeholder}
@@ -563,7 +563,7 @@ export default function QuizPage({
       case 'text':
       default:
         return (
-          <TextInput
+          <FocusAwareTextInput
             style={[styles.textInput, styles.textInputMultiline]}
             value={String(value ?? '')}
             placeholder={question.placeholder}
@@ -581,16 +581,11 @@ export default function QuizPage({
     <View style={styles.root}>
       <StatusBar style="dark" />
 
-      <ScrollView
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          {
-            paddingTop: insets.top + spacing.lg,
-            paddingBottom: insets.bottom + spacing.lg,
-          },
+          { paddingTop: insets.top + spacing.lg },
         ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
       >
         {showBack && onBack ? (
           <BackButton onPress={() => onBack(answers)} style={styles.back} />
@@ -646,7 +641,7 @@ export default function QuizPage({
             onPress={handleContinuePress}
           />
         </View>
-      </ScrollView>
+      </ScreenScroll>
     </View>
   );
 }

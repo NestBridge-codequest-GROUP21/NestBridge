@@ -4,9 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   Linking,
   Pressable,
 } from 'react-native';
@@ -17,6 +14,7 @@ import SecondaryButton from '../../components/SecondaryButton';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
+import ScreenScroll from '../../components/ScreenScroll';
 import {
   fontFamilies,
   fontSizes,
@@ -59,17 +57,14 @@ export default function VerifyEmailScreen({
   const insets = useSafeAreaInsets();
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <View style={styles.flex}>
       <StatusBar style="dark" />
-      <ScrollView
+      <ScreenScroll
+        keyboardAware={false}
         contentContainerStyle={[
           styles.container,
           { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.xl },
         ]}
-        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.iconCircle}>
           <AppIcon name="mail-outline" size={iconSizes.xl} color={colors.tealDeep} />
@@ -116,8 +111,8 @@ export default function VerifyEmailScreen({
             <Text style={styles.supportText}>Contact support</Text>
           </Pressable>
         ) : null}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </ScreenScroll>
+    </View>
   );
 }
 

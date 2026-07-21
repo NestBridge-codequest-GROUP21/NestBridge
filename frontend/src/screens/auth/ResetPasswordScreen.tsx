@@ -3,14 +3,12 @@ import React from 'react';
 import {
   Text,
   StyleSheet,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
+import ScreenScroll from '../../components/ScreenScroll';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import BackButton from '../../components/BackButton';
@@ -58,21 +56,13 @@ export default function ResetPasswordScreen({
   const success = !!statusMessage && !errorMessage;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <View style={styles.root}>
       <StatusBar style="dark" />
-      <ScrollView
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          {
-            paddingTop: insets.top + spacing.lg,
-            paddingBottom: insets.bottom + spacing.lg,
-          },
+          { paddingTop: insets.top + spacing.lg },
         ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
       >
         {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
@@ -129,8 +119,8 @@ export default function ResetPasswordScreen({
             />
           </>
         )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </ScreenScroll>
+    </View>
   );
 }
 

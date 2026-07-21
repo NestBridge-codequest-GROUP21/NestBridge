@@ -7,8 +7,6 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -19,6 +17,7 @@ import Avatar from '../../components/Avatar';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import StatusBadge, { type StatusBadgeTone } from '../../components/StatusBadge';
+import KeyboardSafeView from '../../components/KeyboardSafeView';
 import {
   fontFamilies,
   fontSizes,
@@ -166,9 +165,8 @@ export default function ChatScreen({
   ].filter(Boolean);
 
   return (
-    <KeyboardAvoidingView
+    <KeyboardSafeView
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={insets.top}
     >
       <StatusBar style="light" />
@@ -353,7 +351,7 @@ export default function ChatScreen({
           )}
         </Pressable>
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardSafeView>
   );
 }
 

@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  ScrollView,
   useWindowDimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -16,6 +15,7 @@ import FormTextField from '../../components/FormTextField';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import KeyboardSafeView from '../../components/KeyboardSafeView';
+import ScreenScroll from '../../components/ScreenScroll';
 import type { MapLandmark } from '../../data/featureScreensMock';
 import {
   fontFamilies,
@@ -171,10 +171,8 @@ export default function OfflineMapScreen({
           },
         ]}
       >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          showsVerticalScrollIndicator={false}
+        <ScreenScroll
+          keyboardAware={false}
           contentContainerStyle={styles.panelScrollContent}
         >
           <InlineBanner
@@ -221,7 +219,7 @@ export default function OfflineMapScreen({
               />
             </Pressable>
           </View>
-        </ScrollView>
+        </ScreenScroll>
       </View>
     </KeyboardSafeView>
   );

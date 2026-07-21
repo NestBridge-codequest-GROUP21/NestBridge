@@ -1,6 +1,6 @@
 import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OnboardingProgress from '../../components/OnboardingProgress';
@@ -9,7 +9,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import BackButton from '../../components/BackButton';
 import Card from '../../components/Card';
-import KeyboardSafeView from '../../components/KeyboardSafeView';
+import ScreenScroll from '../../components/ScreenScroll';
 import {
   fontFamilies,
   fontSizes,
@@ -63,20 +63,14 @@ export default function ProfileSetupScreen({
   const insets = useSafeAreaInsets();
 
   return (
-    <KeyboardSafeView style={styles.root}>
+    <View style={styles.root}>
       <StatusBar style="dark" />
 
-      <ScrollView
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          {
-            paddingTop: insets.top + spacing.lg,
-            paddingBottom: insets.bottom + spacing.lg,
-          },
+          { paddingTop: insets.top + spacing.lg },
         ]}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        showsVerticalScrollIndicator={false}
       >
         {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
@@ -127,8 +121,8 @@ export default function ProfileSetupScreen({
         <PrimaryButton label="Continue" onPress={onContinue} />
         <View style={styles.skipSpacer} />
         <SecondaryButton label="Skip for now" onPress={onSkip} />
-      </ScrollView>
-    </KeyboardSafeView>
+      </ScreenScroll>
+    </View>
   );
 }
 
