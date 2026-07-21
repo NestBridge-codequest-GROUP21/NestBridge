@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,6 +27,7 @@ import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import BackButton from '../../components/BackButton';
 import Card from '../../components/Card';
 import FormTextField from '../../components/FormTextField';
+import ScreenScroll from '../../components/ScreenScroll';
 import PrimaryButton from '../../components/PrimaryButton';
 import SkeletonLoader, { SkeletonBlock } from '../../components/SkeletonLoader';
 
@@ -220,18 +220,10 @@ export default function MatchSearchScreen({
         </Text>
       </LinearGradient>
 
-      <ScrollView
+      <ScreenScroll
         style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingBottom: showTabBar
-              ? insets.bottom + layout.scrollBottomInset
-              : insets.bottom + spacing.xl,
-          },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+        withTabBar={showTabBar}
+        contentContainerStyle={styles.scrollContent}
       >
         <Card padding="lg" elevation="card" style={styles.summaryCard}>
           <View style={styles.summaryTopRow}>
@@ -321,7 +313,7 @@ export default function MatchSearchScreen({
           loading={isSearching}
           iconName="search-outline"
         />
-      </ScrollView>
+      </ScreenScroll>
 
       {isSearching ? (
         <View style={styles.loadingOverlay} pointerEvents="none">

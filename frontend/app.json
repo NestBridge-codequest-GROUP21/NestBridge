@@ -23,6 +23,7 @@
         "backgroundColor": "#0C1735"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "pan",
       "package": "com.nestbridge.app"
     },
     "web": {

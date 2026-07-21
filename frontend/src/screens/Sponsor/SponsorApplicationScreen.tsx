@@ -17,7 +17,6 @@ import FormTextField from '../../components/FormTextField';
 import ScreenScroll from '../../components/ScreenScroll';
 import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
-import KeyboardSafeView from '../../components/KeyboardSafeView';
 import type { SponsorListing } from '../../data/sponsorsMock';
 import {
   fontFamilies,
@@ -106,7 +105,7 @@ export default function SponsorApplicationScreen({
   }
 
   return (
-    <KeyboardSafeView style={styles.root}>
+    <View style={styles.root}>
       <StatusBar style="light" />
 
       <ScreenScroll
@@ -209,7 +208,7 @@ export default function SponsorApplicationScreen({
           </Card>
         </View>
       </ScreenScroll>
-    </KeyboardSafeView>
+    </View>
   );
 }
 

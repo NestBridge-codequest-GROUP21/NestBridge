@@ -1,6 +1,6 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -10,6 +10,7 @@ import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
 import PrimaryButton from '../../components/PrimaryButton';
 import SectionHeader from '../../components/SectionHeader';
+import FocusAwareTextInput from '../../components/FocusAwareTextInput';
 import type { ChecklistTask } from '../../data/featureScreensMock';
 import {
   fontFamilies,
@@ -189,8 +190,9 @@ export default function PrepChecklistScreen({
         <Card style={styles.addCard} padding="md">
           <Text style={styles.addTitle}>Add your own item</Text>
           <View style={styles.addRow}>
-            <TextInput
+            <FocusAwareTextInput
               style={styles.addInput}
+              containerStyle={styles.addInputWrap}
               value={newItemLabel}
               onChangeText={setNewItemLabel}
               placeholder="e.g. UK plug adapter / MoMo float"
@@ -334,6 +336,9 @@ function createStyles({ colors }: AppTheme) {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  addInputWrap: {
+    flex: 1,
   },
   addInput: {
     flex: 1,

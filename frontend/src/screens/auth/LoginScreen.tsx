@@ -4,14 +4,12 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
+import ScreenScroll from '../../components/ScreenScroll';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
@@ -81,22 +79,13 @@ export default function LoginScreen({
   const insets = useSafeAreaInsets();
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : spacing.sm}
-    >
+    <View style={styles.root}>
       <StatusBar style="dark" />
-      <ScrollView
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          {
-            paddingTop: insets.top + layout.authContentTop,
-            paddingBottom: insets.bottom + spacing.lg,
-          },
+          { paddingTop: insets.top + layout.authContentTop },
         ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
       >
         {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
@@ -175,8 +164,8 @@ export default function LoginScreen({
         {appVersion ? (
           <Text style={styles.versionText}>NestBridge {appVersion}</Text>
         ) : null}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </ScreenScroll>
+    </View>
   );
 }
 

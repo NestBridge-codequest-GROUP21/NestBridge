@@ -34,6 +34,9 @@ const base: ExpoConfig = {
       backgroundColor: '#0C1735',
     },
     edgeToEdgeEnabled: true,
+    // Let the app handle inset via ScreenScroll / KeyboardSafeView (edge-to-edge
+    // often breaks adjustResize; pan + our padding keeps focused inputs visible).
+    softwareKeyboardLayoutMode: 'pan',
     package: 'com.nestbridge.app',
     permissions: [
       'android.permission.READ_MEDIA_IMAGES',

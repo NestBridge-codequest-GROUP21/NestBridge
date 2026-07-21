@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +15,8 @@ import SecondaryButton from '../../components/SecondaryButton';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import FormTextField from '../../components/FormTextField';
+import ScreenScroll from '../../components/ScreenScroll';
+import KeyboardSafeView from '../../components/KeyboardSafeView';
 import {
   fontFamilies,
   fontSizes,
@@ -52,7 +53,7 @@ export default function ReviewPromptScreen({
   const [comment, setComment] = useState('');
 
   return (
-    <View style={styles.root}>
+    <KeyboardSafeView style={styles.root}>
       <StatusBar style="light" />
 
       <LinearGradient
@@ -68,13 +69,13 @@ export default function ReviewPromptScreen({
         </Text>
       </LinearGradient>
 
-      <ScrollView
+      <ScreenScroll
+        keyboardAware={false}
         style={styles.body}
         contentContainerStyle={[
           styles.bodyContent,
-          { paddingBottom: insets.bottom + spacing.xl * 3 },
+          { paddingBottom: spacing.xl * 3 },
         ]}
-        showsVerticalScrollIndicator={false}
       >
         <Text style={styles.sectionLabel}>{reviewPromptCopy.ratingLabel}</Text>
         <View style={styles.starsRow}>
@@ -114,7 +115,7 @@ export default function ReviewPromptScreen({
             NestBridge moderates reviews before they appear on profiles.
           </Text>
         </Card>
-      </ScrollView>
+      </ScreenScroll>
 
       <View
         style={[
@@ -130,7 +131,7 @@ export default function ReviewPromptScreen({
         <View style={styles.skipSpacer} />
         <SecondaryButton label={reviewPromptCopy.skipLabel} onPress={onSkip ?? onBack} />
       </View>
-    </View>
+    </KeyboardSafeView>
   );
 }
 

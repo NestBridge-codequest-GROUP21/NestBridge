@@ -18,6 +18,7 @@ import {
   controlHeights,
   lineHeights,
 } from '../constants/theme';
+import useScrollFocusedInputIntoView from '../hooks/useScrollFocusedInputIntoView';
 
 export interface FormTextFieldProps {
   label: string;
@@ -61,7 +62,7 @@ export default function FormTextField({
 }: FormTextFieldProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const { containerRef, onInputFocus } = useScrollFocusedInputIntoView();
 
   const [visible, setVisible] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -70,7 +71,7 @@ export default function FormTextField({
   const hasError = Boolean(errorMessage);
 
   return (
-    <View style={styles.wrap}>
+    <View ref={containerRef} style={styles.wrap} collapsable={false}>
       <Text style={styles.label}>{label}</Text>
       <View
         style={[
@@ -100,6 +101,7 @@ export default function FormTextField({
           numberOfLines={numberOfLines}
           onFocus={() => {
             setFocused(true);
+            onInputFocus();
             onFocus?.();
           }}
           onBlur={() => {

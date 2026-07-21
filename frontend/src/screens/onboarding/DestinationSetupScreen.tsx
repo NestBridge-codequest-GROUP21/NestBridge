@@ -1,6 +1,6 @@
 import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker, {
@@ -11,6 +11,7 @@ import SelectField from '../../components/SelectField';
 import PrimaryButton from '../../components/PrimaryButton';
 import BackButton from '../../components/BackButton';
 import Card from '../../components/Card';
+import ScreenScroll from '../../components/ScreenScroll';
 import {
   fontFamilies,
   fontSizes,
@@ -221,16 +222,11 @@ export default function DestinationSetupScreen({
     <View style={styles.root}>
       <StatusBar style="dark" />
 
-      <ScrollView
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          {
-            paddingTop: insets.top + spacing.lg,
-            paddingBottom: insets.bottom + spacing.lg,
-          },
+          { paddingTop: insets.top + spacing.lg },
         ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
       >
         {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
@@ -285,7 +281,7 @@ export default function DestinationSetupScreen({
         </Card>
 
         <PrimaryButton label="Continue" onPress={handleContinue} />
-      </ScrollView>
+      </ScreenScroll>
     </View>
   );
 }

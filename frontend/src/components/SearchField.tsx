@@ -20,6 +20,7 @@ import {
   lineHeights,
   touchTarget,
 } from '../constants/theme';
+import useScrollFocusedInputIntoView from '../hooks/useScrollFocusedInputIntoView';
 
 export interface SearchFieldProps {
   value: string;
@@ -43,13 +44,15 @@ export default function SearchField({
 }: SearchFieldProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
-
+  const { containerRef, onInputFocus } = useScrollFocusedInputIntoView();
 
   const [focused, setFocused] = useState(false);
   const showClear = value.length > 0 && (onClear || onChangeText);
 
   return (
     <View
+      ref={containerRef}
+      collapsable={false}
       style={[
         styles.wrap,
         focused && styles.wrapFocused,
@@ -69,7 +72,10 @@ export default function SearchField({
         placeholderTextColor={colors.textTertiary}
         onChangeText={onChangeText}
         onSubmitEditing={onSubmitEditing}
-        onFocus={() => setFocused(true)}
+        onFocus={() => {
+          setFocused(true);
+          onInputFocus();
+        }}
         onBlur={() => setFocused(false)}
         returnKeyType="search"
         autoCorrect={false}

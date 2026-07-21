@@ -10,7 +10,6 @@ import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import InlineBanner from '../../components/InlineBanner';
 import SectionHeader from '../../components/SectionHeader';
-import KeyboardSafeView from '../../components/KeyboardSafeView';
 import {
   fontFamilies,
   fontSizes,
@@ -94,7 +93,7 @@ export default function CreateEventScreen({
   };
 
   return (
-    <KeyboardSafeView style={styles.root}>
+    <View style={styles.root}>
       <StatusBar style="light" />
       <ScreenHeader
         title="Host an event"
@@ -207,7 +206,7 @@ export default function CreateEventScreen({
           Your event appears in the Student events feed for others nearby to join.
         </Text>
       </ScreenScroll>
-    </KeyboardSafeView>
+    </View>
   );
 }
 
