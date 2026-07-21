@@ -1,5 +1,5 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -8,6 +8,7 @@ import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
 import SectionHeader from '../../components/SectionHeader';
+import CategoryFilterChips from '../../components/CategoryFilterChips';
 import type { PracticalTipSection } from '../../data/practicalLocalTips';
 import {
   fontFamilies,
@@ -21,6 +22,8 @@ import {
   layout,
 } from '../../constants/theme';
 import { emptyStates } from '../../data/appCopy';
+
+const ALL_CATEGORY_ID = 'all';
 
 export interface PracticalLocalTipsScreenProps {
   greeting: string;
@@ -50,6 +53,25 @@ export default function PracticalLocalTipsScreen({
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const empty = emptyStates.practicalTips;
+  const [categoryId, setCategoryId] = useState(ALL_CATEGORY_ID);
+
+  const categoryOptions = useMemo(
+    () => [
+      { id: ALL_CATEGORY_ID, label: 'All' },
+      ...sections.map((section) => ({
+        id: section.id,
+        label: section.title,
+      })),
+    ],
+    [sections],
+  );
+
+  const visibleSections = useMemo(() => {
+    if (categoryId === ALL_CATEGORY_ID) {
+      return sections;
+    }
+    return sections.filter((section) => section.id === categoryId);
+  }, [sections, categoryId]);
 
   return (
     <View style={styles.root}>
@@ -79,35 +101,53 @@ export default function PracticalLocalTipsScreen({
             onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : (
-          sections.map((section, index) => (
-            <View
-              key={section.id}
-              style={index > 0 ? styles.sectionSpacer : undefined}
-            >
-              <SectionHeader
-                title={section.title}
-                subtitle={section.subtitle}
-                style={styles.sectionTight}
+          <>
+            <CategoryFilterChips
+              options={categoryOptions}
+              selectedId={categoryId}
+              onSelect={setCategoryId}
+              accessibilityLabel="Local tip categories"
+            />
+
+            {visibleSections.length === 0 ? (
+              <EmptyState
+                title={empty.title}
+                body={empty.body}
+                tip={empty.tip}
+                iconGlyph={empty.iconGlyph}
               />
-              <View style={styles.tipList}>
-                {section.tips.map((tip) => (
-                  <Card key={tip.id} padding="md" style={styles.tipCard}>
-                    <View style={styles.tipHeader}>
-                      <View style={styles.iconTile}>
-                        <AppIcon
-                          glyph={tip.emoji}
-                          size={iconSizes.md}
-                          color={colors.tealDeep}
-                        />
-                      </View>
-                      <Text style={styles.tipTitle}>{tip.title}</Text>
-                    </View>
-                    <Text style={styles.tipBody}>{tip.description}</Text>
-                  </Card>
-                ))}
-              </View>
-            </View>
-          ))
+            ) : (
+              visibleSections.map((section, index) => (
+                <View
+                  key={section.id}
+                  style={index > 0 ? styles.sectionSpacer : undefined}
+                >
+                  <SectionHeader
+                    title={section.title}
+                    subtitle={section.subtitle}
+                    style={styles.sectionTight}
+                  />
+                  <View style={styles.tipList}>
+                    {section.tips.map((tip) => (
+                      <Card key={tip.id} padding="md" style={styles.tipCard}>
+                        <View style={styles.tipHeader}>
+                          <View style={styles.iconTile}>
+                            <AppIcon
+                              glyph={tip.emoji}
+                              size={iconSizes.md}
+                              color={colors.tealDeep}
+                            />
+                          </View>
+                          <Text style={styles.tipTitle}>{tip.title}</Text>
+                        </View>
+                        <Text style={styles.tipBody}>{tip.description}</Text>
+                      </Card>
+                    ))}
+                  </View>
+                </View>
+              ))
+            )}
+          </>
         )}
       </ScreenScroll>
     </View>
