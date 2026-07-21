@@ -238,6 +238,8 @@ import {
 } from '../data/bookingMock';
 import { conversationsMock } from '../data/conversationsMock';
 import {
+  bindDemoFallbackSession,
+  withCatalogFallback,
   withDemoFallback,
   withDemoFallbackValue,
   presentableLoading,
@@ -246,6 +248,7 @@ import {
   uniqueByKey,
   normalizeContactNumber,
 } from '../utils/demoLiveMerge';
+import { shouldUseDemoFallbackForAccount } from '../config/demoMode';
 import {
   confirmDemoBooking,
   isApiBookingId,
@@ -1165,6 +1168,13 @@ const SEARCH_CATEGORIES = [
 
 export default function AppNavigator() {
   const { user, signOut, signIn } = useAuth();
+  const demoFallbackEnabled = shouldUseDemoFallbackForAccount(user?.email);
+
+  useEffect(() => {
+    bindDemoFallbackSession(user?.email ?? null);
+    return () => bindDemoFallbackSession(null);
+  }, [user?.email]);
+
   const {
     isStaff,
     isStaffShell,
@@ -1260,11 +1270,25 @@ export default function AppNavigator() {
   const [tourBaseRate, setTourBaseRate] = useState('45');
   const [tourMaxGroupSize, setTourMaxGroupSize] = useState('8');
   const [hostProfileCache, setHostProfileCache] = useState<Record<string, HostProfileSummary>>(
-    () => buildDemoHostProfileCache(),
+    () => (shouldUseDemoFallbackForAccount(user?.email) ? buildDemoHostProfileCache() : {}),
   );
   const [guideProfileCache, setGuideProfileCache] = useState<Record<string, GuideProfileSummary>>(
-    () => buildDemoGuideProfileCache(),
+    () => (shouldUseDemoFallbackForAccount(user?.email) ? buildDemoGuideProfileCache() : {}),
   );
+
+  useEffect(() => {
+    if (demoFallbackEnabled) {
+      setHostProfileCache((prev) =>
+        Object.keys(prev).length > 0 ? prev : buildDemoHostProfileCache(),
+      );
+      setGuideProfileCache((prev) =>
+        Object.keys(prev).length > 0 ? prev : buildDemoGuideProfileCache(),
+      );
+    } else {
+      setHostProfileCache({});
+      setGuideProfileCache({});
+    }
+  }, [demoFallbackEnabled, user?.userId]);
   const conversationsApi = useConversations(user?.userId);
   const conversationsRaw = useMemo(
     () =>
@@ -1678,16 +1702,19 @@ export default function AppNavigator() {
     [preview?.role, primaryIntent],
   );
 
-  // Login name wins everywhere — profile displayName is only for editing, not greeting.
+  // Auth registration name wins; profile displayName is a soft fallback only.
+  const profileFields = getProfileFields(profileState);
   const resolvedName =
-    user?.displayName?.trim() || displayName.trim() || 'Guest';
+    user?.displayName?.trim() ||
+    displayName.trim() ||
+    profileFields.displayName.trim() ||
+    'Guest';
   const resolvedInitials = getInitials(resolvedName);
   const homeRouteKey = getStaffAwareHomeRoute(
     isStaff,
     preview?.role,
     profileState,
   );
-  const profileFields = getProfileFields(profileState);
   const cityLabel = profileFields.city || city || 'Accra';
 
   const universityDirectoryItems = useMemo(() => {
@@ -1734,9 +1761,12 @@ export default function AppNavigator() {
     [homeApi.suggestedHosts, homeApi.isLoading, homeApi.error, cityLabel],
   );
 
-  const displayTopMatchHostId =
-    homeApi.topMatchTargetId ?? demoTopMatchHostIdForCity(cityLabel);
-  const displayTopGuideId = homeApi.topGuideTargetId ?? demoTopGuideId;
+  const displayTopMatchHostId = demoFallbackEnabled
+    ? homeApi.topMatchTargetId ?? demoTopMatchHostIdForCity(cityLabel)
+    : homeApi.topMatchTargetId ?? null;
+  const displayTopGuideId = demoFallbackEnabled
+    ? homeApi.topGuideTargetId ?? demoTopGuideId
+    : homeApi.topGuideTargetId ?? null;
 
   const lodgingApi = useLodgingPartners(cityLabel, !!user);
   const contentTransport = useTransport(cityLabel, !!user);
@@ -1835,7 +1865,7 @@ export default function AppNavigator() {
     () =>
       sanitizeVideoResources(
         uniqueByKey(
-          withDemoFallback(contentVideos.data, videosApiMock, {
+          withCatalogFallback(contentVideos.data, videosApiMock, {
             isLoading: contentVideos.isLoading,
             error: contentVideos.error,
             matchKey: (item) =>
@@ -1965,37 +1995,50 @@ export default function AppNavigator() {
     () => notificationsMockForIntent(primaryIntent),
     [primaryIntent],
   );
-  const [unreadNotifications, setUnreadNotifications] = useState(
-    getUnreadNotificationCount(primaryIntent),
-  );
-  const [notificationsList, setNotificationsList] = useState(roleNotificationsMock);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [notificationsList, setNotificationsList] = useState<
+    ReturnType<typeof notificationsMockForIntent>
+  >([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
 
   const refreshNotificationState = useCallback(async () => {
     if (!user) {
       return;
     }
+    const allowDemo = shouldUseDemoFallbackForAccount(user.email);
     const fallback = notificationsMockForIntent(primaryIntent);
     try {
       const [count, list] = await Promise.all([
         fetchUnreadNotificationCount(),
         fetchNotifications(),
       ]);
-      const display = withDemoFallback(list, fallback);
+      const display = withDemoFallback(list, fallback, {
+        accountEmail: user.email,
+      });
       setNotificationsList(display);
       setUnreadNotifications(
         list.length > 0 ? count : display.filter((n) => !n.read).length,
       );
     } catch {
-      setUnreadNotifications(getUnreadNotificationCount(primaryIntent));
-      setNotificationsList(fallback);
+      if (allowDemo) {
+        setUnreadNotifications(getUnreadNotificationCount(primaryIntent));
+        setNotificationsList(fallback);
+      } else {
+        setUnreadNotifications(0);
+        setNotificationsList([]);
+      }
     }
   }, [user, primaryIntent]);
 
   useEffect(() => {
-    setNotificationsList(roleNotificationsMock);
-    setUnreadNotifications(getUnreadNotificationCount(primaryIntent));
-  }, [primaryIntent, roleNotificationsMock]);
+    if (shouldUseDemoFallbackForAccount(user?.email)) {
+      setNotificationsList(roleNotificationsMock);
+      setUnreadNotifications(getUnreadNotificationCount(primaryIntent));
+    } else {
+      setNotificationsList([]);
+      setUnreadNotifications(0);
+    }
+  }, [primaryIntent, roleNotificationsMock, user?.email]);
 
   useEffect(() => {
     if (!user) {
@@ -2060,7 +2103,15 @@ export default function AppNavigator() {
     };
   }, [user, cityLabel, primaryIntent]);
 
-  const homeRecommendations = liveRecommendations ?? demoRecommendations;
+  const homeRecommendations = liveRecommendations
+    ?? (demoFallbackEnabled
+      ? demoRecommendations
+      : {
+          city: cityLabel,
+          role: String(effectiveIntent ?? 'STUDENT'),
+          headline: '',
+          sections: [],
+        });
   const dashboardRecommendations = useMemo(
     () => slimHomeRecommendations(homeRecommendations),
     [homeRecommendations],
@@ -2382,10 +2433,12 @@ export default function AppNavigator() {
         (host) => host.id !== displayTopMatchHostId,
       );
       return {
-      ...studentHomeMockData,
       greeting: personalizedGreeting,
       userName: firstName,
       userInitials: resolvedInitials,
+      statusIcon: '🏠',
+      notificationCount: 0,
+      quickActions: getQuickActionsForRole('STUDENT'),
       activeTabId: 'home',
       tabBarItems,
       featuredMatch:
@@ -2683,13 +2736,25 @@ export default function AppNavigator() {
           guestMessage: 'Homestay request via NestBridge',
         });
         homeApi.refresh();
-      } catch {
-        upsertLocalBooking(
-          createDemoHostBookingRequest(host, checkIn, checkOut, bookingContext),
-        );
+      } catch (error) {
+        if (shouldUseDemoFallbackForAccount(user?.email)) {
+          upsertLocalBooking(
+            createDemoHostBookingRequest(host, checkIn, checkOut, bookingContext),
+          );
+          return;
+        }
+        Alert.alert('Could not create booking', getApiErrorMessage(error));
       }
     },
-    [checkIn, checkOut, getBookingContext, guardPreviewMutation, homeApi, upsertLocalBooking],
+    [
+      checkIn,
+      checkOut,
+      getBookingContext,
+      guardPreviewMutation,
+      homeApi,
+      upsertLocalBooking,
+      user?.email,
+    ],
   );
 
   const submitGuideBookingRequest = useCallback(
@@ -2708,18 +2773,29 @@ export default function AppNavigator() {
           guestMessage: 'Guide session request via NestBridge',
         });
         homeApi.refresh();
-      } catch {
-        upsertLocalBooking(
-          createDemoGuideBookingRequest(
-            guide,
-            sessionDate,
-            DEFAULT_SESSION_TIME,
-            bookingContext,
-          ),
-        );
+      } catch (error) {
+        if (shouldUseDemoFallbackForAccount(user?.email)) {
+          upsertLocalBooking(
+            createDemoGuideBookingRequest(
+              guide,
+              sessionDate,
+              DEFAULT_SESSION_TIME,
+              bookingContext,
+            ),
+          );
+          return;
+        }
+        Alert.alert('Could not create booking', getApiErrorMessage(error));
       }
     },
-    [sessionDate, getBookingContext, guardPreviewMutation, homeApi, upsertLocalBooking],
+    [
+      sessionDate,
+      getBookingContext,
+      guardPreviewMutation,
+      homeApi,
+      upsertLocalBooking,
+      user?.email,
+    ],
   );
 
   const confirmBookingWithDemoFallback = useCallback(
@@ -2851,9 +2927,10 @@ export default function AppNavigator() {
             {...homeTabSosProps(navigation)}
             notificationCount={unreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
-            onFeaturedGuidePress={() =>
-              navigation.navigate('GuideProfile', { guideId: displayTopGuideId })
-            }
+            onFeaturedGuidePress={() => {
+              if (!displayTopGuideId) return;
+              navigation.navigate('GuideProfile', { guideId: displayTopGuideId });
+            }}
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
             }
@@ -3731,6 +3808,7 @@ export default function AppNavigator() {
             {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
             onFeaturedMatchPress={() => {
+              if (!displayTopMatchHostId) return;
               navigation.navigate('HostProfile', {
                 hostId: displayTopMatchHostId,
               });
@@ -3764,9 +3842,10 @@ export default function AppNavigator() {
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
-            onFeaturedGuidePress={() =>
-              navigation.navigate('GuideProfile', { guideId: displayTopGuideId })
-            }
+            onFeaturedGuidePress={() => {
+              if (!displayTopGuideId) return;
+              navigation.navigate('GuideProfile', { guideId: displayTopGuideId });
+            }}
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
             }

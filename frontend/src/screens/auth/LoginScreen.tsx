@@ -13,7 +13,6 @@ import ScreenScroll from '../../components/ScreenScroll';
 import BrandLogo from '../../components/BrandLogo';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
-import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
 import CheckboxRow from '../../components/CheckboxRow';
@@ -26,7 +25,6 @@ import {
   layout,
   touchTarget,
 } from '../../constants/theme';
-import type { DemoAccount } from '../../data/demoAccounts';
 
 export interface LoginScreenProps {
   title: string;
@@ -40,14 +38,12 @@ export interface LoginScreenProps {
   resendBusy?: boolean;
   /** Shown as muted footer text so installs can be verified (e.g. APK builds). */
   appVersion?: string;
-  demoAccounts?: DemoAccount[];
-  demoLoginBusy?: boolean;
+  submitting?: boolean;
   onEmailChange?: (value: string) => void;
   onPasswordChange?: (value: string) => void;
   onToggleKeepSignedIn?: () => void;
   onSubmit?: () => void;
   onResendVerification?: () => void;
-  onDemoLogin?: (account: DemoAccount) => void;
   onForgotPasswordPress?: () => void;
   onCreateAccountPress?: () => void;
   onBack?: () => void;
@@ -63,14 +59,12 @@ export default function LoginScreen({
   showResendVerification = false,
   resendBusy = false,
   appVersion,
-  demoAccounts = [],
-  demoLoginBusy = false,
+  submitting = false,
   onEmailChange,
   onPasswordChange,
   onToggleKeepSignedIn,
   onSubmit,
   onResendVerification,
-  onDemoLogin,
   onForgotPasswordPress,
   onCreateAccountPress,
   onBack,
@@ -95,18 +89,6 @@ export default function LoginScreen({
 
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
-
-        {demoAccounts.length > 0 ? (
-          <>
-            <DemoActorQuickLogin
-              accounts={demoAccounts}
-              busy={demoLoginBusy}
-              variant="tabs"
-              onSelect={onDemoLogin}
-            />
-            <Text style={styles.dividerLabel}>or sign in with email</Text>
-          </>
-        ) : null}
 
         <FormTextField
           label="Email"
@@ -153,17 +135,17 @@ export default function LoginScreen({
             <SecondaryButton
               label="Resend verification email"
               onPress={onResendVerification}
-              disabled={demoLoginBusy || resendBusy}
+              disabled={submitting || resendBusy}
             />
           </View>
         ) : null}
 
-        <PrimaryButton label="Sign in" onPress={onSubmit} loading={demoLoginBusy} />
+        <PrimaryButton label="Sign in" onPress={onSubmit} loading={submitting} />
         <View style={styles.spacer} />
         <SecondaryButton
           label="Create an account"
           onPress={onCreateAccountPress}
-          disabled={demoLoginBusy}
+          disabled={submitting}
         />
         {appVersion ? (
           <Text style={styles.versionText}>NestBridge {appVersion}</Text>
@@ -205,14 +187,6 @@ function createStyles({ colors }: AppTheme) {
     lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
   },
-  dividerLabel: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    lineHeight: lineHeights.caption,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
   forgotRow: {
     alignSelf: 'flex-end',
     minHeight: touchTarget,
@@ -244,4 +218,3 @@ function createStyles({ colors }: AppTheme) {
   },
 });
 }
-

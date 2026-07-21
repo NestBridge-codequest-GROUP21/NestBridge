@@ -76,12 +76,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setBootStage('auth_session_loaded');
 
         if (session?.user) {
+          // Honor "Keep me signed in" — ephemeral sessions are not restored.
+          if (session.keepSignedIn === false) {
+            await clearSession();
+            if (mounted) {
+              setUser(null);
+            }
+            return;
+          }
+
           if (session.refreshToken) {
             setBootStage('auth_refresh');
             try {
               const refreshed = await api.refreshSession();
               if (mounted && refreshed?.user) {
                 setUser(refreshed.user);
+                await saveSession({
+                  ...session,
+                  ...refreshed,
+                  keepSignedIn: true,
+                  user: refreshed.user,
+                });
                 // Push is deferred until after splash — see RootNavigator.
                 return;
               }
@@ -117,7 +132,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const persistSession = useCallback(async (session: AuthSession) => {
-    await saveSession(session);
+    if (session.keepSignedIn === false) {
+      await clearSession();
+    } else {
+      await saveSession({ ...session, keepSignedIn: true });
+    }
     setUser(session.user);
     setAuthError(null);
     // Safe after UI is up; never runs during cold-start hydrate.

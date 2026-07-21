@@ -1,14 +1,18 @@
 /**
  * Demo presentation layer for CodeQuest / pre-launch judging.
  *
- * Live API data wins when the backend returns real rows. When the database is
- * empty, the request errors, or the app is still loading, curated Ghana mock
- * content keeps every screen populated so judges see the deployed experience.
+ * Live API data wins when the backend returns real rows. For seeded demo
+ * actor accounts only, curated Ghana mock content fills empty screens so
+ * judges see a populated experience.
  *
- * Disable via EXPO_PUBLIC_ENABLE_DEMO_FALLBACK=false before real production.
+ * Real Create Account users never receive mock rows — empty API responses
+ * surface as genuine empty states.
+ *
+ * Global kill switch: EXPO_PUBLIC_ENABLE_DEMO_FALLBACK=false
+ * Per-account gate: shouldUseDemoFallbackForAccount(email)
  */
 
-import { isDemoFallbackEnabled } from '../config/demoMode';
+import { shouldUseDemoFallbackForAccount } from '../config/demoMode';
 
 export interface DemoFallbackOptions {
   isLoading?: boolean;
@@ -20,6 +24,27 @@ export interface DemoFallbackOptions {
    * keys, or when rows have no `id` (e.g. emergency contacts by phone).
    */
   matchKey?: (item: unknown) => string;
+  /**
+   * Email of the signed-in account. When omitted, uses the session email
+   * bound via {@link bindDemoFallbackSession}.
+   */
+  accountEmail?: string | null;
+}
+
+/** Session email for withDemoFallback callers that cannot thread email through. */
+let sessionAccountEmail: string | null | undefined;
+
+/** Call from the signed-in shell whenever the auth user changes. */
+export function bindDemoFallbackSession(email: string | null | undefined): void {
+  sessionAccountEmail = email;
+}
+
+function isFallbackActive(options?: DemoFallbackOptions): boolean {
+  const email =
+    options?.accountEmail !== undefined
+      ? options.accountEmail
+      : sessionAccountEmail;
+  return shouldUseDemoFallbackForAccount(email);
 }
 
 function resolveMatchKey<T>(
@@ -34,17 +59,14 @@ function resolveMatchKey<T>(
   return value != null ? String(value).trim() : '';
 }
 
-/** Prefer live rows; when demo mode is on, append demo-only rows so every screen stays full. */
-export function withDemoFallback<T>(
+/** Prefer live rows; when empty/partial, fill with app catalog content for every user. */
+export function withCatalogFallback<T>(
   live: T[],
-  demo: T[],
-  options?: DemoFallbackOptions & { idKey?: keyof T },
+  catalog: T[],
+  options?: Omit<DemoFallbackOptions, 'accountEmail'> & { idKey?: keyof T },
 ): T[] {
-  if (!isDemoFallbackEnabled()) {
-    return live;
-  }
   if (live.length === 0) {
-    return demo;
+    return catalog;
   }
 
   const idKey = String(options?.idKey ?? 'id');
@@ -54,13 +76,11 @@ export function withDemoFallback<T>(
       .filter((key) => key.length > 0),
   );
 
-  // Live rows with no usable identity keys cannot be safely merged — appending
-  // demo would duplicate every contact/card (seen on SOS when contacts lack `id`).
   if (liveKeys.size === 0) {
     return live;
   }
 
-  const extras = demo.filter((item) => {
+  const extras = catalog.filter((item) => {
     const key = resolveMatchKey(item, idKey, options?.matchKey);
     if (!key) {
       return false;
@@ -71,16 +91,36 @@ export function withDemoFallback<T>(
   return extras.length > 0 ? [...live, ...extras] : live;
 }
 
-/** Prefer a live value; otherwise show the demo default when fallback is enabled. */
+/** Prefer a live catalog item; otherwise use the bundled catalog entry for every user. */
+export function withCatalogFallbackValue<T>(
+  live: T | null | undefined,
+  catalog: T,
+): T | null {
+  return live ?? catalog;
+}
+
+/** Prefer live rows; only for demo actors, append demo-only rows when empty/partial. */
+export function withDemoFallback<T>(
+  live: T[],
+  demo: T[],
+  options?: DemoFallbackOptions & { idKey?: keyof T },
+): T[] {
+  if (!isFallbackActive(options)) {
+    return live;
+  }
+  return withCatalogFallback(live, demo, options);
+}
+
+/** Prefer a live value; otherwise show the demo default for demo actors only. */
 export function withDemoFallbackValue<T>(
   live: T | null | undefined,
   demo: T,
-  _options?: DemoFallbackOptions,
+  options?: DemoFallbackOptions,
 ): T | null {
-  if (!isDemoFallbackEnabled()) {
+  if (!isFallbackActive(options)) {
     return live !== null && live !== undefined ? live : null;
   }
-  return live ?? demo;
+  return withCatalogFallbackValue(live, demo);
 }
 
 export function isPresentingDemoData<T>(live: T[], display: T[]): boolean {

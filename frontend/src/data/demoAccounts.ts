@@ -63,7 +63,7 @@ export function demoPresetForAccount(account: DemoAccount): AccountProfileState 
 }
 
 /**
- * Consumer demo actors for Quick sign-in (Welcome / Login / Register).
+ * Consumer demo actors for Quick sign-in on the post-splash Welcome screen only.
  * Staff is intentionally omitted — ops access is via Staff sign-in only.
  * Password for all: {@link DEMO_PASSWORD}
  */

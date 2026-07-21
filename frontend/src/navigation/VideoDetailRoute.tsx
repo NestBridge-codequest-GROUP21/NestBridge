@@ -67,6 +67,7 @@ export default function VideoDetailRoute({
     if (videoApi.data) {
       return sanitizeVideoResource(videoApi.data);
     }
+    // Video library is app catalog content — available to every signed-in user.
     const fallback = videosApiMock.find((item) => item.videoKey === videoKey);
     return fallback ? sanitizeVideoResource(fallback) : null;
   }, [videoApi.data, videoKey]);
