@@ -20,7 +20,7 @@ import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
 import ReminderBanner from '../../components/ReminderBanner';
-import InlineBanner from '../../components/InlineBanner';
+import SectionRetryBanner from '../../components/SectionRetryBanner';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import SkeletonLoader from '../../components/SkeletonLoader';
 import {
@@ -65,7 +65,10 @@ export interface StudentHomeDashboardProps {
   recentActivity?: RecentActivityItem[];
   reminder?: string;
   isHomeLoading?: boolean;
+  /** Fatal only — every home section failed. Partial failures use section props. */
   homeDataError?: string | null;
+  hostsLoadError?: string | null;
+  activityLoadError?: string | null;
   tabBarItems: TabBarItem[];
   activeTabId: string;
   showSosDock?: boolean;
@@ -76,6 +79,9 @@ export interface StudentHomeDashboardProps {
   onFeaturedMatchPress?: () => void;
   onSuggestedHostPress?: (hostId: string) => void;
   onHostsEmptyPrimaryAction?: () => void;
+  onRetryHosts?: () => void;
+  onRetryActivity?: () => void;
+  onRetryHome?: () => void;
   onRecommendationItemPress?: (item: RecommendationItem) => void;
   onRecommendationsEmptyPress?: () => void;
   onJourneyStepPress?: (step: JourneyStep) => void;
@@ -105,6 +111,8 @@ export default function StudentHomeDashboard({
   reminder,
   isHomeLoading = false,
   homeDataError,
+  hostsLoadError,
+  activityLoadError,
   tabBarItems,
   activeTabId,
   showSosDock = false,
@@ -115,6 +123,9 @@ export default function StudentHomeDashboard({
   onFeaturedMatchPress,
   onSuggestedHostPress,
   onHostsEmptyPrimaryAction,
+  onRetryHosts,
+  onRetryActivity,
+  onRetryHome,
   onRecommendationItemPress,
   onRecommendationsEmptyPress,
   onJourneyStepPress,
@@ -144,6 +155,14 @@ export default function StudentHomeDashboard({
             message="Complete your travel profile to unlock messaging, bookings, and personalized matches."
             continueLabel="Complete Profile"
             onContinueSetup={onSetupPress}
+          />
+        ) : null}
+
+        {homeDataError ? (
+          <SectionRetryBanner
+            message={homeDataError}
+            onRetry={onRetryHome}
+            retryLabel="Retry home"
           />
         ) : null}
 
@@ -177,28 +196,36 @@ export default function StudentHomeDashboard({
           />
         ) : null}
 
-        <DiscoveryListingSection
-          title={suggestedHostsTitle}
-          items={suggestedHosts.map((host): DiscoveryListingItem => ({
-            id: host.id,
-            name: host.name,
-            subtitle: host.location,
-            priceLabel: host.pricePerNight,
-            initials: host.name
-              .split(/\s+/)
-              .map((part) => part[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase(),
-            matchPercentage: host.matchPercentage,
-          }))}
-          showMatchScores={showMatchScores}
-          emptyState={hostsEmptyState}
-          onEmptyPrimaryAction={onHostsEmptyPrimaryAction}
-          onItemPress={onSuggestedHostPress}
-          actionLabel="See all"
-          onActionPress={onHostsEmptyPrimaryAction}
-        />
+        {hostsLoadError ? (
+          <SectionRetryBanner
+            message={hostsLoadError}
+            onRetry={onRetryHosts}
+            retryLabel="Retry hosts"
+          />
+        ) : (
+          <DiscoveryListingSection
+            title={suggestedHostsTitle}
+            items={suggestedHosts.map((host): DiscoveryListingItem => ({
+              id: host.id,
+              name: host.name,
+              subtitle: host.location,
+              priceLabel: host.pricePerNight,
+              initials: host.name
+                .split(/\s+/)
+                .map((part) => part[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase(),
+              matchPercentage: host.matchPercentage,
+            }))}
+            showMatchScores={showMatchScores}
+            emptyState={hostsEmptyState}
+            onEmptyPrimaryAction={onHostsEmptyPrimaryAction}
+            onItemPress={onSuggestedHostPress}
+            actionLabel="See all"
+            onActionPress={onHostsEmptyPrimaryAction}
+          />
+        )}
 
         {recommendationSections.length > 0 ? (
           <RecommendedForYou
@@ -211,13 +238,17 @@ export default function StudentHomeDashboard({
           />
         ) : null}
 
-        <RecentActivityList items={recentActivity} />
+        {activityLoadError ? (
+          <SectionRetryBanner
+            message={activityLoadError}
+            onRetry={onRetryActivity}
+            retryLabel="Retry activity"
+          />
+        ) : (
+          <RecentActivityList items={recentActivity} />
+        )}
 
-        {homeDataError ? (
-          <View style={styles.bannerPad}>
-            <InlineBanner message={homeDataError} tone="error" />
-          </View>
-        ) : reminder ? (
+        {!homeDataError && reminder ? (
           <ReminderBanner message={reminder} onPress={onReminderPress} />
         ) : null}
       </ScreenScroll>
@@ -252,7 +283,6 @@ function createStyles({ colors }: AppTheme) {
   skeletonCard: {
     width: '100%',
   },
-  bannerPad: {},
 });
 }
 

@@ -2197,8 +2197,25 @@ export default function AppNavigator() {
     [cityLabel, checkIn, checkOut, runMatchSearch],
   );
 
+  // Fatal banner only when every requested home section failed (hook sets homeApi.error).
+  // Demo-covered empty responses still suppress the global banner.
   const homeDataError = presentableError(
     homeApi.error,
+    homeApi.bookings,
+    displayBookings,
+  );
+  const hostsLoadError = presentableError(
+    homeApi.sectionErrors.hostMatches,
+    homeApi.suggestedHosts,
+    suggestedHostsDisplay,
+  );
+  const guidesLoadError = presentableError(
+    homeApi.sectionErrors.guideMatches,
+    homeApi.suggestedGuides,
+    suggestedGuidesDisplay,
+  );
+  const activityLoadError = presentableError(
+    homeApi.sectionErrors.bookings,
     homeApi.bookings,
     displayBookings,
   );
@@ -2207,6 +2224,7 @@ export default function AppNavigator() {
     homeApi.hostMatches,
     suggestedHostsDisplay,
   );
+  // Reminder / status use fatal error only — partial section failures stay inline.
   const studentLive = buildStudentHomeStatus(
     mergedBookings,
     cityLabel,
@@ -2314,6 +2332,8 @@ export default function AppNavigator() {
       showMatchScores,
       isHomeLoading,
       homeDataError,
+      hostsLoadError,
+      activityLoadError,
       statusLabel: studentLive.statusLabel,
       reminder: studentLive.reminder,
       recentActivity: studentLive.recentActivity,
@@ -2331,6 +2351,8 @@ export default function AppNavigator() {
       showMatchScores,
       isHomeLoading,
       homeDataError,
+      hostsLoadError,
+      activityLoadError,
       studentLive.statusLabel,
       studentLive.reminder,
       studentLive.recentActivity,
@@ -2381,6 +2403,9 @@ export default function AppNavigator() {
       quickActions: getQuickActionsForRole('BROWSE'),
       recentActivity: touristLive.recentActivity,
       reminder: touristLive.reminder,
+      homeDataError,
+      guidesLoadError,
+      activityLoadError,
       tabBarItems,
       activeTabId: 'home',
       showSetupBanner: false,
@@ -2395,7 +2420,7 @@ export default function AppNavigator() {
       journeyProgress,
     };
     },
-    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, dashboardRecommendations, journeyProgress],
+    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, dashboardRecommendations, journeyProgress, homeDataError, guidesLoadError, activityLoadError],
   );
 
   const exploreHomeProps = useMemo(
@@ -2428,6 +2453,9 @@ export default function AppNavigator() {
       quickActions: getQuickActionsForRole('TOURIST'),
       recentActivity: touristLive.recentActivity,
       reminder: touristLive.reminder,
+      homeDataError,
+      guidesLoadError,
+      activityLoadError,
       tabBarItems,
       activeTabId: 'home',
       showSetupBanner: seekerSetupIncomplete && primaryIntent === 'TOURIST',
@@ -2447,6 +2475,9 @@ export default function AppNavigator() {
       dashboardRecommendations,
       journeyProgress,
       touristLive,
+      homeDataError,
+      guidesLoadError,
+      activityLoadError,
     ],
   );
 
@@ -2709,6 +2740,9 @@ export default function AppNavigator() {
             onGuidesEmptyPrimaryAction={() =>
               navigation.navigate('GuideSearch', { mode: 'nearby' })
             }
+            onRetryGuides={() => homeApi.retrySection('guideMatches')}
+            onRetryActivity={() => homeApi.retrySection('bookings')}
+            onRetryHome={() => homeApi.refresh()}
             onRecommendationItemPress={(item) =>
               handleRecommendationItemPress(navigation, item)
             }
@@ -3503,6 +3537,9 @@ export default function AppNavigator() {
               navigation.navigate('HostProfile', { hostId })
             }
             onHostsEmptyPrimaryAction={() => navigation.navigate('ExploreStays')}
+            onRetryHosts={() => homeApi.retrySection('hostMatches')}
+            onRetryActivity={() => homeApi.retrySection('bookings')}
+            onRetryHome={() => homeApi.refresh()}
             onRecommendationItemPress={(item) =>
               handleRecommendationItemPress(navigation, item)
             }
@@ -3534,6 +3571,9 @@ export default function AppNavigator() {
             onGuidesEmptyPrimaryAction={() =>
               navigation.navigate('GuideSearch', { mode: 'nearby' })
             }
+            onRetryGuides={() => homeApi.retrySection('guideMatches')}
+            onRetryActivity={() => homeApi.retrySection('bookings')}
+            onRetryHome={() => homeApi.refresh()}
             onRecommendationItemPress={(item) =>
               handleRecommendationItemPress(navigation, item)
             }
