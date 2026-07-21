@@ -148,7 +148,7 @@ export default function WelcomeScreen({
         keyboardShouldPersistTaps="handled"
       >
         <LinearGradient
-          colors={[...gradients.header]}
+          colors={gradients.header}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.hero, { paddingTop: insets.top + spacing.lg }]}
@@ -158,7 +158,7 @@ export default function WelcomeScreen({
             style={{ position: 'absolute', top: -spacing.xl, right: -spacing.lg }}
           />
 
-          <BrandLogoMark size={WELCOME_LOGO_SIZE} />
+          <BrandLogoMark size={WELCOME_LOGO_SIZE} framed />
 
           {tagline ? <Text style={styles.tagline}>{tagline}</Text> : null}
 

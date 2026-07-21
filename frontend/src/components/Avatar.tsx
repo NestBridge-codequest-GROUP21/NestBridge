@@ -59,13 +59,13 @@ export default function Avatar({
   );
 }
 
-function createStyles({ colors, tints }: AppTheme) {
+function createStyles({ colors, tints, chrome }: AppTheme) {
   return StyleSheet.create({
   base: {
     backgroundColor: tints.teal,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: borderWidths.hairline,
+    borderWidth: chrome.minimalBorders ? 0 : borderWidths.hairline,
     borderColor: colors.border,
   },
   highlighted: {
@@ -76,7 +76,7 @@ function createStyles({ colors, tints }: AppTheme) {
   text: {
     fontFamily: fontFamilies.bold,
     fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
 });
 }

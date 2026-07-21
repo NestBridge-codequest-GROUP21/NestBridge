@@ -2,6 +2,7 @@ import { useThemedStyles, type AppTheme, useTheme } from '../theme';
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import BrandLogo from './BrandLogo';
 import {
   spacing,
 } from '../constants/theme';
@@ -14,13 +15,15 @@ function PulsingDot({ accent }: { accent?: boolean }) {
   );
 }
 
-/** Minimal loader for font/auth bootstrap — not the branded splash. */
+/** Minimal branded loader for font/auth bootstrap — not the full splash. */
 export default function BootLoader() {
   const styles = useThemedStyles(createStyles);
+  const { scheme } = useTheme();
 
   return (
     <View style={styles.root}>
-      <StatusBar style="light" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <BrandLogo size="md" accessibilityLabel="NestBridge" />
       <View style={styles.dots} accessibilityRole="progressbar">
         <PulsingDot />
         <PulsingDot accent />
@@ -34,9 +37,10 @@ function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.navy,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.xl,
   },
   dots: {
     flexDirection: 'row',
@@ -46,13 +50,12 @@ function createStyles({ colors }: AppTheme) {
     width: spacing.sm,
     height: spacing.sm,
     borderRadius: spacing.sm,
-    backgroundColor: colors.surface,
-    opacity: 0.35,
+    backgroundColor: colors.border,
+    opacity: 0.55,
   },
   dotAccent: {
-    backgroundColor: colors.tealBright,
-    opacity: 0.9,
+    backgroundColor: colors.teal,
+    opacity: 0.95,
   },
 });
 }
-

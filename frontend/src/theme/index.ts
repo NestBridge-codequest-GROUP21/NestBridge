@@ -2,11 +2,16 @@ export type {
   ColorPalette,
   ColorSchemeName,
   ThemePreference,
+  ThemeChrome,
   AppThemeTokens,
 } from './palettes';
 export {
   lightColors,
   darkColors,
+  darkTealColors,
+  darkWarmColors,
+  darkBoldColors,
+  themeTokensForPreference,
   themeTokensForScheme,
 } from './palettes';
 export { ThemeProvider, useTheme, useResolvedScheme } from './ThemeContext';

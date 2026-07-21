@@ -1,4 +1,4 @@
-import { useThemedStyles, type AppTheme } from '../../theme';
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -10,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
 import ScreenScroll from '../../components/ScreenScroll';
+import BrandLogo from '../../components/BrandLogo';
 import PrimaryButton from '../../components/PrimaryButton';
 import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import BackButton from '../../components/BackButton';
@@ -66,12 +67,13 @@ export default function RegisterScreen({
   onBack,
 }: RegisterScreenProps) {
   const styles = useThemedStyles(createStyles);
+  const { scheme } = useTheme();
 
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScreenScroll
         contentContainerStyle={[
@@ -80,6 +82,8 @@ export default function RegisterScreen({
         ]}
       >
         {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
+
+        <BrandLogo size="sm" style={styles.brandLogo} />
 
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
@@ -155,6 +159,10 @@ function createStyles({ colors }: AppTheme) {
   },
   back: {
     marginBottom: spacing.sm,
+  },
+  brandLogo: {
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
   },
   title: {
     fontFamily: fontFamilies.bold,

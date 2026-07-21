@@ -71,7 +71,7 @@ export default function HostProfileScreen({
 
       {/* Profile hero with large avatar — not a clean ScreenHeader map. */}
       <LinearGradient
-        colors={[...gradients.header]}
+        colors={gradients.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}
@@ -92,7 +92,7 @@ export default function HostProfileScreen({
           />
           {showMatchScores ? (
             <LinearGradient
-              colors={[...gradients.accent]}
+              colors={gradients.accent}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={styles.matchBadge}

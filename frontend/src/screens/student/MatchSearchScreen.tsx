@@ -203,7 +203,7 @@ export default function MatchSearchScreen({
 
       {/* Marketing search hero — richer than ScreenHeader (eyebrow + display title). */}
       <LinearGradient
-        colors={[...gradients.header]}
+        colors={gradients.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}

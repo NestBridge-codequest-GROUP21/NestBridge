@@ -150,6 +150,12 @@ export const hostPerformanceMock: HomeStatItem[] = [
   { id: 'rating', value: '4.8★', label: 'Rating', subtitle: '12 reviews' },
 ];
 
+export const guidePerformanceMock: HomeStatItem[] = [
+  { id: 'tours', value: '14', label: 'Tours', subtitle: 'This month' },
+  { id: 'guests', value: '46', label: 'Guests', subtitle: 'Last 30 days' },
+  { id: 'rating', value: '4.9★', label: 'Rating', subtitle: '22 reviews' },
+];
+
 export const hostReminderMock =
   'Complete your safeguarding module to accept minor guests.';
 

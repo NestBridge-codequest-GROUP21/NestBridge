@@ -208,6 +208,7 @@ import {
   studentRecentActivityMock,
   touristRecentActivityMock,
   hostPerformanceMock,
+  guidePerformanceMock,
   touristFeaturedGuideMock,
   studentFeaturedMatchForCity,
 } from '../data/homeContentMock';
@@ -387,6 +388,9 @@ function handleTouristQuickAction(
   }
   if (actionId === 'offline-map') {
     navigation.navigate('OfflineMap');
+  }
+  if (actionId === 'sites-directory') {
+    navigation.navigate('SitesDirectory');
   }
   if (actionId === 'cultural-tips') {
     navigation.navigate('LocalTips');
@@ -2246,6 +2250,10 @@ export default function AppNavigator() {
         destinationLabel: cityLabel,
         preferStayCatalogue:
           homeRole === 'TOURIST' || homeRole === 'BROWSE',
+        journeyAudience:
+          homeRole === 'TOURIST' || homeRole === 'BROWSE'
+            ? 'tourist'
+            : 'student',
       }),
     [profileState, mergedBookings, journeyMilestones, cityLabel, homeRole],
   );
@@ -3077,7 +3085,11 @@ export default function AppNavigator() {
                   ? 'Book guided trips, find stays, and explore culture in Ghana'
                   : homeRole === 'STUDENT'
                     ? 'Find a host family, guides, and support for life in Ghana'
-                    : 'Homestays, guides, culture, and support for life in Ghana'
+                    : homeRole === 'HOST'
+                      ? 'Manage listings, help guests get around, and host with confidence'
+                      : homeRole === 'GUIDE'
+                        ? 'Shape tours, check attractions, and guide visitors well'
+                        : 'Tools for your NestBridge role in Ghana'
               }
               primaryActionLabel={primaryLabel}
               primaryActionHint={
@@ -3085,7 +3097,11 @@ export default function AppNavigator() {
                   ? 'Match with verified host families near campus in Ghana'
                   : isTouristBrowse
                     ? 'Book local guides for tours, orientation, and cultural experiences'
-                    : 'Homestays, local guides, hotels, and lodging across Ghana'
+                    : homeRole === 'HOST'
+                      ? 'Browse stays and guides when you travel, or refine how guests find you'
+                      : homeRole === 'GUIDE'
+                        ? 'Discover sites and stays to recommend on your tours'
+                        : 'Homestays, local guides, hotels, and lodging across Ghana'
               }
               travelBookingLabel={
                 showStayShortcut
@@ -3611,7 +3627,7 @@ export default function AppNavigator() {
               statusLabel={hostLive.statusLabel}
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('HOST')}
-              performanceStats={[]}
+              performanceStats={hostPerformanceMock}
               recommendationSections={dashboardRecommendations.sections}
               recommendationHeadline={dashboardRecommendations.headline}
               recommendationCity={cityLabel}
@@ -3689,6 +3705,8 @@ export default function AppNavigator() {
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('GUIDE')}
               tourSuggestions={guideTourSections}
+              performanceStats={guidePerformanceMock}
+              performanceTitle="Your tour performance"
               recommendationSections={dashboardRecommendations.sections}
               recommendationHeadline={dashboardRecommendations.headline}
               recommendationCity={cityLabel}

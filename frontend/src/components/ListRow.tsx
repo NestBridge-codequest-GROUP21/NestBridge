@@ -44,7 +44,7 @@ export default function ListRow({
     <>
       {iconName ? (
         <View style={styles.iconTile}>
-          <AppIcon name={iconName} size={iconSizes.md} color={colors.tealDeep} />
+          <AppIcon name={iconName} size={iconSizes.md} color={colors.onAccent} />
         </View>
       ) : null}
       <View style={styles.textBlock}>
@@ -92,7 +92,7 @@ export default function ListRow({
   );
 }
 
-function createStyles({ colors, tints }: AppTheme) {
+function createStyles({ colors, tints, chrome }: AppTheme) {
   return StyleSheet.create({
   row: {
     flexDirection: 'row',
@@ -102,7 +102,7 @@ function createStyles({ colors, tints }: AppTheme) {
     gap: spacing.md,
   },
   bordered: {
-    borderBottomWidth: borderWidths.hairline,
+    borderBottomWidth: chrome.minimalBorders ? 0 : borderWidths.hairline,
     borderBottomColor: colors.border,
   },
   pressed: {

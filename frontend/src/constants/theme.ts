@@ -3,7 +3,7 @@
  *
  * Usage:
  *   import { colors, fontSizes, fontFamilies, lineHeights, spacing, borderRadius, gradients, layout, shadows } from '../constants/theme';
- *   // Prefer useTheme() / useThemedStyles() in components so light/dark update at runtime.
+ *   // Prefer useTheme() / useThemedStyles() in components so light / dark-* variants update at runtime.
  *
  * Do NOT hardcode hex values, font sizes, or spacing in components.
  * If a token is missing, add it to theme/palettes.ts (colors) or here (layout).

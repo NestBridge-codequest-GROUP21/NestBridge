@@ -3,6 +3,7 @@ package com.nestbridge.notification;
 import com.nestbridge.user.User;
 import com.nestbridge.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmailVerificationService {
 
     private static final int TOKEN_BYTES = 32;
@@ -71,8 +73,21 @@ public class EmailVerificationService {
         if (verifyUrl == null || verifyUrl.isBlank()) {
             return;
         }
-        emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), verifyUrl);
-        lastResendEpochMs.put(user.getUserId(), System.currentTimeMillis());
+        if (!emailService.isConfigured()) {
+            throw new EmailDeliveryException(
+                    "Verification email could not be sent. Email delivery is not configured on the server. Please try again later or contact support.");
+        }
+        try {
+            emailService.sendVerificationEmail(user.getEmail(), user.getFullName(), verifyUrl);
+            lastResendEpochMs.put(user.getUserId(), System.currentTimeMillis());
+        } catch (EmailDeliveryException ex) {
+            // Keep the link in server logs so ops can unblock a user during demos.
+            log.error(
+                    "Failed to deliver verification email to={} verifyUrl={}",
+                    user.getEmail(),
+                    verifyUrl);
+            throw ex;
+        }
     }
 
     @Transactional

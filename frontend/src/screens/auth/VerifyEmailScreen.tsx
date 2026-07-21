@@ -15,6 +15,7 @@ import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import Card from '../../components/Card';
 import ScreenScroll from '../../components/ScreenScroll';
+import BrandLogo from '../../components/BrandLogo';
 import {
   fontFamilies,
   fontSizes,
@@ -53,12 +54,12 @@ export default function VerifyEmailScreen({
   onBackToSignIn,
 }: VerifyEmailScreenProps) {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.flex}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <ScreenScroll
         keyboardAware={false}
         contentContainerStyle={[
@@ -66,6 +67,8 @@ export default function VerifyEmailScreen({
           { paddingTop: insets.top + spacing.xl, paddingBottom: insets.bottom + spacing.xl },
         ]}
       >
+        <BrandLogo size="sm" style={styles.brandLogo} />
+
         <View style={styles.iconCircle}>
           <AppIcon name="mail-outline" size={iconSizes.xl} color={colors.tealDeep} />
         </View>
@@ -130,6 +133,10 @@ function createStyles({ colors, tints }: AppTheme) {
       flexGrow: 1,
       paddingHorizontal: layout.screenPaddingHorizontal,
       gap: spacing.md,
+    },
+    brandLogo: {
+      alignSelf: 'center',
+      marginBottom: spacing.sm,
     },
     iconCircle: {
       width: layout.iconTileSize,

@@ -1,6 +1,6 @@
 /**
- * NestBridge color palettes — light (default / current brand) and dark.
- * Brand hues (navy, teal, gold, terracotta) stay consistent; surfaces adapt.
+ * NestBridge color palettes — light (default) plus three dark variants.
+ * Layout/spacing never change between variants; only these tokens swap.
  */
 
 export type ColorPalette = {
@@ -15,12 +15,14 @@ export type ColorPalette = {
   /** Always pure white — never reuse as a dark surface. */
   white: string;
   background: string;
-  /** Card / panel fill (light: white; dark: elevated navy). */
+  /** Card / panel fill (light: white; dark: elevated surface). */
   surface: string;
   /** Subtle raised panel behind icons / chips. */
   surfaceElevated: string;
   /** Text/icons on primary CTAs and header gradients. */
   onPrimary: string;
+  /** Glyphs on tint / accent icon wells (dark-bold: near-black). */
+  onAccent: string;
   /** Links, active accents, recommendation reasons. */
   primaryAction: string;
   secondaryAction: string;
@@ -35,6 +37,12 @@ export type ColorPalette = {
   success: string;
   warning: string;
   danger: string;
+  /** Active bottom-tab label/icon color. */
+  tabActive: string;
+  /** SOS circle fill. */
+  sos: string;
+  /** SOS circle ring. */
+  sosBorder: string;
 };
 
 export type TintPalette = {
@@ -45,10 +53,12 @@ export type TintPalette = {
   cream: string;
 };
 
+export type GradientStops = readonly [string, string, ...string[]];
+
 export type GradientPalette = {
-  header: readonly [string, string, string, string];
-  headerCompact: readonly [string, string];
-  accent: readonly [string, string];
+  header: GradientStops;
+  headerCompact: GradientStops;
+  accent: GradientStops;
 };
 
 export type ShadowRecipe = {
@@ -71,6 +81,67 @@ export type OverlayPalette = {
   scrimStrong: string;
 };
 
+/** Variant-specific chrome that is not a simple color swap. */
+export type ThemeChrome = {
+  /** SOS ring thickness in pt. */
+  sosBorderWidth: number;
+  /** Icon wells use solid accent fills with onAccent glyphs. */
+  solidAccentBlocks: boolean;
+  /** Cards rely on surface contrast instead of borders. */
+  minimalBorders: boolean;
+  /** dark-bold uses a flat solid header fill. */
+  headerMode: 'gradient' | 'solid';
+};
+
+/** User-selectable appearance. Light is the default. */
+export type ThemePreference =
+  | 'light'
+  | 'dark-teal'
+  | 'dark-warm'
+  | 'dark-bold';
+
+/** Coarse scheme for status bar / React Navigation base theme. */
+export type ColorSchemeName = 'light' | 'dark';
+
+export type AppThemeTokens = {
+  scheme: ColorSchemeName;
+  variant: ThemePreference;
+  colors: ColorPalette;
+  tints: TintPalette;
+  gradients: GradientPalette;
+  shadows: ShadowPalette;
+  overlays: OverlayPalette;
+  chrome: ThemeChrome;
+};
+
+const lightChrome: ThemeChrome = {
+  sosBorderWidth: 4,
+  solidAccentBlocks: false,
+  minimalBorders: false,
+  headerMode: 'gradient',
+};
+
+const darkTealChrome: ThemeChrome = {
+  sosBorderWidth: 4,
+  solidAccentBlocks: false,
+  minimalBorders: false,
+  headerMode: 'gradient',
+};
+
+const darkWarmChrome: ThemeChrome = {
+  sosBorderWidth: 4,
+  solidAccentBlocks: false,
+  minimalBorders: false,
+  headerMode: 'gradient',
+};
+
+const darkBoldChrome: ThemeChrome = {
+  sosBorderWidth: 5,
+  solidAccentBlocks: true,
+  minimalBorders: true,
+  headerMode: 'solid',
+};
+
 /** Current production light theme — do not alter brand hues. */
 export const lightColors: ColorPalette = {
   navy: '#0C1735',
@@ -86,6 +157,7 @@ export const lightColors: ColorPalette = {
   surface: '#FFFFFF',
   surfaceElevated: '#F5F8F7',
   onPrimary: '#FFFFFF',
+  onAccent: '#0F7871',
   primaryAction: '#0F7871',
   secondaryAction: '#135062',
   placeholder: '#9CA3AF',
@@ -99,6 +171,9 @@ export const lightColors: ColorPalette = {
   success: '#2C8A7C',
   warning: '#D4A017',
   danger: '#C0392B',
+  tabActive: '#0F7871',
+  sos: '#C0392B',
+  sosBorder: '#FFFFFF',
 };
 
 export const lightTints: TintPalette = {
@@ -160,94 +235,243 @@ function makeShadows(shadowColor: string): ShadowPalette {
 
 export const lightShadows = makeShadows(lightColors.navy);
 
-/**
- * Dark surfaces with unchanged brand CTAs / accents.
- * Cards use elevated navy panels; text is light for contrast.
- */
-export const darkColors: ColorPalette = {
-  navy: '#0C1735',
-  navyMid: '#1A2A4A',
-  tealDeep: '#1A6B7A',
-  teal: '#1AA68C',
-  tealBright: '#2BC4A8',
-  gold: '#E0B03A',
-  terracotta: '#E06A42',
-  warmCream: '#1A2233',
+const DARK_BORDER = 'rgba(255, 255, 255, 0.08)';
+
+/** dark-teal — cool navy/teal night surfaces. */
+export const darkTealColors: ColorPalette = {
+  navy: '#0B1220',
+  navyMid: '#14342E',
+  tealDeep: '#1F4A40',
+  teal: '#6FA396',
+  tealBright: '#6FA396',
+  gold: '#C9A860',
+  terracotta: '#B8694A',
+  warmCream: '#151E33',
   white: '#FFFFFF',
   background: '#0B1220',
-  surface: '#162033',
-  surfaceElevated: '#1A2A4A',
-  onPrimary: '#FFFFFF',
-  primaryAction: '#1AA68C',
-  secondaryAction: '#2BC4A8',
-  placeholder: '#7C879A',
-  disabled: '#2A3548',
-  disabledText: '#7C879A',
-  error: '#E0554A',
-  textPrimary: '#F2F4F7',
-  textSecondary: '#A8B0C0',
-  textTertiary: '#7C879A',
-  border: '#2A3548',
-  success: '#3BA899',
-  warning: '#E0B03A',
-  danger: '#E0554A',
+  surface: '#151E33',
+  surfaceElevated: '#1A2740',
+  onPrimary: '#F3EFE7',
+  onAccent: '#6FA396',
+  primaryAction: '#6FA396',
+  secondaryAction: '#6FA396',
+  placeholder: '#8A93A6',
+  disabled: '#1A2740',
+  disabledText: '#8A93A6',
+  error: '#B8694A',
+  textPrimary: '#F3EFE7',
+  textSecondary: '#8A93A6',
+  textTertiary: '#8A93A6',
+  border: DARK_BORDER,
+  success: '#6FA396',
+  warning: '#C9A860',
+  danger: '#B8694A',
+  tabActive: '#6FA396',
+  sos: '#B8694A',
+  sosBorder: '#FFFFFF',
 };
 
-export const darkTints: TintPalette = {
-  teal: '#16353A',
-  gold: '#3A3218',
-  terracotta: '#3A241C',
-  navy: '#1A2438',
-  cream: darkColors.warmCream,
+export const darkTealTints: TintPalette = {
+  teal: '#1A3030',
+  gold: '#2E2A1A',
+  terracotta: '#2E221C',
+  navy: '#151E33',
+  cream: darkTealColors.warmCream,
 };
 
-export const darkGradients: GradientPalette = {
-  header: [
-    darkColors.navy,
-    darkColors.navyMid,
-    darkColors.tealDeep,
-    darkColors.teal,
-  ],
-  headerCompact: [darkColors.navy, darkColors.tealDeep],
-  accent: [darkColors.teal, darkColors.tealBright],
+export const darkTealGradients: GradientPalette = {
+  // 135deg: #0B1220 → #14342E → #1F4A40
+  header: ['#0B1220', '#14342E', '#1F4A40'],
+  headerCompact: ['#0B1220', '#1F4A40'],
+  accent: [darkTealColors.teal, darkTealColors.tealBright],
 };
 
-export const darkOverlays: OverlayPalette = {
+export const darkTealOverlays: OverlayPalette = {
   scrim: 'rgba(0, 0, 0, 0.55)',
   scrimStrong: 'rgba(0, 0, 0, 0.72)',
 };
 
-export const darkShadows = makeShadows('#000000');
+export const darkTealShadows = makeShadows('#000000');
 
-export type ColorSchemeName = 'light' | 'dark';
-export type ThemePreference = 'light' | 'dark' | 'system';
-
-export type AppThemeTokens = {
-  scheme: ColorSchemeName;
-  colors: ColorPalette;
-  tints: TintPalette;
-  gradients: GradientPalette;
-  shadows: ShadowPalette;
-  overlays: OverlayPalette;
+/** dark-warm — charcoal / terracotta night surfaces. */
+export const darkWarmColors: ColorPalette = {
+  navy: '#1A1410',
+  navyMid: '#2E1E16',
+  tealDeep: '#3D2418',
+  teal: '#5E9A88',
+  tealBright: '#5E9A88',
+  gold: '#D9A44E',
+  terracotta: '#C9673E',
+  warmCream: '#231A14',
+  white: '#FFFFFF',
+  background: '#17110D',
+  surface: '#231A14',
+  surfaceElevated: '#2C2119',
+  onPrimary: '#F5EFE6',
+  onAccent: '#D9A44E',
+  primaryAction: '#D9A44E',
+  secondaryAction: '#C9673E',
+  placeholder: '#A08E7D',
+  disabled: '#2C2119',
+  disabledText: '#A08E7D',
+  error: '#C9673E',
+  textPrimary: '#F5EFE6',
+  textSecondary: '#A08E7D',
+  textTertiary: '#A08E7D',
+  border: DARK_BORDER,
+  success: '#5E9A88',
+  warning: '#D9A44E',
+  danger: '#C9673E',
+  tabActive: '#D9A44E',
+  sos: '#C9673E',
+  sosBorder: '#FFFFFF',
 };
 
-export function themeTokensForScheme(scheme: ColorSchemeName): AppThemeTokens {
-  if (scheme === 'dark') {
-    return {
-      scheme: 'dark',
-      colors: darkColors,
-      tints: darkTints,
-      gradients: darkGradients,
-      shadows: darkShadows,
-      overlays: darkOverlays,
-    };
+export const darkWarmTints: TintPalette = {
+  teal: '#1C2A26',
+  gold: '#332818',
+  terracotta: '#332018',
+  navy: '#231A14',
+  cream: darkWarmColors.warmCream,
+};
+
+export const darkWarmGradients: GradientPalette = {
+  // 135deg: #1A1410 → #2E1E16 → #3D2418
+  header: ['#1A1410', '#2E1E16', '#3D2418'],
+  headerCompact: ['#1A1410', '#3D2418'],
+  accent: [darkWarmColors.gold, darkWarmColors.terracotta],
+};
+
+export const darkWarmOverlays: OverlayPalette = {
+  scrim: 'rgba(0, 0, 0, 0.55)',
+  scrimStrong: 'rgba(0, 0, 0, 0.72)',
+};
+
+export const darkWarmShadows = makeShadows('#000000');
+
+/** dark-bold — true black with solid accent blocks. */
+export const darkBoldColors: ColorPalette = {
+  navy: '#1C5A48',
+  navyMid: '#1C5A48',
+  tealDeep: '#1C5A48',
+  teal: '#3EBBA0',
+  tealBright: '#3EBBA0',
+  gold: '#E0B24E',
+  terracotta: '#D9704F',
+  warmCream: '#19191C',
+  white: '#FFFFFF',
+  background: '#0D0D0F',
+  surface: '#19191C',
+  surfaceElevated: '#19191C',
+  onPrimary: '#F5F5F0',
+  onAccent: '#0D0D0F',
+  primaryAction: '#3EBBA0',
+  secondaryAction: '#E0B24E',
+  placeholder: '#8A8C93',
+  disabled: '#19191C',
+  disabledText: '#8A8C93',
+  error: '#D9704F',
+  textPrimary: '#F5F5F0',
+  textSecondary: '#8A8C93',
+  textTertiary: '#8A8C93',
+  border: 'transparent',
+  success: '#3EBBA0',
+  warning: '#E0B24E',
+  danger: '#D9704F',
+  tabActive: '#FFFFFF',
+  sos: '#D9704F',
+  sosBorder: '#0D0D0F',
+};
+
+export const darkBoldTints: TintPalette = {
+  // Solid fills (not subtle tints) — glyphs use onAccent (#0D0D0F).
+  teal: '#3EBBA0',
+  gold: '#E0B24E',
+  terracotta: '#D9704F',
+  navy: '#1C5A48',
+  cream: darkBoldColors.warmCream,
+};
+
+export const darkBoldGradients: GradientPalette = {
+  // Flat solid header — same stop repeated for LinearGradient callers.
+  header: ['#1C5A48', '#1C5A48', '#1C5A48'],
+  headerCompact: ['#1C5A48', '#1C5A48'],
+  accent: [darkBoldColors.teal, darkBoldColors.gold],
+};
+
+export const darkBoldOverlays: OverlayPalette = {
+  scrim: 'rgba(0, 0, 0, 0.55)',
+  scrimStrong: 'rgba(0, 0, 0, 0.72)',
+};
+
+export const darkBoldShadows = makeShadows('#000000');
+
+/** @deprecated Use darkTealColors — kept for any residual imports. */
+export const darkColors = darkTealColors;
+/** @deprecated Use darkTealTints */
+export const darkTints = darkTealTints;
+/** @deprecated Use darkTealGradients */
+export const darkGradients = darkTealGradients;
+/** @deprecated Use darkTealOverlays */
+export const darkOverlays = darkTealOverlays;
+/** @deprecated Use darkTealShadows */
+export const darkShadows = darkTealShadows;
+
+export function themeTokensForPreference(
+  preference: ThemePreference,
+): AppThemeTokens {
+  switch (preference) {
+    case 'dark-teal':
+      return {
+        scheme: 'dark',
+        variant: 'dark-teal',
+        colors: darkTealColors,
+        tints: darkTealTints,
+        gradients: darkTealGradients,
+        shadows: darkTealShadows,
+        overlays: darkTealOverlays,
+        chrome: darkTealChrome,
+      };
+    case 'dark-warm':
+      return {
+        scheme: 'dark',
+        variant: 'dark-warm',
+        colors: darkWarmColors,
+        tints: darkWarmTints,
+        gradients: darkWarmGradients,
+        shadows: darkWarmShadows,
+        overlays: darkWarmOverlays,
+        chrome: darkWarmChrome,
+      };
+    case 'dark-bold':
+      return {
+        scheme: 'dark',
+        variant: 'dark-bold',
+        colors: darkBoldColors,
+        tints: darkBoldTints,
+        gradients: darkBoldGradients,
+        shadows: darkBoldShadows,
+        overlays: darkBoldOverlays,
+        chrome: darkBoldChrome,
+      };
+    case 'light':
+    default:
+      return {
+        scheme: 'light',
+        variant: 'light',
+        colors: lightColors,
+        tints: lightTints,
+        gradients: lightGradients,
+        shadows: lightShadows,
+        overlays: lightOverlays,
+        chrome: lightChrome,
+      };
   }
-  return {
-    scheme: 'light',
-    colors: lightColors,
-    tints: lightTints,
-    gradients: lightGradients,
-    shadows: lightShadows,
-    overlays: lightOverlays,
-  };
+}
+
+/**
+ * @deprecated Prefer themeTokensForPreference — maps coarse light/dark only.
+ */
+export function themeTokensForScheme(scheme: ColorSchemeName): AppThemeTokens {
+  return themeTokensForPreference(scheme === 'dark' ? 'dark-teal' : 'light');
 }

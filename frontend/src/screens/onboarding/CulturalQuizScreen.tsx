@@ -54,14 +54,14 @@ export default function CulturalQuizScreen({
   onBack,
 }: CulturalQuizScreenProps) {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
 
 
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView
         contentContainerStyle={[

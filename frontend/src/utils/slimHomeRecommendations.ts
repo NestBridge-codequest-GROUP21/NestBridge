@@ -3,25 +3,63 @@ import type {
   RecommendationSection,
 } from '../types/recommendations';
 
-const SEEKER_HOME_SECTION_IDS = new Set([
-  // Homestays/guides already appear in DiscoveryListing on home.
-  'attractions',
+/** Student home: academic settle-in — skip hosts/guides already in Discovery. */
+const STUDENT_HOME_SECTION_IDS = new Set([
+  'institutions',
+  'transport',
+  'culture',
+  'resources',
 ]);
 
-const PROVIDER_HOME_SECTION_IDS = new Set(['profile-tips']);
+/** Tourist / browse home: visit Ghana — skip duplicating “Guides nearby” list. */
+const TOURIST_HOME_SECTION_IDS = new Set([
+  'attractions',
+  'food',
+  'accommodation',
+  'culture',
+]);
+
+/** Host / guide home: operational tips + actionable opportunities. */
+const PROVIDER_HOME_SECTION_IDS = new Set(['profile-tips', 'opportunities']);
+
+function allowListForRole(role: string): Set<string> {
+  switch (role) {
+    case 'HOST':
+    case 'GUIDE':
+      return PROVIDER_HOME_SECTION_IDS;
+    case 'STUDENT':
+      return STUDENT_HOME_SECTION_IDS;
+    case 'TOURIST':
+    case 'BROWSE':
+    default:
+      return TOURIST_HOME_SECTION_IDS;
+  }
+}
+
+function headlineForRole(recommendations: HomeRecommendations): string {
+  switch (recommendations.role) {
+    case 'HOST':
+      return 'Tips for hosting';
+    case 'GUIDE':
+      return 'Tips for guiding';
+    case 'STUDENT':
+      return `Settling into ${recommendations.city}`;
+    case 'TOURIST':
+    case 'BROWSE':
+    default:
+      return `Exploring ${recommendations.city}`;
+  }
+}
 
 /**
- * Home dashboards only surface “what matters nearby” — prep, culture,
- * universities, videos, and explore catalogues live under Explore.
+ * Keep only role-relevant home recommendation sections.
+ * Full catalogues stay on Explore / dedicated screens.
  */
 export function slimHomeRecommendationSections(
   sections: RecommendationSection[],
   role: string,
 ): RecommendationSection[] {
-  const allow =
-    role === 'HOST' || role === 'GUIDE'
-      ? PROVIDER_HOME_SECTION_IDS
-      : SEEKER_HOME_SECTION_IDS;
+  const allow = allowListForRole(role);
 
   return sections
     .filter((section) => allow.has(section.id) && section.items.length > 0)
@@ -36,10 +74,7 @@ export function slimHomeRecommendations(
 ): HomeRecommendations {
   return {
     ...recommendations,
-    headline:
-      recommendations.role === 'HOST' || recommendations.role === 'GUIDE'
-        ? 'Tips for your listing'
-        : `Nearby in ${recommendations.city}`,
+    headline: headlineForRole(recommendations),
     sections: slimHomeRecommendationSections(
       recommendations.sections,
       recommendations.role,

@@ -83,8 +83,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: base.plugins,
   extra: {
     ...config.extra,
+    // Env wins; otherwise keep app.json; never blank out a configured URL (blank
+    // forces Expo Go onto LAN:8080, which phones often cannot reach → "No network").
     apiBaseUrl:
-      process.env.API_BASE_URL ?? process.env.EXPO_PUBLIC_API_BASE_URL ?? '',
+      process.env.API_BASE_URL ??
+      process.env.EXPO_PUBLIC_API_BASE_URL ??
+      (typeof config.extra?.apiBaseUrl === 'string' && config.extra.apiBaseUrl
+        ? config.extra.apiBaseUrl
+        : 'https://nestbridge-production.up.railway.app'),
     enableDemoFallback: process.env.EXPO_PUBLIC_ENABLE_DEMO_FALLBACK !== 'false',
     // Empty strings are intentional — chat falls back to REST when unset.
     firebaseApiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',

@@ -91,7 +91,7 @@ export default function JourneyProgressCard({
                     <AppIcon
                       glyph={step.iconGlyph}
                       size={iconSizes.sm}
-                      color={colors.tealDeep}
+                      color={colors.onAccent}
                     />
                   )}
                 </View>
@@ -125,7 +125,7 @@ export default function JourneyProgressCard({
   );
 }
 
-function createStyles({ colors, tints }: AppTheme) {
+function createStyles({ colors, tints, chrome }: AppTheme) {
   return StyleSheet.create({
     wrap: {
       marginBottom: layout.sectionGap,
@@ -178,12 +178,12 @@ function createStyles({ colors, tints }: AppTheme) {
       fontFamily: fontFamilies.semibold,
       fontSize: fontSizes.body,
       fontWeight: fontWeights.semibold,
-      color: colors.tealDeep,
+      color: colors.onAccent,
     },
     percentLabel: {
       fontFamily: fontFamilies.regular,
       fontSize: fontSizes.micro,
-      color: colors.teal,
+      color: colors.onAccent,
     },
     bar: {
       marginTop: spacing.xs,
@@ -191,7 +191,7 @@ function createStyles({ colors, tints }: AppTheme) {
     steps: {
       marginTop: spacing.xs,
       borderRadius: borderRadius.md,
-      borderWidth: borderWidths.hairline,
+      borderWidth: chrome.minimalBorders ? 0 : borderWidths.hairline,
       borderColor: colors.border,
       overflow: 'hidden',
       backgroundColor: colors.surfaceElevated,
@@ -205,7 +205,7 @@ function createStyles({ colors, tints }: AppTheme) {
       paddingVertical: spacing.sm,
     },
     stepRowBorder: {
-      borderBottomWidth: borderWidths.hairline,
+      borderBottomWidth: chrome.minimalBorders ? 0 : borderWidths.hairline,
       borderBottomColor: colors.border,
     },
     pressed: {
@@ -215,7 +215,7 @@ function createStyles({ colors, tints }: AppTheme) {
       width: iconSizes.xl,
       height: iconSizes.xl,
       borderRadius: borderRadius.pill,
-      backgroundColor: tints.cream,
+      backgroundColor: chrome.solidAccentBlocks ? tints.teal : tints.cream,
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: spacing.xs,

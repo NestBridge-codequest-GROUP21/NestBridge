@@ -62,6 +62,23 @@ export function handleProfileCulturalItem(
   }
   if (itemId === 'sites-directory') {
     navigation.navigate('SitesDirectory');
+    return;
+  }
+  if (itemId === 'listings') {
+    navigation.navigate('HostListings');
+    return;
+  }
+  if (itemId === 'calendar') {
+    navigation.navigate('HostCalendar');
+    return;
+  }
+  if (itemId === 'availability') {
+    navigation.navigate('GuideAvailability');
+    return;
+  }
+  if (itemId === 'tour-types') {
+    navigation.navigate('TourTypesSetup');
+    return;
   }
 }
 

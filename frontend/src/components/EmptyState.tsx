@@ -84,9 +84,9 @@ export default function EmptyState({
     <View style={[carded ? styles.card : styles.plain, style]}>
       <View style={styles.iconTile}>
         {iconGlyph ? (
-          <AppIcon glyph={iconGlyph} size={iconSizes.xl} color={colors.tealDeep} />
+          <AppIcon glyph={iconGlyph} size={iconSizes.xl} color={colors.onAccent} />
         ) : (
-          <AppIcon name={iconName} size={iconSizes.xl} color={colors.tealDeep} />
+          <AppIcon name={iconName} size={iconSizes.xl} color={colors.onAccent} />
         )}
       </View>
       <Text style={styles.title}>{title}</Text>
@@ -107,13 +107,13 @@ export default function EmptyState({
   );
 }
 
-function createStyles({ colors, tints, shadows }: AppTheme) {
+function createStyles({ colors, tints, shadows, chrome }: AppTheme) {
   return StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    borderWidth: borderWidths.hairline,
+    borderWidth: chrome.minimalBorders ? 0 : borderWidths.hairline,
     borderColor: colors.border,
     alignItems: 'center',
     ...shadows.card,
@@ -127,7 +127,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     width: layout.iconTileSize,
     height: layout.iconTileSize,
     borderRadius: borderRadius.pill,
-    backgroundColor: tints.cream,
+    backgroundColor: chrome.solidAccentBlocks ? tints.teal : tints.cream,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,

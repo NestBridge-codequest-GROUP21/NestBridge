@@ -1,4 +1,4 @@
-import { useThemedStyles, type AppTheme } from '../../theme';
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -59,12 +59,13 @@ export default function ProfileSetupScreen({
   onBack,
 }: ProfileSetupScreenProps) {
   const styles = useThemedStyles(createStyles);
+  const { scheme } = useTheme();
 
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScreenScroll
         contentContainerStyle={[

@@ -76,7 +76,7 @@ export default function IntentSelectScreen({
       <StatusBar style="light" />
 
       <LinearGradient
-        colors={[...gradients.headerCompact]}
+        colors={gradients.headerCompact}
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}
       >
         {onBack ? (

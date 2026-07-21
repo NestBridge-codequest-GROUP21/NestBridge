@@ -65,7 +65,7 @@ export default function GuideProfileDetailScreen({
       <StatusBar style="light" />
 
       <LinearGradient
-        colors={[...gradients.header]}
+        colors={gradients.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}

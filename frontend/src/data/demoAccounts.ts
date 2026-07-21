@@ -55,6 +55,14 @@ export function demoPresetForAccount(account: DemoAccount): AccountProfileState 
 
 export const DEMO_ACTOR_ACCOUNTS: DemoAccount[] = [
   {
+    id: 'staff',
+    label: 'Staff',
+    name: 'NestBridge Staff',
+    email: 'admin@nestbridge.app',
+    intent: 'TOURIST',
+    description: 'Admin board — search users, suspend, KYC, activity',
+  },
+  {
     id: 'student',
     label: 'Student',
     name: 'Akosua Darko',

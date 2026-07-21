@@ -36,8 +36,8 @@ export const STUDENT_QUICK_ACTIONS: QuickActionItem[] = [
 export const TOURIST_QUICK_ACTIONS: QuickActionItem[] = [
   { id: 'book-guide', label: 'Book a trip', icon: '🧳' },
   { id: 'explore-stays', label: 'Stays', icon: '🏡' },
-  { id: 'cultural-tips', label: 'Culture', icon: '👋' },
-  { id: 'practical-tips', label: 'Local tips', icon: '📍' },
+  { id: 'sites-directory', label: 'Attractions', icon: '🏛️' },
+  { id: 'offline-map', label: 'Maps', icon: '🗺️' },
 ];
 
 /** Hosts/guides have no Explore tab — quick action is the entry. */
@@ -49,7 +49,7 @@ export const HOST_QUICK_ACTIONS: QuickActionItem[] = [
 ];
 
 export const GUIDE_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'calendar', label: 'Calendar', icon: '📅' },
+  { id: 'calendar', label: 'Availability', icon: '📅' },
   { id: 'tour-types', label: 'Tour types', icon: '🎯' },
   { id: 'earnings', label: 'Earnings', icon: '💰' },
   { id: 'explore', label: 'Explore', icon: '🧭' },

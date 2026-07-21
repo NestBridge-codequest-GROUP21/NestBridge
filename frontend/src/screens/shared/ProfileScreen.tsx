@@ -9,10 +9,13 @@ import Avatar from '../../components/Avatar';
 import ListRow from '../../components/ListRow';
 import SectionHeader from '../../components/SectionHeader';
 import AppIcon from '../../components/AppIcon';
-import { profileCopy } from '../../data/appCopy';
+import Constants from 'expo-constants';
+import { profileCopy, splashCopy } from '../../data/appCopy';
+import BrandLogo from '../../components/BrandLogo';
 import {
   useTheme,
   useThemedStyles,
+  themeTokensForPreference,
   type AppTheme,
   type ThemePreference,
 } from '../../theme';
@@ -48,25 +51,26 @@ const APPEARANCE_OPTIONS: {
   id: ThemePreference;
   label: string;
   subtitle: string;
-  icon: 'sunny-outline' | 'moon-outline' | 'phone-portrait-outline';
 }[] = [
   {
     id: 'light',
     label: 'Light',
-    subtitle: 'Always use the NestBridge light look',
-    icon: 'sunny-outline',
+    subtitle: 'Default NestBridge look',
   },
   {
-    id: 'dark',
-    label: 'Dark',
-    subtitle: 'Always use dark surfaces with brand accents',
-    icon: 'moon-outline',
+    id: 'dark-teal',
+    label: 'Dark Teal',
+    subtitle: 'Cool navy night with teal accents',
   },
   {
-    id: 'system',
-    label: 'System',
-    subtitle: 'Match your device light or dark setting',
-    icon: 'phone-portrait-outline',
+    id: 'dark-warm',
+    label: 'Dark Warm',
+    subtitle: 'Charcoal surfaces with gold warmth',
+  },
+  {
+    id: 'dark-bold',
+    label: 'Dark Bold',
+    subtitle: 'True black with solid accent blocks',
   },
 ];
 
@@ -85,7 +89,7 @@ export default function ProfileScreen({
   showStaffTools = false,
   onStaffToolsPress,
 }: ProfileScreenProps) {
-  const { preference, setPreference, scheme, colors } = useTheme();
+  const { preference, setPreference, colors } = useTheme();
   const styles = useThemedStyles(createStyles);
 
   return (
@@ -115,6 +119,7 @@ export default function ProfileScreen({
           {APPEARANCE_OPTIONS.map((option, index) => {
             const selected = preference === option.id;
             const isLast = index === APPEARANCE_OPTIONS.length - 1;
+            const preview = themeTokensForPreference(option.id).colors;
             return (
               <Pressable
                 key={option.id}
@@ -128,27 +133,42 @@ export default function ProfileScreen({
                 accessibilityState={{ selected }}
                 accessibilityLabel={`${option.label} theme`}
               >
-                <View style={styles.appearanceIcon}>
-                  <AppIcon
-                    name={option.icon}
-                    size={iconSizes.md}
-                    color={selected ? colors.teal : colors.textTertiary}
+                <View
+                  style={[
+                    styles.swatch,
+                    { backgroundColor: preview.background },
+                  ]}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                >
+                  <View
+                    style={[
+                      styles.swatchSurface,
+                      { backgroundColor: preview.surface },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.swatchAccent,
+                      { backgroundColor: preview.tabActive },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.swatchAccentSecondary,
+                      { backgroundColor: preview.terracotta },
+                    ]}
                   />
                 </View>
                 <View style={styles.appearanceText}>
                   <Text style={styles.appearanceLabel}>{option.label}</Text>
                   <Text style={styles.appearanceSubtitle}>{option.subtitle}</Text>
-                  {option.id === 'system' ? (
-                    <Text style={styles.appearanceHint}>
-                      Currently using {scheme} mode
-                    </Text>
-                  ) : null}
                 </View>
                 {selected ? (
                   <AppIcon
                     name="checkmark-circle"
                     size={iconSizes.lg}
-                    color={colors.teal}
+                    color={colors.success}
                   />
                 ) : (
                   <View style={styles.radioIdle} />
@@ -202,9 +222,20 @@ export default function ProfileScreen({
           </>
         ) : null}
 
-        <SectionHeader title="About" />
+        <SectionHeader title="About NestBridge" />
         <Card style={styles.aboutCard}>
+          <BrandLogo size="sm" style={styles.aboutLogo} />
+          <Text style={styles.aboutBrand}>{profileCopy.brandName}</Text>
+          <Text style={styles.aboutTagline}>{profileCopy.tagline}</Text>
+          <Text style={styles.aboutVersion}>
+            Version{' '}
+            {Constants.expoConfig?.version ??
+              Constants.nativeAppVersion ??
+              '1.0.1'}
+          </Text>
+          <Text style={styles.aboutMission}>{splashCopy.description}</Text>
           <Text style={styles.aboutBody}>{profileCopy.aboutAccount}</Text>
+          <Text style={styles.aboutCopyright}>{profileCopy.copyright}</Text>
         </Card>
 
         {__DEV__ ? (
@@ -291,13 +322,32 @@ function createStyles({ colors }: AppTheme) {
     appearancePressed: {
       opacity: 0.92,
     },
-    appearanceIcon: {
+    swatch: {
       width: touchTarget,
       height: touchTarget,
       borderRadius: borderRadius.md,
-      backgroundColor: colors.warmCream,
-      alignItems: 'center',
-      justifyContent: 'center',
+      borderWidth: borderWidths.hairline,
+      borderColor: colors.border,
+      overflow: 'hidden',
+      padding: spacing.xs,
+      justifyContent: 'space-between',
+    },
+    swatchSurface: {
+      height: spacing.sm + spacing.xs,
+      borderRadius: borderRadius.sm,
+    },
+    swatchAccent: {
+      width: '55%',
+      height: spacing.sm,
+      borderRadius: borderRadius.sm,
+    },
+    swatchAccentSecondary: {
+      position: 'absolute',
+      right: spacing.xs,
+      bottom: spacing.xs,
+      width: spacing.sm + spacing.xs,
+      height: spacing.sm + spacing.xs,
+      borderRadius: borderRadius.sm,
     },
     appearanceText: {
       flex: 1,
@@ -315,12 +365,6 @@ function createStyles({ colors }: AppTheme) {
       marginTop: spacing.xs,
       lineHeight: lineHeights.caption,
     },
-    appearanceHint: {
-      fontFamily: fontFamilies.regular,
-      fontSize: fontSizes.caption,
-      color: colors.teal,
-      marginTop: spacing.xs,
-    },
     radioIdle: {
       width: iconSizes.lg,
       height: iconSizes.lg,
@@ -333,12 +377,55 @@ function createStyles({ colors }: AppTheme) {
     },
     aboutCard: {
       marginBottom: spacing.lg,
+      alignItems: 'center',
     },
-    aboutBody: {
+    aboutLogo: {
+      marginBottom: spacing.md,
+    },
+    aboutBrand: {
+      fontFamily: fontFamilies.bold,
+      fontSize: fontSizes.heading,
+      fontWeight: fontWeights.bold,
+      color: colors.navy,
+      textAlign: 'center',
+    },
+    aboutTagline: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.body,
+      fontWeight: fontWeights.semibold,
+      color: colors.teal,
+      textAlign: 'center',
+      marginTop: spacing.xs,
+    },
+    aboutVersion: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.textTertiary,
+      textAlign: 'center',
+      marginTop: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    aboutMission: {
       fontFamily: fontFamilies.regular,
       fontSize: fontSizes.body,
       color: colors.textSecondary,
       lineHeight: lineHeights.body,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    aboutBody: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.textSecondary,
+      lineHeight: lineHeights.caption,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    aboutCopyright: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.textTertiary,
+      textAlign: 'center',
     },
     signOutWrap: {
       marginBottom: spacing.xl,

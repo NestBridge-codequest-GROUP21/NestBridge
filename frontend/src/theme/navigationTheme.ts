@@ -15,7 +15,7 @@ export function navigationThemeFromTokens(
       ...base.colors,
       primary: tokens.colors.teal,
       background: tokens.colors.background,
-      card: tokens.colors.white,
+      card: tokens.colors.surface,
       text: tokens.colors.textPrimary,
       border: tokens.colors.border,
       notification: tokens.colors.danger,

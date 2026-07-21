@@ -305,6 +305,7 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
             icon: '📸',
             reason: 'Improve visibility',
             routeHint: 'HostListings',
+            actionLabel: 'Edit listing',
           },
           {
             id: 'tip-host-rules',
@@ -314,6 +315,17 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
             icon: '✅',
             reason: 'Profile quality',
             routeHint: 'HostListings',
+            actionLabel: 'Update',
+          },
+          {
+            id: 'tip-host-calendar',
+            type: 'PROFILE_TIP',
+            title: 'Keep your calendar current',
+            subtitle: 'Block dates guests cannot book',
+            icon: '📅',
+            reason: 'Availability',
+            routeHint: 'HostCalendar',
+            actionLabel: 'Open calendar',
           },
         ]
       : [
@@ -325,6 +337,7 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
             icon: '🎯',
             reason: 'Tour catalogue',
             routeHint: 'TourTypesSetup',
+            actionLabel: 'Edit tours',
           },
           {
             id: 'tip-guide-slots',
@@ -334,6 +347,17 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
             icon: '🗓️',
             reason: 'Availability',
             routeHint: 'GuideAvailability',
+            actionLabel: 'Update slots',
+          },
+          {
+            id: 'tip-guide-visitor',
+            type: 'PROFILE_TIP',
+            title: 'Refresh visitor insights',
+            subtitle: 'Note popular pickup points and group sizes',
+            icon: '👥',
+            reason: 'Visitor experience',
+            routeHint: 'TourTypesSetup',
+            actionLabel: 'Review',
           },
         ];
 
@@ -343,20 +367,40 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
           {
             id: 'opp-host-requests',
             type: 'OPPORTUNITY',
-            title: 'Review incoming stay requests',
-            subtitle: `Students looking for homes in ${capital}`,
+            title: 'Respond to booking requests',
+            subtitle: `Guests looking for homes in ${capital}`,
             icon: '📩',
             routeHint: 'HostRequestsTab',
+            actionLabel: 'Open requests',
+          },
+          {
+            id: 'opp-host-calendar',
+            type: 'OPPORTUNITY',
+            title: 'Review upcoming guest stays',
+            subtitle: 'Confirm check-in details on your calendar',
+            icon: '🏠',
+            routeHint: 'HostCalendar',
+            actionLabel: 'Open calendar',
           },
         ]
       : [
           {
+            id: 'opp-guide-requests',
+            type: 'OPPORTUNITY',
+            title: 'New tour requests waiting',
+            subtitle: `Session bookings near ${capital}`,
+            icon: '📩',
+            routeHint: 'GuideBookingsTab',
+            actionLabel: 'Open bookings',
+          },
+          {
             id: 'opp-guide-sites',
             type: 'OPPORTUNITY',
-            title: 'Highlight local attractions',
-            subtitle: `Pair tours with sites near ${capital}`,
+            title: 'Pair tours with local attractions',
+            subtitle: `Highlight sites near ${capital}`,
             icon: '🏛️',
             routeHint: 'TourTypesSetup',
+            actionLabel: 'Edit tours',
           },
         ];
 
@@ -365,11 +409,21 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
     role,
     headline:
       role === 'HOST'
-        ? `Picked for hosts in ${capital}`
-        : `Picked for guides in ${capital}`,
+        ? `Hosting tools for ${capital}`
+        : `Guiding tools for ${capital}`,
     sections: [
-      section('profile-tips', `Improve your ${role === 'HOST' ? 'host' : 'guide'} profile`, 'list', tips),
-      section('opportunities', 'Relevant opportunities', 'list', opportunities),
+      section(
+        'profile-tips',
+        role === 'HOST' ? 'Hosting tips' : 'Guide tips',
+        'list',
+        tips,
+      ),
+      section(
+        'opportunities',
+        role === 'HOST' ? 'Guest management' : 'Tour opportunities',
+        'list',
+        opportunities,
+      ),
     ].filter((s) => s.items.length > 0),
   };
 }
@@ -396,22 +450,22 @@ export function buildDemoHomeRecommendations(
       section('transport', `Getting to ${capital}`, 'list', transportItems(capital)),
       section('guides', 'Local guides', 'list', guideItems(capital)),
       section('culture', 'Culture & language', 'grid', cultureItems(capital)),
-      section('resources', 'Arrival resources', 'list', studentResources(capital)),
+      section('resources', 'Orientation & campus life', 'list', studentResources(capital)),
     ].filter((s) => s.items.length > 0);
 
     return {
       city: capital,
       role: 'STUDENT',
-      headline: `Picked for your stay in ${capital}`,
+      headline: `Settling into ${capital}`,
       sections,
     };
   }
 
-  // TOURIST + BROWSE
+  // TOURIST + BROWSE — visit Ghana (no universities / student events / prep)
   const food = guideItems(capital, true);
   const sections = [
-    section('attractions', `Places to explore`, 'grid', siteItems(capital)),
-    section('guides', 'Local guides', 'list', guideItems(capital)),
+    section('attractions', 'Places to explore', 'grid', siteItems(capital)),
+    section('guides', 'Guided trips', 'list', guideItems(capital)),
     section(
       'food',
       'Featured experiences',
@@ -432,7 +486,7 @@ export function buildDemoHomeRecommendations(
   return {
     city: capital,
     role: role === 'BROWSE' ? 'TOURIST' : role,
-    headline: `Picked for your stay in ${capital}`,
+    headline: `Exploring ${capital}`,
     sections,
   };
 }

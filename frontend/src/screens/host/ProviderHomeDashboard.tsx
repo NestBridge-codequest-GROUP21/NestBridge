@@ -158,7 +158,7 @@ export default function ProviderHomeDashboard({
           onItemPress={onRecommendationItemPress}
         />
 
-        {providerRole === 'host' && performanceStats.length > 0 ? (
+        {performanceStats.length > 0 ? (
           <HomeStatsCarousel title={performanceTitle} items={performanceStats} />
         ) : null}
 

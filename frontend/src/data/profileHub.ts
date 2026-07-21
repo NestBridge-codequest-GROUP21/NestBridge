@@ -60,6 +60,7 @@ const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
   },
 ];
 
+/** Tourist Explore hub — visit Ghana (no student events / sponsors / prep). */
 const TOURIST_CULTURAL_ITEMS: ProfileHubItem[] = [
   HOMESTAYS_HUB_ITEM,
   {
@@ -93,16 +94,96 @@ const TOURIST_CULTURAL_ITEMS: ProfileHubItem[] = [
     icon: '📍',
   },
   {
-    id: 'sponsors',
-    label: 'Sponsors',
-    description: 'Travel grants and diaspora support partners',
-    icon: '🎓',
-  },
-  {
     id: 'transport',
     label: 'Transport guide',
     description: 'Navigate the city with confidence',
     icon: '🚌',
+  },
+];
+
+/** Host Explore hub — guest management tools, not student settle-in content. */
+const HOST_EXPLORE_ITEMS: ProfileHubItem[] = [
+  {
+    id: 'listings',
+    label: 'Your listings',
+    description: 'Photos, house rules, and stay details guests see',
+    icon: '🏠',
+  },
+  {
+    id: 'calendar',
+    label: 'Calendar',
+    description: 'Block dates and review upcoming guest stays',
+    icon: '📅',
+  },
+  {
+    id: 'video-library',
+    label: 'Hosting videos',
+    description: 'Tips for welcoming international guests',
+    icon: '🎬',
+  },
+  {
+    id: 'offline-map',
+    label: 'Offline map',
+    description: 'Help guests navigate your neighbourhood',
+    icon: '📍',
+  },
+  {
+    id: 'transport',
+    label: 'Transport guide',
+    description: 'Share safe ways for guests to get around',
+    icon: '🚌',
+  },
+  {
+    id: 'cultural-tips',
+    label: 'Culture tips for guests',
+    description: 'Etiquette pointers you can share with arrivals',
+    icon: '👋',
+  },
+];
+
+/** Guide Explore hub — tour operations, not student/newcomer prep. */
+const GUIDE_EXPLORE_ITEMS: ProfileHubItem[] = [
+  {
+    id: 'tour-types',
+    label: 'Tour types',
+    description: 'City, food, heritage, and custom experiences',
+    icon: '🎯',
+  },
+  {
+    id: 'availability',
+    label: 'Availability',
+    description: 'Open session slots travellers can book',
+    icon: '📅',
+  },
+  {
+    id: 'sites-directory',
+    label: 'Sites & attractions',
+    description: 'Landmarks to weave into your tours',
+    icon: '🏛️',
+  },
+  {
+    id: 'video-library',
+    label: 'Guide videos',
+    description: 'Storytelling and visitor experience tips',
+    icon: '🎬',
+  },
+  {
+    id: 'offline-map',
+    label: 'Offline map',
+    description: 'Navigate with guests when signal drops',
+    icon: '📍',
+  },
+  {
+    id: 'transport',
+    label: 'Transport guide',
+    description: 'Pickup points and local transfers',
+    icon: '🚌',
+  },
+  {
+    id: 'cultural-tips',
+    label: 'Culture & language',
+    description: 'Phrases and etiquette for visitor groups',
+    icon: '👋',
   },
 ];
 
@@ -114,27 +195,9 @@ export function culturalGuidanceItemsForRole(role: HomeRole): ProfileHubItem[] {
     case 'STUDENT':
       return STUDENT_CULTURAL_ITEMS;
     case 'HOST':
-      // Homestays hub row + student cultural tools + offline map.
-      return [
-        ...STUDENT_CULTURAL_ITEMS,
-        {
-          id: 'offline-map',
-          label: 'Offline map',
-          description: 'Useful when hosting or touring off-grid',
-          icon: '📍',
-        },
-      ];
+      return HOST_EXPLORE_ITEMS;
     case 'GUIDE':
-      // Guides already reach Homestays via Explore primary → UnifiedSearch.
-      return [
-        ...STUDENT_CULTURAL_ITEMS.filter((item) => item.id !== 'homestays'),
-        {
-          id: 'offline-map',
-          label: 'Offline map',
-          description: 'Useful when hosting or touring off-grid',
-          icon: '📍',
-        },
-      ];
+      return GUIDE_EXPLORE_ITEMS;
     default:
       return STUDENT_CULTURAL_ITEMS;
   }

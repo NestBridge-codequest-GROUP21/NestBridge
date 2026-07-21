@@ -52,7 +52,7 @@ export default function RecentActivityList({
             <AppIcon
               glyph={item.icon}
               size={iconSizes.md}
-              color={colors.tealDeep}
+              color={colors.onAccent}
             />
           </View>
           <View style={styles.textBlock}>
@@ -65,7 +65,7 @@ export default function RecentActivityList({
   );
 }
 
-function createStyles({ colors, tints }: AppTheme) {
+function createStyles({ colors, tints, chrome }: AppTheme) {
   return StyleSheet.create({
   wrap: {
     marginBottom: layout.sectionGap,
@@ -76,14 +76,14 @@ function createStyles({ colors, tints }: AppTheme) {
     paddingVertical: spacing.md,
   },
   rowBorder: {
-    borderBottomWidth: borderWidths.hairline,
+    borderBottomWidth: chrome.minimalBorders ? 0 : borderWidths.hairline,
     borderBottomColor: colors.border,
   },
   iconWrap: {
     width: avatarSizes.md,
     height: avatarSizes.md,
     borderRadius: borderRadius.md,
-    backgroundColor: tints.cream,
+    backgroundColor: chrome.solidAccentBlocks ? tints.teal : tints.cream,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,

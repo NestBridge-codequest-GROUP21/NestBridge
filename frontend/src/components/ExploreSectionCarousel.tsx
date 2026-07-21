@@ -124,7 +124,7 @@ function CarouselCard({
               <Animated.View
                 style={[styles.iconTile, { transform: [{ scale: iconScale }] }]}
               >
-                <AppIcon glyph={item.icon} size={iconSizes.lg} color={colors.tealDeep} />
+                <AppIcon glyph={item.icon} size={iconSizes.lg} color={colors.onAccent} />
               </Animated.View>
             ) : null}
             <Text style={styles.title}>{item.title}</Text>

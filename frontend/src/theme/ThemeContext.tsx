@@ -4,12 +4,11 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { useColorScheme } from 'react-native';
 import {
   type AppThemeTokens,
   type ColorSchemeName,
   type ThemePreference,
-  themeTokensForScheme,
+  themeTokensForPreference,
 } from './palettes';
 import {
   loadThemePreference,
@@ -52,24 +51,12 @@ export type AppTheme = AppThemeTokens & {
 
 const ThemeContext = React.createContext<AppTheme | null>(null);
 
-function resolveScheme(
-  preference: ThemePreference,
-  systemScheme: ColorSchemeName | null | undefined,
-): ColorSchemeName {
-  if (preference === 'system') {
-    return systemScheme === 'dark' ? 'dark' : 'light';
-  }
-  return preference;
-}
-
 function buildTheme(
   preference: ThemePreference,
-  systemScheme: ColorSchemeName | null | undefined,
   setPreference: (preference: ThemePreference) => void,
   isReady: boolean,
 ): AppTheme {
-  const scheme = resolveScheme(preference, systemScheme);
-  const tokens = themeTokensForScheme(scheme);
+  const tokens = themeTokensForPreference(preference);
   return {
     ...tokens,
     preference,
@@ -92,7 +79,6 @@ function buildTheme(
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useColorScheme();
   const [preference, setPreferenceState] = useState<ThemePreference>('light');
   const [isReady, setIsReady] = useState(false);
 
@@ -115,8 +101,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => buildTheme(preference, systemScheme, setPreference, isReady),
-    [preference, systemScheme, setPreference, isReady],
+    () => buildTheme(preference, setPreference, isReady),
+    [preference, setPreference, isReady],
   );
 
   return (
@@ -127,7 +113,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme(): AppTheme {
   const ctx = React.useContext(ThemeContext);
   if (!ctx) {
-    return buildTheme('light', 'light', () => undefined, true);
+    return buildTheme('light', () => undefined, true);
   }
   return ctx;
 }

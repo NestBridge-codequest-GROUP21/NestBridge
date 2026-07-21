@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
 import ScreenScroll from '../../components/ScreenScroll';
+import BrandLogo from '../../components/BrandLogo';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import BackButton from '../../components/BackButton';
@@ -46,7 +47,7 @@ export default function ForgotPasswordScreen({
   onBack,
 }: ForgotPasswordScreenProps) {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
 
 
   const insets = useSafeAreaInsets();
@@ -54,7 +55,7 @@ export default function ForgotPasswordScreen({
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <ScreenScroll
         contentContainerStyle={[
           styles.content,
@@ -62,6 +63,8 @@ export default function ForgotPasswordScreen({
         ]}
       >
         {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
+
+        <BrandLogo size="sm" style={styles.brandLogo} />
 
         {sent ? (
           <View style={styles.iconTile}>
@@ -120,6 +123,10 @@ function createStyles({ colors, tints }: AppTheme) {
   },
   back: {
     marginBottom: spacing.sm,
+  },
+  brandLogo: {
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
   },
   iconTile: {
     width: layout.iconTileSize,

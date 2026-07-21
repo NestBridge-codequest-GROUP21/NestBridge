@@ -31,6 +31,8 @@ export interface StaffUserDetailScreenProps {
   onUnsuspend?: () => void;
   onForceVerify?: () => void;
   onClearKyc?: () => void;
+  onMarkEmailVerified?: () => void;
+  onClearEmailVerified?: () => void;
   onGrantStaff?: () => void;
   onRevokeStaff?: () => void;
   onViewActivity?: () => void;
@@ -58,6 +60,8 @@ export default function StaffUserDetailScreen({
   onUnsuspend,
   onForceVerify,
   onClearKyc,
+  onMarkEmailVerified,
+  onClearEmailVerified,
   onGrantStaff,
   onRevokeStaff,
   onViewActivity,
@@ -179,6 +183,20 @@ export default function StaffUserDetailScreen({
                 <SecondaryButton
                   label={actionBusy ? 'Working…' : 'Force-verify KYC'}
                   onPress={onForceVerify}
+                  disabled={actionBusy}
+                />
+              )}
+              <View style={styles.spacer} />
+              {user.emailVerified ? (
+                <SecondaryButton
+                  label={actionBusy ? 'Working…' : 'Clear email verified'}
+                  onPress={onClearEmailVerified}
+                  disabled={actionBusy}
+                />
+              ) : (
+                <SecondaryButton
+                  label={actionBusy ? 'Working…' : 'Mark email verified'}
+                  onPress={onMarkEmailVerified}
                   disabled={actionBusy}
                 />
               )}

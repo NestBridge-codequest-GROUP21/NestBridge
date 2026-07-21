@@ -42,14 +42,14 @@ export default function TouristSiteDetailScreen({
   onBack,
 }: TouristSiteDetailScreenProps) {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
 
 
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
       <View style={[styles.topBar, { paddingTop: insets.top + spacing.xs }]}>
         <BackButton onPress={onBack} />
