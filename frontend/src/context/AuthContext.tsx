@@ -36,7 +36,7 @@ interface AuthContextValue {
     email: string,
     password: string,
     keepSignedIn: boolean,
-  ) => Promise<void>;
+  ) => Promise<AuthUser>;
   signOut: () => Promise<void>;
 }
 
@@ -149,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const session = await api.login(email, password);
         await persistSession({ ...session, keepSignedIn });
+        return session.user;
       } catch (error) {
         const message = api.getApiErrorMessage(error);
         setAuthError(message);

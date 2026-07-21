@@ -35,6 +35,8 @@ export interface StaffUserDetailScreenProps {
   onClearEmailVerified?: () => void;
   onGrantStaff?: () => void;
   onRevokeStaff?: () => void;
+  onHideListing?: (listingId: string) => void;
+  onRestoreListing?: (listingId: string) => void;
   onViewActivity?: () => void;
   onBack?: () => void;
 }
@@ -64,6 +66,8 @@ export default function StaffUserDetailScreen({
   onClearEmailVerified,
   onGrantStaff,
   onRevokeStaff,
+  onHideListing,
+  onRestoreListing,
   onViewActivity,
   onBack,
 }: StaffUserDetailScreenProps) {
@@ -153,6 +157,20 @@ export default function StaffUserDetailScreen({
                         tone="info"
                       />
                     </View>
+                    <View style={styles.spacer} />
+                    {listing.hidden ? (
+                      <SecondaryButton
+                        label={actionBusy ? 'Working…' : 'Restore listing'}
+                        onPress={() => onRestoreListing?.(listing.listingId)}
+                        disabled={actionBusy}
+                      />
+                    ) : (
+                      <SecondaryButton
+                        label={actionBusy ? 'Working…' : 'Hide listing'}
+                        onPress={() => onHideListing?.(listing.listingId)}
+                        disabled={actionBusy}
+                      />
+                    )}
                   </View>
                 ))
               )}

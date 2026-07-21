@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { DEMO_ACTOR_ACCOUNTS } from '../data/demoAccounts';
+import { ALL_DEMO_ACCOUNTS } from '../data/demoAccounts';
 
 /**
  * When true (default), empty API responses show Ghana demo data for CodeQuest judges.
@@ -27,5 +27,5 @@ export function isDemoActorEmail(email: string | null | undefined): boolean {
     return false;
   }
   const normalized = email.trim().toLowerCase();
-  return DEMO_ACTOR_ACCOUNTS.some((account) => account.email.toLowerCase() === normalized);
+  return ALL_DEMO_ACCOUNTS.some((account) => account.email.toLowerCase() === normalized);
 }

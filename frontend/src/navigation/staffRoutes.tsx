@@ -2,29 +2,222 @@ import React, { useCallback, useEffect, useState } from 'react';
 import StaffUserSearchScreen from '../screens/shared/StaffUserSearchScreen';
 import StaffUserDetailScreen from '../screens/shared/StaffUserDetailScreen';
 import StaffUserActivityScreen from '../screens/shared/StaffUserActivityScreen';
+import AdminHomeScreen from '../screens/shared/AdminHomeScreen';
+import AdminModerationScreen, {
+  type ModerationFilter,
+} from '../screens/shared/AdminModerationScreen';
+import AdminPreviewPickerScreen, {
+  ADMIN_PREVIEW_ROLE_OPTIONS,
+} from '../screens/shared/AdminPreviewPickerScreen';
+import type { TabBarItem } from '../components/AppTabBar';
+import type { PrimaryIntent } from '../types/accountProfile';
 import {
+  getAdminOverview,
   getAdminUser,
   getAdminUserActivity,
   getApiErrorMessage,
+  listAdminListings,
   searchAdminUsers,
+  setAdminListingVisibility,
   setAdminUserKycStatus,
   setAdminUserStaffStatus,
   setAdminUserSuspended,
   setAdminUserEmailVerified,
   type AdminBookingActivity,
+  type AdminListingModeration,
+  type AdminOverview,
   type AdminSosActivity,
   type AdminUserDetail,
   type AdminUserSummary,
 } from '../services/api';
 
+export interface AdminHomeRouteProps {
+  staffName: string;
+  tabBarItems: TabBarItem[];
+  onTabPress: (tabId: string) => void;
+  onOpenUsers: () => void;
+  onOpenModeration: () => void;
+  onOpenPreview: () => void;
+  onOpenProfile: () => void;
+  onSosPress?: () => void;
+}
+
+export function AdminHomeRoute({
+  staffName,
+  tabBarItems,
+  onTabPress,
+  onOpenUsers,
+  onOpenModeration,
+  onOpenPreview,
+  onOpenProfile,
+  onSosPress,
+}: AdminHomeRouteProps) {
+  const [overview, setOverview] = useState<AdminOverview | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const loadOverview = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      setOverview(await getAdminOverview());
+    } catch (error) {
+      setOverview(null);
+      setErrorMessage(getApiErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadOverview();
+  }, [loadOverview]);
+
+  return (
+    <AdminHomeScreen
+      staffName={staffName}
+      overview={overview}
+      isLoading={isLoading}
+      errorMessage={errorMessage}
+      tabBarItems={tabBarItems}
+      onTabPress={onTabPress}
+      onRefresh={() => {
+        void loadOverview();
+      }}
+      onOpenUsers={onOpenUsers}
+      onOpenModeration={onOpenModeration}
+      onOpenPreview={onOpenPreview}
+      onOpenProfile={onOpenProfile}
+      onSosPress={onSosPress}
+    />
+  );
+}
+
+export interface AdminModerationRouteProps {
+  tabBarItems: TabBarItem[];
+  onTabPress: (tabId: string) => void;
+  onBack: () => void;
+  onSosPress?: () => void;
+}
+
+export function AdminModerationRoute({
+  tabBarItems,
+  onTabPress,
+  onBack,
+  onSosPress,
+}: AdminModerationRouteProps) {
+  const [filter, setFilter] = useState<ModerationFilter>('ALL');
+  const [listings, setListings] = useState<AdminListingModeration[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+  const loadListings = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const params =
+        filter === 'HIDDEN'
+          ? { hidden: true }
+          : filter === 'HOST' || filter === 'GUIDE'
+            ? { type: filter }
+            : undefined;
+      setListings(await listAdminListings(params));
+    } catch (error) {
+      setListings([]);
+      setErrorMessage(getApiErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filter]);
+
+  useEffect(() => {
+    void loadListings();
+  }, [loadListings]);
+
+  const onToggleVisibility = useCallback(
+    async (listingId: string, hide: boolean) => {
+      setActionBusy(true);
+      setActionMessage(null);
+      setErrorMessage(null);
+      try {
+        await setAdminListingVisibility(listingId, hide);
+        setActionMessage(hide ? 'Listing hidden from marketplace.' : 'Listing restored.');
+        await loadListings();
+      } catch (error) {
+        setErrorMessage(getApiErrorMessage(error));
+      } finally {
+        setActionBusy(false);
+      }
+    },
+    [loadListings],
+  );
+
+  return (
+    <AdminModerationScreen
+      listings={listings}
+      filter={filter}
+      isLoading={isLoading}
+      actionBusy={actionBusy}
+      errorMessage={errorMessage}
+      actionMessage={actionMessage}
+      tabBarItems={tabBarItems}
+      onTabPress={onTabPress}
+      onFilterChange={setFilter}
+      onToggleVisibility={(listingId, hide) => {
+        void onToggleVisibility(listingId, hide);
+      }}
+      onRefresh={() => {
+        void loadListings();
+      }}
+      onBack={onBack}
+      onSosPress={onSosPress}
+    />
+  );
+}
+
+export interface AdminPreviewRouteProps {
+  tabBarItems: TabBarItem[];
+  onTabPress: (tabId: string) => void;
+  onSelectRole: (role: PrimaryIntent) => void;
+  onBack: () => void;
+  onSosPress?: () => void;
+}
+
+export function AdminPreviewRoute({
+  tabBarItems,
+  onTabPress,
+  onSelectRole,
+  onBack,
+  onSosPress,
+}: AdminPreviewRouteProps) {
+  return (
+    <AdminPreviewPickerScreen
+      options={ADMIN_PREVIEW_ROLE_OPTIONS}
+      tabBarItems={tabBarItems}
+      onSelectRole={onSelectRole}
+      onTabPress={onTabPress}
+      onBack={onBack}
+      onSosPress={onSosPress}
+    />
+  );
+}
+
 export interface StaffUserSearchRouteProps {
   onSelectUser: (userId: string) => void;
   onBack: () => void;
+  tabBarItems?: TabBarItem[];
+  onTabPress?: (tabId: string) => void;
+  onSosPress?: () => void;
 }
 
 export function StaffUserSearchRoute({
   onSelectUser,
   onBack,
+  tabBarItems,
+  onTabPress,
+  onSosPress,
 }: StaffUserSearchRouteProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<AdminUserSummary[]>([]);
@@ -56,12 +249,15 @@ export function StaffUserSearchRoute({
       isLoading={isLoading}
       errorMessage={errorMessage}
       hasSearched={hasSearched}
+      tabBarItems={tabBarItems}
       onQueryChange={setQuery}
       onSearch={() => {
         void onSearch();
       }}
       onSelectUser={onSelectUser}
+      onTabPress={onTabPress}
       onBack={onBack}
+      onSosPress={onSosPress}
     />
   );
 }
@@ -118,6 +314,24 @@ export function StaffUserDetailRoute({
     [],
   );
 
+  const runListingAction = useCallback(
+    async (listingId: string, hide: boolean) => {
+      setActionBusy(true);
+      setActionMessage(null);
+      setErrorMessage(null);
+      try {
+        await setAdminListingVisibility(listingId, hide);
+        setUser(await getAdminUser(userId));
+        setActionMessage(hide ? 'Listing hidden.' : 'Listing restored.');
+      } catch (error) {
+        setErrorMessage(getApiErrorMessage(error));
+      } finally {
+        setActionBusy(false);
+      }
+    },
+    [userId],
+  );
+
   return (
     <StaffUserDetailScreen
       user={user}
@@ -172,6 +386,12 @@ export function StaffUserDetailRoute({
           () => setAdminUserStaffStatus(userId, false),
           'Staff access revoked.',
         );
+      }}
+      onHideListing={(listingId) => {
+        void runListingAction(listingId, true);
+      }}
+      onRestoreListing={(listingId) => {
+        void runListingAction(listingId, false);
       }}
       onViewActivity={() => {
         if (user) {

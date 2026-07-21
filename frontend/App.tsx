@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/poppins';
 import { AuthProvider } from './src/context/AuthContext';
 import { AccountProfileProvider } from './src/context/AccountProfileContext';
+import { StaffSessionProvider } from './src/context/StaffSessionContext';
 import { ThemeProvider } from './src/theme';
 import RootNavigator from './src/navigation/RootNavigator';
 import {
@@ -33,7 +34,9 @@ function AppProviders({ onReady }: { onReady: () => void }) {
     <ThemeProvider>
       <AuthProvider>
         <AccountProfileProvider>
-          <RootNavigator />
+          <StaffSessionProvider>
+            <RootNavigator />
+          </StaffSessionProvider>
         </AccountProfileProvider>
       </AuthProvider>
     </ThemeProvider>

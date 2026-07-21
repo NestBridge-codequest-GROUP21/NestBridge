@@ -31,9 +31,18 @@ export interface DemoAccount {
 }
 
 /**
- * Seeded backend users — one tap signs in with real DB data (bookings, messages, etc.).
- * Password for all: {@link DEMO_PASSWORD}
+ * Seeded staff account — use Staff sign-in or email/password only.
+ * Never include in Quick sign-in tiles (anyone with the APK could one-tap into ops).
  */
+export const DEMO_STAFF_ACCOUNT: DemoAccount = {
+  id: 'staff',
+  label: 'Staff',
+  name: 'NestBridge Staff',
+  email: 'admin@nestbridge.app',
+  intent: 'TOURIST',
+  description: 'Ops dashboard — Staff sign-in with email/password only',
+};
+
 /** Complete seeker profile preset for a seeded demo actor (Accra / UG context). */
 export function demoPresetForAccount(account: DemoAccount): AccountProfileState {
   const base = presetHomeDashboard(account.intent);
@@ -53,15 +62,12 @@ export function demoPresetForAccount(account: DemoAccount): AccountProfileState 
   };
 }
 
+/**
+ * Consumer demo actors for Quick sign-in (Welcome / Login / Register).
+ * Staff is intentionally omitted — ops access is via Staff sign-in only.
+ * Password for all: {@link DEMO_PASSWORD}
+ */
 export const DEMO_ACTOR_ACCOUNTS: DemoAccount[] = [
-  {
-    id: 'staff',
-    label: 'Staff',
-    name: 'NestBridge Staff',
-    email: 'admin@nestbridge.app',
-    intent: 'TOURIST',
-    description: 'Admin board — search users, suspend, KYC, activity',
-  },
   {
     id: 'student',
     label: 'Student',
@@ -94,4 +100,10 @@ export const DEMO_ACTOR_ACCOUNTS: DemoAccount[] = [
     intent: 'GUIDE',
     description: 'Tour sessions, availability, guide bookings',
   },
+];
+
+/** All seeded demo emails (consumer actors + staff). */
+export const ALL_DEMO_ACCOUNTS: DemoAccount[] = [
+  DEMO_STAFF_ACCOUNT,
+  ...DEMO_ACTOR_ACCOUNTS,
 ];

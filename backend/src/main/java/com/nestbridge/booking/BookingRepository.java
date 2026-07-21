@@ -2,6 +2,7 @@ package com.nestbridge.booking;
 
 import com.nestbridge.common.BookingStatus;
 import com.nestbridge.common.BookingType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,10 @@ import java.util.UUID;
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     List<Booking> findByGuestIdOrderByCreatedAtDesc(UUID guestId);
+
+    long countByStatus(BookingStatus status);
+
+    List<Booking> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     @Query("""
             SELECT b FROM Booking b

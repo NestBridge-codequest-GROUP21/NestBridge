@@ -8,6 +8,7 @@ import {
   Easing,
   Dimensions,
   ScrollView,
+  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -53,6 +54,7 @@ export interface WelcomeScreenProps {
   onDemoLogin?: (account: DemoAccount) => void;
   onCreateAccount?: () => void;
   onSignIn?: () => void;
+  onStaffSignIn?: () => void;
 }
 
 function DriftRing({ size, style }: { size: number; style: object }) {
@@ -113,6 +115,7 @@ export default function WelcomeScreen({
   onDemoLogin,
   onCreateAccount,
   onSignIn,
+  onStaffSignIn,
 }: WelcomeScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors, gradients } = useTheme();
@@ -220,6 +223,19 @@ export default function WelcomeScreen({
         <PrimaryButton label="Create account" onPress={onCreateAccount} />
         <View style={styles.signInSpacer} />
         <SecondaryButton label="Sign in" onPress={onSignIn} />
+        {onStaffSignIn ? (
+          <>
+            <View style={styles.signInSpacer} />
+            <Pressable
+              onPress={onStaffSignIn}
+              accessibilityRole="button"
+              accessibilityLabel="Staff sign-in"
+              style={({ pressed }) => [styles.staffLink, pressed && { opacity: 0.85 }]}
+            >
+              <Text style={styles.staffLinkText}>Staff sign-in</Text>
+            </Pressable>
+          </>
+        ) : null}
       </View>
     </View>
   );
@@ -321,6 +337,17 @@ function createStyles({ colors, tints }: AppTheme) {
   },
   signInSpacer: {
     height: spacing.sm,
+  },
+  staffLink: {
+    minHeight: touchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  staffLinkText: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    color: colors.teal,
   },
   dividerLabel: {
     fontFamily: fontFamilies.regular,

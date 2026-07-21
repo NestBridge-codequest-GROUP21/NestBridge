@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type {
   NativeStackNavigationProp,
@@ -54,10 +54,15 @@ import ProfileScreen from '../screens/shared/ProfileScreen';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
 import DevTestingScreen from '../screens/shared/DevTestingScreen';
 import {
+  AdminHomeRoute,
+  AdminModerationRoute,
+  AdminPreviewRoute,
   StaffUserActivityRoute,
   StaffUserDetailRoute,
   StaffUserSearchRoute,
 } from './staffRoutes';
+import StaffPreviewBanner from '../components/StaffPreviewBanner';
+import { useStaffSession } from '../context/StaffSessionContext';
 import UnifiedSearchScreen from '../screens/shared/UnifiedSearchScreen';
 import ExploreHomeScreen from '../screens/tourist/ExploreHomeScreen';
 import LodgingDirectoryScreen from '../screens/tourist/LodgingDirectoryScreen';
@@ -115,6 +120,7 @@ import { useAccountProfile } from '../context/AccountProfileContext';
 import {
   getAccountSetupSummary,
   getHomeRoute,
+  getStaffAwareHomeRoute,
   getProgressForTrack,
   getProgressPercent,
   getStepsForTrack,
@@ -206,6 +212,7 @@ import { studentHomeMockData, tabBarWithBadgesForRole, suggestedHostsForCity } f
 import {
   getQuickActionsForRole,
   getTabBarForRole,
+  homeRoleForSession,
   homeRoleFromIntent,
 } from '../data/homeNavigation';
 import {
@@ -331,7 +338,7 @@ import {
   emptyStates,
   devTestingCopy,
 } from '../data/appCopy';
-import { DEMO_PASSWORD, DEMO_ACTOR_ACCOUNTS, demoPresetForAccount, type DemoAccount } from '../data/demoAccounts';
+import { DEMO_PASSWORD, DEMO_ACTOR_ACCOUNTS, ALL_DEMO_ACCOUNTS, demoPresetForAccount, type DemoAccount } from '../data/demoAccounts';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -1069,7 +1076,14 @@ function getProfileFields(
 
 function homeRouteToScreenName(
   route: HomeRoute,
-): 'IntentSelect' | 'BrowseHome' | 'StudentHome' | 'ExploreHome' | 'HostHome' | 'GuideHome' {
+):
+  | 'IntentSelect'
+  | 'BrowseHome'
+  | 'StudentHome'
+  | 'ExploreHome'
+  | 'HostHome'
+  | 'GuideHome'
+  | 'AdminHome' {
   switch (route) {
     case 'StudentHome':
       return 'StudentHome';
@@ -1079,6 +1093,8 @@ function homeRouteToScreenName(
       return 'HostHome';
     case 'GuideHome':
       return 'GuideHome';
+    case 'AdminHome':
+      return 'AdminHome';
     case 'IntentSelect':
       return 'IntentSelect';
     default:
@@ -1149,6 +1165,14 @@ const SEARCH_CATEGORIES = [
 
 export default function AppNavigator() {
   const { user, signOut, signIn } = useAuth();
+  const {
+    isStaff,
+    isStaffShell,
+    preview,
+    isPreviewLocked,
+    enterAppPreview,
+    exitAppPreview,
+  } = useStaffSession();
   const {
     state: profileState,
     primaryIntent,
@@ -1395,8 +1419,12 @@ export default function AppNavigator() {
       demoProfileSyncedForUser.current = null;
       return;
     }
-    const demoAccount = DEMO_ACTOR_ACCOUNTS.find((account) => account.email === user.email);
+    const demoAccount = ALL_DEMO_ACCOUNTS.find((account) => account.email === user.email);
     if (!demoAccount || demoProfileSyncedForUser.current === user.userId) {
+      return;
+    }
+    if (demoAccount.id === 'staff' || user.isStaff) {
+      demoProfileSyncedForUser.current = user.userId;
       return;
     }
     demoProfileSyncedForUser.current = user.userId;
@@ -1404,7 +1432,7 @@ export default function AppNavigator() {
       await applyDevPreset(demoPresetForAccount(demoAccount));
       await setPrimaryIntent(demoAccount.intent);
     })();
-  }, [user?.userId, user?.email, applyDevPreset, setPrimaryIntent]);
+  }, [user?.userId, user?.email, user?.isStaff, applyDevPreset, setPrimaryIntent]);
 
   useEffect(() => {
     if (homeApi.hostMatches.length === 0) return;
@@ -1643,15 +1671,22 @@ export default function AppNavigator() {
   ]);
 
   const profileCulturalItems = useMemo(
-    () => culturalGuidanceItemsForRole(homeRoleFromIntent(primaryIntent)),
-    [primaryIntent],
+    () =>
+      culturalGuidanceItemsForRole(
+        homeRoleFromIntent(preview?.role ?? primaryIntent),
+      ),
+    [preview?.role, primaryIntent],
   );
 
   // Login name wins everywhere — profile displayName is only for editing, not greeting.
   const resolvedName =
     user?.displayName?.trim() || displayName.trim() || 'Guest';
   const resolvedInitials = getInitials(resolvedName);
-  const homeRouteKey = getHomeRoute(profileState);
+  const homeRouteKey = getStaffAwareHomeRoute(
+    isStaff,
+    preview?.role,
+    profileState,
+  );
   const profileFields = getProfileFields(profileState);
   const cityLabel = profileFields.city || city || 'Accra';
 
@@ -1983,15 +2018,18 @@ export default function AppNavigator() {
       ? guideIncoming.length
       : 0) +
     (canAcceptHostBookings && hostIncoming.length > 0 ? hostIncoming.length : 0);
-  const homeRole = homeRoleFromIntent(primaryIntent);
+  const homeRole = homeRoleForSession(isStaffShell, preview?.role, primaryIntent);
+  const effectiveIntent = preview?.role ?? primaryIntent;
   const demoRecommendations = useMemo(
     () =>
       buildDemoHomeRecommendations(
-        homeRole === 'BROWSE' ? 'TOURIST' : primaryIntent ?? 'STUDENT',
+        homeRole === 'BROWSE' || homeRole === 'STAFF'
+          ? 'TOURIST'
+          : effectiveIntent ?? 'STUDENT',
         cityLabel,
         { university: university || profileFields.university },
       ),
-    [homeRole, primaryIntent, cityLabel, university, profileFields.university],
+    [homeRole, effectiveIntent, cityLabel, university, profileFields.university],
   );
   const [liveRecommendations, setLiveRecommendations] =
     useState<HomeRecommendations | null>(null);
@@ -2029,10 +2067,11 @@ export default function AppNavigator() {
   );
 
   const tabBarItems = tabBarWithBadgesForRole(
-    homeRole,
+    homeRole === 'STAFF' ? 'TOURIST' : homeRole,
     unreadNotifications,
     incomingBadgeCount,
   );
+  const staffTabBarItems = getTabBarForRole('STAFF');
   const hostTabBarItems = tabBarWithBadgesForRole(
     'HOST',
     unreadNotifications,
@@ -2086,7 +2125,10 @@ export default function AppNavigator() {
     setDemoLoginError(null);
     setDemoLoginBusy(true);
     try {
-      await signIn(account.email, DEMO_PASSWORD, true);
+      const signedIn = await signIn(account.email, DEMO_PASSWORD, true);
+      if (account.id === 'staff' || signedIn.isStaff) {
+        return;
+      }
       await applyDevPreset(demoPresetForAccount(account));
       await setPrimaryIntent(account.intent);
     } catch (error) {
@@ -2605,9 +2647,21 @@ export default function AppNavigator() {
     studentEventsDisplay,
   );
 
-  const initialRoute = primaryIntent
-    ? homeRouteToScreenName(homeRouteKey)
-    : 'IntentSelect';
+  const initialRoute =
+    isStaff && !preview
+      ? 'AdminHome'
+      : primaryIntent
+        ? homeRouteToScreenName(homeRouteKey)
+        : 'IntentSelect';
+
+  const guardPreviewMutation = useCallback(() => {
+    if (!isPreviewLocked) return false;
+    Alert.alert(
+      'Preview is read-only',
+      'Exit app preview to make booking or account changes. This action was blocked.',
+    );
+    return true;
+  }, [isPreviewLocked]);
 
   const makeBookingContext = (
     bookingType: 'HOST' | 'GUIDE',
@@ -2616,6 +2670,7 @@ export default function AppNavigator() {
 
   const submitHostBookingRequest = useCallback(
     async (host: HostProfileSummary) => {
+      if (guardPreviewMutation()) return;
       const bookingContext = getBookingContext('HOST');
       try {
         await createBooking({
@@ -2634,11 +2689,12 @@ export default function AppNavigator() {
         );
       }
     },
-    [checkIn, checkOut, getBookingContext, homeApi, upsertLocalBooking],
+    [checkIn, checkOut, getBookingContext, guardPreviewMutation, homeApi, upsertLocalBooking],
   );
 
   const submitGuideBookingRequest = useCallback(
     async (guide: GuideProfileSummary) => {
+      if (guardPreviewMutation()) return;
       const bookingContext = getBookingContext('GUIDE');
       try {
         await createBooking({
@@ -2663,7 +2719,7 @@ export default function AppNavigator() {
         );
       }
     },
-    [sessionDate, getBookingContext, homeApi, upsertLocalBooking],
+    [sessionDate, getBookingContext, guardPreviewMutation, homeApi, upsertLocalBooking],
   );
 
   const confirmBookingWithDemoFallback = useCallback(
@@ -2733,12 +2789,42 @@ export default function AppNavigator() {
   );
 
   return (
+    <View style={{ flex: 1 }}>
+      {preview ? (
+        <StaffPreviewBanner
+          roleLabel={
+            preview.role === 'STUDENT'
+              ? 'Student'
+              : preview.role === 'TOURIST'
+                ? 'Tourist'
+                : preview.role === 'HOST'
+                  ? 'Host'
+                  : 'Guide'
+          }
+          onExit={() => {
+            void exitAppPreview();
+          }}
+        />
+      ) : null}
     <Stack.Navigator
+      key={preview ? `preview-${preview.role}` : isStaff ? 'staff-ops' : 'app'}
       initialRouteName={initialRoute}
       screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
     >
       <Stack.Screen name="IntentSelect">
-        {({ navigation }) => (
+        {({ navigation }) =>
+          isStaffShell ? (
+            <AdminHomeRoute
+              staffName={resolvedName}
+              tabBarItems={staffTabBarItems}
+              onTabPress={(tabId) => routeTabPress(navigation, tabId, 'AdminHome')}
+              onOpenUsers={() => navigation.navigate('StaffUserSearch')}
+              onOpenModeration={() => navigation.navigate('AdminModeration')}
+              onOpenPreview={() => navigation.navigate('AdminPreview')}
+              onOpenProfile={() => navigation.navigate('Profile')}
+              onSosPress={() => navigation.navigate('SOS')}
+            />
+          ) : (
           <IntentSelectScreen
             {...intentSelectMock}
             options={intentOptionsFromPrimary()}
@@ -2753,7 +2839,8 @@ export default function AppNavigator() {
               navigatePrimaryOnboarding(navigation, intent);
             }}
           />
-        )}
+          )
+        }
       </Stack.Screen>
 
       <Stack.Screen name="BrowseHome">
@@ -3063,9 +3150,13 @@ export default function AppNavigator() {
             userName={resolvedName}
             userInitials={resolvedInitials}
             email={user?.email ?? ''}
-            setupSummary={setupSummary}
-            showTravelBooking={shouldShowTravelBookingEntry(homeRole)}
-            showStaffTools={Boolean(user?.isStaff)}
+            setupSummary={isStaff ? 'Staff ops access' : setupSummary}
+            showTravelBooking={!isStaff && shouldShowTravelBookingEntry(homeRole)}
+            showAccountSetup={!isStaff}
+            showStaffTools={isStaffShell}
+            showReturnToOps={isStaffShell}
+            showAppPreview={isStaffShell}
+            showExitPreview={Boolean(preview)}
             onBack={() => {
               if (navigation.canGoBack()) {
                 navigation.goBack();
@@ -3073,9 +3164,20 @@ export default function AppNavigator() {
               }
               navigateToHome(navigation, homeRouteKey);
             }}
-            onAccountSetupPress={() => navigation.navigate('AccountSetup')}
+            onAccountSetupPress={() => {
+              if (isStaff) return;
+              navigation.navigate('AccountSetup');
+            }}
             onTravelBookingPress={() => navigation.navigate('UnifiedSearch')}
             onStaffToolsPress={() => navigation.navigate('StaffUserSearch')}
+            onReturnToOpsPress={() => navigateToHome(navigation, 'AdminHome')}
+            onAppPreviewPress={() => navigation.navigate('AdminPreview')}
+            onExitPreviewPress={() => {
+              void (async () => {
+                await exitAppPreview();
+                navigateToHome(navigation, 'AdminHome');
+              })();
+            }}
             onSignOut={() => {
               void signOut();
             }}
@@ -3176,13 +3278,64 @@ export default function AppNavigator() {
         }}
       </Stack.Screen>
 
+      <Stack.Screen name="AdminHome">
+        {({ navigation }) => (
+          <AdminHomeRoute
+            staffName={resolvedName}
+            tabBarItems={staffTabBarItems}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'AdminHome')}
+            onOpenUsers={() => navigation.navigate('StaffUserSearch')}
+            onOpenModeration={() => navigation.navigate('AdminModeration')}
+            onOpenPreview={() => navigation.navigate('AdminPreview')}
+            onOpenProfile={() => navigation.navigate('Profile')}
+            onSosPress={() => navigation.navigate('SOS')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="AdminModeration">
+        {({ navigation }) => (
+          <AdminModerationRoute
+            tabBarItems={staffTabBarItems}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'AdminHome')}
+            onBack={() => navigateToHome(navigation, 'AdminHome')}
+            onSosPress={() => navigation.navigate('SOS')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="AdminPreview">
+        {({ navigation }) => (
+          <AdminPreviewRoute
+            tabBarItems={staffTabBarItems}
+            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'AdminHome')}
+            onSelectRole={(role) => {
+              void enterAppPreview(role);
+            }}
+            onBack={() => navigateToHome(navigation, 'AdminHome')}
+            onSosPress={() => navigation.navigate('SOS')}
+          />
+        )}
+      </Stack.Screen>
+
       <Stack.Screen name="StaffUserSearch">
         {({ navigation }) => (
           <StaffUserSearchRoute
+            tabBarItems={isStaffShell ? staffTabBarItems : undefined}
+            onTabPress={
+              isStaffShell
+                ? (tabId) => routeTabPress(navigation, tabId, 'AdminHome')
+                : undefined
+            }
+            onSosPress={() => navigation.navigate('SOS')}
             onSelectUser={(userId) =>
               navigation.navigate('StaffUserDetail', { userId })
             }
-            onBack={() => navigation.goBack()}
+            onBack={() =>
+              isStaffShell
+                ? navigateToHome(navigation, 'AdminHome')
+                : navigation.goBack()
+            }
           />
         )}
       </Stack.Screen>
@@ -3236,7 +3389,14 @@ export default function AppNavigator() {
       ) : null}
 
       <Stack.Screen name="AccountSetup">
-        {({ navigation }) => (
+        {({ navigation }) =>
+          isStaff ? (
+            <RouteErrorState
+              title="Not available for staff"
+              message="Staff accounts use the ops dashboard. Consumer account setup is only for students, tourists, hosts, and guides."
+              onBack={() => navigateToHome(navigation, 'AdminHome')}
+            />
+          ) : (
           <AccountSetupScreen
             userName={resolvedName}
             userInitials={resolvedInitials}
@@ -3270,7 +3430,8 @@ export default function AppNavigator() {
               );
             }}
           />
-        )}
+          )
+        }
       </Stack.Screen>
 
       <Stack.Screen name="UnifiedSearch">
@@ -4172,7 +4333,7 @@ export default function AppNavigator() {
             cityLabel={cityLabel}
             videos={videosDisplay}
             userId={user?.userId}
-            viewerIntent={primaryIntent ?? homeRole}
+            viewerIntent={effectiveIntent ?? (homeRole === 'STAFF' ? null : homeRole)}
             isLoading={videosLoading}
             errorMessage={videosError}
             progressRefreshKey={videoProgressRefreshKey}
@@ -4641,5 +4802,6 @@ export default function AppNavigator() {
         }}
       </Stack.Screen>
     </Stack.Navigator>
+    </View>
   );
 }
