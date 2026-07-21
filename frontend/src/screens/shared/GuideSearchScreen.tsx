@@ -170,7 +170,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
+    color: colors.teal,
   },
   emptyWrap: {
     paddingHorizontal: layout.screenPaddingHorizontal,
@@ -235,7 +235,7 @@ function createStyles({ colors }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
+    color: colors.teal,
   },
 });
 }

@@ -36,8 +36,8 @@ export default function StatusBadge({
     success: { background: tints.teal, text: colors.success },
     warning: { background: tints.gold, text: colors.textPrimary },
     danger: { background: tints.terracotta, text: colors.danger },
-    info: { background: tints.teal, text: colors.tealDeep },
-    accent: { background: tints.gold, text: colors.tealDeep },
+    info: { background: tints.teal, text: colors.onAccent },
+    accent: { background: tints.gold, text: colors.onAccent },
   };
   const toneStyle = toneStyles[tone];
 

@@ -293,7 +293,7 @@ function createStyles({ colors }: AppTheme) {
     statTile: {
       width: '47%',
       flexGrow: 1,
-      backgroundColor: colors.white,
+      backgroundColor: colors.surface,
       borderRadius: borderRadius.md,
       padding: spacing.md,
       minHeight: touchTarget + spacing.md,

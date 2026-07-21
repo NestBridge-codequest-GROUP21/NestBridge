@@ -69,7 +69,7 @@ export default function DemoActorQuickLogin({
                 <AppIcon
                   glyph={ROLE_GLYPHS[account.id] ?? '👤'}
                   size={iconSizes.md}
-                  color={colors.tealDeep}
+                  color={colors.onAccent}
                 />
               </View>
               <Text style={styles.tabLabel}>{account.label}</Text>
@@ -162,7 +162,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.navy,
+    color: colors.textPrimary,
     textAlign: 'center',
   },
   tabName: {
@@ -193,7 +193,9 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     gap: spacing.sm,
   },
   demoRolePill: {
-    backgroundColor: colors.navy,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.pill,
@@ -202,7 +204,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.onPrimary,
+    color: colors.textPrimary,
   },
   demoName: {
     flex: 1,

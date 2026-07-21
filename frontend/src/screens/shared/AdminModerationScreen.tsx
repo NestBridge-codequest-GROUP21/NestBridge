@@ -185,7 +185,7 @@ function createStyles({ colors }: AppTheme) {
       borderRadius: spacing.md,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
-      backgroundColor: colors.white,
+      backgroundColor: colors.surface,
       alignItems: 'center',
       justifyContent: 'center',
     },
