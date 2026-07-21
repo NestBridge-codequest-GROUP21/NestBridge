@@ -313,7 +313,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   },
   earningsHighlight: {
     fontFamily: fontFamilies.semibold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
     fontWeight: fontWeights.semibold,
   },
   earningsDivider: {

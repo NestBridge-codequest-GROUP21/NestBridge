@@ -181,7 +181,7 @@ export default function SponsorListScreen({
                     <AppIcon
                       glyph={item.logo}
                       size={iconSizes.lg}
-                      color={colors.tealDeep}
+                      color={colors.onAccent}
                     />
                   </View>
                   <View style={styles.cardTitleBlock}>

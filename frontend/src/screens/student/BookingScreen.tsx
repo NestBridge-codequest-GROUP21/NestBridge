@@ -172,7 +172,7 @@ export default function BookingScreen({
           <AppIcon
             name="document-text-outline"
             size={iconSizes.md}
-            color={colors.tealDeep}
+            color={colors.onAccent}
             style={styles.policyIcon}
           />
           <Text style={styles.policyText}>{host.cancellationPolicy}</Text>
@@ -183,7 +183,7 @@ export default function BookingScreen({
             <AppIcon
               name="shield-checkmark-outline"
               size={iconSizes.md}
-              color={colors.tealDeep}
+              color={colors.onAccent}
             />
             <Text style={styles.escrowTitle}>Held in escrow</Text>
           </View>
@@ -337,7 +337,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     lineHeight: lineHeights.subheading,
   },
   priceValueAccent: {
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   priceDivider: {
     height: borderWidths.hairline,

@@ -92,7 +92,7 @@ function PhraseCard({
       >
         <View style={styles.phraseTopRow}>
           <View style={styles.iconTile}>
-            <AppIcon glyph={phrase.emoji} size={iconSizes.lg} color={colors.tealDeep} />
+            <AppIcon glyph={phrase.emoji} size={iconSizes.lg} color={colors.onAccent} />
           </View>
           {completed ? (
             <AppIcon name="checkmark-circle-outline" size={iconSizes.md} color={colors.success} />
@@ -154,7 +154,7 @@ function TopicCard({
       >
         <View style={styles.topicHeader}>
           <View style={styles.iconTileCompact}>
-            <AppIcon glyph={topic.emoji} size={iconSizes.md} color={colors.tealDeep} />
+            <AppIcon glyph={topic.emoji} size={iconSizes.md} color={colors.onAccent} />
           </View>
           <Text style={styles.topicTitle}>{topic.title}</Text>
           {completed ? (

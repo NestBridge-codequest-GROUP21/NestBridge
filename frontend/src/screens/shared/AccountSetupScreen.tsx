@@ -236,7 +236,7 @@ export default function AccountSetupScreen({
                     <AppIcon
                       glyph={SETUP_TRACK_ICONS[item.track]}
                       size={iconSizes.lg}
-                      color={colors.tealDeep}
+                      color={colors.onAccent}
                     />
                   </View>
                   <View style={styles.cardText}>

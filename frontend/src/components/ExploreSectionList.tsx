@@ -57,7 +57,7 @@ export default function ExploreSectionList({
                   <AppIcon
                     glyph={section.icon}
                     size={iconSizes.lg}
-                    color={colors.tealDeep}
+                    color={colors.onAccent}
                   />
                 </View>
               ) : null}
@@ -90,7 +90,7 @@ export default function ExploreSectionList({
                 <AppIcon
                   glyph={section.icon}
                   size={iconSizes.lg}
-                  color={colors.tealDeep}
+                  color={colors.onAccent}
                 />
               </View>
             ) : null}

@@ -304,7 +304,7 @@ function createStyles({ colors, tints }: AppTheme) {
       fontFamily: fontFamilies.semibold,
       fontSize: fontSizes.micro,
       fontWeight: fontWeights.semibold,
-      color: colors.tealDeep,
+      color: colors.onAccent,
     },
     roleText: {
       fontFamily: fontFamilies.regular,

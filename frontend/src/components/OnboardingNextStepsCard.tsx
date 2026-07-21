@@ -45,7 +45,7 @@ export default function OnboardingNextStepsCard({
             <AppIcon
               glyph={step.icon}
               size={iconSizes.md}
-              color={colors.tealDeep}
+              color={colors.onAccent}
             />
           </View>
           <View style={styles.textBlock}>

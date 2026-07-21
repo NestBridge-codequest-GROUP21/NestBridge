@@ -70,7 +70,7 @@ export default function VerifyEmailScreen({
         <BrandLogo size="sm" style={styles.brandLogo} />
 
         <View style={styles.iconCircle}>
-          <AppIcon name="mail-outline" size={iconSizes.xl} color={colors.tealDeep} />
+          <AppIcon name="mail-outline" size={iconSizes.xl} color={colors.onAccent} />
         </View>
 
         <Text style={styles.title}>{title}</Text>

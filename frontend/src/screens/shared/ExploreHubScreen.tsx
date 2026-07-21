@@ -113,7 +113,7 @@ export default function ExploreHubScreen({
                   <AppIcon
                     glyph={item.icon}
                     size={iconSizes.md}
-                    color={colors.tealDeep}
+                    color={colors.onAccent}
                   />
                 </View>
                 <View style={styles.hubText}>

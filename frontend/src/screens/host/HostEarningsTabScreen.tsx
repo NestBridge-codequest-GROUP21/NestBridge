@@ -201,7 +201,7 @@ function createStyles({ colors }: AppTheme) {
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     lineHeight: lineHeights.display,
-    color: colors.tealDeep,
+    color: colors.onAccent,
     marginBottom: spacing.md,
   },
   summaryRow: {

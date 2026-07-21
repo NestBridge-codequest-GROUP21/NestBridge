@@ -311,7 +311,7 @@ function createStyles({ colors, shadows }: AppTheme) {
   },
   earningsHighlight: {
     fontFamily: fontFamilies.bold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
     fontWeight: fontWeights.bold,
   },
   divider: {
