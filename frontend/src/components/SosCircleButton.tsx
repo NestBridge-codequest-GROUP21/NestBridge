@@ -38,17 +38,17 @@ export default function SosCircleButton({
   );
 }
 
-function createStyles({ colors, shadows }: AppTheme) {
+function createStyles({ colors, shadows, chrome }: AppTheme) {
   return StyleSheet.create({
   button: {
     width: layout.sosButtonSize,
     height: layout.sosButtonSize,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.danger,
+    backgroundColor: colors.sos,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: spacing.xs,
-    borderColor: colors.white,
+    borderWidth: chrome.sosBorderWidth,
+    borderColor: colors.sosBorder,
     ...shadows.floating,
   },
   pressed: {

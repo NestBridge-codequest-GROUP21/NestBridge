@@ -10,6 +10,7 @@ import {
   setAdminUserKycStatus,
   setAdminUserStaffStatus,
   setAdminUserSuspended,
+  setAdminUserEmailVerified,
   type AdminBookingActivity,
   type AdminSosActivity,
   type AdminUserDetail,
@@ -146,6 +147,18 @@ export function StaffUserDetailRoute({
         void runAction(
           () => setAdminUserKycStatus(userId, false),
           'KYC verification cleared.',
+        );
+      }}
+      onMarkEmailVerified={() => {
+        void runAction(
+          () => setAdminUserEmailVerified(userId, true),
+          'Email marked verified — user can sign in.',
+        );
+      }}
+      onClearEmailVerified={() => {
+        void runAction(
+          () => setAdminUserEmailVerified(userId, false),
+          'Email verification cleared.',
         );
       }}
       onGrantStaff={() => {

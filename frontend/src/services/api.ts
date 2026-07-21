@@ -653,6 +653,17 @@ export async function setAdminUserKycStatus(
   return unwrap({ data });
 }
 
+export async function setAdminUserEmailVerified(
+  userId: string,
+  emailVerified: boolean,
+): Promise<AdminUserDetail> {
+  const { data } = await api.patch<ApiResponse<AdminUserDetail>>(
+    `/api/admin/users/${userId}/email-verified`,
+    { emailVerified },
+  );
+  return unwrap({ data });
+}
+
 export async function setAdminUserStaffStatus(
   userId: string,
   isStaff: boolean,

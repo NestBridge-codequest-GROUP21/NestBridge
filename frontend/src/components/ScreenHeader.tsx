@@ -70,7 +70,7 @@ export default function ScreenHeader({
 
   return (
     <LinearGradient
-      colors={[...(compact ? gradients.headerCompact : gradients.header)]}
+      colors={compact ? gradients.headerCompact : gradients.header}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={[styles.header, { paddingTop: insets.top + spacing.sm }]}

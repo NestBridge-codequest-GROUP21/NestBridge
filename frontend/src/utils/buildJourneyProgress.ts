@@ -42,11 +42,14 @@ export function buildJourneyProgress(input: {
   destinationLabel?: string;
   /** When true, accommodation CTA prefers ExploreStays over MatchSearch. */
   preferStayCatalogue?: boolean;
+  /** Tourist copy focuses on visiting — not academic settle-in. */
+  journeyAudience?: 'student' | 'tourist';
 }): JourneyProgress {
   const place =
     input.destinationLabel?.trim() ||
     input.profileState.seekerSetup.data.city?.trim() ||
     'Ghana';
+  const isTourist = input.journeyAudience === 'tourist';
 
   const accommodationFound = hasBooking(
     input.bookings,
@@ -62,18 +65,24 @@ export function buildJourneyProgress(input: {
   const steps: JourneyStep[] = [
     {
       id: 'profile',
-      title: 'Profile completed',
-      subtitle: 'Destination, preferences, and basics',
+      title: isTourist ? 'Trip profile ready' : 'Profile completed',
+      subtitle: isTourist
+        ? 'Destination, dates, and travel basics'
+        : 'Destination, preferences, and basics',
       iconGlyph: '👤',
       completed: isSeekerComplete(input.profileState),
       routeHint: 'AccountSetup',
     },
     {
       id: 'accommodation',
-      title: 'Accommodation found',
+      title: isTourist ? 'Stay booked' : 'Accommodation found',
       subtitle: accommodationFound
-        ? 'Open your stay booking'
-        : 'Browse or match with a host stay',
+        ? isTourist
+          ? 'Open your lodging booking'
+          : 'Open your stay booking'
+        : isTourist
+          ? 'Find lodging or a host stay'
+          : 'Browse or match with a host stay',
       iconGlyph: '🏡',
       completed: accommodationFound,
       routeHint: accommodationFound
@@ -84,10 +93,14 @@ export function buildJourneyProgress(input: {
     },
     {
       id: 'guide',
-      title: 'Guide connected',
+      title: isTourist ? 'Guided trip planned' : 'Guide connected',
       subtitle: guideConnected
-        ? 'Open your guide session'
-        : 'Find a local guide near you',
+        ? isTourist
+          ? 'Open your guided experience'
+          : 'Open your guide session'
+        : isTourist
+          ? 'Book a local guide or tour'
+          : 'Find a local guide near you',
       iconGlyph: '🗺️',
       completed: guideConnected,
       routeHint: guideConnected ? 'StudentBookings' : 'GuideSearch',
@@ -102,15 +115,21 @@ export function buildJourneyProgress(input: {
     },
     {
       id: 'culture',
-      title: 'Ghana culture tips completed',
-      subtitle: 'Local customs and everyday etiquette',
+      title: isTourist
+        ? 'Culture tips reviewed'
+        : 'Ghana culture tips completed',
+      subtitle: isTourist
+        ? 'Customs and etiquette for your visit'
+        : 'Local customs and everyday etiquette',
       iconGlyph: '🤝',
       completed: input.milestones.cultureTipsCompleted,
       routeHint: 'LocalTips',
     },
     {
       id: 'language',
-      title: 'Local language basics completed',
+      title: isTourist
+        ? 'Useful phrases learned'
+        : 'Local language basics completed',
       subtitle: 'A few phrases to open doors',
       iconGlyph: '💬',
       completed: input.milestones.languageBasicsCompleted,
@@ -123,17 +142,23 @@ export function buildJourneyProgress(input: {
   const percent =
     totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
-  let subtitle = `Settling into ${place}`;
+  let subtitle = isTourist
+    ? `Planning your visit to ${place}`
+    : `Settling into ${place}`;
   if (percent === 0) {
-    subtitle = `Your path from arrival to belonging in ${place}`;
+    subtitle = isTourist
+      ? `Your path from landing to exploring ${place}`
+      : `Your path from arrival to belonging in ${place}`;
   } else if (percent < 100) {
     subtitle = `${completedCount} of ${totalCount} milestones · keep going`;
   } else {
-    subtitle = `You are settling in beautifully in ${place}`;
+    subtitle = isTourist
+      ? `You are ready to explore ${place}`
+      : `You are settling in beautifully in ${place}`;
   }
 
   return {
-    title: 'Your Ghana Journey',
+    title: isTourist ? 'Your Ghana Trip' : 'Your Ghana Journey',
     subtitle,
     percent,
     completedCount,

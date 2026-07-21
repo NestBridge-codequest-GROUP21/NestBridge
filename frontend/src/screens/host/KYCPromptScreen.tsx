@@ -33,14 +33,14 @@ export default function KYCPromptScreen({
   onVerifyLater,
 }: KYCPromptScreenProps) {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
 
 
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
       <View
         style={[

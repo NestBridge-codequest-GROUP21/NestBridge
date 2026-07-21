@@ -331,7 +331,7 @@ export default function QuizPage({
   stepLabel = 'Preferences',
 }: QuizPageProps) {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, scheme } = useTheme();
 
 
   const insets = useSafeAreaInsets();
@@ -579,7 +579,7 @@ export default function QuizPage({
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScreenScroll
         contentContainerStyle={[

@@ -55,7 +55,7 @@ export default function SponsorApplicationScreen({
   onReturnToList,
 }: SponsorApplicationScreenProps) {
   const styles = useThemedStyles(createStyles);
-  const { colors, gradients } = useTheme();
+  const { colors, gradients, scheme } = useTheme();
 
 
   const insets = useSafeAreaInsets();
@@ -86,7 +86,7 @@ export default function SponsorApplicationScreen({
           { paddingBottom: insets.bottom + spacing.xl },
         ]}
       >
-        <StatusBar style="dark" />
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <View style={styles.successIcon}>
           <AppIcon
             name="checkmark-circle"
@@ -116,7 +116,7 @@ export default function SponsorApplicationScreen({
         }}
       >
         <LinearGradient
-          colors={[...gradients.headerCompact]}
+          colors={gradients.headerCompact}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.header, { paddingTop: insets.top + spacing.md }]}

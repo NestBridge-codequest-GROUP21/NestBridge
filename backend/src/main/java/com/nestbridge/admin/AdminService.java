@@ -84,6 +84,20 @@ public class AdminService {
     }
 
     @Transactional
+    public AdminUserDetailDto setEmailVerified(UUID actorId, UUID userId, boolean emailVerified) {
+        staffGuard.requireStaff(actorId);
+        User user = requireUser(userId);
+        user.setEmailVerified(emailVerified);
+        if (emailVerified) {
+            user.setEmailVerifiedAt(java.time.OffsetDateTime.now());
+        } else {
+            user.setEmailVerifiedAt(null);
+        }
+        userRepository.save(user);
+        return toDetail(user);
+    }
+
+    @Transactional
     public AdminUserDetailDto setStaffStatus(UUID actorId, UUID userId, boolean isStaff) {
         User actor = staffGuard.requireStaff(actorId);
         if (actor.getUserId().equals(userId) && !isStaff) {

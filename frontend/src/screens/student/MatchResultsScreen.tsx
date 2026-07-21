@@ -115,7 +115,7 @@ function HostMatchCard({
 
         <View style={styles.badgeRow}>
           <LinearGradient
-            colors={[...gradients.accent]}
+            colors={gradients.accent}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
             style={styles.compatBadge}

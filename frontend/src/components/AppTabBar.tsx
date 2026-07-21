@@ -66,7 +66,7 @@ export default function AppTabBar({
           <AppIcon
             name={iconName}
             size={iconSizes.md}
-            color={active ? colors.teal : colors.textTertiary}
+            color={active ? colors.tabActive : colors.textTertiary}
             style={styles.tabIcon}
           />
         ) : null}
@@ -111,11 +111,11 @@ export default function AppTabBar({
   );
 }
 
-function createStyles({ colors }: AppTheme) {
+function createStyles({ colors, chrome }: AppTheme) {
   return StyleSheet.create({
   wrapper: {
     backgroundColor: colors.surface,
-    borderTopWidth: 1,
+    borderTopWidth: chrome.minimalBorders ? 0 : 1,
     borderTopColor: colors.border,
     paddingTop: spacing.sm,
     paddingHorizontal: spacing.sm,
@@ -158,7 +158,7 @@ function createStyles({ colors }: AppTheme) {
   tabLabelActive: {
     fontFamily: fontFamilies.semibold,
     fontWeight: fontWeights.semibold,
-    color: colors.teal,
+    color: colors.tabActive,
   },
   badge: {
     position: 'absolute',

@@ -178,7 +178,7 @@ export default function StudentBookingsScreen({
       <StatusBar style="light" />
 
       <LinearGradient
-        colors={[...gradients.headerCompact]}
+        colors={gradients.headerCompact}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
@@ -273,7 +273,7 @@ export default function StudentBookingsScreen({
               accessibilityState={{ disabled: payBlocked || payLoading, busy: payLoading }}
             >
               <LinearGradient
-                colors={[...gradients.accent]}
+                colors={gradients.accent}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={[

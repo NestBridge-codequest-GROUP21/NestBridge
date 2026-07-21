@@ -172,6 +172,7 @@ export default function DestinationSetupScreen({
   onBack,
 }: DestinationSetupScreenProps) {
   const styles = useThemedStyles(createStyles);
+  const { scheme } = useTheme();
 
   const insets = useSafeAreaInsets();
   const [destinationError, setDestinationError] = useState<'required' | 'gibberish' | null>(
@@ -220,7 +221,7 @@ export default function DestinationSetupScreen({
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScreenScroll
         contentContainerStyle={[

@@ -52,7 +52,7 @@ Services like Paystack, SendGrid, and Smile Identity give you **secret passwords
 
 New users receive a verification link. Demo accounts (`*@nestbridge.app`) are pre-verified.
 
-**Critical:** If `SENDGRID_API_KEY` is missing or `EMAIL_FROM` is not a verified sender, registration still creates the account but returns `emailDeliveryFailed` so the app can show Resend / Contact support. Check Railway logs for `SendGrid` errors.
+**Critical:** If `SENDGRID_API_KEY` is missing, NestBridge **auto-verifies** new accounts so users can sign in (no inbox required). When the key is set but `EMAIL_FROM` is not a verified sender, registration still creates the account and returns `emailDeliveryFailed` so the app can show Resend / Contact support. Staff tools can also **Mark email verified** for stuck users. Check Railway logs for `SendGrid` / `SENDGRID_API_KEY` messages.
 
 Set `APP_PUBLIC_URL` to the **same** public HTTPS URL the app uses (e.g. `https://nestbridge-production.up.railway.app`). Verification links are built as `{APP_PUBLIC_URL}/api/auth/verify-email?token=…`.
 

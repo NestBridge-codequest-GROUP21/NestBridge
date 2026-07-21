@@ -1,10 +1,12 @@
 package com.nestbridge.auth;
 
 import com.nestbridge.notification.EmailDeliveryException;
+import com.nestbridge.notification.EmailService;
 import com.nestbridge.notification.EmailVerificationService;
 import com.nestbridge.user.User;
 import com.nestbridge.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -21,6 +24,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
     private final EmailVerificationService emailVerificationService;
+    private final EmailService emailService;
     private final PlatformTransactionManager transactionManager;
 
     @Value("${jwt.refresh-expiry-ms}")
@@ -29,21 +33,36 @@ public class AuthService {
     @Value("${email.verification-enabled:true}")
     private boolean verificationEnabled;
 
+    /**
+     * Real inbox verification only when enabled AND SendGrid is configured.
+     * Otherwise users would be stuck with no email ever arriving.
+     */
+    private boolean inboxVerificationActive() {
+        return verificationEnabled && emailService.isConfigured();
+    }
+
     public RegisterResponse register(RegisterRequest request) {
         String email = request.getEmail().trim().toLowerCase();
         var existing = userRepository.findByEmailIgnoreCase(email);
         if (existing.isPresent()) {
             User user = existing.get();
-            if (verificationEnabled && !user.isEmailVerified()) {
+            if (inboxVerificationActive() && !user.isEmailVerified()) {
                 throw new IllegalArgumentException(
                         "You already started signup with this email. Check your inbox to verify, or use Resend verification email.");
             }
             throw new IllegalArgumentException("An account with this email already exists. Try signing in.");
         }
 
-        User user = persistNewUser(request, email, !verificationEnabled);
+        // Skip inbox gate when SendGrid is missing — auto-verify so signup is usable.
+        boolean autoVerify = !inboxVerificationActive();
+        User user = persistNewUser(request, email, autoVerify);
 
-        if (!verificationEnabled) {
+        if (autoVerify) {
+            if (verificationEnabled && !emailService.isConfigured()) {
+                log.warn(
+                        "Registered {} without verification email — SENDGRID_API_KEY is not configured",
+                        email);
+            }
             return RegisterResponse.builder()
                     .email(user.getEmail())
                     .displayName(user.getFullName())
@@ -58,6 +77,11 @@ public class AuthService {
             emailVerificationService.deliverVerificationEmail(user, verifyUrl);
         } catch (EmailDeliveryException ex) {
             deliveryFailed = true;
+            log.error(
+                    "Verification email delivery failed for {} — verifyUrl={} cause={}",
+                    email,
+                    verifyUrl,
+                    ex.getMessage());
         }
 
         return RegisterResponse.builder()
@@ -96,8 +120,14 @@ public class AuthService {
         if (user.isSuspended()) {
             throw new IllegalArgumentException("This account has been suspended.");
         }
-        if (verificationEnabled && !user.isEmailVerified()) {
-            throw new EmailNotVerifiedException();
+        if (!user.isEmailVerified()) {
+            if (inboxVerificationActive()) {
+                throw new EmailNotVerifiedException();
+            }
+            // Mail cannot be delivered — do not permanently lock the account.
+            log.warn(
+                    "Allowing unverified login for {} because SendGrid is not configured (or verification is off)",
+                    email);
         }
         return issueTokens(user);
     }

@@ -9,6 +9,8 @@ import { ONBOARDING_HERO_IMAGES } from './onboardingHeroImages';
 
 export const splashCopy = {
   tagline: 'From Arrival to Belonging.',
+  description:
+    'A culturally intelligent pairing and guidance platform connecting international students, host families, and travellers.',
   continueHint: 'Tap to continue',
 };
 
@@ -280,6 +282,9 @@ export const providerWelcome = {
 export const profileCopy = {
   aboutAccount:
     'Finish setup only for what you want to book or offer. Search is always open for homestays, guides, and lodging.',
+  brandName: 'NestBridge',
+  tagline: splashCopy.tagline,
+  copyright: `© ${new Date().getFullYear()} NestBridge. All rights reserved.`,
 };
 
 export const accountSetupCopy = {

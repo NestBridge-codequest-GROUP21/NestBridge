@@ -57,7 +57,9 @@ export default function QuickActionsGrid({
               <AppIcon
                 glyph={action.icon}
                 size={iconSizes.xl}
-                color={action.id === 'sos' ? colors.white : colors.teal}
+                color={
+                  action.id === 'sos' ? colors.white : colors.onAccent
+                }
               />
             </View>
             <Text style={styles.label} numberOfLines={2}>
@@ -101,7 +103,7 @@ function createStyles({ colors, tints }: AppTheme) {
     marginBottom: spacing.sm,
   },
   sosIconWrap: {
-    backgroundColor: colors.danger,
+    backgroundColor: colors.sos,
   },
   label: {
     fontFamily: fontFamilies.regular,

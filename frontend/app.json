@@ -48,7 +48,7 @@
       ]
     ],
     "extra": {
-      "apiBaseUrl": "",
+      "apiBaseUrl": "https://nestbridge-production.up.railway.app",
       "firebaseApiKey": "",
       "firebaseAuthDomain": "",
       "firebaseDatabaseUrl": "",

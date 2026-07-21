@@ -3,13 +3,31 @@ import type { ThemePreference } from './palettes';
 
 const THEME_PREFERENCE_KEY = 'nestbridge_theme_preference';
 
-const VALID: ThemePreference[] = ['light', 'dark', 'system'];
+const VALID: ThemePreference[] = [
+  'light',
+  'dark-teal',
+  'dark-warm',
+  'dark-bold',
+];
 
-export function isValidThemePreference(value: unknown): value is ThemePreference {
+/** Migrate earlier light/dark/system values to the four-variant model. */
+function migrateLegacyPreference(raw: string): ThemePreference | null {
+  if (raw === 'dark') {
+    return 'dark-teal';
+  }
+  if (raw === 'system') {
+    return 'light';
+  }
+  return null;
+}
+
+export function isValidThemePreference(
+  value: unknown,
+): value is ThemePreference {
   return typeof value === 'string' && VALID.includes(value as ThemePreference);
 }
 
-/** Default: current NestBridge light appearance. */
+/** Default: NestBridge light appearance. Persists via SecureStore. */
 export async function loadThemePreference(): Promise<ThemePreference> {
   try {
     const raw = await SecureStore.getItemAsync(THEME_PREFERENCE_KEY);
@@ -18,6 +36,11 @@ export async function loadThemePreference(): Promise<ThemePreference> {
     }
     if (isValidThemePreference(raw)) {
       return raw;
+    }
+    const migrated = migrateLegacyPreference(raw);
+    if (migrated) {
+      await SecureStore.setItemAsync(THEME_PREFERENCE_KEY, migrated);
+      return migrated;
     }
     return 'light';
   } catch (error) {

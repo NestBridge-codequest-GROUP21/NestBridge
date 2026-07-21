@@ -43,12 +43,12 @@ export default function Card({
   );
 }
 
-function createStyles({ colors, shadows }: AppTheme) {
+function createStyles({ colors, shadows, chrome }: AppTheme) {
   return StyleSheet.create({
     base: {
       backgroundColor: colors.surface,
       borderRadius: borderRadius.lg,
-      borderWidth: borderWidths.hairline,
+      borderWidth: chrome.minimalBorders ? 0 : borderWidths.hairline,
       borderColor: colors.border,
     },
     paddingMd: {

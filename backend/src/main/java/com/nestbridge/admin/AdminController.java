@@ -63,6 +63,20 @@ public class AdminController {
                 adminService.setKycStatus(actorId, id, request.getIdentityVerified())));
     }
 
+    @PatchMapping("/users/{id}/email-verified")
+    public ResponseEntity<ApiResponse<AdminUserDetailDto>> updateEmailVerified(
+            Authentication authentication,
+            @PathVariable UUID id,
+            @Valid @RequestBody EmailVerifiedRequest request) {
+        UUID actorId = (UUID) authentication.getPrincipal();
+        String message = Boolean.TRUE.equals(request.getEmailVerified())
+                ? "Email marked verified"
+                : "Email verification cleared";
+        return ResponseEntity.ok(ApiResponse.success(
+                message,
+                adminService.setEmailVerified(actorId, id, request.getEmailVerified())));
+    }
+
     @PatchMapping("/users/{id}/staff-status")
     public ResponseEntity<ApiResponse<AdminUserDetailDto>> updateStaffStatus(
             Authentication authentication,

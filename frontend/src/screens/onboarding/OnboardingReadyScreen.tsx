@@ -147,7 +147,7 @@ export default function OnboardingReadyScreen({
       </View>
 
       <LinearGradient
-        colors={[...gradients.header]}
+        colors={gradients.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.contentGradient}
