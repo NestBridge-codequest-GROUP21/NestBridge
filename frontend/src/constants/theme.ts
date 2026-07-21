@@ -152,6 +152,10 @@ export const gradients = lightGradients;
 export const motion = {
   durationFast: 200,
   durationNormal: 400,
+  /** Cold-start splash: logo beat before name/motto reveal. */
+  durationSplashBeat1: 2000,
+  /** Cold-start splash total auto-continue (max). */
+  durationSplashTotal: 5000,
 } as const;
 
 /** @deprecated Prefer useTheme().shadows */

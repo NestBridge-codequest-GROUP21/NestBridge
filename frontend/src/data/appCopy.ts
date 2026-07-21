@@ -8,9 +8,10 @@ import type { OnboardingNextStep } from '../components/OnboardingNextStepsCard';
 import { ONBOARDING_HERO_IMAGES } from './onboardingHeroImages';
 
 export const splashCopy = {
+  /** Motto shown on splash beat 2. */
   tagline: 'From Arrival to Belonging.',
   description:
-    'A culturally intelligent pairing and guidance platform connecting international students, host families, and travellers.',
+    'Discover trusted people, local resources, and the support to confidently feel at home.',
   continueHint: 'Tap to continue',
 };
 
