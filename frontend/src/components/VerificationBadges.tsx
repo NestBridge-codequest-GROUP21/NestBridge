@@ -84,7 +84,7 @@ export default function VerificationBadges({
   const secondary = badges.filter((b) => !b.primary);
 
   const checkColor = onDark ? colors.white : colors.teal;
-  const primaryText = onDark ? colors.white : colors.tealDeep;
+  const primaryText = onDark ? colors.white : colors.onAccent;
   const secondaryText = onDark ? colors.white : colors.textSecondary;
   const primaryBg = onDark ? tints.teal : tints.teal;
   const primaryBorder = onDark ? colors.white : colors.teal;

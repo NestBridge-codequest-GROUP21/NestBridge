@@ -202,7 +202,7 @@ function createStyles({ colors, overlays }: AppTheme) {
   optionTextSelected: {
     fontFamily: fontFamilies.semibold,
     fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
+    color: colors.teal,
   },
 });
 }

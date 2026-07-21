@@ -309,7 +309,7 @@ function createStyles({ colors }: AppTheme) {
   avatarText: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
-    color: colors.tealDeep,
+    color: colors.teal,
   },
   avatarBadge: {
     position: 'absolute',

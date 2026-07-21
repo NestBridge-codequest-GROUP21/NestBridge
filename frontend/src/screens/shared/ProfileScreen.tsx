@@ -443,7 +443,7 @@ function createStyles({ colors }: AppTheme) {
       fontFamily: fontFamilies.bold,
       fontSize: fontSizes.heading,
       fontWeight: fontWeights.bold,
-      color: colors.navy,
+      color: colors.textPrimary,
       textAlign: 'center',
     },
     aboutTagline: {

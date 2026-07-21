@@ -54,7 +54,7 @@ export default function InlineBanner({
     info: {
       border: colors.teal,
       background: tints.teal,
-      text: colors.tealDeep,
+      text: colors.onAccent,
       icon: 'information-circle-outline',
     },
     warning: {

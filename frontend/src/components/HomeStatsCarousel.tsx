@@ -102,7 +102,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
     lineHeight: lineHeights.heading,
-    color: colors.tealDeep,
+    color: colors.teal,
     marginBottom: spacing.xs,
   },
   label: {

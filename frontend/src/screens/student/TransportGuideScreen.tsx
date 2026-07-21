@@ -52,7 +52,7 @@ function RouteCard({
     <Card padding="md">
       <View style={styles.routeHeader}>
         <View style={styles.locationIconWrap}>
-          <AppIcon name="location-outline" size={iconSizes.md} color={colors.tealDeep} />
+          <AppIcon name="location-outline" size={iconSizes.md} color={colors.onAccent} />
         </View>
         <Text style={styles.routeName}>{route.name}</Text>
       </View>
@@ -133,7 +133,7 @@ export default function TransportGuideScreen({
                     <AppIcon
                       name={iconName}
                       size={iconSizes.md}
-                      color={isActive ? colors.white : colors.tealDeep}
+                      color={isActive ? colors.white : colors.onAccent}
                     />
                     <Text
                       style={[styles.tabLabel, isActive && styles.tabLabelActive]}

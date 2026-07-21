@@ -136,7 +136,7 @@ export default function AppIcon({
     <Ionicons
       name={resolved}
       size={size}
-      color={color ?? colors.tealDeep}
+      color={color ?? colors.teal}
       style={style}
     />
   );

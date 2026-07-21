@@ -107,7 +107,7 @@ export default function CulturalQuizScreen({
                   <AppIcon
                     glyph={option.icon}
                     size={iconSizes.lg}
-                    color={selected ? colors.tealDeep : colors.teal}
+                    color={colors.onAccent}
                     style={styles.optionIcon}
                   />
                 ) : null}
@@ -197,7 +197,7 @@ function createStyles({ colors }: AppTheme) {
   optionLabelSelected: {
     fontFamily: fontFamilies.semibold,
     fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
+    color: colors.teal,
   },
   footer: {
     marginTop: spacing.md,
