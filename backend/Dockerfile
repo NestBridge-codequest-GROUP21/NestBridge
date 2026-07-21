@@ -1,4 +1,4 @@
-# Build stage
+# Build stage (Flyway V25 migration rename — force Railway rebuild)
 FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /app
 COPY mvnw .
