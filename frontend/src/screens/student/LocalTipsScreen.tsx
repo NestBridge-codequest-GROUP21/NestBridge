@@ -1,5 +1,5 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -9,6 +9,7 @@ import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
 import SectionHeader from '../../components/SectionHeader';
 import ProgressBar from '../../components/ProgressBar';
+import CategoryFilterChips from '../../components/CategoryFilterChips';
 import type {
   CulturalPhraseCard,
   PhraseGuideSection,
@@ -29,6 +30,14 @@ import {
 } from '../../constants/theme';
 import { emptyStates } from '../../data/appCopy';
 
+const ALL_CATEGORY_ID = 'all';
+
+type CultureMode = 'phrases' | 'culture';
+
+function modeFromFocus(focus?: 'culture' | 'language'): CultureMode {
+  return focus === 'culture' ? 'culture' : 'phrases';
+}
+
 export interface LocalTipsScreenProps {
   greeting: string;
   userName: string;
@@ -42,7 +51,7 @@ export interface LocalTipsScreenProps {
   completedTopicIds?: string[];
   progressPercent?: number;
   progressLabel?: string;
-  /** Prefer phrases (language) or topics (culture) at the top. */
+  /** Prefer phrases (language) or culture tips when opening the screen. */
   focus?: 'culture' | 'language';
   onPhrasePress?: (phraseId: string) => void;
   onPhrasePracticePress?: (phraseId: string) => void;
@@ -185,65 +194,43 @@ export default function LocalTipsScreen({
   const contentWidth = windowWidth - layout.screenPaddingHorizontal * 2;
   const phraseCardWidth = Math.floor((contentWidth - spacing.md) / 2);
 
+  const [mode, setMode] = useState<CultureMode>(() => modeFromFocus(focus));
+  const [categoryId, setCategoryId] = useState(ALL_CATEGORY_ID);
+
+  useEffect(() => {
+    setMode(modeFromFocus(focus));
+    setCategoryId(ALL_CATEGORY_ID);
+  }, [focus]);
+
   const completedPhraseSet = new Set(completedPhraseIds);
   const practicedPhraseSet = new Set(practicedPhraseIds);
   const completedTopicSet = new Set(completedTopicIds);
 
   const isEmpty = phraseSections.length === 0 && topicSections.length === 0;
-  const showPhrasesFirst = focus !== 'culture';
+  const activeSections = mode === 'phrases' ? phraseSections : topicSections;
 
-  const phrasesBlock =
-    phraseSections.length > 0 ? (
-      <View style={showPhrasesFirst ? undefined : styles.blockSpacer}>
-        {phraseSections.map((section, sectionIndex) => (
-          <View key={section.id} style={sectionIndex > 0 ? styles.sectionBlock : undefined}>
-            <SectionHeader
-              title={section.title}
-              subtitle={section.subtitle}
-              style={styles.sectionTight}
-            />
-            <View style={styles.grid}>
-              {section.phrases.map((item) => (
-                <PhraseCard
-                  key={item.id}
-                  phrase={item}
-                  cardWidth={phraseCardWidth}
-                  completed={completedPhraseSet.has(item.id)}
-                  practiced={practicedPhraseSet.has(item.id)}
-                  onPress={() => onPhrasePress?.(item.id)}
-                  onPracticePress={() => onPhrasePracticePress?.(item.id)}
-                />
-              ))}
-            </View>
-          </View>
-        ))}
-      </View>
-    ) : null;
+  const categoryOptions = useMemo(
+    () => [
+      { id: ALL_CATEGORY_ID, label: 'All' },
+      ...activeSections.map((section) => ({
+        id: section.id,
+        label: section.title,
+      })),
+    ],
+    [activeSections],
+  );
 
-  const topicsBlock =
-    topicSections.length > 0 ? (
-      <View style={showPhrasesFirst ? styles.blockSpacer : undefined}>
-        {topicSections.map((section, sectionIndex) => (
-          <View key={section.id} style={sectionIndex > 0 ? styles.sectionBlock : undefined}>
-            <SectionHeader
-              title={section.title}
-              subtitle={section.subtitle}
-              style={styles.sectionTight}
-            />
-            <View style={styles.topicList}>
-              {section.topics.map((topic) => (
-                <TopicCard
-                  key={topic.id}
-                  topic={topic}
-                  completed={completedTopicSet.has(topic.id)}
-                  onPress={() => onTopicPress?.(topic.id)}
-                />
-              ))}
-            </View>
-          </View>
-        ))}
-      </View>
-    ) : null;
+  const visibleSections = useMemo(() => {
+    if (categoryId === ALL_CATEGORY_ID) {
+      return activeSections;
+    }
+    return activeSections.filter((section) => section.id === categoryId);
+  }, [activeSections, categoryId]);
+
+  const handleModeChange = (next: CultureMode) => {
+    setMode(next);
+    setCategoryId(ALL_CATEGORY_ID);
+  };
 
   return (
     <View style={styles.root}>
@@ -288,15 +275,104 @@ export default function LocalTipsScreen({
             primaryActionLabel={empty.primaryActionLabel}
             onPrimaryAction={onEmptyPrimaryAction}
           />
-        ) : showPhrasesFirst ? (
-          <>
-            {phrasesBlock}
-            {topicsBlock}
-          </>
         ) : (
           <>
-            {topicsBlock}
-            {phrasesBlock}
+            <View style={styles.segment} accessibilityRole="tablist">
+              {(
+                [
+                  { id: 'phrases' as const, label: 'Phrases' },
+                  { id: 'culture' as const, label: 'Culture tips' },
+                ] as const
+              ).map((tab) => {
+                const isActive = tab.id === mode;
+                return (
+                  <Pressable
+                    key={tab.id}
+                    style={[styles.segmentItem, isActive && styles.segmentItemActive]}
+                    onPress={() => handleModeChange(tab.id)}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: isActive }}
+                    accessibilityLabel={tab.label}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentLabel,
+                        isActive && styles.segmentLabelActive,
+                      ]}
+                    >
+                      {tab.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <CategoryFilterChips
+              options={categoryOptions}
+              selectedId={categoryId}
+              onSelect={setCategoryId}
+              accessibilityLabel={
+                mode === 'phrases' ? 'Phrase categories' : 'Culture tip categories'
+              }
+            />
+
+            {visibleSections.length === 0 ? (
+              <EmptyState
+                title={empty.title}
+                body={empty.body}
+                tip={empty.tip}
+                iconGlyph={empty.iconGlyph}
+              />
+            ) : mode === 'phrases' ? (
+              (visibleSections as PhraseGuideSection[]).map((section, sectionIndex) => (
+                <View
+                  key={section.id}
+                  style={sectionIndex > 0 ? styles.sectionBlock : undefined}
+                >
+                  <SectionHeader
+                    title={section.title}
+                    subtitle={section.subtitle}
+                    style={styles.sectionTight}
+                  />
+                  <View style={styles.grid}>
+                    {section.phrases.map((item) => (
+                      <PhraseCard
+                        key={item.id}
+                        phrase={item}
+                        cardWidth={phraseCardWidth}
+                        completed={completedPhraseSet.has(item.id)}
+                        practiced={practicedPhraseSet.has(item.id)}
+                        onPress={() => onPhrasePress?.(item.id)}
+                        onPracticePress={() => onPhrasePracticePress?.(item.id)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))
+            ) : (
+              (visibleSections as TopicGuideSection[]).map((section, sectionIndex) => (
+                <View
+                  key={section.id}
+                  style={sectionIndex > 0 ? styles.sectionBlock : undefined}
+                >
+                  <SectionHeader
+                    title={section.title}
+                    subtitle={section.subtitle}
+                    style={styles.sectionTight}
+                  />
+                  <View style={styles.topicList}>
+                    {section.topics.map((topic) => (
+                      <TopicCard
+                        key={topic.id}
+                        topic={topic}
+                        completed={completedTopicSet.has(topic.id)}
+                        onPress={() => onTopicPress?.(topic.id)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))
+            )}
           </>
         )}
       </ScreenScroll>
@@ -330,13 +406,42 @@ function createStyles({ colors, tints }: AppTheme) {
     progressBar: {
       marginTop: spacing.xs,
     },
+    segment: {
+      flexDirection: 'row',
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.lg,
+      borderWidth: borderWidths.hairline,
+      borderColor: colors.border,
+      padding: spacing.xs,
+      marginBottom: spacing.sm,
+      gap: spacing.xs,
+    },
+    segmentItem: {
+      flex: 1,
+      minHeight: touchTarget,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: borderRadius.md,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.sm,
+    },
+    segmentItemActive: {
+      backgroundColor: colors.navy,
+    },
+    segmentLabel: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.body,
+      fontWeight: fontWeights.semibold,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    segmentLabelActive: {
+      color: colors.onPrimary,
+    },
     sectionTight: {
       marginBottom: spacing.sm,
     },
     sectionBlock: {
-      marginTop: layout.sectionGap,
-    },
-    blockSpacer: {
       marginTop: layout.sectionGap,
     },
     grid: {
