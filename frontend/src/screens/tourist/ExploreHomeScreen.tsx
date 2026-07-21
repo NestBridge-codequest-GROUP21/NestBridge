@@ -21,6 +21,7 @@ import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
 import ReminderBanner from '../../components/ReminderBanner';
+import SectionRetryBanner from '../../components/SectionRetryBanner';
 import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
 import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 import type { EmptyStateContent } from '../../data/appCopy';
@@ -58,6 +59,10 @@ export interface ExploreHomeScreenProps {
   journeyProgress?: JourneyProgress | null;
   recentActivity?: RecentActivityItem[];
   reminder?: string;
+  /** Fatal only — every home section failed. */
+  homeDataError?: string | null;
+  guidesLoadError?: string | null;
+  activityLoadError?: string | null;
   tabBarItems: TabBarItem[];
   activeTabId: string;
   showSosDock?: boolean;
@@ -68,6 +73,9 @@ export interface ExploreHomeScreenProps {
   onFeaturedGuidePress?: () => void;
   onSuggestedGuidePress?: (guideId: string) => void;
   onGuidesEmptyPrimaryAction?: () => void;
+  onRetryGuides?: () => void;
+  onRetryActivity?: () => void;
+  onRetryHome?: () => void;
   onSectionPress?: (sectionId: string) => void;
   onRecommendationItemPress?: (item: RecommendationItem) => void;
   onRecommendationsEmptyPress?: () => void;
@@ -97,6 +105,9 @@ export default function ExploreHomeScreen({
   journeyProgress = null,
   recentActivity = [],
   reminder,
+  homeDataError,
+  guidesLoadError,
+  activityLoadError,
   tabBarItems,
   activeTabId,
   showSosDock = false,
@@ -107,6 +118,9 @@ export default function ExploreHomeScreen({
   onFeaturedGuidePress,
   onSuggestedGuidePress,
   onGuidesEmptyPrimaryAction,
+  onRetryGuides,
+  onRetryActivity,
+  onRetryHome,
   onRecommendationItemPress,
   onRecommendationsEmptyPress,
   onJourneyStepPress,
@@ -143,6 +157,14 @@ export default function ExploreHomeScreen({
           />
         ) : null}
 
+        {homeDataError ? (
+          <SectionRetryBanner
+            message={homeDataError}
+            onRetry={onRetryHome}
+            retryLabel="Retry home"
+          />
+        ) : null}
+
         {featuredGuide ? (
           <FeaturedHomeCard
             {...featuredGuide}
@@ -162,16 +184,24 @@ export default function ExploreHomeScreen({
           />
         ) : null}
 
-        <DiscoveryListingSection
-          title={suggestedGuidesTitle}
-          items={suggestedGuides}
-          showMatchScores={showMatchScores}
-          emptyState={guidesEmptyState}
-          onEmptyPrimaryAction={onGuidesEmptyPrimaryAction}
-          onItemPress={onSuggestedGuidePress}
-          actionLabel="See all"
-          onActionPress={onGuidesEmptyPrimaryAction}
-        />
+        {guidesLoadError ? (
+          <SectionRetryBanner
+            message={guidesLoadError}
+            onRetry={onRetryGuides}
+            retryLabel="Retry guides"
+          />
+        ) : (
+          <DiscoveryListingSection
+            title={suggestedGuidesTitle}
+            items={suggestedGuides}
+            showMatchScores={showMatchScores}
+            emptyState={guidesEmptyState}
+            onEmptyPrimaryAction={onGuidesEmptyPrimaryAction}
+            onItemPress={onSuggestedGuidePress}
+            actionLabel="See all"
+            onActionPress={onGuidesEmptyPrimaryAction}
+          />
+        )}
 
         {recommendationSections.length > 0 ? (
           <RecommendedForYou
@@ -184,9 +214,17 @@ export default function ExploreHomeScreen({
           />
         ) : null}
 
-        <RecentActivityList items={recentActivity} />
+        {activityLoadError ? (
+          <SectionRetryBanner
+            message={activityLoadError}
+            onRetry={onRetryActivity}
+            retryLabel="Retry activity"
+          />
+        ) : (
+          <RecentActivityList items={recentActivity} />
+        )}
 
-        {reminder ? (
+        {!homeDataError && reminder ? (
           <ReminderBanner message={reminder} onPress={onReminderPress} />
         ) : null}
       </ScreenScroll>
