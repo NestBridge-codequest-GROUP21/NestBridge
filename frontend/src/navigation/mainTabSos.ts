@@ -28,6 +28,10 @@ export function handleProfileCulturalItem(
     navigation.navigate('ExploreStays');
     return;
   }
+  if (itemId === 'universities') {
+    navigation.navigate('UniversitiesDirectory');
+    return;
+  }
   if (itemId === 'video-library') {
     navigation.navigate('VideoLibrary');
     return;

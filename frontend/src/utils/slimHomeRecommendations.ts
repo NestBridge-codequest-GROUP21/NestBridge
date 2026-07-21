@@ -3,24 +3,30 @@ import type {
   RecommendationSection,
 } from '../types/recommendations';
 
-/** Student home: academic settle-in — skip hosts/guides already in Discovery. */
-const STUDENT_HOME_SECTION_IDS = new Set([
-  'institutions',
-  'transport',
-  'culture',
-  'resources',
-]);
+/**
+ * Student home keep-list is intentionally empty.
+ * Culture, prepare-for-arrival, universities, transport, and sponsors live on
+ * the Explore tab (and dedicated screens) — not the Home dashboard.
+ * Do NOT re-add institutions / transport / culture / resources here.
+ */
+const STUDENT_HOME_SECTION_IDS = new Set<string>();
 
-/** Tourist / browse home: visit Ghana — skip duplicating “Guides nearby” list. */
+/**
+ * Tourist / browse home: visit Ghana — skip duplicating “Guides nearby” list.
+ * Culture tips stay on Explore; keep destination highlights only.
+ */
 const TOURIST_HOME_SECTION_IDS = new Set([
   'attractions',
   'food',
   'accommodation',
-  'culture',
 ]);
 
-/** Host / guide home: operational tips + actionable opportunities. */
-const PROVIDER_HOME_SECTION_IDS = new Set(['profile-tips', 'opportunities']);
+/**
+ * Host / guide home: short profile tips only.
+ * Operational “opportunities” and tour-type grids belong on Bookings /
+ * Availability / Explore — not duplicated on Home.
+ */
+const PROVIDER_HOME_SECTION_IDS = new Set(['profile-tips']);
 
 function allowListForRole(role: string): Set<string> {
   switch (role) {

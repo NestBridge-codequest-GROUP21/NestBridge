@@ -89,6 +89,7 @@ import {
 import { speakPhrase } from '../utils/speakPhrase';
 import ExploreStaysScreen from '../screens/tourist/ExploreStaysScreen';
 import SitesDirectoryScreen from '../screens/tourist/SitesDirectoryScreen';
+import UniversitiesDirectoryScreen from '../screens/student/UniversitiesDirectoryScreen';
 import WelfareCheckInScreen from '../screens/shared/WelfareCheckInScreen';
 import ReviewPromptScreen from '../screens/shared/ReviewPromptScreen';
 import { useLodgingPartners, lodgingListingFromId } from '../hooks/useLodgingPartners';
@@ -130,10 +131,14 @@ import {
   shouldShowTravelBookingEntry,
 } from '../data/profileHub';
 import {
-  guideTourSectionsFromTypes,
   handleProfileCulturalItem,
   homeTabSosProps,
 } from './mainTabSos';
+import {
+  nearbyUniversitiesForCity,
+  normalizeCity,
+  universitiesForCity,
+} from '../data/ghanaReference';
 import type { DevHomeRoute } from '../utils/devTestingPresets';
 import type { AccountProfileState } from '../types/accountProfile';
 
@@ -430,6 +435,9 @@ function handleRecommendationItemPress(
     case 'SitesDirectory':
       navigation.navigate('SitesDirectory');
       return;
+    case 'UniversitiesDirectory':
+      navigation.navigate('UniversitiesDirectory');
+      return;
     case 'TransportGuide':
       navigation.navigate('TransportGuide');
       return;
@@ -471,6 +479,9 @@ function handleRecommendationItemPress(
       return;
     case 'GuideBookingsTab':
       navigation.reset({ index: 0, routes: [{ name: 'GuideBookingsTab' }] });
+      return;
+    case 'IncomingSessionRequests':
+      navigation.navigate('IncomingSessionRequests');
       return;
     default:
       break;
@@ -1631,11 +1642,6 @@ export default function AppNavigator() {
     guideListForSearch,
   ]);
 
-  const guideTourSections = useMemo(
-    () => guideTourSectionsFromTypes(tourTypes),
-    [tourTypes],
-  );
-
   const profileCulturalItems = useMemo(
     () => culturalGuidanceItemsForRole(homeRoleFromIntent(primaryIntent)),
     [primaryIntent],
@@ -1648,6 +1654,25 @@ export default function AppNavigator() {
   const homeRouteKey = getHomeRoute(profileState);
   const profileFields = getProfileFields(profileState);
   const cityLabel = profileFields.city || city || 'Accra';
+
+  const universityDirectoryItems = useMemo(() => {
+    const capital = normalizeCity(cityLabel);
+    const preferred = university?.trim();
+    const local = universitiesForCity(capital);
+    const names =
+      local.length > 0 ? local : nearbyUniversitiesForCity(capital);
+    return names.map((name) => ({
+      id: `uni-${name}`,
+      name,
+      city: capital,
+      reason:
+        preferred && name.toLowerCase().includes(preferred.toLowerCase())
+          ? 'Matches your selected university'
+          : local.length > 0
+            ? `Institution near ${capital}`
+            : 'Closest campuses for this destination',
+    }));
+  }, [cityLabel, university]);
 
   const exploreStayListings = useMemo(
     () =>
@@ -3076,7 +3101,7 @@ export default function AppNavigator() {
                 ? 'Book a trip'
                 : 'Browse stays & guides';
           const showStayShortcut =
-            homeRole === 'STUDENT' || isTouristBrowse || homeRole === 'HOST';
+            homeRole === 'STUDENT' || isTouristBrowse;
           return (
             <ExploreHubScreen
               title="Explore"
@@ -3704,7 +3729,6 @@ export default function AppNavigator() {
               statusLabel={guideLive.statusLabel}
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('GUIDE')}
-              tourSuggestions={guideTourSections}
               performanceStats={guidePerformanceMock}
               performanceTitle="Your tour performance"
               recommendationSections={dashboardRecommendations.sections}
@@ -3738,7 +3762,6 @@ export default function AppNavigator() {
                 navigation.navigate('SessionReview', { requestId })
               }
               onSeeAllRequestsPress={() => navigation.navigate('IncomingSessionRequests')}
-              onTourSuggestionPress={() => navigation.navigate('TourTypesSetup')}
               onTabPress={(tabId) => routeTabPress(navigation, tabId, 'GuideHome')}
             />
           );
@@ -4066,6 +4089,16 @@ export default function AppNavigator() {
             onEmptyPrimaryAction={() =>
               navigation.navigate('GuideSearch', { mode: 'nearby' })
             }
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="UniversitiesDirectory">
+        {({ navigation }) => (
+          <UniversitiesDirectoryScreen
+            cityLabel={cityLabel}
+            universities={universityDirectoryItems}
+            onBack={() => navigation.goBack()}
           />
         )}
       </Stack.Screen>

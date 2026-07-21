@@ -59,6 +59,11 @@ export type GradientPalette = {
   header: GradientStops;
   headerCompact: GradientStops;
   accent: GradientStops;
+  /**
+   * Soft light wash for transparent brand marks (navy/teal ink).
+   * Prefer over header gradients whenever BrandLogo is unframed.
+   */
+  brandSoft: GradientStops;
 };
 
 export type ShadowRecipe = {
@@ -193,6 +198,7 @@ export const lightGradients: GradientPalette = {
   ],
   headerCompact: [lightColors.navy, lightColors.tealDeep],
   accent: [lightColors.teal, lightColors.tealBright],
+  brandSoft: [lightColors.warmCream, lightTints.teal, lightTints.navy],
 };
 
 export const lightOverlays: OverlayPalette = {
@@ -284,6 +290,7 @@ export const darkTealGradients: GradientPalette = {
   header: ['#0B1220', '#14342E', '#1F4A40'],
   headerCompact: ['#0B1220', '#1F4A40'],
   accent: [darkTealColors.teal, darkTealColors.tealBright],
+  brandSoft: [darkTealColors.surfaceElevated, darkTealTints.teal, darkTealTints.navy],
 };
 
 export const darkTealOverlays: OverlayPalette = {
@@ -340,6 +347,7 @@ export const darkWarmGradients: GradientPalette = {
   header: ['#1A1410', '#2E1E16', '#3D2418'],
   headerCompact: ['#1A1410', '#3D2418'],
   accent: [darkWarmColors.gold, darkWarmColors.terracotta],
+  brandSoft: [darkWarmColors.surfaceElevated, darkWarmTints.cream, darkWarmTints.navy],
 };
 
 export const darkWarmOverlays: OverlayPalette = {
@@ -397,6 +405,7 @@ export const darkBoldGradients: GradientPalette = {
   header: ['#1C5A48', '#1C5A48', '#1C5A48'],
   headerCompact: ['#1C5A48', '#1C5A48'],
   accent: [darkBoldColors.teal, darkBoldColors.gold],
+  brandSoft: [darkBoldColors.surfaceElevated, darkBoldTints.teal, darkBoldTints.navy],
 };
 
 export const darkBoldOverlays: OverlayPalette = {

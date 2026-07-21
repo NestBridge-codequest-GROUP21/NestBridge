@@ -17,6 +17,12 @@ const HOMESTAYS_HUB_ITEM: ProfileHubItem = {
 const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
   HOMESTAYS_HUB_ITEM,
   {
+    id: 'universities',
+    label: 'Nearby universities',
+    description: 'Campuses and institutions near your destination',
+    icon: '🎓',
+  },
+  {
     id: 'video-library',
     label: 'Video library',
     description: 'Orientation, transport, and culture videos',
@@ -50,7 +56,7 @@ const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
     id: 'sponsors',
     label: 'Sponsors',
     description: 'Scholarships and travel support partners',
-    icon: '🎓',
+    icon: '🏆',
   },
   {
     id: 'transport',
@@ -203,6 +209,8 @@ export function culturalGuidanceItemsForRole(role: HomeRole): ProfileHubItem[] {
   }
 }
 
-export function shouldShowTravelBookingEntry(role: HomeRole): boolean {
-  return role === 'HOST' || role === 'GUIDE';
+export function shouldShowTravelBookingEntry(_role: HomeRole): boolean {
+  // Hosts/guides use ExploreHub primary “Browse stays & guides”.
+  // Do not duplicate that entry on Profile as “Book as a traveller”.
+  return false;
 }
