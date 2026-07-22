@@ -72,7 +72,10 @@ export default function AppTabBar({
         ) : null}
         <Text
           style={[styles.tabLabel, active && styles.tabLabelActive]}
-          numberOfLines={2}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+          ellipsizeMode="clip"
         >
           {tab.label}
         </Text>

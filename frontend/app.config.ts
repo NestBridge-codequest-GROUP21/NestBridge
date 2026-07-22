@@ -26,6 +26,7 @@ const base: ExpoConfig = {
     infoPlist: {
       NSPhotoLibraryUsageDescription:
         'NestBridge uses your photos so you can add a profile picture.',
+      LSApplicationQueriesSchemes: ['mailto', 'tel'],
     },
   },
   android: {
@@ -66,6 +67,7 @@ const base: ExpoConfig = {
         color: '#1AA68C',
       },
     ],
+    './plugins/withAndroidMailtoQuery.js',
   ],
 };
 

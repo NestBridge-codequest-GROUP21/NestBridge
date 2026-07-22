@@ -8,9 +8,6 @@ import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import FeaturedHomeCard, {
   type FeaturedHomeCardProps,
 } from '../../components/FeaturedHomeCard';
-import QuickActionsGrid, {
-  type QuickActionItem,
-} from '../../components/QuickActionsGrid';
 import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
@@ -30,10 +27,9 @@ import {
 import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 import type { EmptyStateContent } from '../../data/appCopy';
 import { emptyStates } from '../../data/appCopy';
-import type { JourneyProgress, JourneyStep } from '../../types/journeyProgress';
+import type { JourneyProgress } from '../../types/journeyProgress';
 
 export type { TabBarItem } from '../../components/AppTabBar';
-export type { QuickActionItem } from '../../components/QuickActionsGrid';
 
 export interface SuggestedHostItem {
   id: string;
@@ -52,7 +48,6 @@ export interface StudentHomeDashboardProps {
   statusLabel?: string;
   notificationCount?: number;
   featuredMatch?: Omit<FeaturedHomeCardProps, 'onPress'>;
-  quickActions: QuickActionItem[];
   /** Personalized destination-aware recommendations (slim nearby only). */
   recommendationSections?: RecommendationSection[];
   recommendationHeadline?: string;
@@ -84,8 +79,6 @@ export interface StudentHomeDashboardProps {
   onRetryHome?: () => void;
   onRecommendationItemPress?: (item: RecommendationItem) => void;
   onRecommendationsEmptyPress?: () => void;
-  onJourneyStepPress?: (step: JourneyStep) => void;
-  onQuickActionPress?: (actionId: string) => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
 }
@@ -98,7 +91,6 @@ export default function StudentHomeDashboard({
   statusLabel,
   notificationCount = 0,
   featuredMatch,
-  quickActions,
   recommendationSections = [],
   recommendationHeadline = 'Nearby for you',
   recommendationCity,
@@ -128,8 +120,6 @@ export default function StudentHomeDashboard({
   onRetryHome,
   onRecommendationItemPress,
   onRecommendationsEmptyPress,
-  onJourneyStepPress,
-  onQuickActionPress,
   onReminderPress,
   onTabPress,
 }: StudentHomeDashboardProps) {
@@ -184,16 +174,8 @@ export default function StudentHomeDashboard({
           />
         ) : null}
 
-        <QuickActionsGrid
-          actions={quickActions}
-          onActionPress={onQuickActionPress}
-        />
-
         {journeyProgress ? (
-          <JourneyProgressCard
-            journey={journeyProgress}
-            onStepPress={onJourneyStepPress}
-          />
+          <JourneyProgressCard journey={journeyProgress} />
         ) : null}
 
         {hostsLoadError ? (

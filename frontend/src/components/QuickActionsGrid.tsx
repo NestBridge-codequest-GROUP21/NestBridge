@@ -35,6 +35,9 @@ export default function QuickActionsGrid({
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
 
+  if (actions.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.section}>

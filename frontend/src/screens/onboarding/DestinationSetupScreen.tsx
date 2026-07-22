@@ -12,6 +12,7 @@ import PrimaryButton from '../../components/PrimaryButton';
 import BackButton from '../../components/BackButton';
 import Card from '../../components/Card';
 import ScreenScroll from '../../components/ScreenScroll';
+import FocusAwareTextInput from '../../components/FocusAwareTextInput';
 import {
   fontFamilies,
   fontSizes,
@@ -27,12 +28,16 @@ import {
 import { isLikelyValidPlaceName } from '../../utils/textValidation';
 import { validationCopy } from '../../data/appCopy';
 import {
+  CITY_OTHER_OPTION,
   destinationCityOptions,
+  destinationCityOptionsWithOther,
+  isCityOtherOption,
   isUniversityValidForCity,
   universityOptionsForCity,
 } from '../../data/ghanaReference';
 
 const DESTINATION_OPTIONS = destinationCityOptions();
+const DESTINATION_OPTIONS_WITH_OTHER = destinationCityOptionsWithOther();
 
 function parseDateValue(value: string): Date | null {
   const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -172,19 +177,31 @@ export default function DestinationSetupScreen({
   onBack,
 }: DestinationSetupScreenProps) {
   const styles = useThemedStyles(createStyles);
-  const { scheme } = useTheme();
+  const { scheme, colors } = useTheme();
 
   const insets = useSafeAreaInsets();
   const [destinationError, setDestinationError] = useState<'required' | 'gibberish' | null>(
     null,
   );
+  const [customCityMode, setCustomCityMode] = useState(
+    () => city.trim().length > 0 && !DESTINATION_OPTIONS.includes(city),
+  );
   const universityOptions = useMemo(
     () => universityOptionsForCity(city),
     [city],
   );
+  const selectCityValue = customCityMode
+    ? CITY_OTHER_OPTION
+    : DESTINATION_OPTIONS.includes(city)
+      ? city
+      : '';
 
   const handleContinue = () => {
-    if (city.trim().length === 0) {
+    if (customCityMode && city.trim().length === 0) {
+      setDestinationError('required');
+      return;
+    }
+    if (city.trim().length === 0 || isCityOtherOption(city)) {
       setDestinationError('required');
       return;
     }
@@ -203,9 +220,27 @@ export default function DestinationSetupScreen({
     onContinue?.();
   };
 
-  const handleCityChange = (value: string) => {
+  const handleCitySelect = (value: string) => {
+    if (isCityOtherOption(value)) {
+      setCustomCityMode(true);
+      onCityChange?.('');
+      if (university) {
+        onUniversityChange?.('');
+      }
+      return;
+    }
+    setCustomCityMode(false);
     onCityChange?.(value);
-    // Never keep a campus that is not listed for the newly selected city.
+    if (university && !isUniversityValidForCity(university, value)) {
+      onUniversityChange?.('');
+    }
+    if (destinationError && isLikelyValidPlaceName(value)) {
+      setDestinationError(null);
+    }
+  };
+
+  const handleCustomCityChange = (value: string) => {
+    onCityChange?.(value);
     if (university && !isUniversityValidForCity(university, value)) {
       onUniversityChange?.('');
     }
@@ -243,13 +278,30 @@ export default function DestinationSetupScreen({
         <Card style={styles.formCard}>
           <SelectField
             label="Destination city"
-            value={city}
+            value={selectCityValue}
             placeholder="Select a city in Ghana"
-            options={DESTINATION_OPTIONS}
-            onSelect={handleCityChange}
+            options={DESTINATION_OPTIONS_WITH_OTHER}
+            onSelect={handleCitySelect}
           />
+          {customCityMode ? (
+            <View style={styles.customCityWrap}>
+              <Text style={styles.customCityLabel}>Your town or area</Text>
+              <FocusAwareTextInput
+                style={styles.customCityInput}
+                value={city}
+                placeholder="e.g. Elmina, Tarkwa, Hohoe"
+                placeholderTextColor={colors.textTertiary}
+                onChangeText={handleCustomCityChange}
+                accessibilityLabel="Type your town or area"
+              />
+            </View>
+          ) : null}
           {destinationError === 'required' && (
-            <Text style={styles.fieldError}>Choose a destination city to continue</Text>
+            <Text style={styles.fieldError}>
+              {customCityMode
+                ? 'Enter your town or area to continue'
+                : 'Choose a destination city to continue'}
+            </Text>
           )}
           {destinationError === 'gibberish' && (
             <Text style={styles.fieldError}>{validationCopy.placeInvalid}</Text>
@@ -314,6 +366,29 @@ function createStyles({ colors, shadows, overlays }: AppTheme) {
     color: colors.textSecondary,
     marginBottom: spacing.lg,
     lineHeight: lineHeights.body,
+  },
+  customCityWrap: {
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  customCityLabel: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  customCityInput: {
+    minHeight: controlHeights.md,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textPrimary,
+    backgroundColor: colors.surface,
   },
   formCard: {
     marginBottom: spacing.lg,

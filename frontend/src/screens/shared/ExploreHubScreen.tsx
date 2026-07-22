@@ -35,6 +35,8 @@ export interface ExploreHubScreenProps {
   /** Optional host/guide travel entry shown near the top. */
   travelBookingLabel?: string;
   travelBookingHint?: string;
+  /** List section heading under the primary CTAs. */
+  hubSectionTitle?: string;
   tabBarItems: TabBarItem[];
   activeTabId: string;
   showSosDock?: boolean;
@@ -54,6 +56,7 @@ export default function ExploreHubScreen({
   hubItems,
   travelBookingLabel,
   travelBookingHint,
+  hubSectionTitle = 'Guides for living in Ghana',
   tabBarItems,
   activeTabId,
   showSosDock = false,
@@ -96,7 +99,7 @@ export default function ExploreHubScreen({
         ) : null}
 
         <SectionHeader
-          title="Guides for living in Ghana"
+          title={hubSectionTitle}
           style={styles.sectionHeader}
         />
         <Card padding="none" elevation="card" style={styles.groupCard}>

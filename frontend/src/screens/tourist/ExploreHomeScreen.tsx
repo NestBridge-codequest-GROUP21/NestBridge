@@ -26,7 +26,7 @@ import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
 import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 import type { EmptyStateContent } from '../../data/appCopy';
 import { emptyStates } from '../../data/appCopy';
-import type { JourneyProgress, JourneyStep } from '../../types/journeyProgress';
+import type { JourneyProgress } from '../../types/journeyProgress';
 
 export interface ExploreSectionItem {
   id: string;
@@ -79,7 +79,6 @@ export interface ExploreHomeScreenProps {
   onSectionPress?: (sectionId: string) => void;
   onRecommendationItemPress?: (item: RecommendationItem) => void;
   onRecommendationsEmptyPress?: () => void;
-  onJourneyStepPress?: (step: JourneyStep) => void;
   onQuickActionPress?: (actionId: string) => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -123,7 +122,6 @@ export default function ExploreHomeScreen({
   onRetryHome,
   onRecommendationItemPress,
   onRecommendationsEmptyPress,
-  onJourneyStepPress,
   onQuickActionPress,
   onReminderPress,
   onTabPress,
@@ -178,10 +176,7 @@ export default function ExploreHomeScreen({
         />
 
         {journeyProgress ? (
-          <JourneyProgressCard
-            journey={journeyProgress}
-            onStepPress={onJourneyStepPress}
-          />
+          <JourneyProgressCard journey={journeyProgress} />
         ) : null}
 
         {guidesLoadError ? (

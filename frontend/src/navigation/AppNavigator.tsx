@@ -17,6 +17,7 @@ import StudentQuizScreen from '../screens/onboarding/StudentQuizScreen';
 import HostQuizScreen from '../screens/onboarding/HostQuizScreen';
 import TouristQuizScreen from '../screens/onboarding/TouristQuizScreen';
 import GuideQuizScreen from '../screens/onboarding/GuideQuizScreen';
+import { resolvePlaceOtherAnswers } from '../screens/onboarding/quizConstants';
 import StudentHomeDashboard from '../screens/student/StudentHomeDashboard';
 import StudentBookingsScreen from '../screens/student/StudentBookingsScreen';
 import MatchSearchScreen, {
@@ -282,7 +283,6 @@ import type { HomeRecommendations } from '../types/recommendations';
 import {
   EMPTY_JOURNEY_MILESTONES,
   type JourneyMilestones,
-  type JourneyStep,
 } from '../types/journeyProgress';
 import { buildJourneyProgress } from '../utils/buildJourneyProgress';
 import {
@@ -365,30 +365,6 @@ function getInitials(name: string): string {
     .join('')
     .slice(0, 2)
     .toUpperCase();
-}
-
-function handleStudentQuickAction(
-  navigation: NativeStackNavigationProp<AppStackParamList>,
-  actionId: string,
-) {
-  if (actionId === 'checklist') {
-    navigation.navigate('PrepChecklist');
-  }
-  if (actionId === 'events') {
-    navigation.navigate('StudentEvents');
-  }
-  if (actionId === 'cultural-tips') {
-    navigation.navigate('LocalTips');
-  }
-  if (actionId === 'practical-tips') {
-    navigation.navigate('PracticalTips');
-  }
-  if (actionId === 'sponsors') {
-    navigation.navigate('SponsorList');
-  }
-  if (actionId === 'transport') {
-    navigation.navigate('TransportGuide');
-  }
 }
 
 function handleTouristQuickAction(
@@ -712,9 +688,9 @@ function HostListingsStackScreen({
       onAddListingPress={() => {
         Alert.alert(
           'Finish host setup',
-          'Complete your host profile to publish your stay. Listing details are managed from account setup.',
+          'Complete your host profile to publish your stay. Open Profile → Account setup to finish remaining steps.',
         );
-        navigation.navigate('AccountSetup');
+        navigation.navigate('Profile');
       }}
       onToggleOnline={(listingId, isOnline) => {
         setListings((prev) =>
@@ -1300,9 +1276,18 @@ export default function AppNavigator() {
   );
   const studentEventsApi = useStudentEvents(user?.userId);
 
+  // Personalized home matches need a destination from onboarding — never default
+  // every new student to Accra seed hosts with fake “match” framing.
+  const seekerDestinationCity =
+    profileState.seekerSetup.data.city?.trim() || '';
+  const canFetchPersonalizedMatches =
+    !!user &&
+    !!seekerDestinationCity &&
+    (primaryIntent === 'STUDENT' || primaryIntent === 'TOURIST');
+
   const homeApi = useHomeApiData(user?.userId, profileState, {
-    fetchMatches: (primaryIntent === 'STUDENT' || primaryIntent === 'TOURIST') && !!user,
-    fetchGuideMatches: (primaryIntent === 'TOURIST' || primaryIntent === 'STUDENT') && !!user,
+    fetchMatches: canFetchPersonalizedMatches,
+    fetchGuideMatches: canFetchPersonalizedMatches,
     fetchHostIncoming: canAcceptHostBookings && !!user,
     fetchGuideIncoming: canAcceptGuideSessions && !!user,
     fetchBookings: !!user,
@@ -2375,49 +2360,6 @@ export default function AppNavigator() {
       }),
     [profileState, mergedBookings, journeyMilestones, cityLabel, homeRole],
   );
-  const handleJourneyStepPress = useCallback(
-    (
-      navigation: NativeStackNavigationProp<AppStackParamList>,
-      step: JourneyStep,
-    ) => {
-      // Prefer step id so culture vs language can share LocalTips with focus.
-      switch (step.id) {
-        case 'profile':
-          navigation.navigate('AccountSetup');
-          return;
-        case 'accommodation':
-          if (step.completed || step.routeHint === 'StudentBookings') {
-            navigation.navigate('StudentBookings');
-            return;
-          }
-          if (step.routeHint === 'ExploreStays' || homeRole !== 'STUDENT') {
-            navigation.navigate('ExploreStays');
-            return;
-          }
-          navigation.navigate('MatchSearch');
-          return;
-        case 'guide':
-          if (step.completed || step.routeHint === 'StudentBookings') {
-            navigation.navigate('StudentBookings');
-            return;
-          }
-          navigation.navigate('GuideSearch', { mode: 'nearby' });
-          return;
-        case 'emergency':
-          navigation.navigate('SOS');
-          return;
-        case 'culture':
-          navigation.navigate('LocalTips', { focus: 'culture' });
-          return;
-        case 'language':
-          navigation.navigate('LocalTips', { focus: 'language' });
-          return;
-        default:
-          break;
-      }
-    },
-    [homeRole],
-  );
   const hostLive = buildHostHomeStatus(
     hostIncoming,
     presentableError(providerTab.error ?? homeApi.error, providerTab.hostPending, hostPendingDisplay),
@@ -2438,7 +2380,6 @@ export default function AppNavigator() {
       userInitials: resolvedInitials,
       statusIcon: '🏠',
       notificationCount: 0,
-      quickActions: getQuickActionsForRole('STUDENT'),
       activeTabId: 'home',
       tabBarItems,
       featuredMatch:
@@ -2946,7 +2887,6 @@ export default function AppNavigator() {
             onRecommendationsEmptyPress={() =>
               navigation.navigate('GuideSearch', { mode: 'nearby' })
             }
-            onJourneyStepPress={(step) => handleJourneyStepPress(navigation, step)}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'BrowseHome')}
           />
@@ -3222,7 +3162,15 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="Profile">
-        {({ navigation }) => (
+        {({ navigation }) => {
+          const profileTabItems = isStaffShell
+            ? staffTabBarItems
+            : homeRole === 'HOST'
+              ? hostTabBarItems
+              : homeRole === 'GUIDE'
+                ? guideTabBarItems
+                : tabBarItems;
+          return (
           <ProfileScreen
             userName={resolvedName}
             userInitials={resolvedInitials}
@@ -3234,13 +3182,27 @@ export default function AppNavigator() {
             showReturnToOps={isStaffShell}
             showAppPreview={isStaffShell}
             showExitPreview={Boolean(preview)}
-            onBack={() => {
-              if (navigation.canGoBack()) {
-                navigation.goBack();
-                return;
-              }
-              navigateToHome(navigation, homeRouteKey);
-            }}
+            tabBarItems={profileTabItems}
+            activeTabId="profile"
+            {...(isStaffShell ? {} : homeTabSosProps(navigation))}
+            onTabPress={(tabId) =>
+              routeTabPress(
+                navigation,
+                tabId,
+                isStaffShell
+                  ? 'AdminHome'
+                  : homeRole === 'HOST'
+                    ? 'HostHome'
+                    : homeRole === 'GUIDE'
+                      ? 'GuideHome'
+                      : homeRouteKey,
+              )
+            }
+            onBack={
+              navigation.canGoBack()
+                ? () => navigation.goBack()
+                : undefined
+            }
             onAccountSetupPress={() => {
               if (isStaff) return;
               navigation.navigate('AccountSetup');
@@ -3266,7 +3228,8 @@ export default function AppNavigator() {
               })();
             }}
           />
-        )}
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="ExploreHub">
@@ -3279,8 +3242,9 @@ export default function AppNavigator() {
               : isTouristBrowse
                 ? 'Book a trip'
                 : 'Browse stays & guides';
+          // Everyone can travel — hosts/guides included (hotels, hostels, guides).
           const showStayShortcut =
-            homeRole === 'STUDENT' || isTouristBrowse;
+            homeRole === 'STUDENT' || isTouristBrowse || isProvider;
           return (
             <ExploreHubScreen
               title="Explore"
@@ -3290,9 +3254,9 @@ export default function AppNavigator() {
                   : homeRole === 'STUDENT'
                     ? 'Find a host family, guides, and support for life in Ghana'
                     : homeRole === 'HOST'
-                      ? 'Manage listings, help guests get around, and host with confidence'
+                      ? 'Manage your listing, and book stays or guides when you travel'
                       : homeRole === 'GUIDE'
-                        ? 'Shape tours, check attractions, and guide visitors well'
+                        ? 'Shape your tours, and book stays or guides when you travel'
                         : 'Tools for your NestBridge role in Ghana'
               }
               primaryActionLabel={primaryLabel}
@@ -3302,9 +3266,9 @@ export default function AppNavigator() {
                   : isTouristBrowse
                     ? 'Book local guides for tours, orientation, and cultural experiences'
                     : homeRole === 'HOST'
-                      ? 'Browse stays and guides when you travel, or refine how guests find you'
+                      ? 'Search lodging and guides for your own trips'
                       : homeRole === 'GUIDE'
-                        ? 'Discover sites and stays to recommend on your tours'
+                        ? 'Search lodging and peer guides when you travel'
                         : 'Homestays, local guides, hotels, and lodging across Ghana'
               }
               travelBookingLabel={
@@ -3318,6 +3282,13 @@ export default function AppNavigator() {
                 showStayShortcut
                   ? 'Homestays, hotels, and hostels across Ghana'
                   : undefined
+              }
+              hubSectionTitle={
+                isProvider
+                  ? 'Tools for your listing'
+                  : homeRole === 'STUDENT'
+                    ? 'Guides for living in Ghana'
+                    : 'Explore Ghana'
               }
               hubItems={profileCulturalItems}
               tabBarItems={getTabBarForRole(homeRole)}
@@ -3338,11 +3309,8 @@ export default function AppNavigator() {
               onTravelBookingPress={
                 showStayShortcut
                   ? () => {
-                      if (homeRole === 'STUDENT' || isTouristBrowse) {
-                        navigation.navigate('ExploreStays');
-                        return;
-                      }
-                      navigation.navigate('UnifiedSearch');
+                      // Lodging catalogue for every role that can travel.
+                      navigation.navigate('ExploreStays');
                     }
                   : undefined
               }
@@ -3594,7 +3562,9 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentQuizScreen
             onFinish={(answers) => {
-              void completeStep('SEEKER', 'quiz', { quizAnswers: answers });
+              void completeStep('SEEKER', 'quiz', {
+                quizAnswers: resolvePlaceOtherAnswers(answers),
+              });
               navigation.navigate('ProfileSetup', { track: 'SEEKER' });
             }}
           />
@@ -3605,7 +3575,16 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <HostQuizScreen
             onFinish={(answers) => {
-              void completeStep('HOST', 'quiz', { quizAnswers: answers });
+              const resolved = resolvePlaceOtherAnswers(answers);
+              const hostCity =
+                typeof resolved.city === 'string' ? resolved.city.trim() : '';
+              void completeStep('HOST', 'quiz', {
+                quizAnswers: resolved,
+                ...(hostCity ? { city: hostCity } : {}),
+              });
+              if (hostCity) {
+                setCity(hostCity);
+              }
               navigation.navigate('ProfileSetup', { track: 'HOST' });
             }}
           />
@@ -3616,7 +3595,18 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <TouristQuizScreen
             onFinish={(answers) => {
-              void completeStep('SEEKER', 'quiz', { quizAnswers: answers });
+              const resolved = resolvePlaceOtherAnswers(answers);
+              const visitCity =
+                typeof resolved.destination === 'string'
+                  ? resolved.destination.trim()
+                  : '';
+              void completeStep('SEEKER', 'quiz', {
+                quizAnswers: resolved,
+                ...(visitCity ? { city: visitCity } : {}),
+              });
+              if (visitCity) {
+                setCity(visitCity);
+              }
               navigation.navigate('ProfileSetup', { track: 'SEEKER' });
             }}
           />
@@ -3627,7 +3617,20 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <GuideQuizScreen
             onFinish={(answers) => {
-              void completeStep('GUIDE', 'quiz', { quizAnswers: answers });
+              const resolved = resolvePlaceOtherAnswers(answers);
+              const areas = Array.isArray(resolved.operatingAreas)
+                ? resolved.operatingAreas.filter(
+                    (item): item is string => typeof item === 'string',
+                  )
+                : [];
+              const primaryArea = areas[0]?.trim() ?? '';
+              void completeStep('GUIDE', 'quiz', {
+                quizAnswers: resolved,
+                ...(primaryArea ? { city: primaryArea } : {}),
+              });
+              if (primaryArea) {
+                setCity(primaryArea);
+              }
               navigation.navigate('ProfileSetup', { track: 'GUIDE' });
             }}
           />
@@ -3824,10 +3827,6 @@ export default function AppNavigator() {
               handleRecommendationItemPress(navigation, item)
             }
             onRecommendationsEmptyPress={() => navigation.navigate('ExploreStays')}
-            onJourneyStepPress={(step) => handleJourneyStepPress(navigation, step)}
-            onQuickActionPress={(actionId) =>
-              handleStudentQuickAction(navigation, actionId)
-            }
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'StudentHome')}
           />
         )}
@@ -3861,7 +3860,6 @@ export default function AppNavigator() {
             onRecommendationsEmptyPress={() =>
               navigation.navigate('GuideSearch', { mode: 'nearby' })
             }
-            onJourneyStepPress={(step) => handleJourneyStepPress(navigation, step)}
             onQuickActionPress={(actionId) => handleTouristQuickAction(navigation, actionId)}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'ExploreHome')}
           />
@@ -4076,21 +4074,6 @@ export default function AppNavigator() {
               }
             }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
-            onEmptyPrimaryAction={() => {
-              if (primaryIntent === 'TOURIST') {
-                if (bookingFilter === 'active') {
-                  navigation.navigate('ExploreStays');
-                  return;
-                }
-                if (bookingFilter === 'pending') {
-                  navigation.navigate('MatchSearch');
-                  return;
-                }
-                navigation.navigate('GuideSearch', { mode: 'book' });
-                return;
-              }
-              navigation.navigate('MatchSearch');
-            }}
             onBack={
               navigation.canGoBack()
                 ? () => handleBookingsBack(navigation, homeRouteKey)
@@ -4230,7 +4213,14 @@ export default function AppNavigator() {
               onGuidePress={(guideId) =>
                 navigation.navigate('GuideProfile', { guideId })
               }
-              onEmptyPrimaryAction={() => navigation.navigate('SitesDirectory')}
+              onEmptyPrimaryAction={() => {
+                // Label is "Browse stays instead" — never Sites & culture.
+                if (homeRole === 'STUDENT') {
+                  navigation.navigate('MatchSearch');
+                  return;
+                }
+                navigation.navigate('ExploreStays');
+              }}
             />
           );
         }}
@@ -4535,7 +4525,7 @@ export default function AppNavigator() {
               );
             }}
             onBack={() => navigation.goBack()}
-            onEmptyPrimaryAction={() => navigation.navigate('AccountSetup')}
+            onEmptyPrimaryAction={() => navigation.navigate('Profile')}
           />
         )}
       </Stack.Screen>
@@ -4550,7 +4540,7 @@ export default function AppNavigator() {
             statusLabel={studentLive.statusLabel}
             sections={practicalLocalTipSections}
             onBack={() => navigation.goBack()}
-            onEmptyPrimaryAction={() => navigation.navigate('AccountSetup')}
+            onEmptyPrimaryAction={() => navigation.navigate('Profile')}
           />
         )}
       </Stack.Screen>
