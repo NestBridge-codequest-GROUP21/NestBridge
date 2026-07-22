@@ -67,11 +67,11 @@ public class EmailService {
 
                 We received a request to reset your NestBridge password.
 
-                Open this link on your phone to set a new password in the app:
+                Open this link to choose a new password (works in your phone browser — you do not need the app open first):
 
                 %s
 
-                Or open the NestBridge app directly:
+                Optional — open the same reset screen inside the NestBridge app:
 
                 %s
 
@@ -82,8 +82,9 @@ public class EmailService {
         String htmlBody = """
                 <p>Hi %s,</p>
                 <p>We received a request to reset your NestBridge password.</p>
-                <p><a href="%s">Reset password in NestBridge</a></p>
-                <p>Or open the app: %s</p>
+                <p><a href="%s"><strong>Choose a new password</strong></a></p>
+                <p>That page lets you type and save a new password in your browser. You can then sign in on NestBridge.</p>
+                <p>Optional app link: <a href="%s">Open reset in the NestBridge app</a></p>
                 <p>This link expires in 1 hour. If you did not request a reset, you can ignore this email.</p>
                 <p>— The NestBridge team</p>
                 """.formatted(escapeHtml(displayName), escapeHtml(webResetUrl), escapeHtml(appResetUrl));
@@ -108,7 +109,7 @@ public class EmailService {
                     fromAddress,
                     debugExtra);
             throw new EmailDeliveryException(
-                    "Verification email could not be sent. Email delivery is not configured on the server. Please try again later or contact support.");
+                    "Email could not be sent. Email delivery is not configured on the server. Please try again later or contact support.");
         }
 
         StringBuilder content = new StringBuilder();
@@ -156,22 +157,22 @@ public class EmailService {
             throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new EmailDeliveryException("Verification email could not be sent. Please try again.");
+            throw new EmailDeliveryException("Email could not be sent. Please try again.");
         } catch (Exception e) {
             log.error("SendGrid request failed to={} from={}", toEmail, fromAddress, e);
             throw new EmailDeliveryException(
-                    "Verification email could not be sent. Please try again later.", e);
+                    "Email could not be sent. Please try again later.", e);
         }
     }
 
     private static String mapSendGridFailure(int status) {
         if (status == 401 || status == 403) {
-            return "Verification email could not be sent. The mail provider rejected the request (check API key and verified sender).";
+            return "Email could not be sent. The mail provider rejected the request — check SENDGRID_API_KEY and that EMAIL_FROM is a Verified Sender in SendGrid.";
         }
         if (status == 413 || status == 429) {
-            return "Verification email could not be sent right now. Please wait a minute and try again.";
+            return "Email could not be sent right now. Please wait a minute and try again.";
         }
-        return "Verification email could not be sent. Please try again later.";
+        return "Email could not be sent. Please try again later.";
     }
 
     private static String escapeJson(String value) {

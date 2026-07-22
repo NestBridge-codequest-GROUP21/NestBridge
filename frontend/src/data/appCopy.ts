@@ -38,9 +38,19 @@ export const browseGateCopy = {
 };
 
 export const bookingGateCopy = {
-  homestay: 'Complete your travel profile to send a booking request or message hosts.',
-  guide: 'Complete your travel profile to book a guide session or message guides.',
-  messaging: 'Complete your travel profile before messaging hosts and guides.',
+  homestay:
+    'Add and lock in your short bio and about section before booking or messaging hosts. Browsing stays open.',
+  guide:
+    'Add and lock in your short bio and about section before booking or messaging guides. Browsing stays open.',
+  messaging:
+    'Finish your bio and about section before messaging — that is how others know who they are meeting.',
+  identity:
+    'Your short bio and about section are required and locked once saved. Other users rely on them to know who they are going in for.',
+  acceptHost:
+    'Finish your host listing with a locked bio and about before accepting requests.',
+  acceptGuide:
+    'Finish your guide listing with a locked bio and about before accepting sessions.',
+  pay: 'Complete your travel profile (bio + about) before paying for a booking.',
 };
 
 /** Shared shape for polished empty experiences (icon + copy + optional CTA label). */

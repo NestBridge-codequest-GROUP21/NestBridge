@@ -190,7 +190,7 @@ public class RecommendationService {
                         "📸",
                         "Improve visibility",
                         host.getHostId().toString(),
-                        "HostListings"));
+                        "HostListingEditPhotos"));
             }
             if (host.getHouseRules() == null || host.getHouseRules().isBlank()) {
                 tips.add(item(
@@ -201,7 +201,7 @@ public class RecommendationService {
                         "✅",
                         "Profile quality",
                         host.getHostId().toString(),
-                        "HostListings"));
+                        "HostListingEditRules"));
             }
             if (!host.isLocationVerified()) {
                 tips.add(item(
@@ -212,7 +212,7 @@ public class RecommendationService {
                         "📍",
                         "Trust badge",
                         host.getHostId().toString(),
-                        "HostListings"));
+                        "HostListingEdit"));
             }
         }
 

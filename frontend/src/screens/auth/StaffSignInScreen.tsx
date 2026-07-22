@@ -69,14 +69,14 @@ export default function StaffSignInScreen({
         <Text style={styles.kicker}>Staff portal</Text>
         <Text style={styles.title}>Sign in to ops</Text>
         <Text style={styles.subtitle}>
-          For NestBridge staff only. This portal is separate from student, host, guide, and
-          tourist accounts.
+          For NestBridge Group 21 staff only. Sign in with your personal Gmail — staff access is
+          granted automatically for allowlisted team emails.
         </Text>
 
         <FormTextField
           label="Staff email"
           value={email}
-          placeholder="you@nestbridge.app"
+          placeholder="bsbhackman@gmail.com"
           onChangeText={onEmailChange}
           keyboardType="email-address"
           autoCapitalize="none"

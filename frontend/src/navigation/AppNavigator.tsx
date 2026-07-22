@@ -5,7 +5,7 @@ import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import { pickProfileImage } from '../services/imagePicker';
+import { pickProfileImage, pickListingImage } from '../services/imagePicker';
 
 import IntentSelectScreen, {
   intentOptionsFromPrimary,
@@ -52,6 +52,7 @@ import GuideBookingsTabScreen from '../screens/guide/GuideBookingsTabScreen';
 import GuideEarningsTabScreen from '../screens/guide/GuideEarningsTabScreen';
 import BrowseHomeScreen from '../screens/shared/BrowseHomeScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
+import SettingsScreen from '../screens/shared/SettingsScreen';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
 import DevTestingScreen from '../screens/shared/DevTestingScreen';
 import {
@@ -98,10 +99,15 @@ import SitesDirectoryScreen from '../screens/tourist/SitesDirectoryScreen';
 import UniversitiesDirectoryScreen from '../screens/student/UniversitiesDirectoryScreen';
 import WelfareCheckInScreen from '../screens/shared/WelfareCheckInScreen';
 import ReviewPromptScreen from '../screens/shared/ReviewPromptScreen';
+import RatingsScreen from '../screens/shared/RatingsScreen';
+import PaymentMethodScreen, {
+  type PaymentMethodId,
+} from '../screens/shared/PaymentMethodScreen';
 import { useLodgingPartners, lodgingListingFromId } from '../hooks/useLodgingPartners';
 import OfflineMapScreen from '../screens/tourist/OfflineMapScreen';
 import HostCalendarScreen from '../screens/host/HostCalendarScreen';
 import HostListingsScreen from '../screens/host/HostListingsScreen';
+import HostListingEditScreen from '../screens/host/HostListingEditScreen';
 import TourTypesSetupScreen from '../screens/guide/TourTypesSetupScreen';
 import GuideAvailabilityScreen from '../screens/guide/GuideAvailabilityScreen';
 import SOSScreen from '../screens/shared/SOSScreen';
@@ -125,7 +131,10 @@ import {
   getProgressForTrack,
   getProgressPercent,
   getStepsForTrack,
+  isIdentityLocked,
   isSeekerComplete,
+  MIN_ABOUT_LENGTH,
+  MIN_BIO_LENGTH,
 } from '../utils/accountProfile';
 import type { HomeRoute } from '../utils/accountProfile';
 import {
@@ -187,7 +196,13 @@ import {
   updateMyGuideProfile,
   getMyGuideCalendar,
   getApiErrorMessage,
+  getNotificationsPreference,
+  setNotificationsPreference,
 } from '../services/api';
+import {
+  registerPushTokenIfAvailable,
+  unregisterPushTokenLocally,
+} from '../services/pushRegistration';
 import {
   hostProfileToListing,
   mergeTourTypesFromProfile,
@@ -451,6 +466,13 @@ function handleRecommendationItemPress(
     case 'HostListings':
       navigation.navigate('HostListings');
       return;
+    case 'HostListingEdit':
+    case 'HostListingEditPhotos':
+      navigation.navigate('HostListingEdit', { focus: 'photos' });
+      return;
+    case 'HostListingEditRules':
+      navigation.navigate('HostListingEdit', { focus: 'rules' });
+      return;
     case 'HostCalendar':
       navigation.navigate('HostCalendar');
       return;
@@ -660,6 +682,102 @@ function ReviewPromptStackScreen({ navigation, route }: ReviewPromptStackProps) 
   );
 }
 
+type PaymentCheckoutStackProps = NativeStackScreenProps<AppStackParamList, 'PaymentCheckout'> & {
+  bookings: BookingListItem[];
+  payLoading: boolean;
+  payStatusLabel: string;
+  setPayLoading: (value: boolean) => void;
+  setPayStatusLabel: (value: string) => void;
+  onPaid: (booking: BookingListItem) => void;
+};
+
+function PaymentCheckoutStackScreen({
+  navigation,
+  route,
+  bookings,
+  payLoading,
+  payStatusLabel,
+  setPayLoading,
+  setPayStatusLabel,
+  onPaid,
+}: PaymentCheckoutStackProps) {
+  const booking = bookings.find((item) => item.id === route.params.bookingId) ?? null;
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodId | null>('mobile_money');
+  const amount =
+    booking?.sessionPrice?.total ?? booking?.priceBreakdown.total ?? 0;
+  const currency =
+    booking?.sessionPrice?.currency ?? booking?.priceBreakdown.currency ?? 'GHS';
+
+  return (
+    <PaymentMethodScreen
+      hostName={booking?.hostName ?? 'your booking'}
+      amountLabel={amount.toLocaleString('en-GH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}
+      currencyLabel={currency}
+      selectedMethodId={selectedMethod}
+      paying={payLoading}
+      statusLabel={payLoading ? payStatusLabel : undefined}
+      onSelectMethod={setSelectedMethod}
+      onPayPress={() => {
+        if (!booking || !selectedMethod || payLoading) {
+          return;
+        }
+        if (!isApiBookingId(booking.id)) {
+          Alert.alert(
+            'Live Paystack required',
+            'This preview row cannot open Mobile Money or bank checkout. Use an accepted live booking from the server.',
+          );
+          return;
+        }
+        setPayStatusLabel('Preparing payment...');
+        setPayLoading(true);
+        void completeBookingPayment(booking.id, {
+          channels: [selectedMethod],
+          onProgress: (phase, detail) => {
+            if (detail) {
+              setPayStatusLabel(detail);
+              return;
+            }
+            if (phase === 'preparing') setPayStatusLabel('Preparing payment...');
+            else if (phase === 'opening_checkout') setPayStatusLabel('Opening Paystack...');
+            else if (phase === 'awaiting_confirmation') {
+              setPayStatusLabel('Confirming payment...');
+            } else if (phase === 'verifying') setPayStatusLabel('Verifying payment...');
+            else if (phase === 'success') setPayStatusLabel('Payment Successful');
+          },
+        })
+          .then((payment) => {
+            onPaid(booking);
+            const message = payment.mockPayment
+              ? 'Paystack is not enabled on the server, so this booking was confirmed in demo mode.'
+              : 'Your booking is confirmed. Payment was processed securely via Paystack.';
+            Alert.alert('Payment Successful', message);
+            navigation.navigate('BookingConfirmed', { bookingId: booking.id });
+          })
+          .catch((error) => {
+            if (error instanceof PaymentCancelledError) {
+              Alert.alert('Payment cancelled', error.message);
+              return;
+            }
+            Alert.alert(
+              'Payment',
+              error instanceof Error
+                ? error.message
+                : 'Payment could not be completed. You can try again.',
+            );
+          })
+          .finally(() => {
+            setPayLoading(false);
+            setPayStatusLabel('Preparing payment...');
+          });
+      }}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
 function HostListingsStackScreen({
   greeting,
   userName,
@@ -686,11 +804,7 @@ function HostListingsStackScreen({
       listings={displayListings}
       emptyState={emptyStates.hostListings}
       onAddListingPress={() => {
-        Alert.alert(
-          'Finish host setup',
-          'Complete your host profile to publish your stay. Open Profile → Account setup to finish remaining steps.',
-        );
-        navigation.navigate('Profile');
+        navigation.navigate('HostListingEdit', { focus: 'photos' });
       }}
       onToggleOnline={(listingId, isOnline) => {
         setListings((prev) =>
@@ -702,6 +816,116 @@ function HostListingsStackScreen({
           .then((profile) => setListings([hostProfileToListing(profile)]))
           .catch((error) => {
             Alert.alert('Could not update listing', getApiErrorMessage(error));
+          });
+      }}
+      onEditPress={() => navigation.navigate('HostListingEdit', { focus: 'photos' })}
+      onDeletePress={() => {
+        Alert.alert(
+          'Hide listing',
+          'Turn your listing offline from the Online switch, or edit photos and house rules from Edit.',
+        );
+      }}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+function HostListingEditStackScreen({
+  greeting,
+  userName,
+  userInitials,
+  navigation,
+  focus = 'photos',
+}: ProviderScreenHeaderProps & { focus?: 'photos' | 'rules' }) {
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [houseRules, setHouseRules] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [addingPhoto, setAddingPhoto] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    void getMyHostProfile()
+      .then((profile) => {
+        if (cancelled) {
+          return;
+        }
+        setPhotos(Array.isArray(profile.photos) ? profile.photos.filter(Boolean) : []);
+        setHouseRules(profile.houseRules ?? '');
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+        setLoading(false);
+        Alert.alert('Could not load listing', getApiErrorMessage(error));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <HostListingEditScreen
+      greeting={greeting}
+      userName={userName}
+      userInitials={userInitials}
+      statusIcon="🏠"
+      statusLabel="Listing"
+      focus={focus}
+      photos={photos}
+      houseRules={houseRules}
+      loading={loading}
+      saving={saving}
+      addingPhoto={addingPhoto}
+      onHouseRulesChange={setHouseRules}
+      onAddPhotoPress={() => {
+        if (addingPhoto || saving) {
+          return;
+        }
+        setAddingPhoto(true);
+        void pickListingImage()
+          .then(async (picked) => {
+            if (!picked?.uri) {
+              return;
+            }
+            const uploaded = await uploadProfilePhotoIfConfigured(picked.uri);
+            const nextUri = uploaded ?? picked.uri;
+            if (!uploaded) {
+              Alert.alert(
+                'Saved on this device',
+                'Cloud photo storage is not configured yet, so this photo stays on your phone for now. House rules still sync to your listing.',
+              );
+            }
+            setPhotos((prev) => (prev.includes(nextUri) ? prev : [...prev, nextUri]));
+          })
+          .catch((error) => {
+            Alert.alert('Could not add photo', getApiErrorMessage(error));
+          })
+          .finally(() => setAddingPhoto(false));
+      }}
+      onRemovePhotoPress={(photoUri) => {
+        setPhotos((prev) => prev.filter((uri) => uri !== photoUri));
+      }}
+      onSavePress={() => {
+        if (saving || loading) {
+          return;
+        }
+        setSaving(true);
+        void updateMyHostProfile({
+          photos,
+          houseRules: houseRules.trim(),
+        })
+          .then(() => {
+            setSaving(false);
+            Alert.alert('Listing updated', 'Your photos and house rules are saved.');
+            navigation.goBack();
+          })
+          .catch((error) => {
+            setSaving(false);
+            Alert.alert('Could not save listing', getApiErrorMessage(error));
           });
       }}
       onBack={() => navigation.goBack()}
@@ -740,7 +964,9 @@ function HostCalendarStackScreen({
         setLoadError(null);
       })
       .catch((error) => {
-        setLoadedFromApi(false);
+        // Still allow blocking days — save upserts the host profile.
+        setDays(buildEmptyHostMonthDays(calendarMonth.year, calendarMonth.month));
+        setLoadedFromApi(true);
         setLoadError(getApiErrorMessage(error));
       });
   }, [calendarMonth.month, calendarMonth.year]);
@@ -759,9 +985,7 @@ function HostCalendarStackScreen({
   }, [fallbackActiveBooking, reloadCalendar, user?.userId]);
 
   const canEdit = loadedFromApi && !saving;
-  const displayDays = loadedFromApi
-    ? days
-    : withDemoFallback(days, hostCalendarDaysMock);
+  const displayDays = days;
   const displayBooking = withDemoFallbackValue(activeBooking, hostActiveBookingMock);
 
   const persistHostCalendar = (nextDays: typeof days) => {
@@ -962,7 +1186,8 @@ function GuideAvailabilityStackScreen({
         setLoadError(null);
       })
       .catch((error) => {
-        setLoadedFromApi(false);
+        setDays(buildEmptyGuideMonthDays(calendarMonth.year, calendarMonth.month));
+        setLoadedFromApi(true);
         setLoadError(getApiErrorMessage(error));
       });
   }, [calendarMonth.month, calendarMonth.year]);
@@ -972,9 +1197,7 @@ function GuideAvailabilityStackScreen({
   }, [reloadCalendar, user?.userId]);
 
   const canEdit = loadedFromApi && !saving;
-  const displayDays = loadedFromApi
-    ? days
-    : withDemoFallback(days, guideCalendarDaysMock);
+  const displayDays = days;
 
   const persistGuideSchedule = (nextDays: typeof days) => {
     if (!loadedFromApi) {
@@ -1050,6 +1273,7 @@ function getProfileFields(
     departureDate: data.departureDate ?? '',
     displayName: data.displayName ?? '',
     bio: data.bio ?? '',
+    about: data.about ?? '',
   };
 }
 
@@ -1107,6 +1331,7 @@ function syncFieldsFromProfileState(
     setDepartureDate: (v: string) => void;
     setDisplayName: (v: string) => void;
     setBio: (v: string) => void;
+    setAbout: (v: string) => void;
   },
 ) {
   const data = state.seekerSetup.data;
@@ -1116,6 +1341,7 @@ function syncFieldsFromProfileState(
   setters.setDepartureDate(data.departureDate ?? '');
   setters.setDisplayName(data.displayName ?? fallbackName);
   setters.setBio(data.bio ?? '');
+  setters.setAbout(data.about ?? '');
 }
 
 const DEFAULT_SESSION_DATE = '2026-09-05';
@@ -1187,6 +1413,7 @@ export default function AppNavigator() {
   const [departureDate, setDepartureDate] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
+  const [about, setAbout] = useState('');
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const handleAddProfilePhoto = useCallback(async () => {
     const picked = await pickProfileImage();
@@ -1197,16 +1424,40 @@ export default function AppNavigator() {
 
   const saveProfileSetupStep = useCallback(
     async (track: SetupTrack) => {
+      const progress = getProgressForTrack(profileState, track);
+      const locked = Boolean(progress.data.identityLocked) &&
+        Boolean(progress.data.bio?.trim()) &&
+        Boolean(progress.data.about?.trim());
+
+      if (locked) {
+        // Identity already locked — allow photo/name sync only if somehow unlocked path.
+        await completeStep(track, 'profile', {
+          displayName: progress.data.displayName,
+          bio: progress.data.bio,
+          about: progress.data.about,
+          identityLocked: true,
+        });
+        return;
+      }
+
       const profileName = displayName.trim() || user?.displayName?.trim() || '';
+      const nextBio = bio.trim();
+      const nextAbout = about.trim();
+      if (profileName.length < 2 || nextBio.length < MIN_BIO_LENGTH || nextAbout.length < MIN_ABOUT_LENGTH) {
+        return;
+      }
+
       let profilePhotoUrl: string | undefined;
       try {
         profilePhotoUrl = await uploadProfilePhotoIfConfigured(profilePhotoUri);
       } catch {
         profilePhotoUrl = undefined;
       }
-      const stepData: Record<string, string> = {
+      const stepData: Record<string, string | boolean> = {
         displayName: profileName,
-        bio,
+        bio: nextBio,
+        about: nextAbout,
+        identityLocked: true,
       };
       if (profilePhotoUrl) {
         stepData.profilePhotoUrl = profilePhotoUrl;
@@ -1216,7 +1467,7 @@ export default function AppNavigator() {
         setDisplayName(profileName);
       }
     },
-    [bio, completeStep, displayName, profilePhotoUri, user?.displayName],
+    [about, bio, completeStep, displayName, profilePhotoUri, profileState, user?.displayName],
   );
 
   const [pendingIntent, setPendingIntent] = useState<PrimaryIntent | null>(null);
@@ -1981,6 +2232,11 @@ export default function AppNavigator() {
     [primaryIntent],
   );
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    user?.notificationsEnabled !== false,
+  );
+  const [notificationsSaving, setNotificationsSaving] = useState(false);
+  const [notificationsPrefError, setNotificationsPrefError] = useState('');
   const [notificationsList, setNotificationsList] = useState<
     ReturnType<typeof notificationsMockForIntent>
   >([]);
@@ -1988,6 +2244,11 @@ export default function AppNavigator() {
 
   const refreshNotificationState = useCallback(async () => {
     if (!user) {
+      return;
+    }
+    if (notificationsEnabled === false) {
+      setUnreadNotifications(0);
+      setNotificationsList([]);
       return;
     }
     const allowDemo = shouldUseDemoFallbackForAccount(user.email);
@@ -2013,9 +2274,31 @@ export default function AppNavigator() {
         setNotificationsList([]);
       }
     }
-  }, [user, primaryIntent]);
+  }, [user, primaryIntent, notificationsEnabled]);
 
   useEffect(() => {
+    setNotificationsEnabled(user?.notificationsEnabled !== false);
+  }, [user?.userId, user?.notificationsEnabled]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    void getNotificationsPreference()
+      .then((enabled) => {
+        setNotificationsEnabled(enabled);
+      })
+      .catch(() => {
+        // Keep login payload / default when preference endpoint is unavailable.
+      });
+  }, [user?.userId]);
+
+  useEffect(() => {
+    if (notificationsEnabled === false) {
+      setUnreadNotifications(0);
+      setNotificationsList([]);
+      return;
+    }
     if (shouldUseDemoFallbackForAccount(user?.email)) {
       setNotificationsList(roleNotificationsMock);
       setUnreadNotifications(getUnreadNotificationCount(primaryIntent));
@@ -2023,7 +2306,7 @@ export default function AppNavigator() {
       setNotificationsList([]);
       setUnreadNotifications(0);
     }
-  }, [primaryIntent, roleNotificationsMock, user?.email]);
+  }, [primaryIntent, roleNotificationsMock, user?.email, notificationsEnabled]);
 
   useEffect(() => {
     if (!user) {
@@ -2041,6 +2324,37 @@ export default function AppNavigator() {
     },
     [refreshNotificationState],
   );
+
+  const visibleUnreadNotifications =
+    notificationsEnabled === false ? 0 : unreadNotifications;
+
+  const handleNotificationsPreferenceChange = useCallback(
+    async (enabled: boolean) => {
+      setNotificationsPrefError('');
+      setNotificationsSaving(true);
+      const previous = notificationsEnabled;
+      setNotificationsEnabled(enabled);
+      try {
+        const saved = await setNotificationsPreference(enabled);
+        setNotificationsEnabled(saved);
+        if (!saved) {
+          setUnreadNotifications(0);
+          setNotificationsList([]);
+          await unregisterPushTokenLocally();
+        } else {
+          void registerPushTokenIfAvailable();
+          void refreshNotificationState();
+        }
+      } catch (error) {
+        setNotificationsEnabled(previous);
+        setNotificationsPrefError(getApiErrorMessage(error));
+      } finally {
+        setNotificationsSaving(false);
+      }
+    },
+    [notificationsEnabled, refreshNotificationState],
+  );
+
   const incomingBadgeCount =
     (canAcceptGuideSessions && guideIncoming.length > 0
       ? guideIncoming.length
@@ -2190,6 +2504,7 @@ export default function AppNavigator() {
         setDepartureDate,
         setDisplayName,
         setBio,
+        setAbout,
       });
       if (options.resumeTrack) {
         navigateContinueSetup(
@@ -2239,6 +2554,7 @@ export default function AppNavigator() {
     setDepartureDate(progress.data.departureDate ?? '');
     setDisplayName(progress.data.displayName ?? user?.displayName ?? '');
     setBio(progress.data.bio ?? '');
+    setAbout(progress.data.about ?? '');
   };
 
   const setupTracks = useMemo(() => {
@@ -2743,12 +3059,11 @@ export default function AppNavigator() {
     async (bookingId: string): Promise<BookingListItem | null> => {
       const booking = mergedBookings.find((item) => item.id === bookingId) ?? null;
 
-      // Mock/demo rows (e.g. booking-1) are not UUIDs — confirm locally only.
+      // Mock/demo rows (e.g. booking-1) are not UUIDs — cannot open live Paystack.
       if (booking && !isApiBookingId(bookingId)) {
-        setPayStatusLabel('Confirming payment...');
-        const confirmed = confirmDemoBooking(booking);
-        upsertLocalBooking(confirmed);
-        return confirmed;
+        throw new Error(
+          'This is a preview booking. Pay a live accepted booking to open Mobile Money, card, or bank checkout on Paystack.',
+        );
       }
 
       try {
@@ -2866,7 +3181,7 @@ export default function AppNavigator() {
             {...browseHomeProps}
             guidesEmptyState={emptyStates.discoveryGuides(cityLabel)}
             {...homeTabSosProps(navigation)}
-            notificationCount={unreadNotifications}
+            notificationCount={visibleUnreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
             onFeaturedGuidePress={() => {
               if (!displayTopGuideId) return;
@@ -3208,6 +3523,8 @@ export default function AppNavigator() {
               navigation.navigate('AccountSetup');
             }}
             onTravelBookingPress={() => navigation.navigate('UnifiedSearch')}
+            onSettingsPress={() => navigation.navigate('Settings')}
+            onRatingsPress={() => navigation.navigate('Ratings')}
             onStaffToolsPress={() => navigation.navigate('StaffUserSearch')}
             onReturnToOpsPress={() => navigateToHome(navigation, 'AdminHome')}
             onAppPreviewPress={() => navigation.navigate('AdminPreview')}
@@ -3230,6 +3547,20 @@ export default function AppNavigator() {
           />
           );
         }}
+      </Stack.Screen>
+
+      <Stack.Screen name="Settings">
+        {({ navigation }) => (
+          <SettingsScreen
+            notificationsEnabled={notificationsEnabled}
+            notificationsSaving={notificationsSaving}
+            notificationsError={notificationsPrefError || undefined}
+            onNotificationsChange={(enabled) => {
+              void handleNotificationsPreferenceChange(enabled);
+            }}
+            onBack={() => navigation.goBack()}
+          />
+        )}
       </Stack.Screen>
 
       <Stack.Screen name="ExploreHub">
@@ -3640,6 +3971,8 @@ export default function AppNavigator() {
       <Stack.Screen name="ProfileSetup">
         {({ navigation, route }) => {
           const track = route.params.track;
+          const progress = getProgressForTrack(profileState, track);
+          const locked = isIdentityLocked(progress);
           return (
             <ProfileSetupScreen
               currentStep={3}
@@ -3647,22 +3980,15 @@ export default function AppNavigator() {
               {...profileSetupMock}
               displayName={displayName}
               bio={bio}
+              about={about}
               initials={resolvedInitials}
               photoUri={profilePhotoUri}
+              identityLocked={locked}
               onAddPhoto={handleAddProfilePhoto}
               onDisplayNameChange={setDisplayName}
               onBioChange={setBio}
+              onAboutChange={setAbout}
               onContinue={() => {
-                void (async () => {
-                  await saveProfileSetupStep(track);
-                  if (track === 'HOST' || track === 'GUIDE') {
-                    navigation.navigate('KYCPrompt', { track });
-                    return;
-                  }
-                  navigation.navigate('OnboardingReady', { track });
-                })();
-              }}
-              onSkip={() => {
                 void (async () => {
                   await saveProfileSetupStep(track);
                   if (track === 'HOST' || track === 'GUIDE') {
@@ -3806,7 +4132,7 @@ export default function AppNavigator() {
           <StudentHomeDashboard
             {...homeProps}
             hostsEmptyState={emptyStates.discoveryHosts(cityLabel)}
-            notificationCount={unreadNotifications}
+            notificationCount={visibleUnreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
@@ -3837,7 +4163,7 @@ export default function AppNavigator() {
           <ExploreHomeScreen
             {...exploreHomeProps}
             guidesEmptyState={emptyStates.discoveryGuides(cityLabel)}
-            notificationCount={unreadNotifications}
+            notificationCount={visibleUnreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
@@ -3901,7 +4227,7 @@ export default function AppNavigator() {
               reminder={hostLive.reminder}
               tabBarItems={hostTabBarItems}
               activeTabId="home"
-              notificationCount={unreadNotifications}
+              notificationCount={visibleUnreadNotifications}
               onNotificationPress={() => openNotifications(navigation)}
               {...homeTabSosProps(navigation)}
               onFeaturedPress={() => {
@@ -3979,7 +4305,7 @@ export default function AppNavigator() {
               reminder={guideLive.reminder}
               tabBarItems={guideTabBarItems}
               activeTabId="home"
-              notificationCount={unreadNotifications}
+              notificationCount={visibleUnreadNotifications}
               onNotificationPress={() => openNotifications(navigation)}
               {...homeTabSosProps(navigation)}
               onFeaturedPress={() => {
@@ -4010,6 +4336,7 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentBookingsScreen
             {...bookingsTabProps}
+            {...homeTabSosProps(navigation)}
             onFilterChange={setBookingFilter}
             onBookingPress={(bookingId) => {
               const booking = bookings.find((entry) => entry.id === bookingId);
@@ -4039,39 +4366,15 @@ export default function AppNavigator() {
               navigation.navigate('HostProfile', { hostId: booking.hostId });
             }}
             payBlocked={!canBookHomestay && !canBookGuideSession}
-            payBlockedMessage="Complete your travel profile to pay for bookings."
+            payBlockedMessage={bookingGateCopy.pay}
             onContinueSetupPay={() => continueSeekerSetup(navigation)}
             payLoading={payLoading}
             payStatusLabel={payStatusLabel}
-            onPayPress={async (bookingId) => {
+            onPayPress={(bookingId) => {
               if ((!canBookHomestay && !canBookGuideSession) || payLoading) {
                 return;
               }
-              setPayStatusLabel('Preparing payment...');
-              setPayLoading(true);
-              try {
-                const confirmed = await confirmBookingWithDemoFallback(bookingId);
-                if (!confirmed) {
-                  Alert.alert('Payment failed', 'We could not find that booking.');
-                  return;
-                }
-                Alert.alert('Payment Successful', 'Your booking is confirmed.');
-                navigation.navigate('BookingConfirmed', { bookingId });
-              } catch (error) {
-                if (error instanceof PaymentCancelledError) {
-                  Alert.alert('Payment cancelled', error.message);
-                  return;
-                }
-                Alert.alert(
-                  'Payment',
-                  error instanceof Error
-                    ? error.message
-                    : 'Payment could not be completed. You can try again.',
-                );
-              } finally {
-                setPayLoading(false);
-                setPayStatusLabel('Preparing payment...');
-              }
+              navigation.navigate('PaymentCheckout', { bookingId });
             }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
             onBack={
@@ -4081,6 +4384,23 @@ export default function AppNavigator() {
             }
             onHostReviewPress={() => navigation.navigate('IncomingRequests')}
             onGuideReviewPress={() => navigation.navigate('IncomingSessionRequests')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="PaymentCheckout">
+        {(props) => (
+          <PaymentCheckoutStackScreen
+            {...props}
+            bookings={mergedBookings}
+            payLoading={payLoading}
+            payStatusLabel={payStatusLabel}
+            setPayLoading={setPayLoading}
+            setPayStatusLabel={setPayStatusLabel}
+            onPaid={(booking) => {
+              homeApi.refresh();
+              upsertLocalBooking(confirmDemoBooking({ ...booking, status: 'CONFIRMED' }));
+            }}
           />
         )}
       </Stack.Screen>
@@ -4364,6 +4684,42 @@ export default function AppNavigator() {
 
       <Stack.Screen name="ReviewPrompt">
         {(props) => <ReviewPromptStackScreen {...props} />}
+      </Stack.Screen>
+
+      <Stack.Screen name="Ratings">
+        {({ navigation }) => {
+          const pendingReviews = bookings.filter((booking) => {
+            if (
+              booking.status !== 'CONFIRMED' &&
+              booking.status !== 'CHECKED_IN'
+            ) {
+              return false;
+            }
+            const endIso = booking.checkOut || booking.session?.sessionDate;
+            if (!endIso) {
+              return true;
+            }
+            const end = new Date(endIso);
+            if (Number.isNaN(end.getTime())) {
+              return true;
+            }
+            return end.getTime() <= Date.now();
+          });
+          return (
+            <RatingsScreen
+              userName={resolvedName}
+              userInitials={resolvedInitials}
+              pendingReviews={pendingReviews}
+              onRatePress={(booking) =>
+                navigation.navigate('ReviewPrompt', {
+                  bookingId: booking.id,
+                  hostName: booking.hostName,
+                })
+              }
+              onBack={() => navigation.goBack()}
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="SOS">
@@ -4666,6 +5022,18 @@ export default function AppNavigator() {
         )}
       </Stack.Screen>
 
+      <Stack.Screen name="HostListingEdit">
+        {({ navigation, route }) => (
+          <HostListingEditStackScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            navigation={navigation}
+            focus={route.params?.focus ?? 'photos'}
+          />
+        )}
+      </Stack.Screen>
+
       <Stack.Screen name="TourTypesSetup">
         {({ navigation }) => (
           <TourTypesStackScreen
@@ -4741,7 +5109,7 @@ export default function AppNavigator() {
             <MatchRequestReviewScreen
               request={request}
               acceptBlocked={!canAcceptHostBookings}
-              acceptBlockedMessage="Complete your host listing to accept homestay requests."
+              acceptBlockedMessage={bookingGateCopy.acceptHost}
               onContinueSetup={() => continueHostSetup(navigation)}
               onBack={() => navigation.goBack()}
               onAccept={() => {
@@ -4773,7 +5141,7 @@ export default function AppNavigator() {
             <SessionReviewScreen
               request={request}
               acceptBlocked={!canAcceptGuideSessions}
-              acceptBlockedMessage="Complete your guide listing to accept session requests."
+              acceptBlockedMessage={bookingGateCopy.acceptGuide}
               onContinueSetup={() => continueGuideSetup(navigation)}
               onBack={() => navigation.goBack()}
               onAccept={() => {

@@ -21,6 +21,7 @@ export type AppStackParamList = {
   AdminModeration: undefined;
   AdminPreview: undefined;
   Profile: undefined;
+  Settings: undefined;
   ExploreHub: undefined;
   DevTesting: undefined;
   StaffUserSearch: undefined;
@@ -74,6 +75,7 @@ export type AppStackParamList = {
   OfflineMap: undefined;
   HostCalendar: undefined;
   HostListings: undefined;
+  HostListingEdit: { focus?: 'photos' | 'rules' } | undefined;
   TourTypesSetup: undefined;
   GuideAvailability: undefined;
   SitesDirectory: undefined;
@@ -87,6 +89,8 @@ export type AppStackParamList = {
   SponsorApplication: { sponsorId: string };
   WelfareCheckIn: { bookingId: string };
   ReviewPrompt: { bookingId: string; hostName: string };
+  Ratings: undefined;
+  PaymentCheckout: { bookingId: string };
   Notifications: undefined;
 };
 

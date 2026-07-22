@@ -2,7 +2,7 @@
   "expo": {
     "name": "NestBridge",
     "slug": "nestbridge",
-    "owner": "tassyy",
+    "owner": "behackie03",
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -55,7 +55,7 @@
       "firebaseProjectId": "",
       "enableDemoFallback": true,
       "eas": {
-        "projectId": "05eaad69-0d05-4eb9-b956-028c11e08f92"
+        "projectId": "6da19fa0-dbf6-42e2-b6ac-32b29cb37aa9"
       }
     }
   }

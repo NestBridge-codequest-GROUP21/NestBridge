@@ -304,7 +304,7 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
             subtitle: 'Homes with photos get more booking requests',
             icon: '📸',
             reason: 'Improve visibility',
-            routeHint: 'HostListings',
+            routeHint: 'HostListingEditPhotos',
             actionLabel: 'Edit listing',
           },
           {
@@ -314,7 +314,7 @@ function providerTips(role: 'HOST' | 'GUIDE', city: string): HomeRecommendations
             subtitle: 'Clear rules help the right guests choose you',
             icon: '✅',
             reason: 'Profile quality',
-            routeHint: 'HostListings',
+            routeHint: 'HostListingEditRules',
             actionLabel: 'Update',
           },
           {

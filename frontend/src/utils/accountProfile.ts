@@ -92,16 +92,30 @@ export function isProfileComplete(progress: ProfileProgress): boolean {
   return progress.status === 'COMPLETE';
 }
 
+export const MIN_BIO_LENGTH = 12;
+export const MIN_ABOUT_LENGTH = 40;
+
+/** Bio + about must both be present — that is the identity others book against. */
+export function hasIdentityProfile(progress: ProfileProgress): boolean {
+  const bio = progress.data.bio?.trim() ?? '';
+  const about = progress.data.about?.trim() ?? '';
+  return bio.length >= MIN_BIO_LENGTH && about.length >= MIN_ABOUT_LENGTH;
+}
+
+export function isIdentityLocked(progress: ProfileProgress): boolean {
+  return Boolean(progress.data.identityLocked) && hasIdentityProfile(progress);
+}
+
 export function isSeekerComplete(state: AccountProfileState): boolean {
-  return isProfileComplete(state.seekerSetup);
+  return isProfileComplete(state.seekerSetup) && hasIdentityProfile(state.seekerSetup);
 }
 
 export function isHostComplete(state: AccountProfileState): boolean {
-  return isProfileComplete(state.hostProvider);
+  return isProfileComplete(state.hostProvider) && hasIdentityProfile(state.hostProvider);
 }
 
 export function isGuideComplete(state: AccountProfileState): boolean {
-  return isProfileComplete(state.guideProvider);
+  return isProfileComplete(state.guideProvider) && hasIdentityProfile(state.guideProvider);
 }
 
 export function canBookHomestay(state: AccountProfileState): boolean {
@@ -118,6 +132,14 @@ export function canAcceptHostBookings(state: AccountProfileState): boolean {
 
 export function canAcceptGuideSessions(state: AccountProfileState): boolean {
   return isGuideComplete(state) && canEnableGuideProvider(state);
+}
+
+/** Track may be marked COMPLETE in storage but still missing locked identity. */
+export function needsIdentityProfile(
+  state: AccountProfileState,
+  track: SetupTrack = 'SEEKER',
+): boolean {
+  return !hasIdentityProfile(getProgressForTrack(state, track));
 }
 
 export function isActiveExchangeStudent(state: AccountProfileState): boolean {

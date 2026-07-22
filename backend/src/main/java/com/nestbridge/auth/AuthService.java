@@ -194,6 +194,7 @@ public class AuthService {
                 .displayName(user.getFullName())
                 .emailVerified(user.isEmailVerified())
                 .staff(user.isStaff())
+                .notificationsEnabled(user.isNotificationsEnabled())
                 .build();
     }
 }

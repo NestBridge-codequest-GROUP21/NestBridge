@@ -31,6 +31,7 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final AdminEmailAllowlist adminEmailAllowlist;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.public-url:http://localhost:8080}")
@@ -40,12 +41,18 @@ public class PasswordResetService {
     private String mobileScheme;
 
     /**
-     * Always completes without revealing whether the email exists.
+     * Always completes without revealing whether the email exists — unless mail
+     * delivery is broken. Silent SendGrid failures previously made the app claim
+     * "we sent a link" when nothing was delivered.
      */
     @Transactional
     public void requestPasswordReset(String email) {
         if (email == null || email.isBlank()) {
             return;
+        }
+        if (!emailService.isConfigured()) {
+            throw new EmailDeliveryException(
+                    "Password reset email cannot be sent. Email delivery is not configured on the server (missing SENDGRID_API_KEY). Ask your NestBridge admin to fix SendGrid on Railway.");
         }
         String normalized = email.trim().toLowerCase();
         userRepository.findByEmailIgnoreCase(normalized).ifPresent(this::sendResetEmail);
@@ -81,6 +88,15 @@ public class PasswordResetService {
         User user = userRepository.findById(token.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        // Opening the emailed link proves inbox ownership.
+        if (!user.isEmailVerified()) {
+            user.setEmailVerified(true);
+            user.setEmailVerifiedAt(OffsetDateTime.now());
+        }
+        if (!user.isStaff() && adminEmailAllowlist.contains(user.getEmail())) {
+            user.setStaff(true);
+            log.info("Granted staff access to {} via allowlist on password reset", user.getEmail());
+        }
         userRepository.save(user);
 
         token.setUsedAt(OffsetDateTime.now());
@@ -103,12 +119,9 @@ public class PasswordResetService {
         String base = publicUrl.replaceAll("/$", "");
         String webUrl = base + "/api/auth/reset-password?token=" + rawToken;
         String appUrl = mobileScheme + "://reset-password?token=" + rawToken;
-        try {
-            emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), webUrl, appUrl);
-        } catch (EmailDeliveryException ex) {
-            // Keep forgot-password response enumeration-safe; ops see logs.
-            log.error("Password reset email failed for userId={}", user.getUserId(), ex);
-        }
+        // Propagate delivery failures — GlobalExceptionHandler returns 503 so the app
+        // does not pretend a reset email was sent.
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getFullName(), webUrl, appUrl);
     }
 
     private String generateRawToken() {
