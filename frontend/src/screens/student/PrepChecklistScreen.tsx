@@ -57,6 +57,7 @@ export default function PrepChecklistScreen({
   const handleAddItem = () => {
     const label = newItemLabel.trim();
     if (label.length === 0) {
+      
       return;
     }
     setCustomTasks((prev) => [
