@@ -11,6 +11,8 @@ import {
   subscribeToMessages,
 } from '../services/firebase';
 import type { ChatMessage } from '../types/messaging';
+import { shouldUseDemoFallbackForAccount } from '../config/demoMode';
+import { useAuth } from '../context/AuthContext';
 
 export function useChatMessages(
   conversationId: string | undefined,
@@ -22,6 +24,7 @@ export function useChatMessages(
   error: string | null;
   sendMessage: (text: string) => Promise<void>;
 } {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +48,11 @@ export function useChatMessages(
       return;
     }
 
+    if (!shouldUseDemoFallbackForAccount(user?.email)) {
+      setMessages([]);
+      return;
+    }
+
     const demoMessages = messagesForConversation(conversationId);
     if (demoMessages.length > 0) {
       setMessages(
@@ -54,8 +62,10 @@ export function useChatMessages(
           isOwn: item.senderId === 'self' || item.senderId === currentUserId,
         })),
       );
+    } else {
+      setMessages([]);
     }
-  }, [conversationId, currentUserId]);
+  }, [conversationId, currentUserId, user?.email]);
 
   useEffect(() => {
     if (!conversationId || !currentUserId) {

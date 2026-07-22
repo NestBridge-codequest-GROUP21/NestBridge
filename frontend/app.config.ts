@@ -10,7 +10,7 @@ import type { ExpoConfig, ConfigContext } from 'expo/config';
 const base: ExpoConfig = {
   name: 'NestBridge',
   slug: 'nestbridge',
-  version: '1.0.0',
+  version: '1.0.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'light',
@@ -18,7 +18,7 @@ const base: ExpoConfig = {
   splash: {
     image: './assets/splash-icon.png',
     resizeMode: 'contain',
-    backgroundColor: '#0C1735',
+    backgroundColor: '#FFFFFF',
   },
   ios: {
     supportsTablet: true,
@@ -26,14 +26,18 @@ const base: ExpoConfig = {
     infoPlist: {
       NSPhotoLibraryUsageDescription:
         'NestBridge uses your photos so you can add a profile picture.',
+      LSApplicationQueriesSchemes: ['mailto', 'tel'],
     },
   },
   android: {
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#0C1735',
+      backgroundColor: '#FFFFFF',
     },
     edgeToEdgeEnabled: true,
+    // Let the app handle inset via ScreenScroll / KeyboardSafeView (edge-to-edge
+    // often breaks adjustResize; pan + our padding keeps focused inputs visible).
+    softwareKeyboardLayoutMode: 'pan',
     package: 'com.nestbridge.app',
     permissions: [
       'android.permission.READ_MEDIA_IMAGES',
@@ -47,6 +51,7 @@ const base: ExpoConfig = {
   plugins: [
     'expo-secure-store',
     'expo-font',
+    'expo-web-browser',
     [
       'expo-image-picker',
       {
@@ -62,6 +67,7 @@ const base: ExpoConfig = {
         color: '#1AA68C',
       },
     ],
+    './plugins/withAndroidMailtoQuery.js',
   ],
 };
 
@@ -79,8 +85,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: base.plugins,
   extra: {
     ...config.extra,
+    // Env wins; otherwise keep app.json; never blank out a configured URL (blank
+    // forces Expo Go onto LAN:8080, which phones often cannot reach → "No network").
     apiBaseUrl:
-      process.env.API_BASE_URL ?? process.env.EXPO_PUBLIC_API_BASE_URL ?? '',
+      process.env.API_BASE_URL ??
+      process.env.EXPO_PUBLIC_API_BASE_URL ??
+      (typeof config.extra?.apiBaseUrl === 'string' && config.extra.apiBaseUrl
+        ? config.extra.apiBaseUrl
+        : 'https://nestbridge-production.up.railway.app'),
     enableDemoFallback: process.env.EXPO_PUBLIC_ENABLE_DEMO_FALLBACK !== 'false',
     // Empty strings are intentional — chat falls back to REST when unset.
     firebaseApiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY ?? '',

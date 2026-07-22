@@ -1,19 +1,30 @@
-import React, { useState } from 'react';
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
+import React from 'react';
 import {
-  View,
   Text,
   StyleSheet,
-  ScrollView,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
+  View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
+import ScreenScroll from '../../components/ScreenScroll';
+import BrandLogo from '../../components/BrandLogo';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
-import { colors, fontSizes, fontWeights, spacing } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import InlineBanner from '../../components/InlineBanner';
+import AppIcon from '../../components/AppIcon';
+import {
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  lineHeights,
+  layout,
+  iconSizes,
+} from '../../constants/theme';
 
 export interface ResetPasswordScreenProps {
   password: string;
@@ -38,42 +49,40 @@ export default function ResetPasswordScreen({
   onSubmit,
   onBack,
 }: ResetPasswordScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, scheme } = useTheme();
+
+
   const insets = useSafeAreaInsets();
-  const [showPassword, setShowPassword] = useState(false);
   const success = !!statusMessage && !errorMessage;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <StatusBar style="dark" />
-      <ScrollView
+    <View style={styles.root}>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          {
-            paddingTop: insets.top + spacing.lg,
-            paddingBottom: insets.bottom + spacing.lg,
-          },
+          { paddingTop: insets.top + spacing.lg },
         ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
       >
-        {onBack ? (
-          <Pressable
-            onPress={onBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
+
+        <BrandLogo size="sm" style={styles.brandLogo} />
+
+        {success ? (
+          <View style={styles.iconTile}>
+            <AppIcon
+              name="checkmark-circle-outline"
+              size={iconSizes.xl}
+              color={colors.success}
+            />
+          </View>
         ) : null}
 
         <Text style={styles.title}>{success ? 'Password updated' : 'Set a new password'}</Text>
         <Text style={styles.subtitle}>
           {success
-            ? 'Your password was updated. Sign in with your new password.'
+            ? 'Your password was updated. Sign in with your new password to continue.'
             : 'Choose a new password for your NestBridge account.'}
         </Text>
 
@@ -86,86 +95,79 @@ export default function ResetPasswordScreen({
               value={password}
               placeholder="At least 6 characters"
               onChangeText={onPasswordChange}
-              secureTextEntry={!showPassword}
+              secureTextEntry
+              visibilityToggle
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="newPassword"
             />
             <FormTextField
               label="Confirm password"
               value={confirmPassword}
               placeholder="Re-enter your password"
               onChangeText={onConfirmPasswordChange}
-              secureTextEntry={!showPassword}
+              secureTextEntry
+              visibilityToggle
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="newPassword"
             />
 
-            <Pressable
-              onPress={() => setShowPassword((value) => !value)}
-              style={styles.toggleRow}
-              accessibilityRole="button"
-              accessibilityLabel={showPassword ? 'Hide passwords' : 'Show passwords'}
-            >
-              <Text style={styles.toggleText}>
-                {showPassword ? 'Hide passwords' : 'Show passwords'}
-              </Text>
-            </Pressable>
-
-            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+            {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
             <PrimaryButton
-              label={submitting ? 'Saving…' : 'Update password'}
+              label="Update password"
               onPress={onSubmit}
-              disabled={submitting}
+              loading={submitting}
             />
           </>
         )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </ScreenScroll>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backIcon: {
-    fontSize: 24,
-    color: colors.textPrimary,
+  brandLogo: {
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
+  },
+  iconTile: {
+    width: layout.iconTileSize,
+    height: layout.iconTileSize,
+    borderRadius: borderRadius.pill,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   title: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.xl,
   },
-  toggleRow: {
-    minHeight: 44,
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  toggleText: {
-    fontSize: fontSizes.body,
-    color: colors.teal,
-    fontWeight: fontWeights.semibold,
-  },
-  errorText: {
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
-  },
 });
+}
+

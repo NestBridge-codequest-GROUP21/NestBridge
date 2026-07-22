@@ -1,5 +1,6 @@
 package com.nestbridge.user;
 
+import com.nestbridge.common.PrimaryIntent;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +15,16 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCase(String email);
+
+    long countByPrimaryIntent(PrimaryIntent primaryIntent);
+
+    long countByStaffTrue();
+
+    long countBySuspendedTrue();
+
+    long countByIdentityVerifiedFalse();
+
+    long countByEmailVerifiedFalse();
 
     @Query("""
             SELECT u FROM User u

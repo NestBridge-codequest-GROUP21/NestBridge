@@ -14,6 +14,7 @@ import type { AccountProfileState } from '../types/accountProfile';
 import { normalizeCity } from './ghanaReference';
 import { FLEXIBLE_POLICY } from './bookingMock';
 import { suggestedGuidesMock } from './guideSessionMock';
+import { hostVerification, normalizeVerification } from '../types/verification';
 
 const DEFAULT_MATCH_REASONS = [
   'Verified host family',
@@ -39,6 +40,14 @@ function initialsFromName(name: string): string {
     .toUpperCase();
 }
 
+function trustBadgeFromMatch(match: MatchResult): string {
+  if (match.trustBadge) return match.trustBadge;
+  if (match.verification?.providerVerified || match.verification?.identityVerified) {
+    return 'VERIFIED';
+  }
+  return 'NEW';
+}
+
 export function matchToMatchResultHost(match: MatchResult): MatchResultHost {
   return {
     id: match.targetId,
@@ -46,11 +55,12 @@ export function matchToMatchResultHost(match: MatchResult): MatchResultHost {
     hostName: match.targetName,
     initials: match.initials ?? initialsFromName(match.targetName),
     compatibilityScore: Math.round(match.compatibilityScore),
-    trustBadge: match.trustBadge ?? 'VERIFIED',
+    trustBadge: trustBadgeFromMatch(match),
     matchReasons: ensureMatchReasons(match.matchReasons),
     pricePerNight: match.pricePerNight ?? 0,
     currency: 'GHS',
     location: match.location ?? 'Ghana',
+    verification: normalizeVerification(match.verification),
   };
 }
 
@@ -140,21 +150,29 @@ export function hostMatchesToStayListings(matches: MatchResult[]): StayListing[]
   return matches
     .filter((m) => m.targetType === 'HOST')
     .slice(0, 6)
-    .map((match, index) => ({
-      id: match.targetId,
-      title: `${match.targetName}'s Homestay`,
-      location: match.location ?? 'Ghana',
-      rating: match.compatibilityScore >= 90 ? 5 : match.compatibilityScore >= 80 ? 4 : 4,
-      pricePerNight: match.pricePerNight != null
-        ? `GHS ${Math.round(match.pricePerNight)}/night`
-        : 'Price on request',
-      verifiedHost: true,
-      amenities: ['Wifi', 'Meals'],
-      imageEmoji: index % 2 === 0 ? '🏡' : '🏠',
-    }));
+    .map((match, index) => {
+      const verification = normalizeVerification(match.verification);
+      return {
+        id: match.targetId,
+        title: `${match.targetName}'s Homestay`,
+        location: match.location ?? 'Ghana',
+        rating: match.compatibilityScore >= 90 ? 5 : match.compatibilityScore >= 80 ? 4 : 4,
+        pricePerNight: match.pricePerNight != null
+          ? `GHS ${Math.round(match.pricePerNight)}/night`
+          : 'Price on request',
+        verifiedHost: verification.providerVerified,
+        amenities: ['Wifi', 'Meals'],
+        imageEmoji: index % 2 === 0 ? '🏡' : '🏠',
+      };
+    });
 }
 
 export function matchResultHostToHostSummary(host: MatchResultHost): HostProfileSummary {
+  const verification =
+    host.verification ??
+    (host.trustBadge && host.trustBadge !== 'NEW'
+      ? hostVerification()
+      : undefined);
   return {
     id: host.id,
     matchId: host.matchId,
@@ -166,6 +184,7 @@ export function matchResultHostToHostSummary(host: MatchResultHost): HostProfile
     currency: host.currency,
     cancellationPolicy: FLEXIBLE_POLICY,
     icon: '🏡',
+    verification,
   };
 }
 
@@ -199,16 +218,21 @@ export function guideSummariesToDiscoveryItems(
 }
 
 export function matchResultsToStayListings(results: MatchResultHost[]): StayListing[] {
-  return results.slice(0, 6).map((host, index) => ({
-    id: host.id,
-    title: `${host.hostName}'s Homestay`,
-    location: host.location,
-    rating: host.compatibilityScore >= 90 ? 5 : 4,
-    pricePerNight: `${host.currency} ${host.pricePerNight}/night`,
-    verifiedHost: true,
-    amenities: ['Wifi', 'Meals'],
-    imageEmoji: index % 2 === 0 ? '🏡' : '🏠',
-  }));
+  return results.slice(0, 6).map((host, index) => {
+    const verified =
+      host.verification?.providerVerified === true ||
+      (host.trustBadge != null && host.trustBadge !== 'NEW');
+    return {
+      id: host.id,
+      title: `${host.hostName}'s Homestay`,
+      location: host.location,
+      rating: host.compatibilityScore >= 90 ? 5 : 4,
+      pricePerNight: `${host.currency} ${host.pricePerNight}/night`,
+      verifiedHost: verified,
+      amenities: ['Wifi', 'Meals'],
+      imageEmoji: index % 2 === 0 ? '🏡' : '🏠',
+    };
+  });
 }
 
 export { demoTopMatchHostIdForCity, sampleMatchResultsForCity } from './matchResultsMock';

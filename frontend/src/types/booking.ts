@@ -1,3 +1,5 @@
+import type { ProviderVerification } from './verification';
+
 export type BookingStatus =
   | 'PENDING_HOST'
   | 'ACCEPTED'
@@ -82,6 +84,8 @@ export interface HostProfileSummary {
   currency: string;
   cancellationPolicy: string;
   icon?: string;
+  /** Trust flags from API — omit or all-false for unverified hosts. */
+  verification?: ProviderVerification;
 }
 
 export interface GuideProfileSummary {
@@ -99,6 +103,8 @@ export interface GuideProfileSummary {
   languages: string[];
   cancellationPolicy: string;
   icon?: string;
+  /** Trust flags from API — omit or all-false for unverified guides. */
+  verification?: ProviderVerification;
 }
 
 export interface HostCapacityInfo {

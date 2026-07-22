@@ -13,4 +13,8 @@ public interface HostProfileRepository extends JpaRepository<HostProfile, UUID> 
     List<HostProfile> findByCityIgnoreCaseAndActiveTrue(String city);
 
     List<HostProfile> findByActiveTrue();
+
+    long countByActiveTrue();
+
+    long countByActiveFalse();
 }

@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
 import {
   View,
@@ -5,21 +6,27 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import InlineBanner from '../../components/InlineBanner';
+import Card from '../../components/Card';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import {
-  colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  touchTarget,
   gradients,
   layout,
+  lineHeights,
 } from '../../constants/theme';
 import type { WelfareCheckInQuestion } from '../../data/welfareMock';
 import { welfareCheckInIntro } from '../../data/welfareMock';
@@ -49,6 +56,10 @@ export default function WelfareCheckInScreen({
   onSosPress,
   onBack,
 }: WelfareCheckInScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
 
@@ -59,19 +70,12 @@ export default function WelfareCheckInScreen({
       <StatusBar style="light" />
 
       <LinearGradient
-        colors={[...gradients.headerCompact]}
+        colors={gradients.headerCompact}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backButton} />
         <Text style={styles.headerTitle}>Welfare check-in</Text>
         <Text style={styles.headerSubtitle}>
           Stay with {hostName} · {checkIn} – {checkOut}
@@ -88,21 +92,19 @@ export default function WelfareCheckInScreen({
       >
         <Text style={styles.intro}>{welfareCheckInIntro}</Text>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-        {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
-        ) : null}
+        {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
+        {isLoading ? <SkeletonLoader style={styles.loader} /> : null}
 
         {alreadyCompleted ? (
-          <View style={styles.doneCard}>
+          <Card padding="lg">
             <Text style={styles.doneTitle}>Check-in complete</Text>
             <Text style={styles.doneBody}>
               Thanks for confirming you are okay. We will follow up if anything needs attention.
             </Text>
-          </View>
+          </Card>
         ) : (
           questions.map((question) => (
-            <View key={question.id} style={styles.questionCard}>
+            <Card key={question.id} style={styles.questionCard} padding="lg">
               <Text style={styles.questionText}>{question.prompt}</Text>
               <View style={styles.answerRow}>
                 {(['yes', 'no'] as const).map((choice) => {
@@ -134,7 +136,7 @@ export default function WelfareCheckInScreen({
                   );
                 })}
               </View>
-            </View>
+            </Card>
           ))
         )}
 
@@ -177,7 +179,8 @@ export default function WelfareCheckInScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -187,27 +190,23 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
   },
   headerTitle: {
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.heading,
   },
   headerSubtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
+    lineHeight: lineHeights.body,
   },
   body: {
     flex: 1,
@@ -218,51 +217,39 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   intro: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
-  },
-  errorText: {
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
   },
   loader: {
     marginVertical: spacing.lg,
   },
-  doneCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
   doneTitle: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   doneBody: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   questionCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   questionText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.md,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   answerRow: {
     flexDirection: 'row',
@@ -270,35 +257,38 @@ const styles = StyleSheet.create({
   },
   answerButton: {
     flex: 1,
-    minHeight: 44,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: borderRadius.md,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     backgroundColor: colors.background,
   },
   answerButtonSelected: {
     borderColor: colors.teal,
+    borderWidth: borderWidths.strong,
     backgroundColor: colors.warmCream,
   },
   answerButtonPressed: {
     opacity: 0.9,
   },
   answerLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     fontWeight: fontWeights.semibold,
   },
   answerLabelSelected: {
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   sosLink: {
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
     marginTop: spacing.md,
   },
   sosLinkText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     color: colors.danger,
     fontWeight: fontWeights.semibold,
@@ -312,10 +302,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
   },
 });
+}
+

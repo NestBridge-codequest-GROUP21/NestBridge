@@ -1,14 +1,19 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import AppIcon from './AppIcon';
+import SectionHeader from './SectionHeader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   layout,
+  iconSizes,
+  avatarSizes,
+  lineHeights,
 } from '../constants/theme';
 
 export interface RecentActivityItem {
@@ -27,20 +32,28 @@ export default function RecentActivityList({
   title = 'Recent Activity',
   items,
 }: RecentActivityListProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   if (items.length === 0) {
     return null;
   }
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>{title}</Text>
+      <SectionHeader title={title} />
       {items.map((item, index) => (
         <View
           key={item.id}
           style={[styles.row, index < items.length - 1 && styles.rowBorder]}
         >
           <View style={styles.iconWrap}>
-            <AppIcon glyph={item.icon} size={fontSizes.subheading} color={colors.tealDeep} />
+            <AppIcon
+              glyph={item.icon}
+              size={iconSizes.md}
+              color={colors.onAccent}
+            />
           </View>
           <View style={styles.textBlock}>
             <Text style={styles.itemTitle}>{item.title}</Text>
@@ -52,16 +65,10 @@ export default function RecentActivityList({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, chrome }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     marginBottom: layout.sectionGap,
-  },
-  title: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
   },
   row: {
     flexDirection: 'row',
@@ -69,20 +76,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   rowBorder: {
-    borderBottomWidth: 1,
+    borderBottomWidth: chrome.minimalBorders ? 0 : borderWidths.hairline,
     borderBottomColor: colors.border,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
+    width: avatarSizes.md,
+    height: avatarSizes.md,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.warmCream,
+    backgroundColor: chrome.solidAccentBlocks ? tints.teal : tints.cream,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
-  },
-  icon: {
-    fontSize: fontSizes.body,
   },
   textBlock: {
     flex: 1,
@@ -90,12 +94,17 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.xs,
   },
   timestamp: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
+    lineHeight: lineHeights.caption,
   },
 });
+}
+

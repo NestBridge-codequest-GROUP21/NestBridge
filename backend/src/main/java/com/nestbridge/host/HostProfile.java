@@ -76,6 +76,9 @@ public class HostProfile {
     @Column(name = "is_active")
     private boolean active;
 
+    @Column(name = "location_verified")
+    private boolean locationVerified;
+
     @Column(name = "review_count")
     private int reviewCount;
 

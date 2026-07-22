@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
@@ -10,18 +11,22 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
+import BackButton from '../../components/BackButton';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   lineHeights,
   layout,
+  iconSizes,
+  avatarSizes,
+  touchTarget,
 } from '../../constants/theme';
 import type { PrimaryIntent } from '../../types/accountProfile';
 import {
@@ -60,6 +65,10 @@ export default function IntentSelectScreen({
   onContinue,
   onBack,
 }: IntentSelectScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -67,18 +76,15 @@ export default function IntentSelectScreen({
       <StatusBar style="light" />
 
       <LinearGradient
-        colors={[...gradients.headerCompact]}
+        colors={gradients.headerCompact}
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}
       >
         {onBack ? (
-          <Pressable
+          <BackButton
             onPress={onBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <AppIcon name="chevron-back" size={24} color={colors.white} />
-          </Pressable>
+            color={colors.onPrimary}
+            style={styles.back}
+          />
         ) : (
           <View style={styles.backPlaceholder} />
         )}
@@ -100,31 +106,38 @@ export default function IntentSelectScreen({
             <Pressable
               key={option.id}
               style={({ pressed }) => [
-                styles.optionCard,
-                selected && styles.optionCardSelected,
+                styles.optionPressable,
                 pressed && styles.optionPressed,
-                pressed && styles.optionPressedScale,
               ]}
               onPress={() => onSelect?.(option.id)}
               accessibilityRole="button"
               accessibilityLabel={option.label}
               accessibilityState={{ selected }}
             >
-              <View style={styles.optionIconTile}>
-                <AppIcon glyph={option.icon} size={24} color={colors.tealDeep} />
-              </View>
-              <View style={styles.optionText}>
-                <Text style={styles.optionLabel}>{option.label}</Text>
-                <Text style={styles.optionDescription}>{option.description}</Text>
-              </View>
+              <Card
+                padding="lg"
+                style={[styles.optionCard, selected && styles.optionCardSelected]}
+              >
+                <View style={styles.optionIconTile}>
+                  <AppIcon
+                    glyph={option.icon}
+                    size={iconSizes.lg}
+                    color={colors.onAccent}
+                  />
+                </View>
+                <View style={styles.optionText}>
+                  <Text style={styles.optionLabel}>{option.label}</Text>
+                  <Text style={styles.optionDescription}>{option.description}</Text>
+                </View>
+              </Card>
             </Pressable>
           );
         })}
 
-        <View style={styles.noteCard}>
+        <Card padding="lg" style={styles.noteCard}>
           <Text style={styles.noteTitle}>{noteTitle}</Text>
           <Text style={styles.noteBody}>{noteBody}</Text>
-        </View>
+        </Card>
 
         <PrimaryButton
           label="Continue"
@@ -146,7 +159,8 @@ export function intentOptionsFromPrimary(): IntentOption[] {
   }));
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -157,32 +171,26 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: borderRadius.lg,
     borderBottomRightRadius: borderRadius.lg,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontSize: 24,
-    color: colors.white,
+    alignSelf: 'flex-start',
   },
   backPlaceholder: {
-    height: spacing.sm,
+    height: touchTarget,
   },
   title: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    lineHeight: lineHeights.heading,
+    color: colors.onPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     lineHeight: lineHeights.body,
   },
@@ -194,29 +202,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
   },
+  optionPressable: {
+    marginBottom: spacing.md,
+  },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   optionCardSelected: {
     borderColor: colors.teal,
+    borderWidth: borderWidths.strong,
     backgroundColor: colors.warmCream,
   },
   optionPressed: {
     opacity: 0.95,
-  },
-  optionPressedScale: {
     transform: [{ scale: 0.98 }],
   },
   optionIconTile: {
-    width: 48,
-    height: 48,
+    width: avatarSizes.lg,
+    height: avatarSizes.lg,
     borderRadius: borderRadius.md,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -240,12 +244,7 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
   noteCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   noteTitle: {
     fontFamily: fontFamilies.semibold,
@@ -261,3 +260,5 @@ const styles = StyleSheet.create({
     lineHeight: lineHeights.body,
   },
 });
+}
+

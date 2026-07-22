@@ -1,8 +1,8 @@
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
-import { Linking, Text, View, StyleSheet, Pressable } from 'react-native';
+import { Linking, Text, View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
 import SplashScreen from '../screens/auth/SplashScreen';
-import BootLoader from '../components/BootLoader';
 import { splashMock } from '../data/studentOnboardingMock';
 import { useAuth } from '../context/AuthContext';
 import { useAccountProfile } from '../context/AccountProfileContext';
@@ -16,7 +16,12 @@ import {
   setBootStage,
 } from '../services/bootDiagnostics';
 import {
-  colors,
+  useTheme,
+  useThemedStyles,
+  navigationThemeFromTokens,
+  type AppTheme,
+} from '../theme';
+import {
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -31,12 +36,17 @@ const AppNavigator = lazy(() => import('./AppNavigator'));
 const SPLASH_FORCE_MS = 10000;
 
 /**
- * Cold start: branded Splash once per JS session, then Auth or App.
+ * Cold start: one branded Splash (≤5s, tap to skip), then Auth or App.
  * Background resume keeps React state — Splash does not show again.
  */
 export default function RootNavigator() {
   const { user, isLoading: authLoading, signOut } = useAuth();
   const { isLoading: profileLoading } = useAccountProfile();
+  const theme = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const { colors } = theme;
+
+  const navTheme = navigationThemeFromTokens(theme);
   const [splashDismissed, setSplashDismissed] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
   const [forceBoot, setForceBoot] = useState(false);
@@ -121,6 +131,14 @@ export default function RootNavigator() {
   }, [splashDone, user?.userId]);
 
   if (!splashDone) {
+    if (splashDismissed) {
+      return (
+        <View style={[styles.lazyHold, { backgroundColor: colors.navy }]}>
+          <StatusBar style="light" />
+          <ActivityIndicator color={colors.tealBright} size="large" />
+        </View>
+      );
+    }
     return (
       <SplashScreen
         {...splashMock}
@@ -130,7 +148,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
       {priorBootError ? (
         <View style={styles.banner} accessibilityRole="alert">
           <Text style={styles.bannerTitle}>Previous startup issue</Text>
@@ -150,9 +168,15 @@ export default function RootNavigator() {
           </Pressable>
         </View>
       ) : null}
-      <NavigationContainer>
+      <NavigationContainer theme={navTheme}>
         {user ? (
-          <Suspense fallback={<BootLoader />}>
+          <Suspense
+            fallback={
+              <View style={[styles.lazyHold, { backgroundColor: colors.navy }]}>
+                <ActivityIndicator color={colors.tealBright} size="large" />
+              </View>
+            }
+          >
             <AppNavigator key={user.userId} />
           </Suspense>
         ) : (
@@ -167,44 +191,51 @@ export default function RootNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  banner: {
-    backgroundColor: colors.warmCream,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.xs,
-  },
-  bannerTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.danger,
-  },
-  bannerBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
-  },
-  bannerButton: {
-    alignSelf: 'flex-start',
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.tealBright,
-  },
-  bannerButtonLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.white,
-  },
-  pressed: {
-    opacity: 0.9,
-  },
-});
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    lazyHold: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    banner: {
+      backgroundColor: colors.warmCream,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      gap: spacing.xs,
+    },
+    bannerTitle: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.caption,
+      fontWeight: fontWeights.semibold,
+      color: colors.danger,
+    },
+    bannerBody: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.textSecondary,
+    },
+    bannerButton: {
+      alignSelf: 'flex-start',
+      minHeight: 44,
+      justifyContent: 'center',
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.md,
+      backgroundColor: colors.tealBright,
+    },
+    bannerButtonLabel: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.caption,
+      fontWeight: fontWeights.semibold,
+      color: colors.onPrimary,
+    },
+    pressed: {
+      opacity: 0.9,
+    },
+  });
+}

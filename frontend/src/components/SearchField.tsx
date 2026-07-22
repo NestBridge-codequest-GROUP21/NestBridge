@@ -1,0 +1,146 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
+import React, { useState } from 'react';
+import {
+  View,
+  TextInput,
+  StyleSheet,
+  Pressable,
+  ViewStyle,
+} from 'react-native';
+import AppIcon from './AppIcon';
+import {
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  borderWidths,
+  controlHeights,
+  iconSizes,
+  lineHeights,
+  touchTarget,
+} from '../constants/theme';
+import useScrollFocusedInputIntoView from '../hooks/useScrollFocusedInputIntoView';
+
+export interface SearchFieldProps {
+  value: string;
+  placeholder?: string;
+  onChangeText?: (text: string) => void;
+  onClear?: () => void;
+  onSubmitEditing?: () => void;
+  style?: ViewStyle;
+  autoFocus?: boolean;
+}
+
+/** Compact search input with leading icon and optional clear control. */
+export default function SearchField({
+  value,
+  placeholder = 'Search',
+  onChangeText,
+  onClear,
+  onSubmitEditing,
+  style,
+  autoFocus = false,
+}: SearchFieldProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+  const { containerRef, onInputFocus } = useScrollFocusedInputIntoView();
+
+  const [focused, setFocused] = useState(false);
+  const showClear = value.length > 0 && (onClear || onChangeText);
+
+  return (
+    <View
+      ref={containerRef}
+      collapsable={false}
+      style={[
+        styles.wrap,
+        focused && styles.wrapFocused,
+        style,
+      ]}
+    >
+      <AppIcon
+        name="search-outline"
+        size={iconSizes.md}
+        color={colors.textTertiary}
+        style={styles.leadingIcon}
+      />
+      <TextInput
+        style={styles.input}
+        value={value}
+        placeholder={placeholder}
+        placeholderTextColor={colors.textTertiary}
+        onChangeText={onChangeText}
+        onSubmitEditing={onSubmitEditing}
+        onFocus={() => {
+          setFocused(true);
+          onInputFocus();
+        }}
+        onBlur={() => setFocused(false)}
+        returnKeyType="search"
+        autoCorrect={false}
+        autoCapitalize="none"
+        autoFocus={autoFocus}
+        accessibilityLabel={placeholder}
+      />
+      {showClear ? (
+        <Pressable
+          onPress={() => {
+            onClear?.();
+            onChangeText?.('');
+          }}
+          style={styles.clearButton}
+          accessibilityRole="button"
+          accessibilityLabel="Clear search"
+          hitSlop={spacing.sm}
+        >
+          <AppIcon
+            name="close-circle"
+            size={iconSizes.md}
+            color={colors.textTertiary}
+          />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
+  wrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    minHeight: controlHeights.md,
+    paddingHorizontal: spacing.sm,
+  },
+  wrapFocused: {
+    borderColor: colors.teal,
+    borderWidth: borderWidths.strong,
+  },
+  leadingIcon: {
+    marginLeft: spacing.xs,
+    marginRight: spacing.sm,
+  },
+  input: {
+    flex: 1,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    lineHeight: lineHeights.body,
+    color: colors.textPrimary,
+    paddingVertical: spacing.sm,
+    minHeight: controlHeights.md,
+  },
+  clearButton: {
+    width: touchTarget,
+    height: touchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+}
+

@@ -1,11 +1,12 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import AppIcon from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   spacing,
+  lineHeights,
 } from '../constants/theme';
 
 export interface FeatureHighlight {
@@ -17,7 +18,12 @@ export interface FeatureHighlightRowProps {
   items: FeatureHighlight[];
 }
 
-export default function FeatureHighlightRow({ items }: FeatureHighlightRowProps) {
+export default function FeatureHighlightRow({
+ items }: FeatureHighlightRowProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={styles.row}>
       {items.map((item) => (
@@ -25,7 +31,7 @@ export default function FeatureHighlightRow({ items }: FeatureHighlightRowProps)
           <AppIcon
             glyph={item.icon}
             size={fontSizes.subheading}
-            color={colors.white}
+            color={colors.onPrimary}
             style={styles.icon}
           />
           <Text style={styles.label} numberOfLines={2}>
@@ -37,7 +43,8 @@ export default function FeatureHighlightRow({ items }: FeatureHighlightRowProps)
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -46,8 +53,8 @@ const styles = StyleSheet.create({
   },
   item: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'center',
-    minWidth: 44,
   },
   icon: {
     fontSize: fontSizes.subheading,
@@ -56,8 +63,12 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    color: colors.white,
+    lineHeight: lineHeights.caption,
+    color: colors.onPrimary,
     opacity: 0.88,
     textAlign: 'center',
+    width: '100%',
   },
 });
+}
+

@@ -1,13 +1,14 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import AppIcon from './AppIcon';
+import Avatar from './Avatar';
+import Card from './Card';
+import EmptyState from './EmptyState';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
 } from '../constants/theme';
 import type { IncomingBookingRequest } from '../types/booking';
 import { formatBookingDate } from '../data/bookingMock';
@@ -35,10 +36,11 @@ export default function IncomingRequestCard({
   isLast = false,
   onPress,
 }: IncomingRequestCardProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <Pressable
       style={({ pressed }) => [
-        styles.requestCard,
         !isLast && styles.requestCardSpacing,
         !request.capacity.canAccept && styles.requestCardMuted,
         pressed && styles.pressed,
@@ -47,29 +49,29 @@ export default function IncomingRequestCard({
       accessibilityRole="button"
       accessibilityLabel={`Review request from ${request.studentName}`}
     >
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{request.studentInitials}</Text>
-      </View>
+      <Card style={styles.requestCard} padding="lg">
+        <Avatar initials={request.studentInitials} size="lg" />
 
-      <View style={styles.body}>
-        <View style={styles.topRow}>
-          <Text style={styles.name} numberOfLines={1}>
-            {request.studentName}
+        <View style={styles.body}>
+          <View style={styles.topRow}>
+            <Text style={styles.name} numberOfLines={2}>
+              {request.studentName}
+            </Text>
+            <Text style={styles.score}>{request.compatibilityScore}%</Text>
+          </View>
+          <Text style={styles.dates}>{requestScheduleLine(request)}</Text>
+          <Text style={styles.capacity} numberOfLines={2}>
+            {request.bookingType === 'GUIDE'
+              ? `${request.seekerRole === 'TOURIST' ? 'Tourist' : 'Student'} · `
+              : ''}
+            {request.capacity.canAccept
+              ? `${request.capacity.overlappingAccepted} of ${request.capacity.maxAllowed} slots used`
+              : request.capacity.declineReason ?? 'At capacity'}
           </Text>
-          <Text style={styles.score}>{request.compatibilityScore}%</Text>
         </View>
-        <Text style={styles.dates}>{requestScheduleLine(request)}</Text>
-        <Text style={styles.capacity} numberOfLines={1}>
-          {request.bookingType === 'GUIDE'
-            ? `${request.seekerRole === 'TOURIST' ? 'Tourist' : 'Student'} · `
-            : ''}
-          {request.capacity.canAccept
-            ? `${request.capacity.overlappingAccepted} of ${request.capacity.maxAllowed} slots used`
-            : request.capacity.declineReason ?? 'At capacity'}
-        </Text>
-      </View>
 
-      <Text style={styles.listAction}>Open</Text>
+        <Text style={styles.listAction}>Open</Text>
+      </Card>
     </Pressable>
   );
 }
@@ -78,42 +80,37 @@ export interface IncomingRequestsEmptyBlockProps {
   title: string;
   body: string;
   tip?: string;
+  iconGlyph?: string;
+  primaryActionLabel?: string;
+  onPrimaryAction?: () => void;
 }
 
 export function IncomingRequestsEmptyBlock({
   title,
   body,
   tip,
+  iconGlyph = '📩',
+  primaryActionLabel,
+  onPrimaryAction,
 }: IncomingRequestsEmptyBlockProps) {
   return (
-    <View style={styles.emptyBlock}>
-      <AppIcon
-        name="mail-open-outline"
-        size={fontSizes.display}
-        color={colors.textTertiary}
-        style={styles.emptyIcon}
-      />
-      <Text style={styles.emptyTitle}>{title}</Text>
-      <Text style={styles.emptyBody}>{body}</Text>
-      {tip ? <Text style={styles.emptyTip}>{tip}</Text> : null}
-    </View>
+    <EmptyState
+      title={title}
+      body={body}
+      tip={tip}
+      iconGlyph={iconGlyph}
+      primaryActionLabel={primaryActionLabel}
+      onPrimaryAction={onPrimaryAction}
+    />
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   requestCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    alignItems: 'flex-start',
+    gap: spacing.md,
   },
   requestCardSpacing: {
     marginBottom: spacing.md,
@@ -125,43 +122,31 @@ const styles = StyleSheet.create({
     opacity: 0.94,
     transform: [{ scale: 0.995 }],
   },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  avatarText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
-  },
   body: {
     flex: 1,
+    minWidth: 0,
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: spacing.xs,
+    gap: spacing.sm,
   },
   name: {
     flex: 1,
-    fontFamily: fontFamilies.bold,
+    minWidth: 0,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-    marginRight: spacing.sm,
   },
   score: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
+    flexShrink: 0,
   },
   dates: {
     fontFamily: fontFamilies.regular,
@@ -181,43 +166,9 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
-    marginLeft: spacing.sm,
-  },
-  emptyBlock: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  emptyIcon: {
-    fontSize: fontSizes.display,
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  emptyBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  emptyTip: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.regular,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    marginTop: spacing.md,
-    lineHeight: 18,
+    marginTop: spacing.xs,
+    flexShrink: 0,
   },
 });
+}
+

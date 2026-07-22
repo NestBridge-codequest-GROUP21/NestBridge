@@ -1,19 +1,29 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import SectionHeader from '../../components/SectionHeader';
+import Card from '../../components/Card';
+import StatusBadge from '../../components/StatusBadge';
+import EmptyState from '../../components/EmptyState';
 import PrimaryButton from '../../components/PrimaryButton';
 import AppIcon from '../../components/AppIcon';
 import type { StayListing } from '../../data/featureScreensMock';
+import { emptyStates } from '../../data/appCopy';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  lineHeights,
+  layout,
+  iconSizes,
+  touchTarget,
+  controlHeights,
 } from '../../constants/theme';
 
 export interface ExploreStaysScreenProps {
@@ -22,20 +32,25 @@ export interface ExploreStaysScreenProps {
   userInitials: string;
   statusIcon?: string;
   statusLabel?: string;
+  cityLabel?: string;
   listings: StayListing[];
   onBookPress?: (listingId: string) => void;
   onFilterPress?: () => void;
+  onEmptyPrimaryAction?: () => void;
   onBack?: () => void;
 }
 
 function StarRow({ rating }: { rating: number }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   return (
     <View style={styles.starRow}>
       {Array.from({ length: 5 }).map((_, index) => (
         <AppIcon
           key={`star-${index}`}
           name={index < rating ? 'star' : 'star-outline'}
-          size={fontSizes.body}
+          size={iconSizes.sm}
           color={index < rating ? colors.warning : colors.border}
         />
       ))}
@@ -50,17 +65,22 @@ function StayCard({
   listing: StayListing;
   onBookPress?: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.stayCard}>
+    <Card padding="none" elevation="card" style={styles.stayCard}>
       <View style={styles.imageTile}>
-        <AppIcon glyph={listing.imageEmoji} size={44} color={colors.tealDeep} />
+        <AppIcon
+          glyph={listing.imageEmoji}
+          size={iconSizes.xl}
+          color={colors.onAccent}
+        />
       </View>
 
       <View style={styles.cardBody}>
         {listing.verifiedHost ? (
-          <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedText}>Verified Host</Text>
-          </View>
+          <StatusBadge label="Verified Host" tone="success" />
         ) : null}
 
         <Text style={styles.stayTitle}>{listing.title}</Text>
@@ -70,18 +90,25 @@ function StayCard({
 
         <View style={styles.amenityRow}>
           {listing.amenities.map((amenity) => (
-            <View key={amenity} style={styles.amenityChip}>
-              <Text style={styles.amenityText}>{amenity}</Text>
-            </View>
+            <StatusBadge
+              key={amenity}
+              label={amenity}
+              tone="neutral"
+              style={styles.amenityChip}
+            />
           ))}
         </View>
 
         <View style={styles.priceRow}>
           <Text style={styles.priceText}>{listing.pricePerNight}</Text>
-          <PrimaryButton label="Book Now" onPress={onBookPress} style={styles.bookButton} />
+          <PrimaryButton
+            label="Book Now"
+            onPress={onBookPress}
+            style={styles.bookButton}
+          />
         </View>
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -91,11 +118,17 @@ export default function ExploreStaysScreen({
   userInitials,
   statusIcon,
   statusLabel,
+  cityLabel = 'your destination',
   listings,
   onBookPress,
   onFilterPress,
+  onEmptyPrimaryAction,
   onBack,
 }: ExploreStaysScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+  const empty = emptyStates.exploreStays(cityLabel);
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -110,72 +143,79 @@ export default function ExploreStaysScreen({
 
       <ScreenScroll>
         <View style={styles.titleRow}>
-          <Text style={styles.screenTitle}>Explore Stays</Text>
+          <SectionHeader title="Homestays nearby" style={styles.sectionHeader} />
           <Pressable
             onPress={onFilterPress}
             style={styles.filterButton}
             accessibilityRole="button"
             accessibilityLabel="Filter listings"
           >
-            <AppIcon name="options-outline" size={fontSizes.heading} color={colors.textSecondary} />
+            <AppIcon
+              name="options-outline"
+              size={iconSizes.lg}
+              color={colors.textSecondary}
+            />
           </Pressable>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.list}
-        >
-          {listings.map((listing) => (
-            <StayCard
-              key={listing.id}
-              listing={listing}
-              onBookPress={() => onBookPress?.(listing.id)}
-            />
-          ))}
-        </ScrollView>
+        {listings.length === 0 ? (
+          <EmptyState
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            primaryActionLabel={empty.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
+          />
+        ) : (
+          <View style={styles.list}>
+            {listings.map((listing) => (
+              <StayCard
+                key={listing.id}
+                listing={listing}
+                onBookPress={() => onBookPress?.(listing.id)}
+              />
+            ))}
+          </View>
+        )}
       </ScreenScroll>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
-  screenTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
+  sectionHeader: {
+    flex: 1,
+    marginBottom: 0,
   },
   filterButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: touchTarget,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },
   list: {
-    gap: spacing.lg,
+    gap: spacing.md,
     paddingBottom: spacing.sm,
   },
   stayCard: {
-    width: 280,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    width: '100%',
     overflow: 'hidden',
   },
   imageTile: {
-    height: 120,
+    height: layout.carouselMinHeight - spacing.xl * 2,
     margin: spacing.sm,
     backgroundColor: tints.teal,
     borderRadius: borderRadius.md,
@@ -183,29 +223,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardBody: {
-    padding: spacing.md,
+    padding: layout.cardPadding,
     gap: spacing.sm,
   },
-  verifiedBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  verifiedText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    color: colors.white,
-  },
   stayTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
   },
   stayLocation: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
   },
   starRow: {
@@ -214,33 +245,33 @@ const styles = StyleSheet.create({
   },
   amenityRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   amenityChip: {
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  amenityText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.border,
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: spacing.sm,
+    gap: spacing.sm,
   },
   priceText: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.teal,
+    flexShrink: 1,
   },
   bookButton: {
     paddingHorizontal: spacing.md,
-    minHeight: 44,
+    minHeight: controlHeights.sm,
     paddingVertical: spacing.sm,
   },
 });
+}
+

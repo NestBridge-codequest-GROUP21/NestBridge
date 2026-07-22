@@ -1,5 +1,6 @@
 package com.nestbridge.matching;
 
+import com.nestbridge.common.ProviderVerificationDto;
 import lombok.Builder;
 import lombok.Data;
 
@@ -18,6 +19,7 @@ public class MatchResultDto {
     private Map<String, Double> scoreBreakdown;
     private List<String> matchReasons;
     private String trustBadge;
+    private ProviderVerificationDto verification;
     private Double pricePerNight;
     private Double distanceKm;
     private String location;

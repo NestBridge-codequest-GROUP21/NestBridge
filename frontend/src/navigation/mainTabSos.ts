@@ -22,6 +22,16 @@ export function handleProfileCulturalItem(
   navigation: NativeStackNavigationProp<AppStackParamList>,
   itemId: string,
 ) {
+  if (itemId === 'homestays') {
+    // Full homestay catalogue. Students still use Explore primary "Find a host"
+    // for MatchSearch; this hub row is the browseable listing.
+    navigation.navigate('ExploreStays');
+    return;
+  }
+  if (itemId === 'universities') {
+    navigation.navigate('UniversitiesDirectory');
+    return;
+  }
   if (itemId === 'video-library') {
     navigation.navigate('VideoLibrary');
     return;
@@ -30,8 +40,16 @@ export function handleProfileCulturalItem(
     navigation.navigate('PrepChecklist');
     return;
   }
+  if (itemId === 'student-events') {
+    navigation.navigate('StudentEvents');
+    return;
+  }
   if (itemId === 'cultural-tips') {
     navigation.navigate('LocalTips');
+    return;
+  }
+  if (itemId === 'practical-tips') {
+    navigation.navigate('PracticalTips');
     return;
   }
   if (itemId === 'transport') {
@@ -48,6 +66,23 @@ export function handleProfileCulturalItem(
   }
   if (itemId === 'sites-directory') {
     navigation.navigate('SitesDirectory');
+    return;
+  }
+  if (itemId === 'listings') {
+    navigation.navigate('HostListings');
+    return;
+  }
+  if (itemId === 'calendar') {
+    navigation.navigate('HostCalendar');
+    return;
+  }
+  if (itemId === 'availability') {
+    navigation.navigate('GuideAvailability');
+    return;
+  }
+  if (itemId === 'tour-types') {
+    navigation.navigate('TourTypesSetup');
+    return;
   }
 }
 

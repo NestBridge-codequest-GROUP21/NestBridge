@@ -1,24 +1,34 @@
-import React, { useState } from 'react';
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
-  TextInput,
+  useWindowDimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeader from '../../components/ScreenHeader';
+import SearchField from '../../components/SearchField';
+import FormTextField from '../../components/FormTextField';
+import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
+import KeyboardSafeView from '../../components/KeyboardSafeView';
+import ScreenScroll from '../../components/ScreenScroll';
 import type { MapLandmark } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   layout,
+  lineHeights,
+  iconSizes,
+  touchTarget,
+  controlHeights,
 } from '../../constants/theme';
 
 export interface OfflineMapScreenProps {
@@ -35,12 +45,18 @@ export interface OfflineMapScreenProps {
   onBack?: () => void;
 }
 
+const MAP_GRID_ROWS = 6;
+const MAP_GRID_COLS = 4;
+const LANDMARK_CARD_MAX_WIDTH = layout.listingCardWidth * 0.55;
+const LOCATION_DOT = spacing.md;
+const LOCATION_DOT_BORDER = borderWidths.strong + borderWidths.hairline;
+
 export default function OfflineMapScreen({
-  greeting,
-  userName,
-  userInitials,
-  statusIcon,
-  statusLabel,
+  greeting: _greeting,
+  userName: _userName,
+  userInitials: _userInitials,
+  statusIcon: _statusIcon,
+  statusLabel: _statusLabel,
   regionLabel,
   downloadSize,
   landmarks,
@@ -48,58 +64,88 @@ export default function OfflineMapScreen({
   onLocatePress,
   onBack,
 }: OfflineMapScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const [landmarkQuery, setLandmarkQuery] = useState('');
   const [routeFrom, setRouteFrom] = useState('');
   const [routeTo, setRouteTo] = useState('');
 
+  const filteredLandmarks = useMemo(() => {
+    const query = landmarkQuery.trim().toLowerCase();
+    if (!query) {
+      return landmarks;
+    }
+    return landmarks.filter((landmark) =>
+      landmark.name.toLowerCase().includes(query),
+    );
+  }, [landmarkQuery, landmarks]);
+
+  // Keep the map visible on short phones; panel scrolls for the rest.
+  const panelMaxHeight = Math.max(
+    controlHeights.lg * 4,
+    Math.round(windowHeight * 0.42),
+  );
+
   return (
-    <View style={styles.root}>
+    <KeyboardSafeView style={styles.root}>
       <StatusBar style="light" />
       <ScreenHeader
-        greeting={greeting}
-        userName={userName}
-        userInitials={userInitials}
-        statusIcon={statusIcon}
-        statusLabel={statusLabel}
+        title="Offline map"
+        subtitle={`${regionLabel} · ${downloadSize}`}
+        compact
         onBack={onBack}
       />
 
       <View style={styles.mapArea}>
         <View style={styles.offlineBanner}>
           <Text style={styles.bannerText}>
-            OFFLINE MODE ACTIVE — {regionLabel} ({downloadSize})
+            Offline · {regionLabel} ({downloadSize})
           </Text>
         </View>
 
         <View style={styles.mapCanvas}>
           <View style={styles.mapGrid}>
-            {Array.from({ length: 6 }).map((_, row) => (
+            {Array.from({ length: MAP_GRID_ROWS }).map((_, row) => (
               <View key={`row-${row}`} style={styles.mapGridRow}>
-                {Array.from({ length: 4 }).map((__, col) => (
+                {Array.from({ length: MAP_GRID_COLS }).map((__, col) => (
                   <View key={`cell-${row}-${col}`} style={styles.mapGridCell} />
                 ))}
               </View>
             ))}
           </View>
 
-          {landmarks.map((landmark) => (
-            <Pressable
-              key={landmark.id}
-              style={[
-                styles.pinWrap,
-                { top: `${landmark.topPercent}%`, left: `${landmark.leftPercent}%` },
-              ]}
-              onPress={() => onLandmarkPress?.(landmark.id)}
-              accessibilityRole="button"
-              accessibilityLabel={landmark.name}
-            >
-              <AppIcon name="location" size={fontSizes.subheading} color={colors.danger} />
-              <View style={styles.landmarkCard}>
-                <View style={styles.landmarkDot} />
-                <Text style={styles.landmarkName}>{landmark.name}</Text>
-              </View>
-            </Pressable>
-          ))}
+          {filteredLandmarks.map((landmark) => {
+            const top = Math.min(88, Math.max(6, landmark.topPercent));
+            const left = Math.min(82, Math.max(8, landmark.leftPercent));
+            return (
+              <Pressable
+                key={landmark.id}
+                style={[
+                  styles.pinWrap,
+                  { top: `${top}%`, left: `${left}%` },
+                ]}
+                onPress={() => onLandmarkPress?.(landmark.id)}
+                accessibilityRole="button"
+                accessibilityLabel={landmark.name}
+              >
+                <AppIcon
+                  name="location"
+                  size={iconSizes.md}
+                  color={colors.danger}
+                />
+                <View style={styles.landmarkCard}>
+                  <View style={styles.landmarkDot} />
+                  <Text style={styles.landmarkName} numberOfLines={2}>
+                    {landmark.name}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
 
           <View style={styles.currentLocation}>
             <View style={styles.currentDot} />
@@ -111,59 +157,83 @@ export default function OfflineMapScreen({
             accessibilityRole="button"
             accessibilityLabel="Center on current location"
           >
-            <AppIcon name="locate" size={fontSizes.subheading} color={colors.teal} />
+            <AppIcon name="locate" size={iconSizes.md} color={colors.teal} />
           </Pressable>
         </View>
       </View>
 
-      <View style={[styles.searchPanel, { paddingBottom: insets.bottom + spacing.md }]}>
-        <View style={styles.searchBar}>
-          <AppIcon name="search" size={fontSizes.body} color={colors.textTertiary} />
-          <Text style={styles.searchPlaceholder}>Search</Text>
-        </View>
+      <View
+        style={[
+          styles.searchPanel,
+          {
+            maxHeight: panelMaxHeight,
+            paddingBottom: insets.bottom + spacing.md,
+          },
+        ]}
+      >
+        <ScreenScroll
+          keyboardAware={false}
+          contentContainerStyle={styles.panelScrollContent}
+        >
+          <InlineBanner
+            tone="info"
+            message="Works without data — useful for first days in Accra or Kumasi."
+            style={styles.infoBanner}
+          />
 
-        <Text style={styles.routingLabel}>Offline routing between points</Text>
+          <SearchField
+            value={landmarkQuery}
+            placeholder="Search landmarks"
+            onChangeText={setLandmarkQuery}
+            onClear={() => setLandmarkQuery('')}
+            style={styles.searchField}
+          />
 
-        <View style={styles.routeInputRow}>
-          <AppIcon name="location-outline" size={fontSizes.body} color={colors.textSecondary} />
-          <TextInput
-            style={styles.routeInput}
-            placeholder="Route point A"
-            placeholderTextColor={colors.textTertiary}
+          <Text style={styles.routingLabel}>Plan a route offline</Text>
+
+          <FormTextField
+            label="Starting point"
             value={routeFrom}
+            placeholder="Starting point"
             onChangeText={setRouteFrom}
           />
-        </View>
 
-        <View style={styles.routeInputRow}>
-          <AppIcon name="location-outline" size={fontSizes.body} color={colors.textSecondary} />
-          <TextInput
-            style={styles.routeInput}
-            placeholder="Route point B"
-            placeholderTextColor={colors.textTertiary}
-            value={routeTo}
-            onChangeText={setRouteTo}
-          />
-          <Pressable
-            style={styles.routeGoButton}
-            accessibilityRole="button"
-            accessibilityLabel="Calculate offline route"
-          >
-            <AppIcon name="arrow-forward" size={fontSizes.subheading} color={colors.white} />
-          </Pressable>
-        </View>
+          <View style={styles.destinationRow}>
+            <View style={styles.destinationField}>
+              <FormTextField
+                label="Destination"
+                value={routeTo}
+                placeholder="Destination"
+                onChangeText={setRouteTo}
+              />
+            </View>
+            <Pressable
+              style={styles.routeGoButton}
+              accessibilityRole="button"
+              accessibilityLabel="Calculate offline route"
+            >
+              <AppIcon
+                name="arrow-forward"
+                size={iconSizes.md}
+                color={colors.onPrimary}
+              />
+            </Pressable>
+          </View>
+        </ScreenScroll>
       </View>
-    </View>
+    </KeyboardSafeView>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   mapArea: {
     flex: 1,
+    minHeight: layout.carouselMinHeight,
   },
   offlineBanner: {
     backgroundColor: colors.navy,
@@ -173,7 +243,8 @@ const styles = StyleSheet.create({
   bannerText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    color: colors.white,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
     textAlign: 'center',
   },
   mapCanvas: {
@@ -181,10 +252,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warmCream,
     margin: layout.screenPaddingHorizontal,
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     overflow: 'hidden',
     position: 'relative',
+    ...shadows.card,
+  },
+  infoBanner: {
+    marginBottom: spacing.md,
   },
   mapGrid: {
     ...StyleSheet.absoluteFillObject,
@@ -196,50 +271,55 @@ const styles = StyleSheet.create({
   },
   mapGridCell: {
     flex: 1,
-    borderWidth: 0.5,
+    borderWidth: borderWidths.hairline / 2,
     borderColor: colors.border,
   },
   pinWrap: {
     position: 'absolute',
     alignItems: 'center',
-    maxWidth: 120,
-  },
-  pinIcon: {
-    fontSize: fontSizes.subheading,
+    maxWidth: LANDMARK_CARD_MAX_WIDTH,
+    transform: [{ translateX: -spacing.md }],
   },
   landmarkCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
+    alignItems: 'flex-start',
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     marginTop: spacing.xs,
     gap: spacing.xs,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
+    maxWidth: '100%',
   },
   landmarkDot: {
-    width: 8,
-    height: 8,
+    width: spacing.sm,
+    height: spacing.sm,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.success,
+    marginTop: spacing.xs,
+    flexShrink: 0,
   },
   landmarkName: {
     fontFamily: fontFamilies.semibold,
-    fontSize: 10,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.caption,
     color: colors.textPrimary,
     flexShrink: 1,
+    flexGrow: 1,
+    minWidth: 0,
   },
   currentLocation: {
     position: 'absolute',
     top: '48%',
     left: '55%',
-    width: 16,
-    height: 16,
+    width: LOCATION_DOT,
+    height: LOCATION_DOT,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.tealBright,
-    borderWidth: 3,
+    borderWidth: LOCATION_DOT_BORDER,
     borderColor: colors.white,
   },
   currentDot: {
@@ -249,87 +329,55 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: spacing.md,
     right: spacing.md,
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
-    borderWidth: 1,
+    backgroundColor: colors.surface,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  locateIcon: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    color: colors.teal,
+    ...shadows.floating,
   },
   searchPanel: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,
+    borderTopWidth: borderWidths.hairline,
+    borderTopColor: colors.border,
+    ...shadows.raised,
+  },
+  panelScrollContent: {
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minHeight: 44,
-    gap: spacing.sm,
+  searchField: {
     marginBottom: spacing.md,
-  },
-  searchIcon: {
-    fontSize: fontSizes.body,
-  },
-  searchPlaceholder: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textTertiary,
   },
   routingLabel: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
-  routeInputRow: {
+  destinationRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     gap: spacing.sm,
-    marginBottom: spacing.sm,
   },
-  routePin: {
-    fontSize: fontSizes.body,
-  },
-  routeInput: {
+  destinationField: {
     flex: 1,
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    minHeight: 44,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textPrimary,
   },
   routeGoButton: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: controlHeights.md,
+    marginBottom: spacing.md,
     borderRadius: borderRadius.md,
     backgroundColor: colors.tealBright,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  routeGoIcon: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    color: colors.white,
-  },
 });
+}
+

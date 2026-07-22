@@ -125,6 +125,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
 });

@@ -3,7 +3,7 @@ import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
 import {
   DIETARY_OPTIONS,
-  GHANA_CITY_OPTIONS,
+  GHANA_CITY_OPTIONS_WITH_OTHER,
   LANGUAGE_OPTIONS,
   QuizPageDefinition,
   RELIGION_OPTIONS,
@@ -36,12 +36,12 @@ const GUIDE_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'guidingStyle',
-      question: "What's your guiding style?",
+      question: 'How do you usually guide guests?',
       type: 'multi-select',
       options: [
-        'Relaxed/flexible pace',
-        'Structured/efficient',
-        'High-energy/adventurous',
+        'Relaxed / flexible pace',
+        'Structured / efficient',
+        'High-energy / adventurous',
       ],
       required: true,
     },
@@ -58,7 +58,7 @@ const GUIDE_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'sessionDuration',
-      question: "What's your session duration?",
+      question: "What's your typical session length?",
       type: 'number',
       placeholder: 'Duration in hours',
       required: true,
@@ -67,16 +67,16 @@ const GUIDE_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'operatingAreas',
-      question: 'Which cities do you operate in?',
+      question: 'Which Ghanaian cities do you operate in?',
       type: 'multi-select',
-      options: GHANA_CITY_OPTIONS,
+      options: GHANA_CITY_OPTIONS_WITH_OTHER,
       required: true,
     },
   ],
   [
     {
       id: 'serviceTypes',
-      question: 'What service types do you offer?',
+      question: 'What experiences do you offer?',
       type: 'multi-select',
       options: [
         'City tour',
@@ -109,9 +109,9 @@ const GUIDE_PAGES: QuizPageDefinition[] = [
     {
       id: 'guideBackground',
       question:
-        "What's your own cultural background, and do you specialize with any particular group?",
+        "What's your cultural background, and do you specialize with any particular group?",
       type: 'text',
-      placeholder: 'Share your background and any specialties',
+      placeholder: 'Your background and any specialties',
       required: false,
     },
   ],

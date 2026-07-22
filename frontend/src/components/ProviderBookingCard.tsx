@@ -1,12 +1,15 @@
+import { useThemedStyles, type AppTheme, useTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Avatar from './Avatar';
+import Card from './Card';
+import EmptyState from './EmptyState';
+import StatusBadge, { type StatusBadgeTone } from './StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
 } from '../constants/theme';
 import type { ProviderBookingItem } from '../types/providerBooking';
 import { formatBookingDate, formatCurrency } from '../data/bookingMock';
@@ -23,28 +26,19 @@ function scheduleLine(booking: ProviderBookingItem): string {
   return `${formatBookingDate(booking.checkIn)} – ${formatBookingDate(booking.checkOut)}`;
 }
 
-function statusLabel(status: ProviderBookingItem['status']): string {
+function statusMeta(status: ProviderBookingItem['status']): {
+  label: string;
+  tone: StatusBadgeTone;
+} {
   switch (status) {
     case 'ACCEPTED':
-      return 'Awaiting payment';
+      return { label: 'Awaiting payment', tone: 'warning' };
     case 'CONFIRMED':
-      return 'Confirmed';
+      return { label: 'Confirmed', tone: 'success' };
     case 'CHECKED_IN':
-      return 'Checked in';
+      return { label: 'Checked in', tone: 'success' };
     default:
-      return status;
-  }
-}
-
-function statusColors(status: ProviderBookingItem['status']): { bg: string; text: string } {
-  switch (status) {
-    case 'ACCEPTED':
-      return { bg: colors.warmCream, text: colors.warning };
-    case 'CONFIRMED':
-    case 'CHECKED_IN':
-      return { bg: colors.success, text: colors.white };
-    default:
-      return { bg: colors.border, text: colors.textSecondary };
+      return { label: status, tone: 'neutral' };
   }
 }
 
@@ -59,23 +53,19 @@ export default function ProviderBookingCard({
   isLast = false,
   onPress,
 }: ProviderBookingCardProps) {
-  const statusStyle = statusColors(booking.status);
+  const styles = useThemedStyles(createStyles);
+
+  const status = statusMeta(booking.status);
   const cardBody = (
     <>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>{booking.guestInitials}</Text>
-      </View>
+      <Avatar initials={booking.guestInitials} size="lg" />
 
       <View style={styles.body}>
         <View style={styles.topRow}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text style={styles.name} numberOfLines={2}>
             {booking.guestName}
           </Text>
-          <View style={[styles.statusPill, { backgroundColor: statusStyle.bg }]}>
-            <Text style={[styles.statusText, { color: statusStyle.text }]}>
-              {statusLabel(booking.status)}
-            </Text>
-          </View>
+          <StatusBadge label={status.label} tone={status.tone} />
         </View>
         <Text style={styles.schedule}>{scheduleLine(booking)}</Text>
         <Text style={styles.payout}>
@@ -87,22 +77,22 @@ export default function ProviderBookingCard({
 
   if (!onPress) {
     return (
-      <View style={[styles.card, !isLast && styles.cardSpacing]}>{cardBody}</View>
+      <Card style={[styles.card, !isLast && styles.cardSpacing]} padding="lg">
+        {cardBody}
+      </Card>
     );
   }
 
   return (
     <Pressable
-      style={({ pressed }) => [
-        styles.card,
-        !isLast && styles.cardSpacing,
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [!isLast && styles.cardSpacing, pressed && styles.pressed]}
       onPress={() => onPress(booking.id)}
       accessibilityRole="button"
       accessibilityLabel={`Booking with ${booking.guestName}`}
     >
-      {cardBody}
+      <Card style={styles.card} padding="lg">
+        {cardBody}
+      </Card>
     </Pressable>
   );
 }
@@ -111,30 +101,40 @@ export interface ProviderBookingsEmptyBlockProps {
   title: string;
   body: string;
   tip?: string;
+  iconGlyph?: string;
+  primaryActionLabel?: string;
+  onPrimaryAction?: () => void;
 }
 
 export function ProviderBookingsEmptyBlock({
   title,
   body,
   tip,
+  iconGlyph = '📅',
+  primaryActionLabel,
+  onPrimaryAction,
 }: ProviderBookingsEmptyBlockProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
-    <View style={styles.emptyBlock}>
-      <Text style={styles.emptyTitle}>{title}</Text>
-      <Text style={styles.emptyBody}>{body}</Text>
-      {tip ? <Text style={styles.emptyTip}>{tip}</Text> : null}
-    </View>
+    <EmptyState
+      title={title}
+      body={body}
+      tip={tip}
+      iconGlyph={iconGlyph}
+      primaryActionLabel={primaryActionLabel}
+      onPrimaryAction={onPrimaryAction}
+      style={styles.emptySpacing}
+    />
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   card: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    alignItems: 'flex-start',
+    gap: spacing.md,
   },
   cardSpacing: {
     marginBottom: spacing.md,
@@ -142,47 +142,26 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.92,
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.teal,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  avatarText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
   body: {
     flex: 1,
+    minWidth: 0,
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
     marginBottom: spacing.xs,
     gap: spacing.sm,
   },
   name: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: '40%',
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-  },
-  statusPill: {
-    borderRadius: borderRadius.pill,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  statusText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
   },
   schedule: {
     fontFamily: fontFamilies.regular,
@@ -196,28 +175,9 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
-  emptyBlock: {
-    backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+  emptySpacing: {
     marginBottom: spacing.lg,
   },
-  emptyTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptyBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  emptyTip: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textTertiary,
-  },
 });
+}
+

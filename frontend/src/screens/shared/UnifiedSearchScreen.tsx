@@ -1,24 +1,28 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
+import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  iconSizes,
+  touchTarget,
   layout,
+  lineHeights,
 } from '../../constants/theme';
 
 export interface SearchCategoryItem {
@@ -55,6 +59,10 @@ export default function UnifiedSearchScreen({
   onBack,
   onTabPress,
 }: UnifiedSearchScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -63,39 +71,45 @@ export default function UnifiedSearchScreen({
         greeting="Search"
         userName={userName}
         userInitials={userInitials}
-        subtitle={`Explore options in ${cityLabel}`}
+        subtitle={`Find stays and guides in ${cityLabel}`}
         onBack={onBack}
       />
 
-      <ScrollView
-        style={styles.body}
-        contentContainerStyle={styles.bodyContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScreenScroll withTabBar withSosDock={showSosDock}>
         <Text style={styles.lead}>
-          Homestays near campus, verified local guides, and hotels when you want
-          your own space — search by what you need today.
+          Homestays near campus, verified Ghanaian guides, and hotels when you
+          want your own space — start with what you need today.
         </Text>
 
         {categories.map((category) => (
           <Pressable
             key={category.id}
-            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+            style={({ pressed }) => [styles.cardPress, pressed && styles.cardPressed]}
             onPress={() => onCategoryPress?.(category.id)}
             accessibilityRole="button"
             accessibilityLabel={category.label}
           >
-            <View style={styles.cardIconTile}>
-              <AppIcon glyph={category.icon} size={24} color={colors.tealDeep} />
-            </View>
-            <View style={styles.cardText}>
-              <Text style={styles.cardTitle}>{category.label}</Text>
-              <Text style={styles.cardDescription}>{category.description}</Text>
-            </View>
-            <AppIcon name="chevron-forward" size={22} color={colors.teal} />
+            <Card style={styles.card} padding="lg">
+              <View style={styles.cardIconTile}>
+                <AppIcon
+                  glyph={category.icon}
+                  size={iconSizes.lg}
+                  color={colors.onAccent}
+                />
+              </View>
+              <View style={styles.cardText}>
+                <Text style={styles.cardTitle}>{category.label}</Text>
+                <Text style={styles.cardDescription}>{category.description}</Text>
+              </View>
+              <AppIcon
+                name="chevron-forward"
+                size={iconSizes.lg}
+                color={colors.teal}
+              />
+            </Card>
           </Pressable>
         ))}
-      </ScrollView>
+      </ScreenScroll>
 
       <AppTabBar
         items={tabBarItems}
@@ -108,48 +122,40 @@ export default function UnifiedSearchScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  body: {
-    flex: 1,
-  },
-  bodyContent: {
-    paddingHorizontal: layout.screenPaddingHorizontal,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
   },
   lead: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
+  },
+  cardPress: {
+    marginBottom: layout.sectionGap,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 72,
+    minHeight: touchTarget + spacing.lg,
   },
   cardPressed: {
     opacity: 0.95,
   },
   cardIconTile: {
-    width: 48,
-    height: 48,
+    width: layout.iconTileSize,
+    height: layout.iconTileSize,
     borderRadius: borderRadius.md,
     backgroundColor: tints.teal,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.border,
   },
   cardText: {
     flex: 1,
@@ -158,6 +164,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
@@ -165,6 +172,8 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textSecondary,
-    lineHeight: 16,
+    lineHeight: lineHeights.caption,
   },
 });
+}
+

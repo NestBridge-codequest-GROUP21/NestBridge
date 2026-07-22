@@ -1,17 +1,26 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import PrimaryButton from '../../components/PrimaryButton';
+import FormTextField from '../../components/FormTextField';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
+import InlineBanner from '../../components/InlineBanner';
+import SectionHeader from '../../components/SectionHeader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  lineHeights,
+  iconSizes,
+  touchTarget,
+  layout,
 } from '../../constants/theme';
 import {
   EVENT_ORGANIZER_META,
@@ -32,6 +41,10 @@ export default function CreateEventScreen({
   onBack,
   onSubmit,
 }: CreateEventScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const [title, setTitle] = useState('');
   const [type, setType] = useState<StudentEventType>('MEETUP');
   const [organizerKind, setOrganizerKind] =
@@ -84,158 +97,131 @@ export default function CreateEventScreen({
       <StatusBar style="light" />
       <ScreenHeader
         title="Host an event"
-        subtitle="Set up a party, trip, or hangout for other students"
+        subtitle="Invite other students to a meetup, trip, or hangout around campus"
         onBack={onBack}
       />
 
-      <ScreenScroll keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Event title</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Sunday jollof cook-off"
-          placeholderTextColor={colors.textTertiary}
+      <ScreenScroll>
+        <FormTextField
+          label="Event title"
           value={title}
+          placeholder="e.g. Sunday jollof cook-off"
           onChangeText={setTitle}
-          accessibilityLabel="Event title"
         />
 
-        <Text style={styles.label}>What kind of event?</Text>
-        <View style={styles.chipRow}>
-          {EVENT_TYPE_ORDER.map((option) => {
-            const meta = EVENT_TYPE_META[option];
-            const active = option === type;
-            return (
-              <Pressable
-                key={option}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => setType(option)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                accessibilityLabel={meta.label}
-              >
-                <AppIcon
-                  glyph={meta.icon}
-                  size={fontSizes.caption}
-                  color={active ? colors.white : colors.textSecondary}
-                />
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                  {meta.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <SectionHeader title="What kind of event?" style={styles.chipSection} />
+        <Card padding="md" style={styles.chipCard}>
+          <View style={styles.chipRow}>
+            {EVENT_TYPE_ORDER.map((option) => {
+              const meta = EVENT_TYPE_META[option];
+              const active = option === type;
+              return (
+                <Pressable
+                  key={option}
+                  style={[styles.chip, active && styles.chipActive]}
+                  onPress={() => setType(option)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={meta.label}
+                >
+                  <AppIcon
+                    glyph={meta.icon}
+                    size={iconSizes.sm}
+                    color={active ? colors.white : colors.textSecondary}
+                  />
+                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                    {meta.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Card>
 
-        <Text style={styles.label}>Who's hosting?</Text>
-        <View style={styles.chipRow}>
-          {EVENT_ORGANIZER_ORDER.map((option) => {
-            const meta = EVENT_ORGANIZER_META[option];
-            const active = option === organizerKind;
-            return (
-              <Pressable
-                key={option}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => setOrganizerKind(option)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                accessibilityLabel={meta.label}
-              >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                  {meta.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <SectionHeader title="Who's hosting?" style={styles.chipSection} />
+        <Card padding="md" style={styles.chipCard}>
+          <View style={styles.chipRow}>
+            {EVENT_ORGANIZER_ORDER.map((option) => {
+              const meta = EVENT_ORGANIZER_META[option];
+              const active = option === organizerKind;
+              return (
+                <Pressable
+                  key={option}
+                  style={[styles.chip, active && styles.chipActive]}
+                  onPress={() => setOrganizerKind(option)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={meta.label}
+                >
+                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                    {meta.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Card>
 
-        <Text style={styles.label}>Date & time</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Sat, Jul 18 · 5:00 PM"
-          placeholderTextColor={colors.textTertiary}
+        <FormTextField
+          label="Date & time"
           value={dateLabel}
+          placeholder="e.g. Sat, Jul 18 · 5:00 PM"
           onChangeText={setDateLabel}
-          accessibilityLabel="Date and time"
         />
 
-        <Text style={styles.label}>Location</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Campus common room, Block C"
-          placeholderTextColor={colors.textTertiary}
+        <FormTextField
+          label="Location"
           value={location}
+          placeholder="e.g. UG common room, Legon"
           onChangeText={setLocation}
-          accessibilityLabel="Location"
         />
 
-        <Text style={styles.label}>Spots available</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. 20"
-          placeholderTextColor={colors.textTertiary}
+        <FormTextField
+          label="Spots available"
           value={capacity}
+          placeholder="e.g. 20"
           onChangeText={setCapacity}
           keyboardType="number-pad"
-          accessibilityLabel="Spots available"
         />
 
-        <Text style={styles.label}>Description</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="What should people expect? What to bring?"
-          placeholderTextColor={colors.textTertiary}
+        <FormTextField
+          label="Description"
           value={description}
+          placeholder="What should people expect? What to bring?"
           onChangeText={setDescription}
           multiline
           numberOfLines={4}
-          textAlignVertical="top"
-          accessibilityLabel="Description"
         />
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? <InlineBanner message={error} tone="error" style={styles.errorBanner} /> : null}
 
         <PrimaryButton
-          label={submitting ? 'Posting…' : 'Post event'}
+          label="Post event"
           onPress={handleSubmit}
           disabled={submitting}
+          loading={submitting}
           style={styles.submit}
         />
         <Text style={styles.helper}>
-          Your event appears in the Student events feed for others to join.
+          Your event appears in the Student events feed for others nearby to join.
         </Text>
       </ScreenScroll>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  label: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
+  chipSection: {
     marginBottom: spacing.sm,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
-  input: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    minHeight: 48,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textPrimary,
-  },
-  textArea: {
-    minHeight: 108,
-    paddingTop: spacing.md,
+  chipCard: {
+    marginBottom: spacing.md,
   },
   chipRow: {
     flexDirection: 'row',
@@ -246,19 +232,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    minHeight: 44,
+    minHeight: touchTarget,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.pill,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
   chipActive: {
     backgroundColor: colors.teal,
     borderColor: colors.teal,
-  },
-  chipIcon: {
-    fontSize: fontSizes.caption,
   },
   chipText: {
     fontFamily: fontFamilies.semibold,
@@ -267,22 +250,24 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   chipTextActive: {
-    color: colors.white,
+    color: colors.onPrimary,
   },
-  error: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.danger,
-    marginTop: spacing.md,
+  errorBanner: {
+    marginTop: spacing.sm,
+    marginBottom: 0,
   },
   submit: {
-    marginTop: spacing.lg,
+    marginTop: layout.sectionGap,
   },
   helper: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     textAlign: 'center',
     marginTop: spacing.md,
+    lineHeight: lineHeights.caption,
   },
 });
+}
+

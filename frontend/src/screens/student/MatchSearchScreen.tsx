@@ -1,30 +1,35 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
-  TextInput,
-  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  borderWidths,
   gradients,
   layout,
+  lineHeights,
+  touchTarget,
 } from '../../constants/theme';
 import MatchResultsScreen, {
   type MatchResultHost,
 } from './MatchResultsScreen';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import BackButton from '../../components/BackButton';
+import Card from '../../components/Card';
+import FormTextField from '../../components/FormTextField';
+import ScreenScroll from '../../components/ScreenScroll';
+import PrimaryButton from '../../components/PrimaryButton';
+import SkeletonLoader, { SkeletonBlock } from '../../components/SkeletonLoader';
 
 export interface MatchSearchDefaults {
   destinationCity: string;
@@ -90,13 +95,17 @@ export default function MatchSearchScreen({
   defaults,
   onSearch,
   tabBarItems,
-  activeTabId = 'search',
+  activeTabId = 'explore',
   showSosDock = false,
   onSosPress,
   onBack,
   onHostPress,
   onTabPress,
 }: MatchSearchScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const showTabBar = tabBarItems != null && tabBarItems.length > 0;
 
@@ -192,45 +201,31 @@ export default function MatchSearchScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
+      {/* Marketing search hero — richer than ScreenHeader (eyebrow + display title). */}
       <LinearGradient
-        colors={[...gradients.header]}
+        colors={gradients.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
         {onBack && !showTabBar ? (
-          <Pressable
-            onPress={onBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
+          <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backButton} />
         ) : (
           <View style={styles.backButtonSpacer} />
         )}
-        <Text style={styles.headerEyebrow}>Smart matching</Text>
-        <Text style={styles.headerTitle}>Find your perfect host</Text>
+        <Text style={styles.headerEyebrow}>Host search</Text>
+        <Text style={styles.headerTitle}>Find your host</Text>
         <Text style={styles.headerSubtitle}>
-          We match you with verified families based on lifestyle, diet, language, and budget.
+          Matched to verified Ghana host families by lifestyle, diet, language, and budget.
         </Text>
       </LinearGradient>
 
-      <ScrollView
+      <ScreenScroll
         style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingBottom: showTabBar
-              ? insets.bottom + layout.scrollBottomInset
-              : insets.bottom + spacing.xl,
-          },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+        withTabBar={showTabBar}
+        contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.summaryCard}>
+        <Card padding="lg" elevation="card" style={styles.summaryCard}>
           <View style={styles.summaryTopRow}>
             <View style={styles.summaryTextWrap}>
               <Text style={styles.summaryLabel}>Your search</Text>
@@ -249,119 +244,86 @@ export default function MatchSearchScreen({
 
           {isExpanded ? (
             <View style={styles.expandedFields}>
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Destination city</Text>
-                <TextInput
-                  style={styles.fieldInput}
-                  value={destinationCity}
-                  onChangeText={setDestinationCity}
-                  placeholder="e.g. Accra, Kumasi, Wa, Ho"
-                  placeholderTextColor={colors.textTertiary}
-                  autoCapitalize="words"
-                />
-              </View>
+              <FormTextField
+                label="Destination city"
+                value={destinationCity}
+                onChangeText={setDestinationCity}
+                placeholder="e.g. Accra, Kumasi, Wa, Ho"
+                autoCapitalize="words"
+              />
 
               <View style={styles.fieldRow}>
                 <View style={styles.fieldHalf}>
-                  <Text style={styles.fieldLabel}>Check-in</Text>
-                  <TextInput
-                    style={styles.fieldInput}
+                  <FormTextField
+                    label="Check-in"
                     value={checkIn}
                     onChangeText={setCheckIn}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor={colors.textTertiary}
                     autoCapitalize="none"
+                    autoCorrect={false}
                   />
                 </View>
                 <View style={styles.fieldHalf}>
-                  <Text style={styles.fieldLabel}>Check-out</Text>
-                  <TextInput
-                    style={styles.fieldInput}
+                  <FormTextField
+                    label="Check-out"
                     value={checkOut}
                     onChangeText={setCheckOut}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor={colors.textTertiary}
                     autoCapitalize="none"
+                    autoCorrect={false}
                   />
                 </View>
               </View>
 
               <View style={styles.fieldRow}>
                 <View style={styles.fieldHalf}>
-                  <Text style={styles.fieldLabel}>Budget min ({currency})</Text>
-                  <TextInput
-                    style={styles.fieldInput}
+                  <FormTextField
+                    label={`Budget min (${currency})`}
                     value={budgetMin}
                     onChangeText={setBudgetMin}
                     placeholder="100"
-                    placeholderTextColor={colors.textTertiary}
                     keyboardType="number-pad"
                   />
                 </View>
                 <View style={styles.fieldHalf}>
-                  <Text style={styles.fieldLabel}>Budget max ({currency})</Text>
-                  <TextInput
-                    style={styles.fieldInput}
+                  <FormTextField
+                    label={`Budget max (${currency})`}
                     value={budgetMax}
                     onChangeText={setBudgetMax}
                     placeholder="200"
-                    placeholderTextColor={colors.textTertiary}
                     keyboardType="number-pad"
                   />
                 </View>
               </View>
             </View>
           ) : null}
-        </View>
+        </Card>
 
-        <View style={styles.heroCard}>
-          <Text style={styles.heroCardTitle}>Why matching matters</Text>
+        <Card padding="lg" elevation="card" style={styles.heroCard}>
+          <Text style={styles.heroCardTitle}>Why you will see match reasons</Text>
           <Text style={styles.heroCardBody}>
-            Every result shows exactly why a host fits you — diet, quiet hours, languages, and
-            location — so you can choose with confidence before you message anyone.
+            Each result explains the fit — diet, quiet hours, languages, and neighbourhood —
+            before you message anyone.
           </Text>
-        </View>
+        </Card>
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.findButton,
-            isSearching && styles.findButtonDisabled,
-            pressed && !isSearching && styles.findButtonPressed,
-          ]}
+        <PrimaryButton
+          label="Find my matches"
           onPress={handleFindMatches}
-          disabled={isSearching}
-          accessibilityRole="button"
-          accessibilityLabel="Find my matches"
-          accessibilityState={{ disabled: isSearching }}
-        >
-          <LinearGradient
-            colors={isSearching ? [colors.border, colors.border] : [...gradients.accent]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.findButtonGradient}
-          >
-            {isSearching ? (
-              <View style={styles.loadingRow}>
-                <ActivityIndicator color={colors.textSecondary} size="small" />
-                <Text style={styles.findButtonTextLoading}>Finding your matches…</Text>
-              </View>
-            ) : (
-              <Text style={styles.findButtonText}>Find my matches</Text>
-            )}
-          </LinearGradient>
-        </Pressable>
-      </ScrollView>
+          loading={isSearching}
+          iconName="search-outline"
+        />
+      </ScreenScroll>
 
       {isSearching ? (
         <View style={styles.loadingOverlay} pointerEvents="none">
           <View style={styles.loadingOverlayBackdrop} />
-          <View style={styles.loadingCard}>
-            <ActivityIndicator color={colors.teal} size="large" />
+          <Card padding="lg" elevation="raised" style={styles.loadingCard}>
             <Text style={styles.loadingTitle}>Matching hosts to your profile</Text>
-            <View style={styles.skeletonBlock} />
-            <View style={[styles.skeletonBlock, styles.skeletonBlockShort]} />
-            <View style={[styles.skeletonBlock, styles.skeletonBlockMedium]} />
-          </View>
+            <SkeletonLoader lines={2} style={styles.loadingSkeleton} />
+            <SkeletonBlock width="72%" height={12} style={styles.skeletonGap} />
+            <SkeletonBlock width="88%" height={12} style={styles.skeletonGap} />
+          </Card>
         </View>
       ) : null}
       {showTabBar ? (
@@ -377,7 +339,8 @@ export default function MatchSearchScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -387,25 +350,17 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
     marginBottom: spacing.xs,
+    marginLeft: -spacing.sm,
   },
   backButtonSpacer: {
-    height: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
+    height: touchTarget,
   },
   headerEyebrow: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.82,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -415,16 +370,17 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.display,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.9,
-    lineHeight: fontSizes.body + 6,
+    lineHeight: lineHeights.body,
   },
   scroll: {
     flex: 1,
@@ -435,16 +391,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
   summaryCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
     marginBottom: spacing.lg,
   },
   summaryTopRow: {
@@ -469,10 +415,10 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-    lineHeight: fontSizes.subheading + 6,
+    lineHeight: lineHeights.subheading,
   },
   editButton: {
-    minHeight: 44,
+    minHeight: touchTarget,
     paddingHorizontal: spacing.sm,
     justifyContent: 'center',
   },
@@ -488,12 +434,8 @@ const styles = StyleSheet.create({
   expandedFields: {
     marginTop: spacing.lg,
     paddingTop: spacing.lg,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
-    gap: spacing.md,
-  },
-  fieldGroup: {
-    gap: spacing.sm,
   },
   fieldRow: {
     flexDirection: 'row',
@@ -501,90 +443,27 @@ const styles = StyleSheet.create({
   },
   fieldHalf: {
     flex: 1,
-    gap: spacing.sm,
-  },
-  fieldLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  fieldInput: {
-    backgroundColor: colors.warmCream,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md - 2,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textPrimary,
-    minHeight: 48,
   },
   heroCard: {
     backgroundColor: colors.navyMid,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+    borderColor: colors.navyMid,
     marginBottom: spacing.xl,
   },
   heroCardTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.subheading,
   },
   heroCardBody: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.9,
-    lineHeight: fontSizes.body + 6,
-  },
-  findButton: {
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    shadowColor: colors.tealDeep,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
-    elevation: 6,
-  },
-  findButtonDisabled: {
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  findButtonPressed: {
-    opacity: 0.96,
-    transform: [{ scale: 0.995 }],
-  },
-  findButtonGradient: {
-    minHeight: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  findButtonText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  findButtonTextLoading: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.textSecondary,
-  },
-  loadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+    lineHeight: lineHeights.caption,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -599,41 +478,22 @@ const styles = StyleSheet.create({
   },
   loadingCard: {
     width: '100%',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 8,
   },
   loadingTitle: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-    marginTop: spacing.md,
     marginBottom: spacing.lg,
     textAlign: 'center',
+    lineHeight: lineHeights.body,
   },
-  skeletonBlock: {
-    width: '100%',
-    height: 14,
-    borderRadius: borderRadius.sm,
-    backgroundColor: colors.border,
+  loadingSkeleton: {
     marginBottom: spacing.sm,
   },
-  skeletonBlockShort: {
-    width: '72%',
-    alignSelf: 'flex-start',
-  },
-  skeletonBlockMedium: {
-    width: '88%',
-    alignSelf: 'flex-start',
-    marginBottom: 0,
+  skeletonGap: {
+    marginTop: spacing.sm,
   },
 });
+}
+

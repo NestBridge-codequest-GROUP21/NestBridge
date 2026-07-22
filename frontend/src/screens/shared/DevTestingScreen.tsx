@@ -1,19 +1,24 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import InlineBanner from '../../components/InlineBanner';
+import Card from '../../components/Card';
 import { devTestingCopy } from '../../data/appCopy';
 import type { DemoAccount } from '../../data/demoAccounts';
-import { DEMO_ACTOR_ACCOUNTS, DEMO_PASSWORD } from '../../data/demoAccounts';
+import { DEMO_ACTOR_ACCOUNTS } from '../../data/demoAccounts';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  touchTarget,
   gradients,
   lineHeights,
 } from '../../constants/theme';
@@ -45,11 +50,13 @@ export interface DevTestingScreenProps {
 }
 
 function DevSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
-    <View style={styles.section}>
+    <Card style={styles.section} padding="lg">
       <Text style={styles.sectionTitle}>{title}</Text>
       {children}
-    </View>
+    </Card>
   );
 }
 
@@ -62,6 +69,8 @@ function DevButton({
   onPress?: () => void;
   variant?: 'default' | 'danger';
 }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -95,6 +104,10 @@ export default function DevTestingScreen({
   onResetDemo,
   onDemoActorLogin,
 }: DevTestingScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   const applyHome = (intent: PrimaryIntent | null) => {
@@ -121,21 +134,14 @@ export default function DevTestingScreen({
       <StatusBar style="light" />
 
       <LinearGradient
-        colors={[...gradients.headerCompact]}
+        colors={gradients.headerCompact}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
         <View style={styles.headerTop}>
           {onBack ? (
-            <Pressable
-              onPress={onBack}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-            >
-              <Text style={styles.backIcon}>←</Text>
-            </Pressable>
+            <BackButton onPress={onBack} color={colors.onPrimary} />
           ) : (
             <View style={styles.backPlaceholder} />
           )}
@@ -156,7 +162,7 @@ export default function DevTestingScreen({
         <DevSection title={devTestingCopy.demoActorsTitle}>
           <Text style={styles.sectionBody}>{devTestingCopy.demoActorsHint}</Text>
           {demoLoginError ? (
-            <Text style={styles.demoErrorText}>{demoLoginError}</Text>
+            <InlineBanner tone="error" message={demoLoginError} />
           ) : null}
           {DEMO_ACTOR_ACCOUNTS.map((account) => (
             <DevButton
@@ -232,7 +238,8 @@ export default function DevTestingScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -249,30 +256,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.sm,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 24,
-    color: colors.white,
-  },
   backPlaceholder: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
   },
   headerTitle: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     lineHeight: lineHeights.body,
   },
@@ -285,12 +282,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   section: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   sectionTitle: {
     fontFamily: fontFamilies.semibold,
@@ -307,16 +299,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   devButton: {
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
     backgroundColor: colors.warmCream,
     marginBottom: spacing.sm,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.border,
   },
   devButtonDanger: {
     backgroundColor: colors.danger,
+    borderColor: colors.danger,
   },
   devButtonPressed: {
     opacity: 0.9,
@@ -328,12 +323,8 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   devButtonTextDanger: {
-    color: colors.white,
-  },
-  demoErrorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
+    color: colors.onPrimary,
   },
 });
+}
+

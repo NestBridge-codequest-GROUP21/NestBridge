@@ -3,7 +3,7 @@ import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
 import {
   DIETARY_OPTIONS,
-  GHANA_CITY_OPTIONS,
+  GHANA_CITY_OPTIONS_WITH_OTHER,
   LANGUAGE_OPTIONS,
   QUIET_SOCIAL_LABELS,
   QuizPageDefinition,
@@ -35,7 +35,7 @@ const TOURIST_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'travelStyle',
-      question: "What's your travel style?",
+      question: "What's your travel style in Ghana?",
       type: 'multi-select',
       options: [
         'Cultural immersion',
@@ -59,7 +59,7 @@ const TOURIST_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'budget',
-      question: "What's your budget range per night?",
+      question: "What's your nightly budget in Ghana?",
       type: 'single-select',
       options: [
         'Under GHS 100',
@@ -73,9 +73,9 @@ const TOURIST_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'destination',
-      question: 'Which city are you visiting?',
+      question: 'Which Ghanaian city are you visiting?',
       type: 'single-select',
-      options: GHANA_CITY_OPTIONS,
+      options: GHANA_CITY_OPTIONS_WITH_OTHER,
       required: true,
     },
   ],

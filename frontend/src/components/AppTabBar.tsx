@@ -1,15 +1,18 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SosCircleButton from './SosCircleButton';
 import AppIcon, { type IoniconName } from './AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   layout,
+  iconSizes,
+  borderRadius,
+  lineHeights,
 } from '../constants/theme';
 
 export interface TabBarItem {
@@ -36,6 +39,10 @@ export default function AppTabBar({
   onSosPress,
   onTabPress,
 }: AppTabBarProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const showSos = showSosDock && !!onSosPress;
 
@@ -58,12 +65,18 @@ export default function AppTabBar({
         {iconName ? (
           <AppIcon
             name={iconName}
-            size={fontSizes.subheading}
-            color={active ? colors.teal : colors.textTertiary}
+            size={iconSizes.md}
+            color={active ? colors.tabActive : colors.textTertiary}
             style={styles.tabIcon}
           />
         ) : null}
-        <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+        <Text
+          style={[styles.tabLabel, active && styles.tabLabelActive]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+          ellipsizeMode="clip"
+        >
           {tab.label}
         </Text>
         {tab.badgeCount && tab.badgeCount > 0 ? (
@@ -101,10 +114,11 @@ export default function AppTabBar({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, chrome }: AppTheme) {
+  return StyleSheet.create({
   wrapper: {
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
+    backgroundColor: colors.surface,
+    borderTopWidth: chrome.minimalBorders ? 0 : 1,
     borderTopColor: colors.border,
     paddingTop: spacing.sm,
     paddingHorizontal: spacing.sm,
@@ -117,13 +131,16 @@ const styles = StyleSheet.create({
   },
   tabItem: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 44,
     position: 'relative',
+    paddingHorizontal: spacing.xs,
   },
   sosSlot: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -136,12 +153,15 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textTertiary,
+    textAlign: 'center',
+    width: '100%',
   },
   tabLabelActive: {
     fontFamily: fontFamilies.semibold,
     fontWeight: fontWeights.semibold,
-    color: colors.teal,
+    color: colors.tabActive,
   },
   badge: {
     position: 'absolute',
@@ -149,7 +169,7 @@ const styles = StyleSheet.create({
     right: spacing.sm,
     minWidth: 18,
     height: 18,
-    borderRadius: 9,
+    borderRadius: borderRadius.pill,
     backgroundColor: colors.danger,
     alignItems: 'center',
     justifyContent: 'center',
@@ -157,7 +177,10 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontFamily: fontFamilies.bold,
-    fontSize: 10,
-    color: colors.white,
+    fontSize: fontSizes.micro,
+    lineHeight: lineHeights.micro,
+    color: colors.onPrimary,
   },
 });
+}
+

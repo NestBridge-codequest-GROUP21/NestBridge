@@ -5,6 +5,7 @@ import type {
   PriceBreakdown,
   AppNotification,
 } from '../types/booking';
+import { hostVerification } from '../types/verification';
 
 const FLEXIBLE_POLICY =
   'Free cancellation up to 7 days before check-in. 50% refund within 7 days.';
@@ -21,6 +22,7 @@ export const hostProfileMock: HostProfileSummary = {
   currency: 'GHS',
   cancellationPolicy: FLEXIBLE_POLICY,
   icon: '🏡',
+  verification: hostVerification(),
 };
 
 export const studentBookingsMock: BookingListItem[] = [
@@ -52,7 +54,7 @@ export const studentBookingsMock: BookingListItem[] = [
     bookingType: 'HOST',
     seekerRole: 'STUDENT',
     hostId: 'host-2',
-    hostName: 'Kwame & Grace',
+    hostName: 'Kwame & Grace Asante',
     hostInitials: 'KG',
     hostLocation: 'Cantonments, Accra',
     hostIcon: '🏡',
@@ -330,7 +332,7 @@ export const studentNotificationsMock: AppNotification[] = [
   {
     id: 'notif-student-2',
     title: 'Booking request sent',
-    body: 'Kwame & Grace will review your request for Sep–Nov 2026.',
+    body: 'Kwame & Grace Asante will review your request for Sep–Nov 2026.',
     read: true,
     createdAt: '2026-06-22',
     relatedBookingId: 'booking-2',

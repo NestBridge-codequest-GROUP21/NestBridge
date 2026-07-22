@@ -3,7 +3,7 @@
     "name": "NestBridge",
     "slug": "nestbridge",
     "owner": "tassyy",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0C1735"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
@@ -20,9 +20,10 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0C1735"
+        "backgroundColor": "#FFFFFF"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "pan",
       "package": "com.nestbridge.app"
     },
     "web": {
@@ -47,7 +48,7 @@
       ]
     ],
     "extra": {
-      "apiBaseUrl": "",
+      "apiBaseUrl": "https://nestbridge-production.up.railway.app",
       "firebaseApiKey": "",
       "firebaseAuthDomain": "",
       "firebaseDatabaseUrl": "",

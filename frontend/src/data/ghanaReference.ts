@@ -7,7 +7,9 @@ export type UniversityCategory =
   | 'PUBLIC'
   | 'TECHNICAL'
   | 'PRIVATE'
-  | 'SPECIALIZED';
+  | 'SPECIALIZED'
+  | 'NURSING'
+  | 'COLLEGE_OF_EDUCATION';
 
 export interface GhanaRegion {
   name: string;
@@ -23,6 +25,28 @@ export interface GhanaUniversity {
   matchDestinations: readonly string[];
   strengths?: string;
 }
+
+/**
+ * Capitals with few/no local campuses — show nearby hub institutions instead of
+ * unrelated schools from across Ghana.
+ */
+const NEARBY_DESTINATION_HUBS: Record<string, readonly string[]> = {
+  Goaso: ['Sunyani', 'Kumasi'],
+  Techiman: ['Kumasi', 'Sunyani'],
+  Nalerigu: ['Tamale'],
+  Dambai: ['Ho'],
+  Damongo: ['Tamale'],
+  'Sefwi Wiawso': ['Sekondi-Takoradi', 'Kumasi'],
+};
+
+const CATEGORY_SORT_ORDER: Record<UniversityCategory, number> = {
+  PUBLIC: 0,
+  TECHNICAL: 1,
+  NURSING: 2,
+  COLLEGE_OF_EDUCATION: 3,
+  PRIVATE: 4,
+  SPECIALIZED: 5,
+};
 
 export const GHANA_REGIONS: readonly GhanaRegion[] = [
   { name: 'Ahafo', capital: 'Goaso' },
@@ -256,9 +280,154 @@ export const GHANA_UNIVERSITIES: readonly GhanaUniversity[] = [
     matchDestinations: ['Accra'],
     strengths: 'Maritime Education',
   },
+  // Nursing / midwifery training colleges
+  {
+    name: 'Korle Bu Nursing and Midwifery Training College',
+    category: 'NURSING',
+    town: 'Accra',
+    matchDestinations: ['Accra'],
+    strengths: 'Nursing, Midwifery',
+  },
+  {
+    name: '37 Military Hospital Nurses Training College',
+    category: 'NURSING',
+    town: 'Accra',
+    matchDestinations: ['Accra'],
+    strengths: 'Nursing',
+  },
+  {
+    name: 'Komfo Anokye Nursing and Midwifery Training College',
+    category: 'NURSING',
+    town: 'Kumasi',
+    matchDestinations: ['Kumasi'],
+    strengths: 'Nursing, Midwifery',
+  },
+  {
+    name: 'Nurses Training College, Cape Coast',
+    category: 'NURSING',
+    town: 'Cape Coast',
+    matchDestinations: ['Cape Coast'],
+    strengths: 'Nursing, Midwifery',
+  },
+  {
+    name: 'Nurses Training College, Tamale',
+    category: 'NURSING',
+    town: 'Tamale',
+    matchDestinations: ['Tamale'],
+    strengths: 'Nursing, Midwifery',
+  },
+  {
+    name: 'Nurses Training College, Ho',
+    category: 'NURSING',
+    town: 'Ho',
+    matchDestinations: ['Ho'],
+    strengths: 'Nursing, Midwifery',
+  },
+  {
+    name: 'Nurses Training College, Sunyani',
+    category: 'NURSING',
+    town: 'Sunyani',
+    matchDestinations: ['Sunyani'],
+    strengths: 'Nursing, Midwifery',
+  },
+  {
+    name: 'Nurses Training College, Sekondi',
+    category: 'NURSING',
+    town: 'Sekondi',
+    matchDestinations: ['Sekondi-Takoradi'],
+    strengths: 'Nursing, Midwifery',
+  },
+  {
+    name: 'Nurses Training College, Bolgatanga',
+    category: 'NURSING',
+    town: 'Bolgatanga',
+    matchDestinations: ['Bolgatanga'],
+    strengths: 'Nursing, Midwifery',
+  },
+  {
+    name: 'Nurses Training College, Wa',
+    category: 'NURSING',
+    town: 'Wa',
+    matchDestinations: ['Wa'],
+    strengths: 'Nursing, Midwifery',
+  },
+  // Colleges of education
+  {
+    name: 'Accra College of Education',
+    category: 'COLLEGE_OF_EDUCATION',
+    town: 'Accra',
+    matchDestinations: ['Accra'],
+    strengths: 'Teacher Education',
+  },
+  {
+    name: 'Wesley College of Education, Kumasi',
+    category: 'COLLEGE_OF_EDUCATION',
+    town: 'Kumasi',
+    matchDestinations: ['Kumasi'],
+    strengths: 'Teacher Education',
+  },
+  {
+    name: 'Ola College of Education, Cape Coast',
+    category: 'COLLEGE_OF_EDUCATION',
+    town: 'Cape Coast',
+    matchDestinations: ['Cape Coast'],
+    strengths: 'Teacher Education',
+  },
+  {
+    name: 'Tamale College of Education',
+    category: 'COLLEGE_OF_EDUCATION',
+    town: 'Tamale',
+    matchDestinations: ['Tamale'],
+    strengths: 'Teacher Education',
+  },
+  {
+    name: 'St. Francis College of Education, Hohoe',
+    category: 'COLLEGE_OF_EDUCATION',
+    town: 'Hohoe',
+    matchDestinations: ['Ho'],
+    strengths: 'Teacher Education',
+  },
+  {
+    name: 'St. Joseph College of Education, Bechem',
+    category: 'COLLEGE_OF_EDUCATION',
+    town: 'Bechem',
+    matchDestinations: ['Sunyani', 'Goaso'],
+    strengths: 'Teacher Education',
+  },
+  {
+    name: 'Holy Child College of Education, Takoradi',
+    category: 'COLLEGE_OF_EDUCATION',
+    town: 'Takoradi',
+    matchDestinations: ['Sekondi-Takoradi'],
+    strengths: 'Teacher Education',
+  },
+  {
+    name: 'Kibi College of Education',
+    category: 'COLLEGE_OF_EDUCATION',
+    town: 'Kibi',
+    matchDestinations: ['Koforidua'],
+    strengths: 'Teacher Education',
+  },
+  {
+    name: 'Gbewaa College of Education, Pusiga',
+    category: 'COLLEGE_OF_EDUCATION',
+    town: 'Pusiga',
+    matchDestinations: ['Bolgatanga'],
+    strengths: 'Teacher Education',
+  },
+  {
+    name: 'N.J. Ahmadiyya College of Education, Wa',
+    category: 'COLLEGE_OF_EDUCATION',
+    town: 'Wa',
+    matchDestinations: ['Wa'],
+    strengths: 'Teacher Education',
+  },
 ] as const;
 
 export const UNIVERSITY_OTHER_OPTION = 'Other / area not listed';
+
+/** Select-list sentinel — user types their town/area in a follow-up field. */
+export const CITY_OTHER_OPTION = 'Other area (not listed)';
 
 /** Accra neighbourhoods and common search tokens beyond regional capitals. */
 export const GHANA_NEIGHBOURHOODS = [
@@ -313,6 +482,7 @@ const CITY_ALIASES: Record<string, string> = {
   winneba: 'Cape Coast',
   pedu: 'Cape Coast',
   'cape coast': 'Cape Coast',
+  'central region': 'Cape Coast',
   tarkwa: 'Sekondi-Takoradi',
   takoradi: 'Sekondi-Takoradi',
   sekondi: 'Sekondi-Takoradi',
@@ -329,6 +499,15 @@ export function destinationCityOptions(): string[] {
   return GHANA_REGIONS.map((region) => region.capital).sort((a, b) =>
     a.localeCompare(b),
   );
+}
+
+/** Listed capitals plus “Other area” so users can type a town not in the quiz list. */
+export function destinationCityOptionsWithOther(): string[] {
+  return [...destinationCityOptions(), CITY_OTHER_OPTION];
+}
+
+export function isCityOtherOption(value: string | null | undefined): boolean {
+  return (value ?? '').trim() === CITY_OTHER_OPTION;
 }
 
 export function regionForCapital(capital: string): GhanaRegion | undefined {
@@ -386,28 +565,91 @@ export function isKnownGhanaPlace(text: string): boolean {
   return CITY_ALIASES[normalized] != null || CITY_ALIASES[firstPart] != null;
 }
 
-export function universitiesForCity(city: string): string[] {
-  const normalizedDestination = normalizePlaceToken(normalizeCity(city));
-  const matches = GHANA_UNIVERSITIES.filter((uni) =>
+function institutionsMatchingDestination(destination: string): GhanaUniversity[] {
+  const normalizedDestination = normalizePlaceToken(destination);
+  return GHANA_UNIVERSITIES.filter((uni) =>
     uni.matchDestinations.some(
-      (destination) =>
-        normalizePlaceToken(destination) === normalizedDestination,
+      (entry) => normalizePlaceToken(entry) === normalizedDestination,
     ),
+  ).sort(
+    (a, b) =>
+      CATEGORY_SORT_ORDER[a.category] - CATEGORY_SORT_ORDER[b.category] ||
+      a.name.localeCompare(b.name),
   );
+}
 
-  return matches.map((uni) => uni.name);
+export function universitiesForCity(city: string): string[] {
+  if (!city.trim()) {
+    return [];
+  }
+  return institutionsMatchingDestination(normalizeCity(city)).map((uni) => uni.name);
+}
+
+/** Nearby hub campuses for capitals without a local listing (never all-Ghana). */
+export function nearbyUniversitiesForCity(city: string): string[] {
+  if (!city.trim()) {
+    return [];
+  }
+  const capital = normalizeCity(city);
+  const hubs = NEARBY_DESTINATION_HUBS[capital] ?? [];
+  const names: string[] = [];
+  const seen = new Set(universitiesForCity(capital));
+  for (const hub of hubs) {
+    for (const name of universitiesForCity(hub)) {
+      if (seen.has(name)) {
+        continue;
+      }
+      seen.add(name);
+      names.push(name);
+    }
+  }
+  return names;
+}
+
+/** Primary city plus nearby hubs for local inventory lookups. */
+export function recommendationSearchCities(city: string): string[] {
+  const capital = normalizeCity(city);
+  const cities = [capital];
+  for (const hub of NEARBY_DESTINATION_HUBS[capital] ?? []) {
+    if (!cities.includes(hub)) {
+      cities.push(hub);
+    }
+  }
+  return cities;
 }
 
 export function allUniversityOptions(): string[] {
-  return GHANA_UNIVERSITIES.map((uni) => uni.name);
+  return [...GHANA_UNIVERSITIES]
+    .sort(
+      (a, b) =>
+        CATEGORY_SORT_ORDER[a.category] - CATEGORY_SORT_ORDER[b.category] ||
+        a.name.localeCompare(b.name),
+    )
+    .map((uni) => uni.name);
 }
 
+/**
+ * Institutions for a destination capital only.
+ * Never falls back to the full national list — unrelated schools stay hidden.
+ */
 export function universityOptionsForCity(city: string): string[] {
-  const filtered = universitiesForCity(city);
-  if (filtered.length === 0) {
-    return [...allUniversityOptions(), UNIVERSITY_OTHER_OPTION];
+  if (!city.trim()) {
+    return [UNIVERSITY_OTHER_OPTION];
   }
-  return [...filtered, UNIVERSITY_OTHER_OPTION];
+  const local = universitiesForCity(city);
+  const nearby = local.length === 0 ? nearbyUniversitiesForCity(city) : [];
+  return [...local, ...nearby, UNIVERSITY_OTHER_OPTION];
+}
+
+export function isUniversityValidForCity(
+  university: string,
+  city: string,
+): boolean {
+  if (!university.trim() || university === UNIVERSITY_OTHER_OPTION) {
+    return true;
+  }
+  const options = universityOptionsForCity(city);
+  return options.includes(university);
 }
 
 export function destinationPlaceholderExamples(limit = 4): string {

@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -14,20 +15,24 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
-import OnboardingReadyCarousel from '../../components/OnboardingReadyCarousel';
-import type { OnboardingNextStep } from '../../components/OnboardingNextStepsCard';
+import BackButton from '../../components/BackButton';
+import OnboardingNextStepsCard, {
+  type OnboardingNextStep,
+} from '../../components/OnboardingNextStepsCard';
 import AppIcon from '../../components/AppIcon';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   lineHeights,
   layout,
   motion,
+  touchTarget,
+  iconSizes,
 } from '../../constants/theme';
 
 export interface OnboardingReadyScreenProps {
@@ -42,7 +47,7 @@ export interface OnboardingReadyScreenProps {
   onBack?: () => void;
 }
 
-const HERO_HEIGHT_RATIO = 0.38;
+const HERO_HEIGHT_RATIO = 0.26;
 
 export default function OnboardingReadyScreen({
   subtitle,
@@ -55,24 +60,43 @@ export default function OnboardingReadyScreen({
   onContinueLater,
   onBack,
 }: OnboardingReadyScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients, overlays } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const entrance = useRef(new Animated.Value(0)).current;
+  const checkPulse = useRef(new Animated.Value(0)).current;
   const [heroFailed, setHeroFailed] = useState(false);
   const heroHeight = Dimensions.get('window').height * HERO_HEIGHT_RATIO;
 
   useEffect(() => {
-    Animated.timing(entrance, {
-      toValue: 1,
-      duration: motion.durationNormal,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [entrance]);
+    Animated.parallel([
+      Animated.timing(entrance, {
+        toValue: 1,
+        duration: motion.durationNormal,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.sequence([
+        Animated.timing(checkPulse, {
+          toValue: 1,
+          duration: motion.durationNormal,
+          easing: Easing.out(Easing.back(1.4)),
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [entrance, checkPulse]);
 
   const contentOpacity = entrance;
   const contentTranslateY = entrance.interpolate({
     inputRange: [0, 1],
     outputRange: [spacing.md, 0],
+  });
+  const checkScale = checkPulse.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.6, 1],
   });
 
   return (
@@ -96,24 +120,13 @@ export default function OnboardingReadyScreen({
           />
         )}
         <LinearGradient
-          colors={['transparent', 'rgba(12, 23, 53, 0.55)']}
+          colors={['transparent', overlays.scrimStrong]}
           style={styles.heroScrim}
         />
 
         <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
           {onBack ? (
-            <Pressable
-              onPress={onBack}
-              style={styles.topActionButton}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-            >
-              <AppIcon
-                name="chevron-back"
-                size={fontSizes.heading}
-                color={colors.white}
-              />
-            </Pressable>
+            <BackButton onPress={onBack} color={colors.onPrimary} />
           ) : (
             <View style={styles.topSpacer} />
           )}
@@ -123,8 +136,8 @@ export default function OnboardingReadyScreen({
           {roleIcon ? (
             <AppIcon
               glyph={roleIcon}
-              size={fontSizes.body}
-              color={colors.white}
+              size={iconSizes.md}
+              color={colors.onPrimary}
               style={styles.roleBadgeIcon}
             />
           ) : null}
@@ -133,7 +146,7 @@ export default function OnboardingReadyScreen({
       </View>
 
       <LinearGradient
-        colors={[...gradients.header]}
+        colors={gradients.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.contentGradient}
@@ -146,10 +159,7 @@ export default function OnboardingReadyScreen({
 
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: insets.bottom + spacing.lg },
-          ]}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <Animated.View
@@ -158,35 +168,58 @@ export default function OnboardingReadyScreen({
               transform: [{ translateY: contentTranslateY }],
             }}
           >
-            <Text style={styles.headline}>ALL SET!</Text>
+            <Animated.View
+              style={[
+                styles.checkWrap,
+                { transform: [{ scale: checkScale }] },
+              ]}
+              accessibilityRole="image"
+              accessibilityLabel="Setup complete"
+            >
+              <View style={styles.checkRing}>
+                <AppIcon
+                  name="checkmark"
+                  size={iconSizes.xl}
+                  color={colors.onPrimary}
+                />
+              </View>
+            </Animated.View>
+
+            <Text style={styles.headline}>You're all set</Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
 
-            <View style={styles.carouselSection}>
-              <OnboardingReadyCarousel cards={carouselCards} />
-            </View>
-
-            <View style={styles.actions}>
-              <PrimaryButton label={ctaLabel} onPress={onPrimaryAction} />
-              <Pressable
-                onPress={onContinueLater}
-                style={({ pressed }) => [
-                  styles.continueLaterButton,
-                  pressed && styles.continueLaterPressed,
-                ]}
-                accessibilityRole="button"
-                accessibilityLabel="Continue Later"
-              >
-                <Text style={styles.continueLaterLabel}>Continue Later</Text>
-              </Pressable>
+            <View style={styles.stepsSection}>
+              <OnboardingNextStepsCard steps={carouselCards} />
             </View>
           </Animated.View>
         </ScrollView>
+
+        <View
+          style={[
+            styles.footer,
+            { paddingBottom: Math.max(insets.bottom, spacing.md) + spacing.sm },
+          ]}
+        >
+          <PrimaryButton label={ctaLabel} onPress={onPrimaryAction} />
+          <Pressable
+            onPress={onContinueLater}
+            style={({ pressed }) => [
+              styles.continueLaterButton,
+              pressed && styles.continueLaterPressed,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Continue Later"
+          >
+            <Text style={styles.continueLaterLabel}>Continue Later</Text>
+          </Pressable>
+        </View>
       </LinearGradient>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows, overlays }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.navy,
@@ -216,28 +249,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPaddingHorizontal,
     zIndex: 2,
   },
-  topActionButton: {
-    minWidth: 44,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   topSpacer: {
-    width: 44,
+    width: touchTarget,
   },
   roleBadge: {
     position: 'absolute',
     left: layout.screenPaddingHorizontal,
-    bottom: spacing.lg,
+    bottom: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.navyMid,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.tealBright,
     zIndex: 2,
+    ...shadows.card,
   },
   roleBadgeIcon: {
     marginRight: spacing.xs,
@@ -246,7 +274,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   contentGradient: {
     flex: 1,
@@ -279,13 +307,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+  },
+  checkWrap: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  checkRing: {
+    width: touchTarget + spacing.md,
+    height: touchTarget + spacing.md,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.tealBright,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: borderWidths.strong,
+    borderColor: colors.white,
+    ...shadows.raised,
   },
   headline: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
     lineHeight: lineHeights.display,
     textAlign: 'center',
     marginBottom: spacing.sm,
@@ -293,24 +337,26 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.subheading,
-    color: colors.white,
-    lineHeight: lineHeights.subheading,
+    fontSize: fontSizes.body,
+    color: colors.onPrimary,
+    lineHeight: lineHeights.body,
     textAlign: 'center',
     opacity: 0.92,
     marginBottom: spacing.lg,
     paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  carouselSection: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  actions: {
+  stepsSection: {
     paddingHorizontal: layout.screenPaddingHorizontal,
-    gap: spacing.sm,
+  },
+  footer: {
+    paddingHorizontal: layout.screenPaddingHorizontal,
+    paddingTop: spacing.sm,
+    gap: spacing.xs,
+    borderTopWidth: borderWidths.hairline,
+    borderTopColor: overlays.scrim,
   },
   continueLaterButton: {
-    minHeight: 44,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.sm,
@@ -322,7 +368,9 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.onPrimary,
     textDecorationLine: 'underline',
   },
 });
+}
+

@@ -1,23 +1,33 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import BackButton from '../../components/BackButton';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import Avatar from '../../components/Avatar';
+import VerificationBadges from '../../components/VerificationBadges';
+import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import {
-  colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
+  lineHeights,
+  layout,
+  touchTarget,
 } from '../../constants/theme';
 import type { HostProfileSummary } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -25,6 +35,13 @@ import { formatCurrency } from '../../data/bookingMock';
 export interface HostProfileScreenProps {
   host: HostProfileSummary;
   showMatchScores?: boolean;
+  /** Host bio — pass from parent/API; omit to hide the About section. */
+  about?: string;
+  /** Amenity / lifestyle chips — pass from parent/API. */
+  highlights?: string[];
+  setupIncomplete?: boolean;
+  setupMessage?: string;
+  onContinueSetup?: () => void;
   onMessagePress?: () => void;
   onBookPress?: () => void;
   onBack?: () => void;
@@ -33,47 +50,59 @@ export interface HostProfileScreenProps {
 export default function HostProfileScreen({
   host,
   showMatchScores = false,
+  about,
+  highlights = [],
+  setupIncomplete = false,
+  setupMessage = 'Complete your travel profile to message hosts and request a stay.',
+  onContinueSetup,
   onMessagePress,
   onBookPress,
   onBack,
 }: HostProfileScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
 
+      {/* Profile hero with large avatar — not a clean ScreenHeader map. */}
       <LinearGradient
-        colors={[...gradients.header]}
+        colors={gradients.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.onPrimary} style={styles.back} />
 
         <View style={styles.heroContent}>
           <View style={styles.avatarRing}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarInitials}>{host.initials}</Text>
-            </View>
+            <Avatar initials={host.initials} size="xl" />
           </View>
           <Text style={styles.hostName}>{host.name}</Text>
           <Text style={styles.hostLocation}>{host.location}</Text>
+          <VerificationBadges
+            verification={host.verification}
+            variant="host"
+            onDark
+            style={styles.verification}
+          />
           {showMatchScores ? (
-          <View style={styles.matchBadge}>
-            <Text style={styles.matchBadgeText}>{host.matchPercentage}% match</Text>
-          </View>
+            <LinearGradient
+              colors={gradients.accent}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.matchBadge}
+            >
+              <Text style={styles.matchBadgeText}>{host.matchPercentage}% match</Text>
+            </LinearGradient>
           ) : (
-          <Text style={styles.matchHint}>
-            Complete your profile to see compatibility
-          </Text>
+            <Text style={styles.matchHint}>
+              Complete your profile to see compatibility
+            </Text>
           )}
         </View>
       </LinearGradient>
@@ -82,32 +111,51 @@ export default function HostProfileScreen({
         style={styles.scroll}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: insets.bottom + 140 },
+          { paddingBottom: insets.bottom + layout.scrollBottomInset },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.priceCard}>
-          <Text style={styles.priceLabel}>From</Text>
+        <Card padding="lg" elevation="card" style={styles.priceCard}>
+          <Text style={styles.priceLabel}>Nightly rate</Text>
           <Text style={styles.priceValue}>
             {formatCurrency(host.pricePerNight, host.currency)}
             <Text style={styles.priceUnit}> / night</Text>
           </Text>
-        </View>
+          <Text style={styles.priceHint}>
+            Platform fee and total appear before you pay on the booking screen.
+          </Text>
+        </Card>
 
-        <Text style={styles.sectionTitle}>About this host</Text>
-        <Text style={styles.aboutText}>
-          A welcoming family home with quiet study space, home-cooked meals, and
-          a short commute to campus. Verified host with strong reviews from
-          international students.
-        </Text>
+        {about ? (
+          <View style={styles.sectionBlock}>
+            <SectionHeader title="About this host" />
+            <Card padding="lg" elevation="card">
+              <Text style={styles.aboutText}>{about}</Text>
+            </Card>
+          </View>
+        ) : null}
 
-        <View style={styles.highlights}>
-          {['Meals included', 'Study-friendly', 'Near campus'].map((label) => (
-            <View key={label} style={styles.highlightChip}>
-              <Text style={styles.highlightLabel}>{label}</Text>
+        {highlights.length > 0 ? (
+          <View style={styles.sectionBlock}>
+            <SectionHeader title="Highlights" />
+            <View style={styles.highlights}>
+              {highlights.map((label) => (
+                <View key={label} style={styles.highlightChip}>
+                  <Text style={styles.highlightLabel}>{label}</Text>
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
+          </View>
+        ) : null}
+
+        {host.cancellationPolicy ? (
+          <View style={styles.sectionBlock}>
+            <SectionHeader title="Cancellation" />
+            <Card padding="md" elevation="none" style={styles.policyCard}>
+              <Text style={styles.policyBody}>{host.cancellationPolicy}</Text>
+            </Card>
+          </View>
+        ) : null}
       </ScrollView>
 
       <View
@@ -116,39 +164,45 @@ export default function HostProfileScreen({
           { paddingBottom: Math.max(insets.bottom, spacing.md) },
         ]}
       >
+        {setupIncomplete ? (
+          <View style={styles.setupBanner}>
+            <ProfileIncompleteBanner
+              message={setupMessage}
+              continueLabel="Complete Profile"
+              onContinueSetup={onContinueSetup}
+            />
+          </View>
+        ) : null}
         <View style={styles.footerRow}>
-          <View style={styles.messageButtonWrap}>
-            <SecondaryButton label="Message" onPress={onMessagePress} />
-          </View>
-          <View style={styles.bookButtonWrap}>
-            <PrimaryButton label="Request to book" onPress={onBookPress} />
-          </View>
+          <SecondaryButton
+            label="Message"
+            onPress={setupIncomplete ? onContinueSetup : onMessagePress}
+            style={styles.messageButton}
+          />
+          <PrimaryButton
+            label="Request to book"
+            onPress={setupIncomplete ? onContinueSetup : onBookPress}
+            style={styles.bookButton}
+          />
         </View>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   hero: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingBottom: spacing.xl,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.md,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
+    alignSelf: 'flex-start',
   },
   heroContent: {
     alignItems: 'center',
@@ -156,50 +210,47 @@ const styles = StyleSheet.create({
   avatarRing: {
     padding: spacing.xs,
     borderRadius: borderRadius.pill,
-    borderWidth: 2,
+    borderWidth: borderWidths.strong,
     borderColor: colors.white,
     marginBottom: spacing.md,
-  },
-  avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitials: {
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
+    backgroundColor: tints.cream,
   },
   hostName: {
-    fontSize: fontSizes.display,
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    lineHeight: lineHeights.heading,
+    color: colors.onPrimary,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
   hostLocation: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    lineHeight: lineHeights.body,
+    color: colors.onPrimary,
     opacity: 0.9,
+    marginBottom: spacing.sm,
+  },
+  verification: {
     marginBottom: spacing.md,
   },
   matchBadge: {
-    backgroundColor: colors.tealBright,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
   },
   matchBadgeText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.caption,
+    color: colors.onPrimary,
   },
   matchHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     textAlign: 'center',
   },
@@ -208,47 +259,44 @@ const styles = StyleSheet.create({
     marginTop: -spacing.lg,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
   priceCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
   },
   priceLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
   priceValue: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   priceUnit: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
-  sectionTitle: {
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
+  priceHint: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
+    marginTop: spacing.sm,
+  },
+  sectionBlock: {
+    marginBottom: spacing.lg,
   },
   aboutText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 24,
-    marginBottom: spacing.lg,
+    lineHeight: lineHeights.body,
   },
   highlights: {
     flexDirection: 'row',
@@ -258,42 +306,63 @@ const styles = StyleSheet.create({
   highlightChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
-    minHeight: 44,
-  },
-  highlightIcon: {
-    fontSize: fontSizes.body,
-    marginRight: spacing.sm,
+    minHeight: touchTarget,
   },
   highlightLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
+  },
+  policyCard: {
+    backgroundColor: colors.warmCream,
+  },
+  policyBody: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
   },
   footer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
+    ...shadows.raised,
+  },
+  setupBanner: {
+    marginBottom: spacing.sm,
   },
   footerRow: {
     flexDirection: 'row',
+    alignItems: 'stretch',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  messageButtonWrap: {
-    flex: 1,
+  messageButton: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: '30%',
+    minWidth: 0,
+    paddingHorizontal: spacing.md,
   },
-  bookButtonWrap: {
-    flex: 1.4,
+  bookButton: {
+    flexGrow: 2,
+    flexShrink: 1,
+    flexBasis: '45%',
+    minWidth: 0,
   },
 });
+}
+

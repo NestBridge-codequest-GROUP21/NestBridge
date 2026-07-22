@@ -1,8 +1,8 @@
+import { useThemedStyles, type AppTheme, useTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import PrimaryButton from './PrimaryButton';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -22,6 +22,8 @@ export default function ProfileIncompleteBanner({
   continueLabel = 'Continue setup',
   onContinueSetup,
 }: ProfileIncompleteBannerProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.wrap}>
       <Text style={styles.message}>{message}</Text>
@@ -54,6 +56,8 @@ export function GatedPrimaryButton({
   onPress,
   onContinueSetup,
 }: GatedPrimaryButtonProps) {
+  const styles = useThemedStyles(createStyles);
+
   if (blocked) {
     return (
       <View style={styles.gatedWrap}>
@@ -71,7 +75,8 @@ export function GatedPrimaryButton({
   return <PrimaryButton label={label} onPress={onPress} />;
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     backgroundColor: colors.warmCream,
     borderRadius: borderRadius.md,
@@ -114,3 +119,5 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
 });
+}
+

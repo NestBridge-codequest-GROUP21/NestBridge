@@ -68,21 +68,49 @@ public class UserProfileService {
             applyTrackUpdate(userId, "SEEKER", update.getSeekerSetup());
         }
         if (update.getHostProvider() != null) {
-            if (user.getPrimaryIntent() == PrimaryIntent.STUDENT && user.isActiveExchangeStudent()) {
-                throw new IllegalArgumentException(
-                        "Active exchange students cannot enable host listing until exchange ends.");
-            }
-            applyTrackUpdate(userId, "HOST", update.getHostProvider());
+            applyProviderTrackIfAllowed(user, userId, "HOST", update.getHostProvider());
         }
         if (update.getGuideProvider() != null) {
-            if (user.getPrimaryIntent() == PrimaryIntent.STUDENT && user.isActiveExchangeStudent()) {
-                throw new IllegalArgumentException(
-                        "Active exchange students cannot enable guide listing until exchange ends.");
-            }
-            applyTrackUpdate(userId, "GUIDE", update.getGuideProvider());
+            applyProviderTrackIfAllowed(user, userId, "GUIDE", update.getGuideProvider());
         }
 
         return getMyProfile(userId);
+    }
+
+    /**
+     * Active exchange students cannot enable host/guide listing. Idle
+     * NOT_STARTED payloads (sent when the mobile app syncs the full profile)
+     * must be ignored — not rejected — so seeker onboarding still persists.
+     */
+    private void applyProviderTrackIfAllowed(
+            User user,
+            UUID userId,
+            String track,
+            ProfileProgressDto dto
+    ) {
+        boolean activeExchangeStudent =
+                user.getPrimaryIntent() == PrimaryIntent.STUDENT && user.isActiveExchangeStudent();
+        if (activeExchangeStudent) {
+            if (isProviderEnableAttempt(dto)) {
+                throw new IllegalArgumentException(
+                        "Active exchange students cannot enable "
+                                + ("HOST".equals(track) ? "host" : "guide")
+                                + " listing until exchange ends.");
+            }
+            return;
+        }
+        applyTrackUpdate(userId, track, dto);
+    }
+
+    private boolean isProviderEnableAttempt(ProfileProgressDto dto) {
+        if (dto == null) {
+            return false;
+        }
+        if (dto.getStatus() == ProfileStatus.IN_PROGRESS || dto.getStatus() == ProfileStatus.COMPLETE) {
+            return true;
+        }
+        List<String> steps = dto.getStepsCompleted();
+        return steps != null && !steps.isEmpty();
     }
 
     private void applyTrackUpdate(UUID userId, String track, ProfileProgressDto dto) {

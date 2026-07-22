@@ -1,19 +1,31 @@
-import React, { useState } from 'react';
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
+import ScreenScroll from '../../components/ScreenScroll';
+import BrandLogo from '../../components/BrandLogo';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import InlineBanner from '../../components/InlineBanner';
+import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
+import {
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  lineHeights,
+  layout,
+  iconSizes,
+} from '../../constants/theme';
 
 export interface ForgotPasswordScreenProps {
   email: string;
@@ -34,135 +46,128 @@ export default function ForgotPasswordScreen({
   onSubmit,
   onBack,
 }: ForgotPasswordScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, scheme } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const sent = !!statusMessage && !errorMessage;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <StatusBar style="dark" />
-      <ScrollView
+    <View style={styles.root}>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          {
-            paddingTop: insets.top + spacing.lg,
-            paddingBottom: insets.bottom + spacing.lg,
-          },
+          { paddingTop: insets.top + spacing.lg },
         ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
       >
-        {onBack ? (
-          <Pressable
-            onPress={onBack}
-            style={styles.backButton}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </Pressable>
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
+
+        <BrandLogo size="sm" style={styles.brandLogo} />
+
+        {sent ? (
+          <View style={styles.iconTile}>
+            <AppIcon name="mail-open-outline" size={iconSizes.xl} color={colors.onAccent} />
+          </View>
         ) : null}
 
         <Text style={styles.title}>{sent ? 'Check your inbox' : 'Forgot password?'}</Text>
         <Text style={styles.subtitle}>
           {sent
             ? 'If an account exists for this email, we sent a reset link. Open it on this device, then set a new password in the app.'
-            : 'Enter your email and we will send a link to reset your password.'}
+            : 'Enter the email on your NestBridge account and we will send a reset link.'}
         </Text>
 
         {sent ? (
-          <View style={styles.emailCard}>
+          <Card style={styles.emailCard}>
             <Text style={styles.emailLabel}>Sent to</Text>
             <Text style={styles.emailValue}>{email}</Text>
-          </View>
+          </Card>
         ) : (
           <FormTextField
             label="Email"
             value={email}
-            placeholder="Enter email address..."
+            placeholder="you@example.com"
             onChangeText={onEmailChange}
             keyboardType="email-address"
             autoCapitalize="none"
           />
         )}
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-        {statusMessage ? <Text style={styles.statusText}>{statusMessage}</Text> : null}
+        {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
+        {statusMessage ? <InlineBanner message={statusMessage} tone="success" /> : null}
 
         {sent ? (
           <SecondaryButton label="Back to sign in" onPress={onBack} />
         ) : (
           <PrimaryButton
-            label={submitting ? 'Sending…' : 'Send reset link'}
+            label="Send reset link"
             onPress={onSubmit}
-            disabled={submitting}
+            loading={submitting}
           />
         )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </ScreenScroll>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backIcon: {
-    fontSize: 24,
-    color: colors.textPrimary,
+  brandLogo: {
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
+  },
+  iconTile: {
+    width: layout.iconTileSize,
+    height: layout.iconTileSize,
+    borderRadius: borderRadius.pill,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   title: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.xl,
   },
   emailCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
     marginBottom: spacing.lg,
   },
   emailLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
   emailValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
-  errorText: {
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
-  },
-  statusText: {
-    fontSize: fontSizes.body,
-    color: colors.success,
-    marginBottom: spacing.md,
-  },
 });
+}
+

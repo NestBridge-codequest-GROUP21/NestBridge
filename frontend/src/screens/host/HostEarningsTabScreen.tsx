@@ -1,18 +1,24 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
+import Card from '../../components/Card';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
+import SectionHeader from '../../components/SectionHeader';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  lineHeights,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
+import type { EmptyStateContent } from '../../data/appCopy';
 import type { EarningsLineItem, EarningsSummary } from '../../types/providerBooking';
 
 export interface HostEarningsTabScreenProps {
@@ -24,7 +30,8 @@ export interface HostEarningsTabScreenProps {
   activeTabId: string;
   isLoading?: boolean;
   errorMessage?: string | null;
-  emptyState: { title: string; body: string; tip?: string };
+  emptyState: EmptyStateContent;
+  onEmptyPrimaryAction?: () => void;
   showSosDock?: boolean;
   onSosPress?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -40,10 +47,13 @@ export default function HostEarningsTabScreen({
   isLoading = false,
   errorMessage,
   emptyState,
+  onEmptyPrimaryAction,
   showSosDock = false,
   onSosPress,
   onTabPress,
 }: HostEarningsTabScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const hasEarnings = lineItems.length > 0;
 
   return (
@@ -57,21 +67,26 @@ export default function HostEarningsTabScreen({
         compact
       />
       <ScreenScroll withTabBar withSosDock={showSosDock}>
-        <View style={styles.escrowCard}>
+        <Card padding="lg" elevation="none" style={styles.escrowCard}>
           <Text style={styles.escrowTitle}>Held in escrow</Text>
           <Text style={styles.escrowBody}>
             Guest payments stay in escrow until 24 hours after check-in. Payouts
             move here once stays are confirmed.
           </Text>
-        </View>
+        </Card>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <InlineBanner message={errorMessage} tone="error" />
+        ) : null}
         {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
+          <View accessibilityRole="progressbar" accessibilityLabel="Loading earnings">
+            <SkeletonLoader lines={3} style={styles.skeleton} />
+            <SkeletonLoader lines={2} style={styles.skeleton} />
+          </View>
         ) : null}
 
         {!isLoading && hasEarnings ? (
-          <View style={styles.summaryCard}>
+          <Card padding="lg" style={styles.summaryCard}>
             <Text style={styles.summaryLabel}>Net payout</Text>
             <Text style={styles.summaryValue}>
               {formatCurrency(summary.netPayout, summary.currency)}
@@ -94,34 +109,41 @@ export default function HostEarningsTabScreen({
                 <Text style={styles.metaValue}>{summary.sessionCount}</Text>
               </View>
             </View>
-          </View>
+          </Card>
         ) : null}
 
         {!isLoading && !hasEarnings ? (
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>{emptyState.title}</Text>
-            <Text style={styles.emptyBody}>{emptyState.body}</Text>
-            {emptyState.tip ? (
-              <Text style={styles.emptyTip}>{emptyState.tip}</Text>
-            ) : null}
-          </View>
+          <EmptyState
+            title={emptyState.title}
+            body={emptyState.body}
+            tip={emptyState.tip}
+            iconGlyph={emptyState.iconGlyph ?? '💰'}
+            primaryActionLabel={emptyState.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
+          />
         ) : null}
 
-        {lineItems.map((item) => (
-          <View key={item.id} style={styles.lineItem}>
-            <View style={styles.lineItemHeader}>
-              <Text style={styles.lineGuest}>{item.guestName}</Text>
-              <Text style={styles.lineNet}>
-                {formatCurrency(item.net, item.currency)}
-              </Text>
-            </View>
-            <Text style={styles.lineLabel}>{item.label}</Text>
-            <Text style={styles.lineMeta}>
-              Gross {formatCurrency(item.gross, item.currency)} · Fee{' '}
-              {formatCurrency(item.fee, item.currency)}
-            </Text>
-          </View>
-        ))}
+        {!isLoading && hasEarnings ? (
+          <SectionHeader title="Payout history" />
+        ) : null}
+
+        {!isLoading
+          ? lineItems.map((item) => (
+              <Card key={item.id} padding="lg" style={styles.lineItem}>
+                <View style={styles.lineItemHeader}>
+                  <Text style={styles.lineGuest}>{item.guestName}</Text>
+                  <Text style={styles.lineNet}>
+                    {formatCurrency(item.net, item.currency)}
+                  </Text>
+                </View>
+                <Text style={styles.lineLabel}>{item.label}</Text>
+                <Text style={styles.lineMeta}>
+                  Gross {formatCurrency(item.gross, item.currency)} · Fee{' '}
+                  {formatCurrency(item.fee, item.currency)}
+                </Text>
+              </Card>
+            ))
+          : null}
       </ScreenScroll>
       <AppTabBar
         items={tabBarItems}
@@ -134,52 +156,41 @@ export default function HostEarningsTabScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   escrowCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.lg,
   },
   escrowTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   escrowBody: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.danger,
+  skeleton: {
     marginBottom: spacing.md,
   },
-  loader: {
-    marginVertical: spacing.xl,
-  },
   summaryCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.lg,
   },
   summaryLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -189,7 +200,8 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
+    lineHeight: lineHeights.display,
+    color: colors.onAccent,
     marginBottom: spacing.md,
   },
   summaryRow: {
@@ -202,6 +214,7 @@ const styles = StyleSheet.create({
   metaLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
@@ -211,39 +224,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
-  emptyCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  emptyTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptyBody: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    lineHeight: 22,
-    marginBottom: spacing.sm,
-  },
-  emptyTip: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textTertiary,
-    lineHeight: 18,
-  },
   lineItem: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.md,
   },
   lineItemHeader: {
@@ -261,20 +242,26 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
   },
   lineNet: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.teal,
   },
   lineLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
   lineMeta: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
+    lineHeight: lineHeights.caption,
   },
 });
+}
+

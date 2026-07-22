@@ -1,26 +1,33 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
-  TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
+import FormTextField from '../../components/FormTextField';
+import ScreenScroll from '../../components/ScreenScroll';
+import KeyboardSafeView from '../../components/KeyboardSafeView';
 import {
-  colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  borderWidths,
+  iconSizes,
+  touchTarget,
   gradients,
   layout,
+  lineHeights,
 } from '../../constants/theme';
 import { reviewPromptCopy } from '../../data/welfareMock';
 
@@ -37,41 +44,38 @@ export default function ReviewPromptScreen({
   onSkip,
   onBack,
 }: ReviewPromptScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
 
   return (
-    <View style={styles.root}>
+    <KeyboardSafeView style={styles.root}>
       <StatusBar style="light" />
 
       <LinearGradient
-        colors={[...gradients.headerCompact]}
+        colors={gradients.headerCompact}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backButton} />
         <Text style={styles.headerTitle}>{reviewPromptCopy.title}</Text>
         <Text style={styles.headerSubtitle}>
           {hostName} · {reviewPromptCopy.subtitle}
         </Text>
       </LinearGradient>
 
-      <ScrollView
+      <ScreenScroll
+        keyboardAware={false}
         style={styles.body}
         contentContainerStyle={[
           styles.bodyContent,
-          { paddingBottom: insets.bottom + spacing.xl * 3 },
+          { paddingBottom: spacing.xl * 3 },
         ]}
-        showsVerticalScrollIndicator={false}
       >
         <Text style={styles.sectionLabel}>{reviewPromptCopy.ratingLabel}</Text>
         <View style={styles.starsRow}>
@@ -87,7 +91,7 @@ export default function ReviewPromptScreen({
               >
                 <AppIcon
                   name={filled ? 'star' : 'star-outline'}
-                  size={fontSizes.display}
+                  size={iconSizes.xl}
                   color={filled ? colors.gold : colors.border}
                 />
               </Pressable>
@@ -95,25 +99,23 @@ export default function ReviewPromptScreen({
           })}
         </View>
 
-        <Text style={styles.sectionLabel}>Comments</Text>
-        <TextInput
-          style={styles.commentInput}
+        <FormTextField
+          label="Comments"
           value={comment}
           onChangeText={setComment}
           placeholder={reviewPromptCopy.commentPlaceholder}
-          placeholderTextColor={colors.textTertiary}
           multiline
-          textAlignVertical="top"
+          numberOfLines={4}
         />
 
-        <View style={styles.sealedCard}>
+        <Card style={styles.sealedCard} padding="lg">
           <Text style={styles.sealedTitle}>Sealed review</Text>
           <Text style={styles.sealedBody}>
             Your rating stays hidden until your host submits their feedback too.
             NestBridge moderates reviews before they appear on profiles.
           </Text>
-        </View>
-      </ScrollView>
+        </Card>
+      </ScreenScroll>
 
       <View
         style={[
@@ -129,11 +131,12 @@ export default function ReviewPromptScreen({
         <View style={styles.skipSpacer} />
         <SecondaryButton label={reviewPromptCopy.skipLabel} onPress={onSkip ?? onBack} />
       </View>
-    </View>
+    </KeyboardSafeView>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -143,28 +146,23 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
   },
   headerTitle: {
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.heading,
   },
   headerSubtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   body: {
     flex: 1,
@@ -175,8 +173,10 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
   },
   sectionLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -189,59 +189,43 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   starButton: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  star: {
-    fontSize: 32,
-    color: colors.border,
-  },
-  starFilled: {
-    color: colors.warning,
-  },
-  commentInput: {
-    minHeight: 120,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    fontSize: fontSizes.body,
-    color: colors.textPrimary,
-    marginBottom: spacing.lg,
-  },
   sealedCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   sealedTitle: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   sealedBody: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   footer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
   skipSpacer: {
     height: spacing.sm,
   },
 });
+}
+

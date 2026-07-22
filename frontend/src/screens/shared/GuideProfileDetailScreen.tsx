@@ -1,23 +1,33 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import ScreenScroll from '../../components/ScreenScroll';
+import Card from '../../components/Card';
+import Avatar from '../../components/Avatar';
+import StatusBadge from '../../components/StatusBadge';
+import SectionHeader from '../../components/SectionHeader';
+import VerificationBadges from '../../components/VerificationBadges';
+import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import {
-  colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
+  lineHeights,
+  avatarSizes,
 } from '../../constants/theme';
 import type { GuideProfileSummary } from '../../types/booking';
 import { formatCurrency } from '../../data/bookingMock';
@@ -25,6 +35,9 @@ import { formatCurrency } from '../../data/bookingMock';
 export interface GuideProfileDetailScreenProps {
   guide: GuideProfileSummary;
   showMatchScores?: boolean;
+  setupIncomplete?: boolean;
+  setupMessage?: string;
+  onContinueSetup?: () => void;
   onMessagePress?: () => void;
   onBookPress?: () => void;
   onBack?: () => void;
@@ -33,60 +46,70 @@ export interface GuideProfileDetailScreenProps {
 export default function GuideProfileDetailScreen({
   guide,
   showMatchScores = false,
+  setupIncomplete = false,
+  setupMessage = 'Complete your travel profile to message guides and book a session.',
+  onContinueSetup,
   onMessagePress,
   onBookPress,
   onBack,
 }: GuideProfileDetailScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
+  const heroAvatarSize = avatarSizes.lg + spacing.xl;
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
 
       <LinearGradient
-        colors={[...gradients.header]}
+        colors={gradients.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backButton} />
 
         <View style={styles.heroContent}>
           <View style={styles.avatarRing}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarInitials}>{guide.initials}</Text>
+            <View
+              style={[
+                styles.avatarWrap,
+                { width: heroAvatarSize, height: heroAvatarSize },
+              ]}
+            >
+              <Avatar initials={guide.initials} size="lg" highlighted />
             </View>
           </View>
           <Text style={styles.name}>{guide.name}</Text>
           <Text style={styles.location}>{guide.location}</Text>
+          <VerificationBadges
+            verification={guide.verification}
+            variant="guide"
+            onDark
+            style={styles.verification}
+          />
           {showMatchScores ? (
-          <View style={styles.matchBadge}>
-            <Text style={styles.matchBadgeText}>{guide.matchPercentage}% match</Text>
-          </View>
+            <StatusBadge
+              label={`${guide.matchPercentage}% match`}
+              tone="accent"
+            />
           ) : (
-          <Text style={styles.matchHint}>
-            Complete your profile to see compatibility
-          </Text>
+            <Text style={styles.matchHint}>
+              Complete your profile to see compatibility
+            </Text>
           )}
         </View>
       </LinearGradient>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 140 },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <ScreenScroll
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + 140,
+        }}
       >
-        <View style={styles.priceCard}>
+        <Card style={styles.priceCard} padding="lg">
           <Text style={styles.priceLabel}>Session rate</Text>
           <Text style={styles.priceValue}>
             {formatCurrency(guide.pricePerSession, guide.currency)}
@@ -94,26 +117,25 @@ export default function GuideProfileDetailScreen({
           <Text style={styles.duration}>
             {guide.sessionDurationHours} hour sessions
           </Text>
-        </View>
+        </Card>
 
-        <Text style={styles.sectionTitle}>Services offered</Text>
+        <SectionHeader title="Services offered" />
         <View style={styles.chips}>
           {guide.serviceTypes.map((service) => (
-            <View key={service} style={styles.chip}>
-              <Text style={styles.chipText}>{service}</Text>
-            </View>
+            <StatusBadge key={service} label={service} tone="neutral" />
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Languages</Text>
+        <SectionHeader title="Languages" />
         <Text style={styles.bodyText}>{guide.languages.join(' · ')}</Text>
 
-        <Text style={styles.sectionTitle}>About</Text>
+        <SectionHeader title="About" />
         <Text style={styles.bodyText}>
-          Experienced local guide offering authentic cultural experiences with
-          flexible pacing and personalized recommendations.
+          {guide.serviceTypes.slice(0, 2).join(' and ')} around {guide.location}.
+          Sessions last {guide.sessionDurationHours} hours and can cover markets,
+          transport tips, and settling into daily life in Ghana.
         </Text>
-      </ScrollView>
+      </ScreenScroll>
 
       <View
         style={[
@@ -121,20 +143,34 @@ export default function GuideProfileDetailScreen({
           { paddingBottom: Math.max(insets.bottom, spacing.md) },
         ]}
       >
+        {setupIncomplete ? (
+          <View style={styles.setupBanner}>
+            <ProfileIncompleteBanner
+              message={setupMessage}
+              continueLabel="Complete Profile"
+              onContinueSetup={onContinueSetup}
+            />
+          </View>
+        ) : null}
         <View style={styles.footerRow}>
-          <View style={styles.messageWrap}>
-            <SecondaryButton label="Message" onPress={onMessagePress} />
-          </View>
-          <View style={styles.bookWrap}>
-            <PrimaryButton label="Book session" onPress={onBookPress} />
-          </View>
+          <SecondaryButton
+            label="Message"
+            onPress={setupIncomplete ? onContinueSetup : onMessagePress}
+            style={styles.messageButton}
+          />
+          <PrimaryButton
+            label="Book session"
+            onPress={setupIncomplete ? onContinueSetup : onBookPress}
+            style={styles.bookButton}
+          />
         </View>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -144,16 +180,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     marginBottom: spacing.md,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
   },
   heroContent: {
     alignItems: 'center',
@@ -161,93 +189,68 @@ const styles = StyleSheet.create({
   avatarRing: {
     padding: spacing.xs,
     borderRadius: borderRadius.pill,
-    borderWidth: 2,
+    borderWidth: borderWidths.strong,
     borderColor: colors.white,
     marginBottom: spacing.md,
   },
-  avatar: {
-    width: 88,
-    height: 88,
+  avatarWrap: {
     borderRadius: borderRadius.pill,
     backgroundColor: colors.warmCream,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarInitials: {
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
-  },
   name: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
   location: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.9,
+    marginBottom: spacing.sm,
+  },
+  verification: {
     marginBottom: spacing.md,
   },
-  matchBadge: {
-    backgroundColor: colors.tealBright,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.pill,
-  },
-  matchBadgeText: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
   matchHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     textAlign: 'center',
   },
-  scroll: {
-    flex: 1,
-    marginTop: -spacing.lg,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-  },
   priceCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   priceLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
   priceValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.display,
+    color: colors.onAccent,
     marginBottom: spacing.xs,
   },
   duration: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-  },
-  sectionTitle: {
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
   },
   bodyText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 24,
+    lineHeight: lineHeights.body,
     marginBottom: spacing.lg,
   },
   chips: {
@@ -256,38 +259,40 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.lg,
   },
-  chip: {
-    backgroundColor: colors.warmCream,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipText: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-  },
   footer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
   footerRow: {
     flexDirection: 'row',
+    alignItems: 'stretch',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  messageWrap: {
-    flex: 1,
+  setupBanner: {
+    marginBottom: spacing.sm,
   },
-  bookWrap: {
-    flex: 1.4,
+  messageButton: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: '30%',
+    minWidth: 0,
+    paddingHorizontal: spacing.md,
+  },
+  bookButton: {
+    flexGrow: 2,
+    flexShrink: 1,
+    flexBasis: '45%',
+    minWidth: 0,
   },
 });
+}
+

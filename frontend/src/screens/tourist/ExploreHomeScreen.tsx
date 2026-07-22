@@ -1,5 +1,6 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -11,16 +12,21 @@ import FeaturedHomeCard, {
 import QuickActionsGrid, {
   type QuickActionItem,
 } from '../../components/QuickActionsGrid';
-import ExploreSectionCarousel from '../../components/ExploreSectionCarousel';
 import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
+import RecommendedForYou from '../../components/RecommendedForYou';
+import JourneyProgressCard from '../../components/JourneyProgressCard';
 import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
 import ReminderBanner from '../../components/ReminderBanner';
-import { colors, fontFamilies, fontSizes, fontWeights, spacing } from '../../constants/theme';
+import SectionRetryBanner from '../../components/SectionRetryBanner';
 import type { SuggestedHostItem } from '../student/StudentHomeDashboard';
+import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
+import type { EmptyStateContent } from '../../data/appCopy';
+import { emptyStates } from '../../data/appCopy';
+import type { JourneyProgress } from '../../types/journeyProgress';
 
 export interface ExploreSectionItem {
   id: string;
@@ -41,13 +47,22 @@ export interface ExploreHomeScreenProps {
   notificationCount?: number;
   featuredGuide?: Omit<FeaturedHomeCardProps, 'onPress'>;
   quickActions: QuickActionItem[];
-  sections: ExploreSectionItem[];
+  /** Kept for callers; site grids live on Sites / Explore hub. */
+  sections?: ExploreSectionItem[];
   exploreSectionTitle?: string;
   suggestedGuides?: DiscoveryListingItem[];
   suggestedGuidesTitle?: string;
+  guidesEmptyState?: EmptyStateContent;
   showMatchScores?: boolean;
+  recommendationSections?: RecommendationSection[];
+  recommendationHeadline?: string;
+  journeyProgress?: JourneyProgress | null;
   recentActivity?: RecentActivityItem[];
   reminder?: string;
+  /** Fatal only — every home section failed. */
+  homeDataError?: string | null;
+  guidesLoadError?: string | null;
+  activityLoadError?: string | null;
   tabBarItems: TabBarItem[];
   activeTabId: string;
   showSosDock?: boolean;
@@ -57,7 +72,13 @@ export interface ExploreHomeScreenProps {
   onNotificationPress?: () => void;
   onFeaturedGuidePress?: () => void;
   onSuggestedGuidePress?: (guideId: string) => void;
+  onGuidesEmptyPrimaryAction?: () => void;
+  onRetryGuides?: () => void;
+  onRetryActivity?: () => void;
+  onRetryHome?: () => void;
   onSectionPress?: (sectionId: string) => void;
+  onRecommendationItemPress?: (item: RecommendationItem) => void;
+  onRecommendationsEmptyPress?: () => void;
   onQuickActionPress?: (actionId: string) => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
@@ -74,13 +95,18 @@ export default function ExploreHomeScreen({
   notificationCount = 0,
   featuredGuide,
   quickActions,
-  sections,
-  exploreSectionTitle = 'Explore Accra',
   suggestedGuides = [],
-  suggestedGuidesTitle = 'Top guides near you',
+  suggestedGuidesTitle = 'Guides nearby',
+  guidesEmptyState,
   showMatchScores = false,
+  recommendationSections = [],
+  recommendationHeadline = 'Nearby for you',
+  journeyProgress = null,
   recentActivity = [],
   reminder,
+  homeDataError,
+  guidesLoadError,
+  activityLoadError,
   tabBarItems,
   activeTabId,
   showSosDock = false,
@@ -90,11 +116,18 @@ export default function ExploreHomeScreen({
   onNotificationPress,
   onFeaturedGuidePress,
   onSuggestedGuidePress,
-  onSectionPress,
+  onGuidesEmptyPrimaryAction,
+  onRetryGuides,
+  onRetryActivity,
+  onRetryHome,
+  onRecommendationItemPress,
+  onRecommendationsEmptyPress,
   onQuickActionPress,
   onReminderPress,
   onTabPress,
 }: ExploreHomeScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const resolvedStatus =
     statusLabel ??
     (variant === 'browse' ? `Discover ${cityLabel}` : `Exploring ${cityLabel}`);
@@ -107,7 +140,7 @@ export default function ExploreHomeScreen({
         greeting={greeting}
         userName={userName}
         userInitials={userInitials}
-        statusIcon={statusIcon ?? (variant === 'browse' ? '🔍' : '📍')}
+        statusIcon={statusIcon ?? (variant === 'browse' ? 'search-outline' : 'location-outline')}
         statusLabel={resolvedStatus}
         notificationCount={notificationCount}
         onNotificationPress={onNotificationPress}
@@ -116,8 +149,17 @@ export default function ExploreHomeScreen({
       <ScreenScroll withTabBar withSosDock={showSosDock}>
         {showSetupBanner ? (
           <ProfileIncompleteBanner
-            message="Add your travel details to unlock booking."
+            message="Complete your travel profile to unlock messaging, bookings, and trip recommendations."
+            continueLabel="Complete Profile"
             onContinueSetup={onSetupPress}
+          />
+        ) : null}
+
+        {homeDataError ? (
+          <SectionRetryBanner
+            message={homeDataError}
+            onRetry={onRetryHome}
+            retryLabel="Retry home"
           />
         ) : null}
 
@@ -133,28 +175,51 @@ export default function ExploreHomeScreen({
           onActionPress={onQuickActionPress}
         />
 
-        {suggestedGuides.length > 0 ? (
+        {journeyProgress ? (
+          <JourneyProgressCard journey={journeyProgress} />
+        ) : null}
+
+        {guidesLoadError ? (
+          <SectionRetryBanner
+            message={guidesLoadError}
+            onRetry={onRetryGuides}
+            retryLabel="Retry guides"
+          />
+        ) : (
           <DiscoveryListingSection
             title={suggestedGuidesTitle}
             items={suggestedGuides}
             showMatchScores={showMatchScores}
+            emptyState={guidesEmptyState}
+            onEmptyPrimaryAction={onGuidesEmptyPrimaryAction}
             onItemPress={onSuggestedGuidePress}
+            actionLabel="See all"
+            onActionPress={onGuidesEmptyPrimaryAction}
+          />
+        )}
+
+        {recommendationSections.length > 0 ? (
+          <RecommendedForYou
+            headline={recommendationHeadline}
+            city={cityLabel}
+            sections={recommendationSections}
+            emptyState={emptyStates.recommendations}
+            onEmptyPrimaryAction={onRecommendationsEmptyPress}
+            onItemPress={onRecommendationItemPress}
           />
         ) : null}
 
-        {sections.length > 0 ? (
-          <View style={styles.carouselWrap}>
-            <Text style={styles.sectionTitle}>{exploreSectionTitle}</Text>
-            <ExploreSectionCarousel
-              sections={sections}
-              onSectionPress={onSectionPress}
-            />
-          </View>
-        ) : null}
+        {activityLoadError ? (
+          <SectionRetryBanner
+            message={activityLoadError}
+            onRetry={onRetryActivity}
+            retryLabel="Retry activity"
+          />
+        ) : (
+          <RecentActivityList items={recentActivity} />
+        )}
 
-        <RecentActivityList items={recentActivity} />
-
-        {reminder ? (
+        {!homeDataError && reminder ? (
           <ReminderBanner message={reminder} onPress={onReminderPress} />
         ) : null}
       </ScreenScroll>
@@ -172,20 +237,12 @@ export default function ExploreHomeScreen({
 
 export type { SuggestedHostItem };
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  carouselWrap: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-});
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+  });
+}
+

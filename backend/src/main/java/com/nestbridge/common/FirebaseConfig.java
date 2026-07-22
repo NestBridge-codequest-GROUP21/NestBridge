@@ -47,16 +47,18 @@ public class FirebaseConfig {
             }
             FirebaseOptions.Builder builder = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(stream));
-            if (databaseUrl != null && !databaseUrl.isBlank()) {
-                builder.setDatabaseUrl(databaseUrl);
+            String trimmedDatabaseUrl = databaseUrl == null ? "" : databaseUrl.trim();
+            if (!trimmedDatabaseUrl.isBlank()) {
+                builder.setDatabaseUrl(trimmedDatabaseUrl);
             }
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(builder.build());
             }
             FirebaseDatabase.getInstance().getReference().keepSynced(false);
             log.info("Firebase Admin initialized.");
-        } catch (IOException e) {
-            log.error("Failed to initialize Firebase Admin", e);
+        } catch (Exception e) {
+            // Never block API boot on chat config — REST/Postgres remains available.
+            log.error("Failed to initialize Firebase Admin; continuing without realtime chat sync", e);
         }
     }
 

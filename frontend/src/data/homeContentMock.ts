@@ -69,17 +69,12 @@ export const studentRecentActivityMock: RecentActivityItem[] = [
   },
 ];
 
+/** Prep shortcuts — excludes Transport (already in student quick actions). */
 export const studentRecommendedMock: ExploreSectionItem[] = [
   {
-    id: 'transport',
-    title: 'Transport guide',
-    subtitle: 'Getting around Accra safely',
-    icon: '🚌',
-  },
-  {
     id: 'greetings',
-    title: 'Local greetings',
-    subtitle: 'Twi phrases for newcomers',
+    title: 'Culture & language',
+    subtitle: 'Twi phrases and etiquette for newcomers',
     icon: '👋',
   },
   {
@@ -96,13 +91,14 @@ export const studentRecommendedMock: ExploreSectionItem[] = [
   },
 ];
 
+/** Must match suggestedGuidesMock[0] (guide-1) — same ID the home CTA opens. */
 export const touristFeaturedGuideMock: Omit<FeaturedHomeCardProps, 'onPress'> = {
   sectionLabel: 'Recommended for you',
-  name: 'Yaw Darko — City Tour',
+  name: 'Kofi Asante — City Tour',
   badge: 'Top rated guide',
-  details: 'English & French · 4.9★ · Available this week',
+  details: 'English & Twi · Accra (Osu & Labadi) · Available this week',
   ctaLabel: 'See all guides →',
-  initials: 'YD',
+  initials: 'KA',
 };
 
 export const touristStatusMock = {
@@ -152,6 +148,12 @@ export const hostPerformanceMock: HomeStatItem[] = [
   { id: 'views', value: '128', label: 'Views', subtitle: 'This month' },
   { id: 'occupancy', value: '78%', label: 'Occupancy', subtitle: 'Last 30 days' },
   { id: 'rating', value: '4.8★', label: 'Rating', subtitle: '12 reviews' },
+];
+
+export const guidePerformanceMock: HomeStatItem[] = [
+  { id: 'tours', value: '14', label: 'Tours', subtitle: 'This month' },
+  { id: 'guests', value: '46', label: 'Guests', subtitle: 'Last 30 days' },
+  { id: 'rating', value: '4.9★', label: 'Rating', subtitle: '22 reviews' },
 ];
 
 export const hostReminderMock =

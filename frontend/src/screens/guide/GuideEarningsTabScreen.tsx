@@ -1,19 +1,24 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
-import { ProviderBookingsEmptyBlock } from '../../components/ProviderBookingCard';
+import Card from '../../components/Card';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
+import SectionHeader from '../../components/SectionHeader';
+import SkeletonLoader from '../../components/SkeletonLoader';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  lineHeights,
 } from '../../constants/theme';
 import { formatCurrency } from '../../data/bookingMock';
+import type { EmptyStateContent } from '../../data/appCopy';
 import type { EarningsLineItem, EarningsSummary } from '../../types/providerBooking';
 
 export interface GuideEarningsTabScreenProps {
@@ -27,7 +32,8 @@ export interface GuideEarningsTabScreenProps {
   onSosPress?: () => void;
   isLoading?: boolean;
   errorMessage?: string | null;
-  emptyState: { title: string; body: string; tip?: string };
+  emptyState: EmptyStateContent;
+  onEmptyPrimaryAction?: () => void;
   onTabPress?: (tabId: string) => void;
 }
 
@@ -43,8 +49,11 @@ export default function GuideEarningsTabScreen({
   isLoading = false,
   errorMessage,
   emptyState,
+  onEmptyPrimaryAction,
   onTabPress,
 }: GuideEarningsTabScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const hasEarnings = lineItems.length > 0;
 
   return (
@@ -58,12 +67,17 @@ export default function GuideEarningsTabScreen({
         compact
       />
       <ScreenScroll withTabBar withSosDock={showSosDock}>
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <InlineBanner message={errorMessage} tone="error" />
+        ) : null}
         {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
+          <View accessibilityRole="progressbar" accessibilityLabel="Loading earnings">
+            <SkeletonLoader lines={3} style={styles.skeleton} />
+            <SkeletonLoader lines={2} style={styles.skeleton} />
+          </View>
         ) : null}
         {!isLoading && hasEarnings ? (
-          <View style={styles.summaryCard}>
+          <Card padding="lg" style={styles.summaryCard}>
             <Text style={styles.summaryLabel}>Net payout</Text>
             <Text style={styles.summaryValue}>
               {formatCurrency(summary.netPayout, summary.currency)}
@@ -86,28 +100,38 @@ export default function GuideEarningsTabScreen({
                 <Text style={styles.metaValue}>{summary.sessionCount}</Text>
               </View>
             </View>
-          </View>
+          </Card>
         ) : null}
         {!isLoading && !hasEarnings ? (
-          <ProviderBookingsEmptyBlock
+          <EmptyState
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
+            iconGlyph={emptyState.iconGlyph ?? '💰'}
+            primaryActionLabel={emptyState.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : null}
-        {lineItems.map((item) => (
-          <View key={item.id} style={styles.lineItem}>
-            <View style={styles.lineTop}>
-              <Text style={styles.lineGuest}>{item.guestName}</Text>
-              <Text style={styles.lineNet}>{formatCurrency(item.net, item.currency)}</Text>
-            </View>
-            <Text style={styles.lineLabel}>{item.label}</Text>
-            <Text style={styles.lineFee}>
-              Fee {formatCurrency(item.fee, item.currency)} · Gross{' '}
-              {formatCurrency(item.gross, item.currency)}
-            </Text>
-          </View>
-        ))}
+        {!isLoading && hasEarnings ? (
+          <SectionHeader title="Payout history" />
+        ) : null}
+        {!isLoading
+          ? lineItems.map((item) => (
+              <Card key={item.id} padding="lg" style={styles.lineItem}>
+                <View style={styles.lineTop}>
+                  <Text style={styles.lineGuest}>{item.guestName}</Text>
+                  <Text style={styles.lineNet}>
+                    {formatCurrency(item.net, item.currency)}
+                  </Text>
+                </View>
+                <Text style={styles.lineLabel}>{item.label}</Text>
+                <Text style={styles.lineFee}>
+                  Gross {formatCurrency(item.gross, item.currency)} · Fee{' '}
+                  {formatCurrency(item.fee, item.currency)}
+                </Text>
+              </Card>
+            ))
+          : null}
       </ScreenScroll>
       <AppTabBar
         items={tabBarItems}
@@ -120,39 +144,32 @@ export default function GuideEarningsTabScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  loader: {
-    marginVertical: spacing.xl,
-  },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.danger,
+  skeleton: {
     marginBottom: spacing.md,
   },
   summaryCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   summaryLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    color: colors.textSecondary,
+    fontWeight: fontWeights.regular,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
     marginBottom: spacing.xs,
   },
   summaryValue: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.teal,
+    color: colors.onAccent,
     marginBottom: spacing.md,
   },
   summaryRow: {
@@ -165,6 +182,7 @@ const styles = StyleSheet.create({
   metaLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
@@ -175,12 +193,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   lineItem: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   lineTop: {
     flexDirection: 'row',
@@ -190,26 +203,33 @@ const styles = StyleSheet.create({
   },
   lineGuest: {
     fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
+    fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     flex: 1,
+    paddingRight: spacing.md,
   },
   lineNet: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.teal,
   },
   lineLabel: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
   lineFee: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
+    lineHeight: lineHeights.caption,
   },
 });
+}
+

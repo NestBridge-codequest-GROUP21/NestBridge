@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -5,16 +6,31 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
+import EmptyState from '../../components/EmptyState';
+import StatusBadge from '../../components/StatusBadge';
 import type { HostListingItem } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   layout,
+  lineHeights,
+  touchTarget,
+  controlHeights,
+  iconSizes,
 } from '../../constants/theme';
+
+export interface HostListingsEmptyState {
+  title: string;
+  body: string;
+  tip?: string;
+  iconGlyph?: string;
+  primaryActionLabel?: string;
+}
 
 export interface HostListingsScreenProps {
   greeting: string;
@@ -23,6 +39,7 @@ export interface HostListingsScreenProps {
   statusIcon?: string;
   statusLabel?: string;
   listings: HostListingItem[];
+  emptyState?: HostListingsEmptyState;
   onToggleOnline?: (listingId: string, isOnline: boolean) => void;
   onEditPress?: (listingId: string) => void;
   onDeletePress?: (listingId: string) => void;
@@ -41,17 +58,21 @@ function ListingCard({
   onEditPress?: () => void;
   onDeletePress?: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.listingCard}>
+    <Card padding="none" style={styles.listingCard}>
       <View style={styles.thumbnail}>
-        <AppIcon glyph={listing.imageEmoji} size={32} color={colors.tealDeep} />
+        <AppIcon glyph={listing.imageEmoji} size={iconSizes.xl} color={colors.onAccent} />
       </View>
 
       <View style={styles.listingBody}>
         <View style={styles.onlineRow}>
-          <Text style={styles.onlineLabel}>
-            {listing.isOnline ? 'Online' : 'Offline'}
-          </Text>
+          <StatusBadge
+            label={listing.isOnline ? 'Online' : 'Offline'}
+            tone={listing.isOnline ? 'success' : 'neutral'}
+          />
           <Switch
             value={listing.isOnline}
             onValueChange={onToggleOnline}
@@ -63,12 +84,15 @@ function ListingCard({
 
         <Text style={styles.address}>{listing.address}</Text>
         <Text style={styles.scoreText}>
-          Current bookings Score: {listing.bookingsScore}%
+          Booking score: {listing.bookingsScore}%
         </Text>
 
         <View style={styles.actionRow}>
           <Pressable
-            style={styles.actionButton}
+            style={({ pressed }) => [
+              styles.actionButton,
+              pressed && styles.actionPressed,
+            ]}
             onPress={onEditPress}
             accessibilityRole="button"
             accessibilityLabel={`Edit ${listing.address}`}
@@ -76,7 +100,11 @@ function ListingCard({
             <Text style={styles.actionLabel}>Edit</Text>
           </Pressable>
           <Pressable
-            style={[styles.actionButton, styles.deleteButton]}
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.deleteButton,
+              pressed && styles.actionPressed,
+            ]}
             onPress={onDeletePress}
             accessibilityRole="button"
             accessibilityLabel={`Delete ${listing.address}`}
@@ -85,7 +113,7 @@ function ListingCard({
           </Pressable>
         </View>
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -96,12 +124,17 @@ export default function HostListingsScreen({
   statusIcon,
   statusLabel,
   listings,
+  emptyState,
   onToggleOnline,
   onEditPress,
   onDeletePress,
   onAddListingPress,
   onBack,
 }: HostListingsScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
@@ -116,36 +149,58 @@ export default function HostListingsScreen({
         onBack={onBack}
       />
 
-      <ScreenScroll contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xl + 64 }}>
-        <View style={styles.grid}>
-          {listings.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              onToggleOnline={(isOnline) =>
-                onToggleOnline?.(listing.id, isOnline)
-              }
-              onEditPress={() => onEditPress?.(listing.id)}
-              onDeletePress={() => onDeletePress?.(listing.id)}
-            />
-          ))}
-        </View>
+      <ScreenScroll
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + spacing.xxl + controlHeights.lg,
+        }}
+      >
+        {listings.length === 0 && emptyState ? (
+          <EmptyState
+            title={emptyState.title}
+            body={emptyState.body}
+            tip={emptyState.tip}
+            iconGlyph={emptyState.iconGlyph ?? '🏡'}
+            primaryActionLabel={
+              emptyState.primaryActionLabel ?? 'Add listing'
+            }
+            onPrimaryAction={onAddListingPress}
+          />
+        ) : (
+          <View style={styles.grid}>
+            {listings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                onToggleOnline={(isOnline) =>
+                  onToggleOnline?.(listing.id, isOnline)
+                }
+                onEditPress={() => onEditPress?.(listing.id)}
+                onDeletePress={() => onDeletePress?.(listing.id)}
+              />
+            ))}
+          </View>
+        )}
       </ScreenScroll>
 
       <Pressable
-        style={[styles.fab, { bottom: insets.bottom + spacing.lg }]}
+        style={({ pressed }) => [
+          styles.fab,
+          { bottom: insets.bottom + spacing.lg },
+          pressed && styles.fabPressed,
+        ]}
         onPress={onAddListingPress}
         accessibilityRole="button"
         accessibilityLabel="Add new listing"
       >
-        <AppIcon name="add" size={fontSizes.heading} color={colors.white} />
-        <Text style={styles.fabLabel}>Add New Listing</Text>
+        <AppIcon name="add" size={iconSizes.lg} color={colors.onPrimary} />
+        <Text style={styles.fabLabel}>Finish setup</Text>
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -157,20 +212,13 @@ const styles = StyleSheet.create({
   },
   listingCard: {
     width: '47%',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
   },
   thumbnail: {
-    height: 88,
-    backgroundColor: colors.warmCream,
+    height: spacing.xxl + spacing.xl + spacing.md,
+    backgroundColor: tints.cream,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  thumbnailEmoji: {
-    fontSize: 36,
   },
   listingBody: {
     padding: spacing.sm,
@@ -180,21 +228,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  onlineLabel: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    color: colors.teal,
+    minHeight: touchTarget,
   },
   address: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
   scoreText: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
+    lineHeight: lineHeights.caption,
   },
   actionRow: {
     flexDirection: 'row',
@@ -203,17 +250,22 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    minHeight: 44,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
+    borderRadius: borderRadius.md,
+    borderWidth: borderWidths.strong,
+    borderColor: colors.teal,
+    backgroundColor: colors.surface,
+  },
+  actionPressed: {
+    opacity: 0.88,
+    backgroundColor: colors.warmCream,
   },
   actionLabel: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
   deleteButton: {
@@ -232,21 +284,19 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.pill,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    minHeight: 52,
-    elevation: 4,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    minHeight: controlHeights.lg,
+    ...shadows.floating,
   },
-  fabIcon: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    color: colors.white,
+  fabPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.98 }],
   },
   fabLabel: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
-    color: colors.white,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
   },
 });
+}
+

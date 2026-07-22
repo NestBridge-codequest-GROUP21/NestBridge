@@ -1,12 +1,14 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  touchTarget,
 } from '../constants/theme';
 import type { CalendarDayStatus, GuideShiftBlock } from '../data/featureScreensMock';
 import { GUIDE_SHIFT_LABELS } from '../data/featureScreensMock';
@@ -36,7 +38,10 @@ export interface MonthCalendarGridProps {
   onNextMonth?: () => void;
 }
 
-function statusColor(status: CalendarDayStatus): string {
+function statusColor(
+  status: CalendarDayStatus,
+  colors: AppTheme['colors'],
+): string {
   switch (status) {
     case 'available':
       return colors.success;
@@ -58,11 +63,14 @@ function HostDayCell({
   selected: boolean;
   onPress?: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   if (!cell.isCurrentMonth) {
     return <View style={styles.dayCell} />;
   }
 
-  const bg = statusColor(cell.status);
+  const bg = statusColor(cell.status, colors);
 
   return (
     <Pressable
@@ -87,6 +95,9 @@ function GuideDayCell({
   selected: boolean;
   onPress?: () => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   if (!cell.isCurrentMonth) {
     return <View style={styles.dayCell} />;
   }
@@ -127,6 +138,10 @@ export default function MonthCalendarGrid({
   onPrevMonth,
   onNextMonth,
 }: MonthCalendarGridProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const days = mode === 'host' ? hostDays : guideDays;
 
   return (
@@ -259,11 +274,12 @@ export function buildGuideCalendarGrid(
   return cells;
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   container: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     padding: spacing.md,
   },
@@ -274,8 +290,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   navButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: touchTarget,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -308,6 +324,7 @@ const styles = StyleSheet.create({
   dayCell: {
     width: `${100 / 7}%`,
     aspectRatio: 1,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xs,
@@ -317,8 +334,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.warmCream,
   },
   dayBadge: {
-    width: 36,
-    height: 36,
+    width: touchTarget,
+    height: touchTarget,
     borderRadius: borderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -326,7 +343,7 @@ const styles = StyleSheet.create({
   dayNumber: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   guideDayNumber: {
     fontFamily: fontFamilies.semibold,
@@ -349,7 +366,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginTop: spacing.md,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
   },
   legendItem: {
@@ -368,3 +385,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
 });
+}
+
