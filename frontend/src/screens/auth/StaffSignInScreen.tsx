@@ -7,6 +7,7 @@ import FormTextField from '../../components/FormTextField';
 import ScreenScroll from '../../components/ScreenScroll';
 import BrandLogo from '../../components/BrandLogo';
 import PrimaryButton from '../../components/PrimaryButton';
+import SecondaryButton from '../../components/SecondaryButton';
 import BackButton from '../../components/BackButton';
 import InlineBanner from '../../components/InlineBanner';
 import CheckboxRow from '../../components/CheckboxRow';
@@ -30,6 +31,7 @@ export interface StaffSignInScreenProps {
   onPasswordChange?: (value: string) => void;
   onToggleKeepSignedIn?: () => void;
   onSubmit?: () => void;
+  onForgotPasswordPress: () => void;
   onBack?: () => void;
 }
 
@@ -43,11 +45,13 @@ export default function StaffSignInScreen({
   onPasswordChange,
   onToggleKeepSignedIn,
   onSubmit,
+  onForgotPasswordPress,
   onBack,
 }: StaffSignInScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { scheme } = useTheme();
   const insets = useSafeAreaInsets();
+  const showCredentialError = Boolean(errorMessage?.trim());
 
   return (
     <View style={styles.root}>
@@ -69,8 +73,6 @@ export default function StaffSignInScreen({
           tourist accounts.
         </Text>
 
-        {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
-
         <FormTextField
           label="Staff email"
           value={email}
@@ -85,13 +87,37 @@ export default function StaffSignInScreen({
           placeholder="••••••••"
           onChangeText={onPasswordChange}
           secureTextEntry
+          visibilityToggle
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="password"
         />
+
+        <Pressable
+          onPress={onForgotPasswordPress}
+          style={styles.forgotRow}
+          accessibilityRole="button"
+          accessibilityLabel="Forgot password"
+        >
+          <Text style={styles.forgotText}>Forgot password?</Text>
+        </Pressable>
 
         <CheckboxRow
           label="Keep me signed in"
           checked={keepSignedIn}
           onPress={onToggleKeepSignedIn}
         />
+
+        {showCredentialError ? (
+          <View style={styles.errorBlock}>
+            <InlineBanner tone="error" message={errorMessage!} />
+            <SecondaryButton
+              label="Forgot password?"
+              onPress={onForgotPasswordPress}
+              disabled={submitting}
+            />
+          </View>
+        ) : null}
 
         <PrimaryButton
           label={submitting ? 'Signing in…' : 'Sign in to ops'}
@@ -150,6 +176,21 @@ function createStyles({ colors }: AppTheme) {
       color: colors.textSecondary,
       lineHeight: lineHeights.body,
       marginBottom: spacing.sm,
+    },
+    forgotRow: {
+      alignSelf: 'flex-end',
+      minHeight: touchTarget,
+      justifyContent: 'center',
+      marginTop: -spacing.sm,
+    },
+    forgotText: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.caption,
+      fontWeight: fontWeights.semibold,
+      color: colors.teal,
+    },
+    errorBlock: {
+      gap: spacing.sm,
     },
     footerLink: {
       minHeight: touchTarget,
