@@ -27,10 +27,12 @@ class AdminEmailAllowlistTest {
     void blankEnv_usesBuiltInDefaultEmails() {
         var allowlist = new AdminEmailAllowlist("");
         assertTrue(allowlist.contains("bsbhackman@gmail.com"));
-        assertTrue(allowlist.contains("AbdulsamedTaslima@gmail.com"));
+        assertTrue(allowlist.contains("AbigailAdusei17@gmail.com"));
         assertTrue(allowlist.contains("angelonwe54@gmail.com"));
+        assertTrue(allowlist.contains("SirinaAbbas2@gmail.com"));
+        assertTrue(allowlist.contains("AbdulsamedTaslima@gmail.com"));
         assertFalse(allowlist.contains("student@example.com"));
-        assertEquals(3, allowlist.snapshot().size());
+        assertEquals(5, allowlist.snapshot().size());
     }
 
     @Test
