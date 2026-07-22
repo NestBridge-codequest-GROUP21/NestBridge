@@ -71,6 +71,14 @@ public class PaystackService {
 
     @Transactional
     public PaymentInitializeResponse initializePayment(UUID bookingId, UUID guestId) {
+        return initializePayment(bookingId, guestId, null);
+    }
+
+    @Transactional
+    public PaymentInitializeResponse initializePayment(
+            UUID bookingId,
+            UUID guestId,
+            List<String> preferredChannels) {
         profileGateService.requireEmailVerified(guestId);
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
@@ -114,6 +122,7 @@ public class PaystackService {
         String reference = "nb-" + bookingId.toString().replace("-", "").substring(0, 12)
                 + "-" + System.currentTimeMillis();
         long amountPesewas = toPesewas(booking.getTotalPrice());
+        List<String> channels = resolveChannels(preferredChannels);
 
         try {
             String callbackUrl = publicUrl.replaceAll("/$", "") + "/api/payments/callback";
@@ -123,7 +132,7 @@ public class PaystackService {
                     "currency", "GHS",
                     "reference", reference,
                     "callback_url", callbackUrl,
-                    "channels", CHECKOUT_CHANNELS,
+                    "channels", channels,
                     "metadata", Map.of(
                             "booking_id", bookingId.toString(),
                             "guest_id", guestId.toString(),
@@ -167,10 +176,11 @@ public class PaystackService {
             paymentRecordRepository.save(record);
 
             log.info(
-                    "Paystack checkout created bookingId={} reference={} amount={} GHS",
+                    "Paystack checkout created bookingId={} reference={} amount={} GHS channels={}",
                     bookingId,
                     reference,
-                    booking.getTotalPrice());
+                    booking.getTotalPrice(),
+                    channels);
 
             return PaymentInitializeResponse.builder()
                     .mockPayment(false)
@@ -189,6 +199,20 @@ public class PaystackService {
             log.error("Paystack initialize error", e);
             throw new IllegalStateException("Could not start payment. Please try again.");
         }
+    }
+
+    private List<String> resolveChannels(List<String> preferredChannels) {
+        if (preferredChannels == null || preferredChannels.isEmpty()) {
+            return CHECKOUT_CHANNELS;
+        }
+        List<String> allowed = preferredChannels.stream()
+                .filter(channel -> channel != null && !channel.isBlank())
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .filter(CHECKOUT_CHANNELS::contains)
+                .distinct()
+                .toList();
+        return allowed.isEmpty() ? CHECKOUT_CHANNELS : allowed;
     }
 
     /**

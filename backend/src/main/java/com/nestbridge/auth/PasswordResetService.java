@@ -31,6 +31,7 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final AdminEmailAllowlist adminEmailAllowlist;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.public-url:http://localhost:8080}")
@@ -81,6 +82,15 @@ public class PasswordResetService {
         User user = userRepository.findById(token.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        // Opening the emailed link proves inbox ownership.
+        if (!user.isEmailVerified()) {
+            user.setEmailVerified(true);
+            user.setEmailVerifiedAt(OffsetDateTime.now());
+        }
+        if (!user.isStaff() && adminEmailAllowlist.contains(user.getEmail())) {
+            user.setStaff(true);
+            log.info("Granted staff access to {} via allowlist on password reset", user.getEmail());
+        }
         userRepository.save(user);
 
         token.setUsedAt(OffsetDateTime.now());

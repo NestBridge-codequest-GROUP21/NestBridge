@@ -85,6 +85,7 @@ public class UserController {
                 .userId(user.getUserId().toString())
                 .fullName(user.getFullName())
                 .bio(user.getBio())
+                .about(user.getAbout())
                 .profilePhotoUrl(user.getProfilePhotoUrl())
                 .primaryIntent(user.getPrimaryIntent())
                 .build();

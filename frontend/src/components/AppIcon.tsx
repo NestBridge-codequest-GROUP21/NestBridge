@@ -95,6 +95,8 @@ const GLYPH_TO_ICON: Record<string, IoniconName> = {
   '🗣️': 'chatbubble-ellipses-outline',
   '👍': 'thumbs-up-outline',
   '📱': 'phone-portrait-outline',
+  '💳': 'card-outline',
+  '🏦': 'business-outline',
   '👕': 'body-outline',
   // Emergency
   '🆘': 'alert-circle-outline',

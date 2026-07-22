@@ -76,7 +76,7 @@ export default function StaffSignInScreen({
         <FormTextField
           label="Staff email"
           value={email}
-          placeholder="you@nestbridge.app"
+          placeholder="bsbhackman@gmail.com"
           onChangeText={onEmailChange}
           keyboardType="email-address"
           autoCapitalize="none"

@@ -34,9 +34,11 @@ import {
   getProviderBlockedReason,
   getSeekerNextStep,
   getStepsForTrack,
+  hasIdentityProfile,
   isActiveExchangeStudent,
   isGuideComplete,
   isHostComplete,
+  isIdentityLocked,
   isSeekerComplete,
   preferRicherAccountProfile,
   profileCompletenessScore,
@@ -292,13 +294,33 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
           : track === 'HOST'
             ? state.hostProvider
             : state.guideProvider;
+
+      // Once identity is locked, refuse changes to bio / about / display name.
+      let mergeData = data;
+      if (isIdentityLocked(current) && data) {
+        const {
+          bio: _bio,
+          about: _about,
+          displayName: _displayName,
+          identityLocked: _locked,
+          ...rest
+        } = data;
+        mergeData = {
+          ...rest,
+          bio: current.data.bio,
+          about: current.data.about,
+          displayName: current.data.displayName,
+          identityLocked: true,
+        };
+      }
+
       const stepsCompleted = current.stepsCompleted.includes(step)
         ? current.stepsCompleted
         : [...current.stepsCompleted, step];
       const nextProgress: ProfileProgress = {
         status: deriveStatus(stepsCompleted, steps),
         stepsCompleted,
-        data: mergeProfileData(current.data, data),
+        data: mergeProfileData(current.data, mergeData),
       };
       await persist(updateTrackProgress(state, track, () => nextProgress));
     },
@@ -317,11 +339,19 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
           : track === 'HOST'
             ? state.hostProvider
             : state.guideProvider;
+      if (!hasIdentityProfile(current)) {
+        // Cannot unlock core activities without locked bio + about.
+        return;
+      }
       await persist(
         updateTrackProgress(state, track, () => ({
           ...current,
           status: 'COMPLETE',
           stepsCompleted: [...steps],
+          data: {
+            ...current.data,
+            identityLocked: true,
+          },
         })),
       );
     },
