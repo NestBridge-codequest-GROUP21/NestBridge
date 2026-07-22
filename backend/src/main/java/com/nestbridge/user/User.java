@@ -83,6 +83,10 @@ public class User {
     @Column(name = "is_suspended")
     private boolean suspended;
 
+    @Builder.Default
+    @Column(name = "notifications_enabled", nullable = false)
+    private boolean notificationsEnabled = true;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

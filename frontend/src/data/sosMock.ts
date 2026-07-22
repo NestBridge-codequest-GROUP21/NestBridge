@@ -3,7 +3,6 @@ import type { EmergencyContact } from '../screens/shared/SOSScreen';
 /**
  * Unique Ghana emergency + NestBridge support contacts.
  * National emergency (112) is the SOS primary CTA — not repeated in this list.
- * NestBridge rows include the team member who owns that line.
  */
 export const emergencyContactsMock: EmergencyContact[] = [
   {
@@ -43,23 +42,37 @@ export const emergencyContactsMock: EmergencyContact[] = [
   },
   {
     organisation: 'NestBridge Support',
-    contactName: 'Blessing Hackman',
+    contactName: 'Blessing Baffoa Hackman',
     contactTitle: 'Platform support',
     number: '+233 59 556 2101',
     description: 'NestBridge team contact for travellers, hosts, and guides',
   },
   {
     organisation: 'NestBridge Support',
-    contactName: 'Abdulsamed Taslima',
+    contactName: 'Taslimah Abdul Samed',
     contactTitle: 'Platform support',
     number: '+233 24 300 8368',
     description: 'NestBridge team contact for travellers, hosts, and guides',
   },
   {
     organisation: 'NestBridge Support',
-    contactName: 'Angelo Onwe',
+    contactName: 'Sirina Abbas',
     contactTitle: 'Platform support',
     number: '+233 59 661 4273',
+    description: 'NestBridge team contact for travellers, hosts, and guides',
+  },
+  {
+    organisation: 'NestBridge Support',
+    contactName: 'Abigail Adusei',
+    contactTitle: 'Platform support',
+    number: '+233 20 553 7622',
+    description: 'NestBridge team contact for travellers, hosts, and guides',
+  },
+  {
+    organisation: 'NestBridge Support',
+    contactName: 'Angel Onwe',
+    contactTitle: 'Platform support',
+    number: '+233 20 334 6248',
     description: 'NestBridge team contact for travellers, hosts, and guides',
   },
 ];
@@ -105,6 +118,18 @@ export function enrichEmergencyContact(contact: {
       ...known,
       number,
       description: contact.description ?? known.description,
+    };
+  }
+
+  const label = contact.label?.trim() ?? '';
+  const dashParts = label.split(/\s+[—–-]\s+/);
+  if (dashParts.length >= 2 && /nestbridge/i.test(dashParts[1] ?? '')) {
+    return {
+      organisation: dashParts[1].trim(),
+      contactName: dashParts[0].trim(),
+      contactTitle: 'Platform support',
+      number,
+      description: contact.description,
     };
   }
 

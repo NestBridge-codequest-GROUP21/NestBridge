@@ -1,5 +1,6 @@
 import type { BookingListItem, IncomingBookingRequest } from '../types/booking';
 import type { RecentActivityItem } from '../components/RecentActivityList';
+import { splashCopy } from '../data/appCopy';
 
 export interface LiveHomeStatus {
   statusLabel: string;
@@ -102,7 +103,8 @@ export function buildHostHomeStatus(
 ): LiveHomeStatus {
   const pending = incoming.length;
   return {
-    statusLabel: pending > 0 ? `${pending} new request${pending > 1 ? 's' : ''}` : 'Listing active',
+    // Motto in the header pill — request counts live on Requests + notifications.
+    statusLabel: splashCopy.tagline,
     reminder: apiError
       ? `Could not load live data: ${apiError}`
       : pending > 0
@@ -118,7 +120,7 @@ export function buildGuideHomeStatus(
 ): LiveHomeStatus {
   const pending = incoming.length;
   return {
-    statusLabel: pending > 0 ? `${pending} session request${pending > 1 ? 's' : ''}` : 'Available for tours',
+    statusLabel: splashCopy.tagline,
     reminder: apiError
       ? `Could not load live data: ${apiError}`
       : pending > 0

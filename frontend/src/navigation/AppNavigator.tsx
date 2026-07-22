@@ -5,7 +5,7 @@ import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import { pickProfileImage } from '../services/imagePicker';
+import { pickProfileImage, pickListingImage } from '../services/imagePicker';
 
 import IntentSelectScreen, {
   intentOptionsFromPrimary,
@@ -52,6 +52,7 @@ import GuideBookingsTabScreen from '../screens/guide/GuideBookingsTabScreen';
 import GuideEarningsTabScreen from '../screens/guide/GuideEarningsTabScreen';
 import BrowseHomeScreen from '../screens/shared/BrowseHomeScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
+import SettingsScreen from '../screens/shared/SettingsScreen';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
 import DevTestingScreen from '../screens/shared/DevTestingScreen';
 import {
@@ -98,10 +99,12 @@ import SitesDirectoryScreen from '../screens/tourist/SitesDirectoryScreen';
 import UniversitiesDirectoryScreen from '../screens/student/UniversitiesDirectoryScreen';
 import WelfareCheckInScreen from '../screens/shared/WelfareCheckInScreen';
 import ReviewPromptScreen from '../screens/shared/ReviewPromptScreen';
+import RatingsScreen from '../screens/shared/RatingsScreen';
 import { useLodgingPartners, lodgingListingFromId } from '../hooks/useLodgingPartners';
 import OfflineMapScreen from '../screens/tourist/OfflineMapScreen';
 import HostCalendarScreen from '../screens/host/HostCalendarScreen';
 import HostListingsScreen from '../screens/host/HostListingsScreen';
+import HostListingEditScreen from '../screens/host/HostListingEditScreen';
 import TourTypesSetupScreen from '../screens/guide/TourTypesSetupScreen';
 import GuideAvailabilityScreen from '../screens/guide/GuideAvailabilityScreen';
 import SOSScreen from '../screens/shared/SOSScreen';
@@ -187,7 +190,13 @@ import {
   updateMyGuideProfile,
   getMyGuideCalendar,
   getApiErrorMessage,
+  getNotificationsPreference,
+  setNotificationsPreference,
 } from '../services/api';
+import {
+  registerPushTokenIfAvailable,
+  unregisterPushTokenLocally,
+} from '../services/pushRegistration';
 import {
   hostProfileToListing,
   mergeTourTypesFromProfile,
@@ -451,6 +460,13 @@ function handleRecommendationItemPress(
     case 'HostListings':
       navigation.navigate('HostListings');
       return;
+    case 'HostListingEdit':
+    case 'HostListingEditPhotos':
+      navigation.navigate('HostListingEdit', { focus: 'photos' });
+      return;
+    case 'HostListingEditRules':
+      navigation.navigate('HostListingEdit', { focus: 'rules' });
+      return;
     case 'HostCalendar':
       navigation.navigate('HostCalendar');
       return;
@@ -686,11 +702,7 @@ function HostListingsStackScreen({
       listings={displayListings}
       emptyState={emptyStates.hostListings}
       onAddListingPress={() => {
-        Alert.alert(
-          'Finish host setup',
-          'Complete your host profile to publish your stay. Open Profile → Account setup to finish remaining steps.',
-        );
-        navigation.navigate('Profile');
+        navigation.navigate('HostListingEdit', { focus: 'photos' });
       }}
       onToggleOnline={(listingId, isOnline) => {
         setListings((prev) =>
@@ -702,6 +714,116 @@ function HostListingsStackScreen({
           .then((profile) => setListings([hostProfileToListing(profile)]))
           .catch((error) => {
             Alert.alert('Could not update listing', getApiErrorMessage(error));
+          });
+      }}
+      onEditPress={() => navigation.navigate('HostListingEdit', { focus: 'photos' })}
+      onDeletePress={() => {
+        Alert.alert(
+          'Hide listing',
+          'Turn your listing offline from the Online switch, or edit photos and house rules from Edit.',
+        );
+      }}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+function HostListingEditStackScreen({
+  greeting,
+  userName,
+  userInitials,
+  navigation,
+  focus = 'photos',
+}: ProviderScreenHeaderProps & { focus?: 'photos' | 'rules' }) {
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [houseRules, setHouseRules] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [addingPhoto, setAddingPhoto] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    void getMyHostProfile()
+      .then((profile) => {
+        if (cancelled) {
+          return;
+        }
+        setPhotos(Array.isArray(profile.photos) ? profile.photos.filter(Boolean) : []);
+        setHouseRules(profile.houseRules ?? '');
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+        setLoading(false);
+        Alert.alert('Could not load listing', getApiErrorMessage(error));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <HostListingEditScreen
+      greeting={greeting}
+      userName={userName}
+      userInitials={userInitials}
+      statusIcon="🏠"
+      statusLabel="Listing"
+      focus={focus}
+      photos={photos}
+      houseRules={houseRules}
+      loading={loading}
+      saving={saving}
+      addingPhoto={addingPhoto}
+      onHouseRulesChange={setHouseRules}
+      onAddPhotoPress={() => {
+        if (addingPhoto || saving) {
+          return;
+        }
+        setAddingPhoto(true);
+        void pickListingImage()
+          .then(async (picked) => {
+            if (!picked?.uri) {
+              return;
+            }
+            const uploaded = await uploadProfilePhotoIfConfigured(picked.uri);
+            const nextUri = uploaded ?? picked.uri;
+            if (!uploaded) {
+              Alert.alert(
+                'Saved on this device',
+                'Cloud photo storage is not configured yet, so this photo stays on your phone for now. House rules still sync to your listing.',
+              );
+            }
+            setPhotos((prev) => (prev.includes(nextUri) ? prev : [...prev, nextUri]));
+          })
+          .catch((error) => {
+            Alert.alert('Could not add photo', getApiErrorMessage(error));
+          })
+          .finally(() => setAddingPhoto(false));
+      }}
+      onRemovePhotoPress={(photoUri) => {
+        setPhotos((prev) => prev.filter((uri) => uri !== photoUri));
+      }}
+      onSavePress={() => {
+        if (saving || loading) {
+          return;
+        }
+        setSaving(true);
+        void updateMyHostProfile({
+          photos,
+          houseRules: houseRules.trim(),
+        })
+          .then(() => {
+            setSaving(false);
+            Alert.alert('Listing updated', 'Your photos and house rules are saved.');
+            navigation.goBack();
+          })
+          .catch((error) => {
+            setSaving(false);
+            Alert.alert('Could not save listing', getApiErrorMessage(error));
           });
       }}
       onBack={() => navigation.goBack()}
@@ -740,7 +862,9 @@ function HostCalendarStackScreen({
         setLoadError(null);
       })
       .catch((error) => {
-        setLoadedFromApi(false);
+        // Still allow blocking days — save upserts the host profile.
+        setDays(buildEmptyHostMonthDays(calendarMonth.year, calendarMonth.month));
+        setLoadedFromApi(true);
         setLoadError(getApiErrorMessage(error));
       });
   }, [calendarMonth.month, calendarMonth.year]);
@@ -759,9 +883,7 @@ function HostCalendarStackScreen({
   }, [fallbackActiveBooking, reloadCalendar, user?.userId]);
 
   const canEdit = loadedFromApi && !saving;
-  const displayDays = loadedFromApi
-    ? days
-    : withDemoFallback(days, hostCalendarDaysMock);
+  const displayDays = days;
   const displayBooking = withDemoFallbackValue(activeBooking, hostActiveBookingMock);
 
   const persistHostCalendar = (nextDays: typeof days) => {
@@ -962,7 +1084,8 @@ function GuideAvailabilityStackScreen({
         setLoadError(null);
       })
       .catch((error) => {
-        setLoadedFromApi(false);
+        setDays(buildEmptyGuideMonthDays(calendarMonth.year, calendarMonth.month));
+        setLoadedFromApi(true);
         setLoadError(getApiErrorMessage(error));
       });
   }, [calendarMonth.month, calendarMonth.year]);
@@ -972,9 +1095,7 @@ function GuideAvailabilityStackScreen({
   }, [reloadCalendar, user?.userId]);
 
   const canEdit = loadedFromApi && !saving;
-  const displayDays = loadedFromApi
-    ? days
-    : withDemoFallback(days, guideCalendarDaysMock);
+  const displayDays = days;
 
   const persistGuideSchedule = (nextDays: typeof days) => {
     if (!loadedFromApi) {
@@ -1981,6 +2102,11 @@ export default function AppNavigator() {
     [primaryIntent],
   );
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    user?.notificationsEnabled !== false,
+  );
+  const [notificationsSaving, setNotificationsSaving] = useState(false);
+  const [notificationsPrefError, setNotificationsPrefError] = useState('');
   const [notificationsList, setNotificationsList] = useState<
     ReturnType<typeof notificationsMockForIntent>
   >([]);
@@ -1988,6 +2114,11 @@ export default function AppNavigator() {
 
   const refreshNotificationState = useCallback(async () => {
     if (!user) {
+      return;
+    }
+    if (notificationsEnabled === false) {
+      setUnreadNotifications(0);
+      setNotificationsList([]);
       return;
     }
     const allowDemo = shouldUseDemoFallbackForAccount(user.email);
@@ -2013,9 +2144,31 @@ export default function AppNavigator() {
         setNotificationsList([]);
       }
     }
-  }, [user, primaryIntent]);
+  }, [user, primaryIntent, notificationsEnabled]);
 
   useEffect(() => {
+    setNotificationsEnabled(user?.notificationsEnabled !== false);
+  }, [user?.userId, user?.notificationsEnabled]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    void getNotificationsPreference()
+      .then((enabled) => {
+        setNotificationsEnabled(enabled);
+      })
+      .catch(() => {
+        // Keep login payload / default when preference endpoint is unavailable.
+      });
+  }, [user?.userId]);
+
+  useEffect(() => {
+    if (notificationsEnabled === false) {
+      setUnreadNotifications(0);
+      setNotificationsList([]);
+      return;
+    }
     if (shouldUseDemoFallbackForAccount(user?.email)) {
       setNotificationsList(roleNotificationsMock);
       setUnreadNotifications(getUnreadNotificationCount(primaryIntent));
@@ -2023,7 +2176,7 @@ export default function AppNavigator() {
       setNotificationsList([]);
       setUnreadNotifications(0);
     }
-  }, [primaryIntent, roleNotificationsMock, user?.email]);
+  }, [primaryIntent, roleNotificationsMock, user?.email, notificationsEnabled]);
 
   useEffect(() => {
     if (!user) {
@@ -2041,6 +2194,37 @@ export default function AppNavigator() {
     },
     [refreshNotificationState],
   );
+
+  const visibleUnreadNotifications =
+    notificationsEnabled === false ? 0 : unreadNotifications;
+
+  const handleNotificationsPreferenceChange = useCallback(
+    async (enabled: boolean) => {
+      setNotificationsPrefError('');
+      setNotificationsSaving(true);
+      const previous = notificationsEnabled;
+      setNotificationsEnabled(enabled);
+      try {
+        const saved = await setNotificationsPreference(enabled);
+        setNotificationsEnabled(saved);
+        if (!saved) {
+          setUnreadNotifications(0);
+          setNotificationsList([]);
+          await unregisterPushTokenLocally();
+        } else {
+          void registerPushTokenIfAvailable();
+          void refreshNotificationState();
+        }
+      } catch (error) {
+        setNotificationsEnabled(previous);
+        setNotificationsPrefError(getApiErrorMessage(error));
+      } finally {
+        setNotificationsSaving(false);
+      }
+    },
+    [notificationsEnabled, refreshNotificationState],
+  );
+
   const incomingBadgeCount =
     (canAcceptGuideSessions && guideIncoming.length > 0
       ? guideIncoming.length
@@ -2866,7 +3050,7 @@ export default function AppNavigator() {
             {...browseHomeProps}
             guidesEmptyState={emptyStates.discoveryGuides(cityLabel)}
             {...homeTabSosProps(navigation)}
-            notificationCount={unreadNotifications}
+            notificationCount={visibleUnreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
             onFeaturedGuidePress={() => {
               if (!displayTopGuideId) return;
@@ -3208,6 +3392,8 @@ export default function AppNavigator() {
               navigation.navigate('AccountSetup');
             }}
             onTravelBookingPress={() => navigation.navigate('UnifiedSearch')}
+            onSettingsPress={() => navigation.navigate('Settings')}
+            onRatingsPress={() => navigation.navigate('Ratings')}
             onStaffToolsPress={() => navigation.navigate('StaffUserSearch')}
             onReturnToOpsPress={() => navigateToHome(navigation, 'AdminHome')}
             onAppPreviewPress={() => navigation.navigate('AdminPreview')}
@@ -3230,6 +3416,20 @@ export default function AppNavigator() {
           />
           );
         }}
+      </Stack.Screen>
+
+      <Stack.Screen name="Settings">
+        {({ navigation }) => (
+          <SettingsScreen
+            notificationsEnabled={notificationsEnabled}
+            notificationsSaving={notificationsSaving}
+            notificationsError={notificationsPrefError || undefined}
+            onNotificationsChange={(enabled) => {
+              void handleNotificationsPreferenceChange(enabled);
+            }}
+            onBack={() => navigation.goBack()}
+          />
+        )}
       </Stack.Screen>
 
       <Stack.Screen name="ExploreHub">
@@ -3806,7 +4006,7 @@ export default function AppNavigator() {
           <StudentHomeDashboard
             {...homeProps}
             hostsEmptyState={emptyStates.discoveryHosts(cityLabel)}
-            notificationCount={unreadNotifications}
+            notificationCount={visibleUnreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
@@ -3837,7 +4037,7 @@ export default function AppNavigator() {
           <ExploreHomeScreen
             {...exploreHomeProps}
             guidesEmptyState={emptyStates.discoveryGuides(cityLabel)}
-            notificationCount={unreadNotifications}
+            notificationCount={visibleUnreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
             onSetupPress={() => continueSeekerSetup(navigation)}
@@ -3901,7 +4101,7 @@ export default function AppNavigator() {
               reminder={hostLive.reminder}
               tabBarItems={hostTabBarItems}
               activeTabId="home"
-              notificationCount={unreadNotifications}
+              notificationCount={visibleUnreadNotifications}
               onNotificationPress={() => openNotifications(navigation)}
               {...homeTabSosProps(navigation)}
               onFeaturedPress={() => {
@@ -3979,7 +4179,7 @@ export default function AppNavigator() {
               reminder={guideLive.reminder}
               tabBarItems={guideTabBarItems}
               activeTabId="home"
-              notificationCount={unreadNotifications}
+              notificationCount={visibleUnreadNotifications}
               onNotificationPress={() => openNotifications(navigation)}
               {...homeTabSosProps(navigation)}
               onFeaturedPress={() => {
@@ -4055,7 +4255,10 @@ export default function AppNavigator() {
                   Alert.alert('Payment failed', 'We could not find that booking.');
                   return;
                 }
-                Alert.alert('Payment Successful', 'Your booking is confirmed.');
+                Alert.alert(
+                  'Payment Successful',
+                  'Your booking is confirmed. Payment was processed securely via Paystack.',
+                );
                 navigation.navigate('BookingConfirmed', { bookingId });
               } catch (error) {
                 if (error instanceof PaymentCancelledError) {
@@ -4366,6 +4569,42 @@ export default function AppNavigator() {
         {(props) => <ReviewPromptStackScreen {...props} />}
       </Stack.Screen>
 
+      <Stack.Screen name="Ratings">
+        {({ navigation }) => {
+          const pendingReviews = bookings.filter((booking) => {
+            if (
+              booking.status !== 'CONFIRMED' &&
+              booking.status !== 'CHECKED_IN'
+            ) {
+              return false;
+            }
+            const endIso = booking.checkOut || booking.session?.sessionDate;
+            if (!endIso) {
+              return true;
+            }
+            const end = new Date(endIso);
+            if (Number.isNaN(end.getTime())) {
+              return true;
+            }
+            return end.getTime() <= Date.now();
+          });
+          return (
+            <RatingsScreen
+              userName={resolvedName}
+              userInitials={resolvedInitials}
+              pendingReviews={pendingReviews}
+              onRatePress={(booking) =>
+                navigation.navigate('ReviewPrompt', {
+                  bookingId: booking.id,
+                  hostName: booking.hostName,
+                })
+              }
+              onBack={() => navigation.goBack()}
+            />
+          );
+        }}
+      </Stack.Screen>
+
       <Stack.Screen name="SOS">
         {({ navigation }) => (
           <SOSScreen
@@ -4662,6 +4901,18 @@ export default function AppNavigator() {
             userName={firstName}
             userInitials={resolvedInitials}
             navigation={navigation}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="HostListingEdit">
+        {({ navigation, route }) => (
+          <HostListingEditStackScreen
+            greeting={personalizedGreeting}
+            userName={firstName}
+            userInitials={resolvedInitials}
+            navigation={navigation}
+            focus={route.params?.focus ?? 'photos'}
           />
         )}
       </Stack.Screen>

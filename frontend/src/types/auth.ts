@@ -4,6 +4,8 @@ export interface AuthUser {
   displayName: string;
   /** Server-gated ops access; only true for NestBridge staff accounts. */
   isStaff?: boolean;
+  /** When false, push and in-app badges are suppressed. Default true. */
+  notificationsEnabled?: boolean;
 }
 
 export interface StoredCredential {
