@@ -1423,14 +1423,13 @@ export default function AppNavigator() {
   }, []);
 
   const saveProfileSetupStep = useCallback(
-    async (track: SetupTrack) => {
+    async (track: SetupTrack, options?: { skipIdentity?: boolean }) => {
       const progress = getProgressForTrack(profileState, track);
       const locked = Boolean(progress.data.identityLocked) &&
         Boolean(progress.data.bio?.trim()) &&
         Boolean(progress.data.about?.trim());
 
       if (locked) {
-        // Identity already locked — allow photo/name sync only if somehow unlocked path.
         await completeStep(track, 'profile', {
           displayName: progress.data.displayName,
           bio: progress.data.bio,
@@ -1443,6 +1442,25 @@ export default function AppNavigator() {
       const profileName = displayName.trim() || user?.displayName?.trim() || '';
       const nextBio = bio.trim();
       const nextAbout = about.trim();
+
+      // Soft skip — mark the step done so they can browse; booking stays gated.
+      if (options?.skipIdentity) {
+        const stepData: Record<string, string | boolean> = {
+          identityLocked: false,
+        };
+        if (profileName.length >= 2) {
+          stepData.displayName = profileName;
+        }
+        if (nextBio) {
+          stepData.bio = nextBio;
+        }
+        if (nextAbout) {
+          stepData.about = nextAbout;
+        }
+        await completeStep(track, 'profile', stepData);
+        return;
+      }
+
       if (profileName.length < 2 || nextBio.length < MIN_BIO_LENGTH || nextAbout.length < MIN_ABOUT_LENGTH) {
         return;
       }
@@ -1451,6 +1469,7 @@ export default function AppNavigator() {
       try {
         profilePhotoUrl = await uploadProfilePhotoIfConfigured(profilePhotoUri);
       } catch {
+        // Photo is optional — never block continue if upload/S3 fails.
         profilePhotoUrl = undefined;
       }
       const stepData: Record<string, string | boolean> = {
@@ -3991,6 +4010,16 @@ export default function AppNavigator() {
               onContinue={() => {
                 void (async () => {
                   await saveProfileSetupStep(track);
+                  if (track === 'HOST' || track === 'GUIDE') {
+                    navigation.navigate('KYCPrompt', { track });
+                    return;
+                  }
+                  navigation.navigate('OnboardingReady', { track });
+                })();
+              }}
+              onSkipForNow={() => {
+                void (async () => {
+                  await saveProfileSetupStep(track, { skipIdentity: true });
                   if (track === 'HOST' || track === 'GUIDE') {
                     navigation.navigate('KYCPrompt', { track });
                     return;
