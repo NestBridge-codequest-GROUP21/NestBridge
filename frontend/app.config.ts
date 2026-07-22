@@ -10,6 +10,7 @@ import type { ExpoConfig, ConfigContext } from 'expo/config';
 const base: ExpoConfig = {
   name: 'NestBridge',
   slug: 'nestbridge',
+  owner: 'behackie03',
   version: '1.0.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
@@ -116,10 +117,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         ? config.extra.eas
         : {}),
       projectId:
-        process.env.EAS_PROJECT_ID ??
-        (config.extra as { eas?: { projectId?: string } } | undefined)?.eas
-          ?.projectId ??
-        '05eaad69-0d05-4eb9-b956-028c11e08f92',
+        process.env.EAS_PROJECT_ID ||
+        ((config.extra as { eas?: { projectId?: string } } | undefined)?.eas
+          ?.projectId ||
+          '6da19fa0-dbf6-42e2-b6ac-32b29cb37aa9'),
     },
   },
 });
