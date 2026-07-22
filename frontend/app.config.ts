@@ -18,7 +18,7 @@ const base: ExpoConfig = {
   splash: {
     image: './assets/splash-icon.png',
     resizeMode: 'contain',
-    backgroundColor: '#0C1735',
+    backgroundColor: '#FFFFFF',
   },
   ios: {
     supportsTablet: true,
@@ -32,7 +32,7 @@ const base: ExpoConfig = {
   android: {
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#0C1735',
+      backgroundColor: '#FFFFFF',
     },
     edgeToEdgeEnabled: true,
     // Let the app handle inset via ScreenScroll / KeyboardSafeView (edge-to-edge
