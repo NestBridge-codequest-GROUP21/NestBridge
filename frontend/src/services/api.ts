@@ -492,8 +492,13 @@ async function refreshAccessToken(): Promise<AuthSession | null> {
     };
     await saveSession(next);
     return next;
-  } catch {
-    return null;
+  } catch (error) {
+    // Expired/revoked refresh → null (caller should sign out).
+    // Network/timeout → rethrow so AuthContext can keep the cached session offline.
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      return null;
+    }
+    throw error;
   }
 }
 

@@ -100,10 +100,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Push is deferred until after splash — see RootNavigator.
                 return;
               }
+              // Refresh returned null (expired/revoked). Clear so boot does not
+              // keep a dead Bearer token that 401s profile hydrate.
+              await clearSession();
+              if (mounted) {
+                setUser(null);
+              }
+              return;
             } catch (error) {
-              // Keep cached session if refresh fails (offline / misconfigured API).
+              // Network / timeout — keep cached session for offline demos.
               console.warn('[auth] refresh failed, using cached session', error);
             }
+          } else if (!session.token) {
+            await clearSession();
+            if (mounted) {
+              setUser(null);
+            }
+            return;
           }
           if (mounted) {
             setUser(session.user);

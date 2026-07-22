@@ -51,7 +51,10 @@ function uniqueContacts(contacts: EmergencyContact[]): EmergencyContact[] {
   const seen = new Set<string>();
   const unique: EmergencyContact[] = [];
   for (const contact of contacts) {
-    const key = contact.number.replace(/[^\d+]/g, '');
+    let key = contact.number.replace(/[^\d]/g, '');
+    if (key.length === 10 && key.startsWith('0')) {
+      key = `233${key.slice(1)}`;
+    }
     if (!key || seen.has(key)) {
       continue;
     }
@@ -222,6 +225,11 @@ export default function SOSScreen({
                       <Text style={styles.contactNumber} numberOfLines={1}>
                         {contact.number}
                       </Text>
+                      {!expanded ? (
+                        <Text style={styles.expandHint} numberOfLines={1}>
+                          Tap to expand · Call
+                        </Text>
+                      ) : null}
                     </View>
                     <View style={styles.expandChevron}>
                       <AppIcon
@@ -234,14 +242,20 @@ export default function SOSScreen({
 
                   {expanded ? (
                     <View style={styles.contactExpanded}>
-                      {detailLines.map((line, lineIndex) => (
-                        <Text
-                          key={`${key}-detail-${lineIndex}`}
-                          style={styles.contactDetail}
-                        >
-                          {line}
+                      {detailLines.length > 0 ? (
+                        detailLines.map((line, lineIndex) => (
+                          <Text
+                            key={`${key}-detail-${lineIndex}`}
+                            style={styles.contactDetail}
+                          >
+                            {line}
+                          </Text>
+                        ))
+                      ) : (
+                        <Text style={styles.contactDetail}>
+                          NestBridge support contact
                         </Text>
-                      ))}
+                      )}
                       <Pressable
                         style={({ pressed }) => [
                           styles.callAction,
@@ -390,6 +404,13 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
       fontWeight: fontWeights.semibold,
       color: colors.teal,
       lineHeight: lineHeights.caption,
+    },
+    expandHint: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.textTertiary,
+      lineHeight: lineHeights.caption,
+      marginTop: spacing.xs / 2,
     },
     expandChevron: {
       width: touchTarget,
