@@ -28,6 +28,10 @@ import {
   UNVERIFIED_LOGIN_COPY,
   isUnverifiedEmailError,
 } from '../utils/authErrors';
+import {
+  isCompleteEmail,
+  normalizeLoginEmail,
+} from '../utils/normalizeLoginEmail';
 import type { AuthStackParamList } from './types';
 
 const APP_VERSION =
@@ -151,17 +155,25 @@ export default function AuthNavigator({
             }}
             onSubmit={async () => {
               setStaffLoginError('');
-              if (!email.trim()) {
+              const normalizedEmail = normalizeLoginEmail(email);
+              if (!normalizedEmail) {
                 setStaffLoginError('Enter your staff email address.');
+                return;
+              }
+              if (!isCompleteEmail(normalizedEmail)) {
+                setStaffLoginError(
+                  'Enter your full email (e.g. bsbhackman@gmail.com).',
+                );
                 return;
               }
               if (!password) {
                 setStaffLoginError('Enter your password.');
                 return;
               }
+              setEmail(normalizedEmail);
               setStaffLoginBusy(true);
               try {
-                const signedIn = await signIn(email.trim(), password, keepSignedIn);
+                const signedIn = await signIn(normalizedEmail, password, keepSignedIn);
                 if (!signedIn.isStaff) {
                   await signOut();
                   setStaffLoginError(
@@ -173,7 +185,7 @@ export default function AuthNavigator({
                   error instanceof Error ? error.message : 'Email or password is incorrect.';
                 setStaffLoginError(
                   message.includes('Invalid email or password')
-                    ? 'Incorrect email or password. Use Forgot password if you need to reset it — this is the same password as your NestBridge account.'
+                    ? 'Incorrect email or password. Tap Forgot password to choose a new one — then sign in here with that new password.'
                     : message,
                 );
               } finally {
@@ -316,15 +328,21 @@ export default function AuthNavigator({
             onSubmit={async () => {
               setForgotError('');
               setForgotStatus('');
-              if (!email.trim()) {
+              const normalizedEmail = normalizeLoginEmail(email);
+              if (!normalizedEmail) {
                 setForgotError('Please enter your email address.');
                 return;
               }
+              if (!isCompleteEmail(normalizedEmail)) {
+                setForgotError('Enter your full email (e.g. bsbhackman@gmail.com).');
+                return;
+              }
+              setEmail(normalizedEmail);
               setForgotBusy(true);
               try {
-                await api.requestPasswordReset(email.trim());
+                await api.requestPasswordReset(normalizedEmail);
                 setForgotStatus(
-                  'If an account exists for this email, we sent password reset instructions.',
+                  'If an account exists for this email, we sent a reset link. Open the email, choose a new password on the page, then sign in.',
                 );
               } catch (error) {
                 setForgotError(api.getApiErrorMessage(error));
@@ -335,6 +353,10 @@ export default function AuthNavigator({
             onBack={() => {
               setForgotError('');
               setForgotStatus('');
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+                return;
+              }
               navigation.navigate('Login');
             }}
           />
@@ -380,8 +402,23 @@ export default function AuthNavigator({
                 setResetBusy(true);
                 try {
                   await api.resetPassword(token, newPassword);
+                  setPassword(newPassword);
                   setResetStatus('Password updated. You can sign in with your new password.');
                   onResetTokenConsumed?.();
+                  Alert.alert(
+                    'Password updated',
+                    'Sign in with your new password.',
+                    [
+                      {
+                        text: 'Staff sign-in',
+                        onPress: () => navigation.navigate('StaffSignIn'),
+                      },
+                      {
+                        text: 'Sign in',
+                        onPress: () => navigation.navigate('Login'),
+                      },
+                    ],
+                  );
                 } catch (error) {
                   setResetError(api.getApiErrorMessage(error));
                 } finally {
@@ -419,16 +456,22 @@ export default function AuthNavigator({
             onSubmit={async () => {
               setLoginError('');
               setLoginNeedsVerification(false);
-              if (!email.trim()) {
+              const normalizedEmail = normalizeLoginEmail(email);
+              if (!normalizedEmail) {
                 setLoginError('Enter your email address.');
+                return;
+              }
+              if (!isCompleteEmail(normalizedEmail)) {
+                setLoginError('Enter your full email address.');
                 return;
               }
               if (!password) {
                 setLoginError('Enter your password.');
                 return;
               }
+              setEmail(normalizedEmail);
               try {
-                await signIn(email, password, keepSignedIn);
+                await signIn(normalizedEmail, password, keepSignedIn);
               } catch (error) {
                 const message =
                   error instanceof Error ? error.message : 'Email or password is incorrect.';

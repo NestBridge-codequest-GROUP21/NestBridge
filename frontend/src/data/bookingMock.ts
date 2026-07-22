@@ -37,7 +37,7 @@ export const studentBookingsMock: BookingListItem[] = [
     hostIcon: '🏡',
     checkIn: '2026-09-01',
     checkOut: '2026-12-15',
-    status: 'ACCEPTED',
+    status: 'CONFIRMED',
     priceBreakdown: {
       nightlyRate: 180,
       currency: 'GHS',

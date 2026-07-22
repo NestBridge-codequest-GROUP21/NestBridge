@@ -43,6 +43,18 @@ const base: ExpoConfig = {
       'android.permission.READ_MEDIA_IMAGES',
       'android.permission.READ_EXTERNAL_STORAGE',
     ],
+    intentFilters: [
+      {
+        action: 'VIEW',
+        category: ['BROWSABLE', 'DEFAULT'],
+        data: [
+          {
+            scheme: 'nestbridge',
+            host: 'reset-password',
+          },
+        ],
+      },
+    ],
   },
   scheme: 'nestbridge',
   web: {

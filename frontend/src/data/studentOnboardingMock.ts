@@ -71,7 +71,8 @@ export const destinationMock = {
 
 export const profileSetupMock = {
   title: 'Introduce yourself',
-  subtitle: 'A short bio helps hosts and guides recognize you when you arrive.',
+  subtitle:
+    'Your short bio and about section are locked once saved — that is how others decide who they are meeting.',
 };
 
 export const onboardingReadyMock = {

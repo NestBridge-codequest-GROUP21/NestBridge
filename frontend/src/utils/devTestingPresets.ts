@@ -16,7 +16,17 @@ function emptyProgress(): ProfileProgress {
 }
 
 function completeProgress(steps: readonly string[]): ProfileProgress {
-  return { status: 'COMPLETE', stepsCompleted: [...steps], data: {} };
+  return {
+    status: 'COMPLETE',
+    stepsCompleted: [...steps],
+    data: {
+      displayName: 'Demo NestBridge user',
+      bio: 'Exploring Ghana through NestBridge stays and cultural connections.',
+      about:
+        'I use NestBridge to meet people and book with clear expectations. This about section stays locked so others know who they are going in for.',
+      identityLocked: true,
+    },
+  };
 }
 
 function partialProgress(steps: readonly string[]): ProfileProgress {

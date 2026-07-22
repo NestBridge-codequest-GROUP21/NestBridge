@@ -10,6 +10,7 @@ public class PublicUserDto {
     private String userId;
     private String fullName;
     private String bio;
+    private String about;
     private String profilePhotoUrl;
     private PrimaryIntent primaryIntent;
 }

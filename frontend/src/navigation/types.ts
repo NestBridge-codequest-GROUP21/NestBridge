@@ -90,6 +90,7 @@ export type AppStackParamList = {
   WelfareCheckIn: { bookingId: string };
   ReviewPrompt: { bookingId: string; hostName: string };
   Ratings: undefined;
+  PaymentCheckout: { bookingId: string };
   Notifications: undefined;
 };
 

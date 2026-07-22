@@ -34,6 +34,7 @@ import { emptyStates } from '../../data/appCopy';
 import type { BookingListItem, BookingStatus, BookingTabFilter, BookingType } from '../../types/booking';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
 import { formatSessionSchedule } from '../../data/guideSessionMock';
+import { isApiBookingId } from '../../utils/demoBookingFlow';
 
 export interface StudentBookingsScreenProps {
   bookings: BookingListItem[];
@@ -169,7 +170,9 @@ export default function StudentBookingsScreen({
       : activeFilter === 'past'
         ? emptyStates.studentBookings.past
         : emptyStates.studentBookings.active;
-  const payNowBooking = bookings.find((b) => b.status === 'ACCEPTED');
+  const payNowBooking =
+    bookings.find((b) => b.status === 'ACCEPTED' && isApiBookingId(b.id)) ??
+    bookings.find((b) => b.status === 'ACCEPTED');
 
   return (
     <View style={styles.root}>

@@ -994,9 +994,11 @@ export interface PaymentVerifyResult {
 
 export async function initializeBookingPayment(
   bookingId: string,
+  options?: { channels?: string[] },
 ): Promise<PaymentInitializeResult> {
   const { data } = await api.post<ApiResponse<PaymentInitializeResult>>(
     `/api/bookings/${bookingId}/payment/initialize`,
+    options?.channels?.length ? { channels: options.channels } : {},
   );
   return unwrap({ data });
 }

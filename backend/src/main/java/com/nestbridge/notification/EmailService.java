@@ -67,11 +67,11 @@ public class EmailService {
 
                 We received a request to reset your NestBridge password.
 
-                Open this link on your phone to set a new password in the app:
+                Open this link to choose a new password (works in your phone browser — you do not need the app open first):
 
                 %s
 
-                Or open the NestBridge app directly:
+                Optional — open the same reset screen inside the NestBridge app:
 
                 %s
 
@@ -82,8 +82,9 @@ public class EmailService {
         String htmlBody = """
                 <p>Hi %s,</p>
                 <p>We received a request to reset your NestBridge password.</p>
-                <p><a href="%s">Reset password in NestBridge</a></p>
-                <p>Or open the app: %s</p>
+                <p><a href="%s"><strong>Choose a new password</strong></a></p>
+                <p>That page lets you type and save a new password in your browser. You can then sign in on NestBridge.</p>
+                <p>Optional app link: <a href="%s">Open reset in the NestBridge app</a></p>
                 <p>This link expires in 1 hour. If you did not request a reset, you can ignore this email.</p>
                 <p>— The NestBridge team</p>
                 """.formatted(escapeHtml(displayName), escapeHtml(webResetUrl), escapeHtml(appResetUrl));

@@ -100,6 +100,9 @@ import UniversitiesDirectoryScreen from '../screens/student/UniversitiesDirector
 import WelfareCheckInScreen from '../screens/shared/WelfareCheckInScreen';
 import ReviewPromptScreen from '../screens/shared/ReviewPromptScreen';
 import RatingsScreen from '../screens/shared/RatingsScreen';
+import PaymentMethodScreen, {
+  type PaymentMethodId,
+} from '../screens/shared/PaymentMethodScreen';
 import { useLodgingPartners, lodgingListingFromId } from '../hooks/useLodgingPartners';
 import OfflineMapScreen from '../screens/tourist/OfflineMapScreen';
 import HostCalendarScreen from '../screens/host/HostCalendarScreen';
@@ -128,7 +131,10 @@ import {
   getProgressForTrack,
   getProgressPercent,
   getStepsForTrack,
+  isIdentityLocked,
   isSeekerComplete,
+  MIN_ABOUT_LENGTH,
+  MIN_BIO_LENGTH,
 } from '../utils/accountProfile';
 import type { HomeRoute } from '../utils/accountProfile';
 import {
@@ -676,6 +682,102 @@ function ReviewPromptStackScreen({ navigation, route }: ReviewPromptStackProps) 
   );
 }
 
+type PaymentCheckoutStackProps = NativeStackScreenProps<AppStackParamList, 'PaymentCheckout'> & {
+  bookings: BookingListItem[];
+  payLoading: boolean;
+  payStatusLabel: string;
+  setPayLoading: (value: boolean) => void;
+  setPayStatusLabel: (value: string) => void;
+  onPaid: (booking: BookingListItem) => void;
+};
+
+function PaymentCheckoutStackScreen({
+  navigation,
+  route,
+  bookings,
+  payLoading,
+  payStatusLabel,
+  setPayLoading,
+  setPayStatusLabel,
+  onPaid,
+}: PaymentCheckoutStackProps) {
+  const booking = bookings.find((item) => item.id === route.params.bookingId) ?? null;
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodId | null>('mobile_money');
+  const amount =
+    booking?.sessionPrice?.total ?? booking?.priceBreakdown.total ?? 0;
+  const currency =
+    booking?.sessionPrice?.currency ?? booking?.priceBreakdown.currency ?? 'GHS';
+
+  return (
+    <PaymentMethodScreen
+      hostName={booking?.hostName ?? 'your booking'}
+      amountLabel={amount.toLocaleString('en-GH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}
+      currencyLabel={currency}
+      selectedMethodId={selectedMethod}
+      paying={payLoading}
+      statusLabel={payLoading ? payStatusLabel : undefined}
+      onSelectMethod={setSelectedMethod}
+      onPayPress={() => {
+        if (!booking || !selectedMethod || payLoading) {
+          return;
+        }
+        if (!isApiBookingId(booking.id)) {
+          Alert.alert(
+            'Live Paystack required',
+            'This preview row cannot open Mobile Money or bank checkout. Use an accepted live booking from the server.',
+          );
+          return;
+        }
+        setPayStatusLabel('Preparing payment...');
+        setPayLoading(true);
+        void completeBookingPayment(booking.id, {
+          channels: [selectedMethod],
+          onProgress: (phase, detail) => {
+            if (detail) {
+              setPayStatusLabel(detail);
+              return;
+            }
+            if (phase === 'preparing') setPayStatusLabel('Preparing payment...');
+            else if (phase === 'opening_checkout') setPayStatusLabel('Opening Paystack...');
+            else if (phase === 'awaiting_confirmation') {
+              setPayStatusLabel('Confirming payment...');
+            } else if (phase === 'verifying') setPayStatusLabel('Verifying payment...');
+            else if (phase === 'success') setPayStatusLabel('Payment Successful');
+          },
+        })
+          .then((payment) => {
+            onPaid(booking);
+            const message = payment.mockPayment
+              ? 'Paystack is not enabled on the server, so this booking was confirmed in demo mode.'
+              : 'Your booking is confirmed. Payment was processed securely via Paystack.';
+            Alert.alert('Payment Successful', message);
+            navigation.navigate('BookingConfirmed', { bookingId: booking.id });
+          })
+          .catch((error) => {
+            if (error instanceof PaymentCancelledError) {
+              Alert.alert('Payment cancelled', error.message);
+              return;
+            }
+            Alert.alert(
+              'Payment',
+              error instanceof Error
+                ? error.message
+                : 'Payment could not be completed. You can try again.',
+            );
+          })
+          .finally(() => {
+            setPayLoading(false);
+            setPayStatusLabel('Preparing payment...');
+          });
+      }}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
 function HostListingsStackScreen({
   greeting,
   userName,
@@ -1171,6 +1273,7 @@ function getProfileFields(
     departureDate: data.departureDate ?? '',
     displayName: data.displayName ?? '',
     bio: data.bio ?? '',
+    about: data.about ?? '',
   };
 }
 
@@ -1228,6 +1331,7 @@ function syncFieldsFromProfileState(
     setDepartureDate: (v: string) => void;
     setDisplayName: (v: string) => void;
     setBio: (v: string) => void;
+    setAbout: (v: string) => void;
   },
 ) {
   const data = state.seekerSetup.data;
@@ -1237,6 +1341,7 @@ function syncFieldsFromProfileState(
   setters.setDepartureDate(data.departureDate ?? '');
   setters.setDisplayName(data.displayName ?? fallbackName);
   setters.setBio(data.bio ?? '');
+  setters.setAbout(data.about ?? '');
 }
 
 const DEFAULT_SESSION_DATE = '2026-09-05';
@@ -1308,6 +1413,7 @@ export default function AppNavigator() {
   const [departureDate, setDepartureDate] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
+  const [about, setAbout] = useState('');
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const handleAddProfilePhoto = useCallback(async () => {
     const picked = await pickProfileImage();
@@ -1318,16 +1424,40 @@ export default function AppNavigator() {
 
   const saveProfileSetupStep = useCallback(
     async (track: SetupTrack) => {
+      const progress = getProgressForTrack(profileState, track);
+      const locked = Boolean(progress.data.identityLocked) &&
+        Boolean(progress.data.bio?.trim()) &&
+        Boolean(progress.data.about?.trim());
+
+      if (locked) {
+        // Identity already locked — allow photo/name sync only if somehow unlocked path.
+        await completeStep(track, 'profile', {
+          displayName: progress.data.displayName,
+          bio: progress.data.bio,
+          about: progress.data.about,
+          identityLocked: true,
+        });
+        return;
+      }
+
       const profileName = displayName.trim() || user?.displayName?.trim() || '';
+      const nextBio = bio.trim();
+      const nextAbout = about.trim();
+      if (profileName.length < 2 || nextBio.length < MIN_BIO_LENGTH || nextAbout.length < MIN_ABOUT_LENGTH) {
+        return;
+      }
+
       let profilePhotoUrl: string | undefined;
       try {
         profilePhotoUrl = await uploadProfilePhotoIfConfigured(profilePhotoUri);
       } catch {
         profilePhotoUrl = undefined;
       }
-      const stepData: Record<string, string> = {
+      const stepData: Record<string, string | boolean> = {
         displayName: profileName,
-        bio,
+        bio: nextBio,
+        about: nextAbout,
+        identityLocked: true,
       };
       if (profilePhotoUrl) {
         stepData.profilePhotoUrl = profilePhotoUrl;
@@ -1337,7 +1467,7 @@ export default function AppNavigator() {
         setDisplayName(profileName);
       }
     },
-    [bio, completeStep, displayName, profilePhotoUri, user?.displayName],
+    [about, bio, completeStep, displayName, profilePhotoUri, profileState, user?.displayName],
   );
 
   const [pendingIntent, setPendingIntent] = useState<PrimaryIntent | null>(null);
@@ -2374,6 +2504,7 @@ export default function AppNavigator() {
         setDepartureDate,
         setDisplayName,
         setBio,
+        setAbout,
       });
       if (options.resumeTrack) {
         navigateContinueSetup(
@@ -2423,6 +2554,7 @@ export default function AppNavigator() {
     setDepartureDate(progress.data.departureDate ?? '');
     setDisplayName(progress.data.displayName ?? user?.displayName ?? '');
     setBio(progress.data.bio ?? '');
+    setAbout(progress.data.about ?? '');
   };
 
   const setupTracks = useMemo(() => {
@@ -2927,12 +3059,11 @@ export default function AppNavigator() {
     async (bookingId: string): Promise<BookingListItem | null> => {
       const booking = mergedBookings.find((item) => item.id === bookingId) ?? null;
 
-      // Mock/demo rows (e.g. booking-1) are not UUIDs — confirm locally only.
+      // Mock/demo rows (e.g. booking-1) are not UUIDs — cannot open live Paystack.
       if (booking && !isApiBookingId(bookingId)) {
-        setPayStatusLabel('Confirming payment...');
-        const confirmed = confirmDemoBooking(booking);
-        upsertLocalBooking(confirmed);
-        return confirmed;
+        throw new Error(
+          'This is a preview booking. Pay a live accepted booking to open Mobile Money, card, or bank checkout on Paystack.',
+        );
       }
 
       try {
@@ -3840,6 +3971,8 @@ export default function AppNavigator() {
       <Stack.Screen name="ProfileSetup">
         {({ navigation, route }) => {
           const track = route.params.track;
+          const progress = getProgressForTrack(profileState, track);
+          const locked = isIdentityLocked(progress);
           return (
             <ProfileSetupScreen
               currentStep={3}
@@ -3847,22 +3980,15 @@ export default function AppNavigator() {
               {...profileSetupMock}
               displayName={displayName}
               bio={bio}
+              about={about}
               initials={resolvedInitials}
               photoUri={profilePhotoUri}
+              identityLocked={locked}
               onAddPhoto={handleAddProfilePhoto}
               onDisplayNameChange={setDisplayName}
               onBioChange={setBio}
+              onAboutChange={setAbout}
               onContinue={() => {
-                void (async () => {
-                  await saveProfileSetupStep(track);
-                  if (track === 'HOST' || track === 'GUIDE') {
-                    navigation.navigate('KYCPrompt', { track });
-                    return;
-                  }
-                  navigation.navigate('OnboardingReady', { track });
-                })();
-              }}
-              onSkip={() => {
                 void (async () => {
                   await saveProfileSetupStep(track);
                   if (track === 'HOST' || track === 'GUIDE') {
@@ -4210,6 +4336,7 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentBookingsScreen
             {...bookingsTabProps}
+            {...homeTabSosProps(navigation)}
             onFilterChange={setBookingFilter}
             onBookingPress={(bookingId) => {
               const booking = bookings.find((entry) => entry.id === bookingId);
@@ -4239,42 +4366,15 @@ export default function AppNavigator() {
               navigation.navigate('HostProfile', { hostId: booking.hostId });
             }}
             payBlocked={!canBookHomestay && !canBookGuideSession}
-            payBlockedMessage="Complete your travel profile to pay for bookings."
+            payBlockedMessage={bookingGateCopy.pay}
             onContinueSetupPay={() => continueSeekerSetup(navigation)}
             payLoading={payLoading}
             payStatusLabel={payStatusLabel}
-            onPayPress={async (bookingId) => {
+            onPayPress={(bookingId) => {
               if ((!canBookHomestay && !canBookGuideSession) || payLoading) {
                 return;
               }
-              setPayStatusLabel('Preparing payment...');
-              setPayLoading(true);
-              try {
-                const confirmed = await confirmBookingWithDemoFallback(bookingId);
-                if (!confirmed) {
-                  Alert.alert('Payment failed', 'We could not find that booking.');
-                  return;
-                }
-                Alert.alert(
-                  'Payment Successful',
-                  'Your booking is confirmed. Payment was processed securely via Paystack.',
-                );
-                navigation.navigate('BookingConfirmed', { bookingId });
-              } catch (error) {
-                if (error instanceof PaymentCancelledError) {
-                  Alert.alert('Payment cancelled', error.message);
-                  return;
-                }
-                Alert.alert(
-                  'Payment',
-                  error instanceof Error
-                    ? error.message
-                    : 'Payment could not be completed. You can try again.',
-                );
-              } finally {
-                setPayLoading(false);
-                setPayStatusLabel('Preparing payment...');
-              }
+              navigation.navigate('PaymentCheckout', { bookingId });
             }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
             onBack={
@@ -4284,6 +4384,23 @@ export default function AppNavigator() {
             }
             onHostReviewPress={() => navigation.navigate('IncomingRequests')}
             onGuideReviewPress={() => navigation.navigate('IncomingSessionRequests')}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="PaymentCheckout">
+        {(props) => (
+          <PaymentCheckoutStackScreen
+            {...props}
+            bookings={mergedBookings}
+            payLoading={payLoading}
+            payStatusLabel={payStatusLabel}
+            setPayLoading={setPayLoading}
+            setPayStatusLabel={setPayStatusLabel}
+            onPaid={(booking) => {
+              homeApi.refresh();
+              upsertLocalBooking(confirmDemoBooking({ ...booking, status: 'CONFIRMED' }));
+            }}
           />
         )}
       </Stack.Screen>
@@ -4992,7 +5109,7 @@ export default function AppNavigator() {
             <MatchRequestReviewScreen
               request={request}
               acceptBlocked={!canAcceptHostBookings}
-              acceptBlockedMessage="Complete your host listing to accept homestay requests."
+              acceptBlockedMessage={bookingGateCopy.acceptHost}
               onContinueSetup={() => continueHostSetup(navigation)}
               onBack={() => navigation.goBack()}
               onAccept={() => {
@@ -5024,7 +5141,7 @@ export default function AppNavigator() {
             <SessionReviewScreen
               request={request}
               acceptBlocked={!canAcceptGuideSessions}
-              acceptBlockedMessage="Complete your guide listing to accept session requests."
+              acceptBlockedMessage={bookingGateCopy.acceptGuide}
               onContinueSetup={() => continueGuideSetup(navigation)}
               onBack={() => navigation.goBack()}
               onAccept={() => {

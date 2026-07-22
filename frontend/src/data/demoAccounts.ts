@@ -57,6 +57,9 @@ export function demoPresetForAccount(account: DemoAccount): AccountProfileState 
         departureDate: '2026-12-15',
         displayName: account.name,
         bio: 'Exchange student exploring homestays and cultural experiences in Ghana.',
+        about:
+          'I am here for a semester exchange and want a respectful homestay where I can share meals, practice local customs, and feel part of family life in Ghana.',
+        identityLocked: true,
       },
     },
   };

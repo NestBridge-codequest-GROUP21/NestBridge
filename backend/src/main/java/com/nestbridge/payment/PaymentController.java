@@ -18,11 +18,15 @@ public class PaymentController {
     @PostMapping("/{id}/payment/initialize")
     public ResponseEntity<ApiResponse<PaymentInitializeResponse>> initialize(
             Authentication authentication,
-            @PathVariable UUID id) {
+            @PathVariable UUID id,
+            @RequestBody(required = false) PaymentInitializeRequest request) {
         UUID userId = (UUID) authentication.getPrincipal();
         return ResponseEntity.ok(ApiResponse.success(
                 "Payment initialized",
-                paystackService.initializePayment(id, userId)));
+                paystackService.initializePayment(
+                        id,
+                        userId,
+                        request != null ? request.getChannels() : null)));
     }
 
     /**

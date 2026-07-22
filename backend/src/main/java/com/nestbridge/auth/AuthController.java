@@ -144,22 +144,106 @@ public class AuthController {
     }
 
     private static String resetPasswordLandingHtml(String token) {
-        String appUrl = "nestbridge://reset-password?token=" + token;
-        return """
+        String safeToken = escapeHtml(token);
+        String appUrl = escapeHtml("nestbridge://reset-password?token=" + token);
+        String html = """
                 <!DOCTYPE html>
                 <html lang="en">
-                <head><meta charset="UTF-8"><title>Reset password</title>
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <style>body{font-family:system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem;color:#1a2b3c}
-                a.btn{display:inline-block;margin-top:1rem;padding:0.75rem 1.25rem;background:#0d7a6f;color:#fff;text-decoration:none;border-radius:8px}
-                p{line-height:1.5}</style></head>
+                <head>
+                  <meta charset="UTF-8">
+                  <title>Reset password - NestBridge</title>
+                  <meta name="viewport" content="width=device-width, initial-scale=1">
+                  <style>
+                    body{font-family:system-ui,sans-serif;max-width:28rem;margin:3rem auto;padding:0 1.25rem;color:#1a2b3c;background:#f7faf9}
+                    h1{color:#0d3b4c;font-size:1.5rem;margin-bottom:0.35rem}
+                    p{line-height:1.55;color:#3d4f5f}
+                    label{display:block;font-weight:600;margin:1rem 0 0.35rem}
+                    input{width:100%;box-sizing:border-box;padding:0.75rem 0.85rem;border:1px solid #c5d0d6;border-radius:10px;font-size:1rem}
+                    button{width:100%;margin-top:1.25rem;padding:0.85rem 1.25rem;background:#0d7a6f;color:#fff;border:0;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer}
+                    button:disabled{opacity:0.65;cursor:not-allowed}
+                    .card{background:#fff;border-radius:16px;padding:1.5rem;box-shadow:0 8px 24px rgba(13,59,76,0.08)}
+                    .msg{margin-top:1rem;padding:0.75rem 0.9rem;border-radius:10px;display:none}
+                    .msg.error{display:block;background:#fdecea;color:#9b1c1c}
+                    .msg.ok{display:block;background:#e8f7f3;color:#0d7a6f}
+                    .hint{font-size:0.9rem;margin-top:1rem}
+                    a{color:#0d7a6f}
+                  </style>
+                </head>
                 <body>
-                <h1>Reset your password</h1>
-                <p>Open the NestBridge app to choose a new password.</p>
-                <p><a class="btn" href="%s">Open NestBridge</a></p>
-                <p>If the button does not work, return to the app, open <strong>Reset password</strong>, and request a new link.</p>
-                </body></html>
-                """.formatted(escapeHtml(appUrl));
+                  <div class="card">
+                    <h1>Choose a new password</h1>
+                    <p>Enter and confirm your new NestBridge password. You can then sign in on the app.</p>
+                    <form id="reset-form" novalidate>
+                      <input type="hidden" id="token" value="__RESET_TOKEN__"/>
+                      <label for="password">New password</label>
+                      <input id="password" name="password" type="password" autocomplete="new-password" minlength="6" required placeholder="At least 6 characters"/>
+                      <label for="confirm">Confirm password</label>
+                      <input id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="6" required placeholder="Re-enter password"/>
+                      <button id="submit" type="submit">Save new password</button>
+                    </form>
+                    <div id="message" class="msg" role="status"></div>
+                    <p class="hint">Have the NestBridge app installed? <a href="__APP_RESET_URL__">Open reset in the app</a></p>
+                  </div>
+                  <script>
+                    (function () {
+                      var form = document.getElementById('reset-form');
+                      var message = document.getElementById('message');
+                      var submit = document.getElementById('submit');
+                      function show(type, text) {
+                        message.className = 'msg ' + type;
+                        message.textContent = text;
+                      }
+                      form.addEventListener('submit', function (event) {
+                        event.preventDefault();
+                        var token = document.getElementById('token').value;
+                        var password = document.getElementById('password').value;
+                        var confirm = document.getElementById('confirm').value;
+                        if (!password || password.length < 6) {
+                          show('error', 'Password must be at least 6 characters.');
+                          return;
+                        }
+                        if (password !== confirm) {
+                          show('error', 'Passwords do not match.');
+                          return;
+                        }
+                        submit.disabled = true;
+                        show('ok', 'Saving your new password...');
+                        fetch('/api/auth/reset-password', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                          body: JSON.stringify({ token: token, password: password })
+                        }).then(function (response) {
+                          return response.json().then(function (body) {
+                            return { ok: response.ok, body: body };
+                          }).catch(function () {
+                            return { ok: response.ok, body: null };
+                          });
+                        }).then(function (result) {
+                          if (result.ok) {
+                            form.style.display = 'none';
+                            show('ok', (result.body && result.body.message)
+                              ? result.body.message
+                              : 'Password updated. Return to the NestBridge app and sign in with your new password.');
+                            return;
+                          }
+                          var err = (result.body && (result.body.message || result.body.error))
+                            ? (result.body.message || result.body.error)
+                            : 'Could not reset password. Request a new link from the app.';
+                          show('error', err);
+                          submit.disabled = false;
+                        }).catch(function () {
+                          show('error', 'Network error. Check your connection and try again.');
+                          submit.disabled = false;
+                        });
+                      });
+                    })();
+                  </script>
+                </body>
+                </html>
+                """;
+        return html
+                .replace("__RESET_TOKEN__", safeToken)
+                .replace("__APP_RESET_URL__", appUrl);
     }
 
     private static String resetPasswordErrorHtml(String message) {
