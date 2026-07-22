@@ -151,12 +151,7 @@ export default function OnboardingReadyScreen({
         end={{ x: 1, y: 1 }}
         style={styles.contentGradient}
       >
-        <View style={styles.decorWrap} pointerEvents="none">
-          <Text style={[styles.decorGlyph, styles.decorTopRight]}>+</Text>
-          <Text style={[styles.decorGlyph, styles.decorMidLeft]}>✦</Text>
-          <Text style={[styles.decorGlyph, styles.decorBottomRight]}>+</Text>
-        </View>
-
+       
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
