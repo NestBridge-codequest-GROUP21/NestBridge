@@ -72,6 +72,7 @@ interface DatePickerFieldProps {
 
 function DatePickerField({ label, value, placeholder, onChange }: DatePickerFieldProps) {
   const styles = useThemedStyles(createStyles);
+  const { colors, scheme } = useTheme();
 
   const [show, setShow] = useState(false);
   const parsed = parseDateValue(value);
@@ -104,41 +105,60 @@ function DatePickerField({ label, value, placeholder, onChange }: DatePickerFiel
         </Text>
       </Pressable>
 
-      {show && Platform.OS === 'android' && (
-        <DateTimePicker value={initialDate} mode="date" onChange={handleChange} />
-      )}
+      {show && Platform.OS === 'android' ? (
+        <DateTimePicker
+          value={initialDate}
+          mode="date"
+          display="default"
+          onChange={handleChange}
+        />
+      ) : null}
 
-      {Platform.OS === 'ios' && (
+      {Platform.OS === 'ios' ? (
         <Modal
           visible={show}
           transparent
-          animationType="fade"
+          animationType="slide"
           onRequestClose={() => setShow(false)}
         >
-          <Pressable style={styles.pickerBackdrop} onPress={() => setShow(false)}>
-            <Pressable style={styles.pickerSheet} onPress={() => {}}>
+          <View style={styles.pickerBackdrop}>
+            <Pressable
+              style={styles.pickerDismissArea}
+              onPress={() => setShow(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss date picker"
+            />
+            <View style={styles.pickerSheet}>
+              <View style={styles.pickerToolbar}>
+                <Text style={styles.pickerToolbarTitle}>{label}</Text>
+                <Pressable
+                  style={styles.pickerDoneBtn}
+                  onPress={() => setShow(false)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Done"
+                >
+                  <Text style={styles.pickerDoneText}>Done</Text>
+                </Pressable>
+              </View>
               <DateTimePicker
                 value={initialDate}
                 mode="date"
                 display="spinner"
-                onChange={(event, selected) => {
+                themeVariant={scheme === 'dark' ? 'dark' : 'light'}
+                // iOS spinner is often invisible (white-on-white) without these.
+                textColor={colors.textPrimary}
+                accentColor={colors.teal}
+                style={styles.iosSpinner}
+                onChange={(_event, selected) => {
                   if (selected) {
                     onChange?.(toIsoDate(selected));
                   }
                 }}
               />
-              <Pressable
-                style={styles.pickerDoneBtn}
-                onPress={() => setShow(false)}
-                accessibilityRole="button"
-                accessibilityLabel="Done"
-              >
-                <Text style={styles.pickerDoneText}>Done</Text>
-              </Pressable>
-            </Pressable>
-          </Pressable>
+            </View>
+          </View>
         </Modal>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -444,12 +464,37 @@ function createStyles({ colors, shadows, overlays }: AppTheme) {
     backgroundColor: overlays.scrim,
     justifyContent: 'flex-end',
   },
+  pickerDismissArea: {
+    flex: 1,
+  },
   pickerSheet: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,
-    padding: spacing.md,
+    paddingBottom: spacing.lg,
+    overflow: 'hidden',
     ...shadows.raised,
+  },
+  pickerToolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    minHeight: touchTarget,
+    borderBottomWidth: borderWidths.hairline,
+    borderBottomColor: colors.border,
+  },
+  pickerToolbarTitle: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+  },
+  iosSpinner: {
+    alignSelf: 'stretch',
+    height: 216,
+    backgroundColor: colors.surface,
   },
   pickerDoneBtn: {
     alignSelf: 'flex-end',

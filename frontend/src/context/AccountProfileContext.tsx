@@ -355,7 +355,19 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
             ? state.hostProvider
             : state.guideProvider;
       if (!hasIdentityProfile(current)) {
-        // Cannot unlock core activities without locked bio + about.
+        // Soft-skipped identity: still finish the track for browsing.
+        // Booking/accept stay gated by isSeekerComplete / isHostComplete / isGuideComplete.
+        await persist(
+          updateTrackProgress(state, track, () => ({
+            ...current,
+            status: 'COMPLETE',
+            stepsCompleted: [...steps],
+            data: {
+              ...current.data,
+              identityLocked: false,
+            },
+          })),
+        );
         return;
       }
       await persist(
