@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -8,17 +8,13 @@ import Card from '../../components/Card';
 import Avatar from '../../components/Avatar';
 import ListRow from '../../components/ListRow';
 import SectionHeader from '../../components/SectionHeader';
-import AppIcon from '../../components/AppIcon';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import Constants from 'expo-constants';
 import { profileCopy, splashCopy } from '../../data/appCopy';
 import BrandLogo from '../../components/BrandLogo';
 import {
-  useTheme,
   useThemedStyles,
-  themeTokensForPreference,
   type AppTheme,
-  type ThemePreference,
 } from '../../theme';
 import {
   fontFamilies,
@@ -26,10 +22,6 @@ import {
   fontWeights,
   spacing,
   lineHeights,
-  borderRadius,
-  borderWidths,
-  iconSizes,
-  touchTarget,
 } from '../../constants/theme';
 
 export interface ProfileScreenProps {
@@ -48,6 +40,8 @@ export interface ProfileScreenProps {
   onBack?: () => void;
   onAccountSetupPress?: () => void;
   onTravelBookingPress?: () => void;
+  onSettingsPress?: () => void;
+  onRatingsPress?: () => void;
   onSignOut?: () => void;
   onResetDemo?: () => void;
   onDevTestingPress?: () => void;
@@ -60,33 +54,6 @@ export interface ProfileScreenProps {
   showExitPreview?: boolean;
   onExitPreviewPress?: () => void;
 }
-
-const APPEARANCE_OPTIONS: {
-  id: ThemePreference;
-  label: string;
-  subtitle: string;
-}[] = [
-  {
-    id: 'light',
-    label: 'Light',
-    subtitle: 'Default NestBridge look',
-  },
-  {
-    id: 'dark-teal',
-    label: 'Dark Teal',
-    subtitle: 'Cool navy night with teal accents',
-  },
-  {
-    id: 'dark-warm',
-    label: 'Dark Warm',
-    subtitle: 'Charcoal surfaces with gold warmth',
-  },
-  {
-    id: 'dark-bold',
-    label: 'Dark Bold',
-    subtitle: 'True black with solid accent blocks',
-  },
-];
 
 export default function ProfileScreen({
   userName,
@@ -103,6 +70,8 @@ export default function ProfileScreen({
   onBack,
   onAccountSetupPress,
   onTravelBookingPress,
+  onSettingsPress,
+  onRatingsPress,
   onSignOut,
   onResetDemo,
   onDevTestingPress,
@@ -115,7 +84,6 @@ export default function ProfileScreen({
   showExitPreview = false,
   onExitPreviewPress,
 }: ProfileScreenProps) {
-  const { preference, setPreference, colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const showTabBar = Boolean(tabBarItems?.length);
 
@@ -168,73 +136,29 @@ export default function ProfileScreen({
               iconName="airplane-outline"
               onPress={onTravelBookingPress}
               style={styles.listRowPad}
+              bordered={Boolean(onSettingsPress) || Boolean(onRatingsPress)}
+            />
+          ) : null}
+          {onRatingsPress ? (
+            <ListRow
+              title="Ratings & reviews"
+              subtitle="Rate completed stays and guide sessions"
+              iconName="star-outline"
+              onPress={onRatingsPress}
+              style={styles.listRowPad}
+              bordered={Boolean(onSettingsPress)}
+            />
+          ) : null}
+          {onSettingsPress ? (
+            <ListRow
+              title="Settings"
+              subtitle="Appearance themes and notifications"
+              iconName="settings-outline"
+              onPress={onSettingsPress}
+              style={styles.listRowPad}
               bordered={false}
             />
           ) : null}
-        </Card>
-
-        <SectionHeader title="Appearance" />
-        <Card padding="none" style={styles.groupCard}>
-          {APPEARANCE_OPTIONS.map((option, index) => {
-            const selected = preference === option.id;
-            const isLast = index === APPEARANCE_OPTIONS.length - 1;
-            const preview = themeTokensForPreference(option.id).colors;
-            return (
-              <Pressable
-                key={option.id}
-                onPress={() => setPreference(option.id)}
-                style={({ pressed }) => [
-                  styles.appearanceRow,
-                  !isLast && styles.appearanceRowBorder,
-                  pressed && styles.appearancePressed,
-                ]}
-                accessibilityRole="radio"
-                accessibilityState={{ selected }}
-                accessibilityLabel={`${option.label} theme`}
-              >
-                <View
-                  style={[
-                    styles.swatch,
-                    { backgroundColor: preview.background },
-                  ]}
-                  accessibilityElementsHidden
-                  importantForAccessibility="no-hide-descendants"
-                >
-                  <View
-                    style={[
-                      styles.swatchSurface,
-                      { backgroundColor: preview.surface },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.swatchAccent,
-                      { backgroundColor: preview.tabActive },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.swatchAccentSecondary,
-                      { backgroundColor: preview.terracotta },
-                    ]}
-                  />
-                </View>
-                <View style={styles.appearanceText}>
-                  <Text style={styles.appearanceLabel}>{option.label}</Text>
-                  <Text style={styles.appearanceSubtitle}>{option.subtitle}</Text>
-                </View>
-                {selected ? (
-                  <AppIcon
-                    name="checkmark-circle"
-                    size={iconSizes.lg}
-                    color={colors.success}
-                  />
-                ) : (
-                  <View style={styles.radioIdle} />
-                )}
-              </Pressable>
-            );
-          })}
         </Card>
 
         {showExitPreview || showReturnToOps || showAppPreview || showStaffTools ? (
@@ -379,71 +303,6 @@ function createStyles({ colors }: AppTheme) {
     groupCard: {
       marginBottom: spacing.lg,
       overflow: 'hidden',
-    },
-    appearanceRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      minHeight: touchTarget + spacing.md,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
-      gap: spacing.md,
-    },
-    appearanceRowBorder: {
-      borderBottomWidth: borderWidths.hairline,
-      borderBottomColor: colors.border,
-    },
-    appearancePressed: {
-      opacity: 0.92,
-    },
-    swatch: {
-      width: touchTarget,
-      height: touchTarget,
-      borderRadius: borderRadius.md,
-      borderWidth: borderWidths.hairline,
-      borderColor: colors.border,
-      overflow: 'hidden',
-      padding: spacing.xs,
-      justifyContent: 'space-between',
-    },
-    swatchSurface: {
-      height: spacing.sm + spacing.xs,
-      borderRadius: borderRadius.sm,
-    },
-    swatchAccent: {
-      width: '55%',
-      height: spacing.sm,
-      borderRadius: borderRadius.sm,
-    },
-    swatchAccentSecondary: {
-      position: 'absolute',
-      right: spacing.xs,
-      bottom: spacing.xs,
-      width: spacing.sm + spacing.xs,
-      height: spacing.sm + spacing.xs,
-      borderRadius: borderRadius.sm,
-    },
-    appearanceText: {
-      flex: 1,
-    },
-    appearanceLabel: {
-      fontFamily: fontFamilies.semibold,
-      fontSize: fontSizes.body,
-      fontWeight: fontWeights.semibold,
-      color: colors.textPrimary,
-    },
-    appearanceSubtitle: {
-      fontFamily: fontFamilies.regular,
-      fontSize: fontSizes.caption,
-      color: colors.textSecondary,
-      marginTop: spacing.xs,
-      lineHeight: lineHeights.caption,
-    },
-    radioIdle: {
-      width: iconSizes.lg,
-      height: iconSizes.lg,
-      borderRadius: borderRadius.pill,
-      borderWidth: borderWidths.strong,
-      borderColor: colors.border,
     },
     listRowPad: {
       paddingHorizontal: spacing.md,

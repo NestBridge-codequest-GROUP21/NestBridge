@@ -1,24 +1,32 @@
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ThemePreference } from './palettes';
 
 const THEME_PREFERENCE_KEY = 'nestbridge_theme_preference';
 
-const VALID: ThemePreference[] = [
+/** Selectable themes shown in Settings (excludes deprecated aliases). */
+export const SELECTABLE_THEME_PREFERENCES = [
   'light',
+  'coastal-blue-light',
+  'coastal-blue-dark',
+  'sunset-savanna-light',
+  'sunset-savanna-dark',
+  'kente-vibrant-light',
+  'kente-vibrant-dark',
+] as const satisfies readonly ThemePreference[];
+
+const VALID: ThemePreference[] = [
+  ...SELECTABLE_THEME_PREFERENCES,
   'dark-teal',
   'dark-warm',
   'dark-bold',
 ];
 
-/** Migrate earlier light/dark/system values to the four-variant model. */
-function migrateLegacyPreference(raw: string): ThemePreference | null {
-  if (raw === 'dark') {
-    return 'dark-teal';
-  }
-  if (raw === 'system') {
-    return 'light';
-  }
-  return null;
+function migrateLegacyPreference(raw: string): ThemePreference {
+  if (raw === 'dark' || raw === 'dark-teal') return 'coastal-blue-dark';
+  if (raw === 'dark-warm') return 'sunset-savanna-dark';
+  if (raw === 'dark-bold') return 'kente-vibrant-dark';
+  if (raw === 'system') return 'light';
+  return 'light';
 }
 
 export function isValidThemePreference(
@@ -27,22 +35,30 @@ export function isValidThemePreference(
   return typeof value === 'string' && VALID.includes(value as ThemePreference);
 }
 
-/** Default: NestBridge light appearance. Persists via SecureStore. */
+function normalizePreference(preference: ThemePreference): ThemePreference {
+  if (preference === 'dark-teal') return 'coastal-blue-dark';
+  if (preference === 'dark-warm') return 'sunset-savanna-dark';
+  if (preference === 'dark-bold') return 'kente-vibrant-dark';
+  return preference;
+}
+
+/** Default: Original NestBridge light. Persists via AsyncStorage. */
 export async function loadThemePreference(): Promise<ThemePreference> {
   try {
-    const raw = await SecureStore.getItemAsync(THEME_PREFERENCE_KEY);
+    const raw = await AsyncStorage.getItem(THEME_PREFERENCE_KEY);
     if (!raw) {
       return 'light';
     }
     if (isValidThemePreference(raw)) {
-      return raw;
+      const normalized = normalizePreference(raw);
+      if (normalized !== raw) {
+        await AsyncStorage.setItem(THEME_PREFERENCE_KEY, normalized);
+      }
+      return normalized;
     }
     const migrated = migrateLegacyPreference(raw);
-    if (migrated) {
-      await SecureStore.setItemAsync(THEME_PREFERENCE_KEY, migrated);
-      return migrated;
-    }
-    return 'light';
+    await AsyncStorage.setItem(THEME_PREFERENCE_KEY, migrated);
+    return migrated;
   } catch (error) {
     console.warn('[themePreferenceStorage] load failed', error);
     return 'light';
@@ -52,11 +68,11 @@ export async function loadThemePreference(): Promise<ThemePreference> {
 export async function saveThemePreference(
   preference: ThemePreference,
 ): Promise<void> {
-  if (!isValidThemePreference(preference)) {
-    return;
-  }
+  const next = normalizePreference(
+    isValidThemePreference(preference) ? preference : 'light',
+  );
   try {
-    await SecureStore.setItemAsync(THEME_PREFERENCE_KEY, preference);
+    await AsyncStorage.setItem(THEME_PREFERENCE_KEY, next);
   } catch (error) {
     console.warn('[themePreferenceStorage] save failed', error);
   }

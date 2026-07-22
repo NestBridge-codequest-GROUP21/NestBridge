@@ -139,8 +139,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(session.user);
     setAuthError(null);
-    // Safe after UI is up; never runs during cold-start hydrate.
-    void registerPushTokenIfAvailable();
+    if (session.user.notificationsEnabled !== false) {
+      void registerPushTokenIfAvailable();
+    }
   }, []);
 
   const register = useCallback(

@@ -35,6 +35,7 @@ export interface AuthTokenPayload {
   displayName: string;
   emailVerified?: boolean;
   staff?: boolean;
+  notificationsEnabled?: boolean;
 }
 
 export interface AdminUserSummary {
@@ -155,6 +156,7 @@ function authUserFromPayload(payload: AuthTokenPayload): AuthUser {
     email: payload.email,
     displayName: payload.displayName,
     isStaff: Boolean(payload.staff),
+    notificationsEnabled: payload.notificationsEnabled !== false,
   };
 }
 
@@ -370,6 +372,11 @@ export interface HostProfileApi {
   country?: string;
   pricePerNight?: number;
   cancellationPolicy?: string;
+  houseRules?: string;
+  photos?: string[];
+  amenities?: string[];
+  roomType?: string;
+  maxGuests?: number;
   matchPercentage?: number;
   matchReasons?: string[];
   averageRating?: number;
@@ -1064,6 +1071,23 @@ export async function registerDeviceToken(
   platform: string,
 ): Promise<void> {
   await api.post('/api/users/me/device-tokens', { expoPushToken, platform });
+}
+
+export async function getNotificationsPreference(): Promise<boolean> {
+  const { data } = await api.get<ApiResponse<{ enabled: boolean }>>(
+    '/api/users/me/notifications-preference',
+  );
+  return Boolean(unwrap({ data }).enabled);
+}
+
+export async function setNotificationsPreference(
+  enabled: boolean,
+): Promise<boolean> {
+  const { data } = await api.put<ApiResponse<{ enabled: boolean }>>(
+    '/api/users/me/notifications-preference',
+    { enabled },
+  );
+  return Boolean(unwrap({ data }).enabled);
 }
 
 export interface PhotoUploadUrlResult {

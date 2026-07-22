@@ -6,8 +6,11 @@ import {
   borderRadius,
 } from '../constants/theme';
 
-/** Official NestBridge logo — transparent PNG (wordmark + mark). */
-const logoSource = require('../../assets/logo-transparent.png');
+/**
+ * Official NestBridge logo — white-background mark (app-wide standard).
+ * Do not use the transparent asset in UI chrome.
+ */
+const logoSource = require('../../assets/logo.png');
 const resolved = Image.resolveAssetSource(logoSource);
 const LOGO_ASPECT =
   resolved?.width && resolved?.height
@@ -27,8 +30,8 @@ export interface BrandLogoProps {
   /** Width of the logo image. Prefer size presets for consistency. */
   size?: BrandLogoSize | number;
   /**
-   * Light plate behind the logo for dark/gradient surfaces so navy
-   * mark strokes stay visible. Off by default on light backgrounds.
+   * Soft plate behind the logo. Usually unnecessary with the white-bg asset;
+   * keep for dense gradient surfaces if needed.
    */
   framed?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -36,7 +39,7 @@ export interface BrandLogoProps {
 }
 
 /**
- * Single reusable NestBridge logo. Uses the transparent production asset
+ * Single reusable NestBridge logo. Uses the white-background production asset
  * and preserves aspect ratio on every density.
  */
 export default function BrandLogo({
@@ -52,7 +55,7 @@ export default function BrandLogo({
   const image = (
     <Image
       source={logoSource}
-      style={{ width, height }}
+      style={[styles.image, { width, height }]}
       resizeMode="contain"
       accessibilityRole="image"
       accessibilityLabel={accessibilityLabel}
@@ -75,9 +78,15 @@ function createStyles({ colors }: AppTheme) {
     plain: {
       alignItems: 'center',
       justifyContent: 'center',
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
+      backgroundColor: colors.white,
+    },
+    image: {
+      backgroundColor: colors.white,
     },
     frame: {
-      backgroundColor: colors.surface,
+      backgroundColor: colors.white,
       borderRadius: borderRadius.lg,
       padding: spacing.md,
       alignItems: 'center',

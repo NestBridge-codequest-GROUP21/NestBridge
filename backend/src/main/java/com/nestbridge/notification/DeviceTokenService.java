@@ -29,4 +29,9 @@ public class DeviceTokenService {
                                 .platform(platform)
                                 .build()));
     }
+
+    @Transactional
+    public void removeAllTokensForUser(UUID userId) {
+        deviceTokenRepository.deleteByUserId(userId);
+    }
 }

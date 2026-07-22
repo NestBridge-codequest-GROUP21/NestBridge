@@ -286,11 +286,14 @@ export default function StudentBookingsScreen({
                 <Text style={styles.heroDates}>
                   {bookingScheduleLine(payNowBooking)}
                 </Text>
+                <Text style={styles.heroPayMethods}>
+                  Pay with Mobile Money, bank card, or bank transfer via Paystack
+                </Text>
                 <View style={styles.heroCta}>
                   <Text style={styles.heroCtaText}>
                     {payLoading
                       ? payStatusLabel || 'Preparing payment...'
-                      : 'Pay now'}
+                      : 'Pay with Paystack'}
                   </Text>
                 </View>
               </LinearGradient>
@@ -371,8 +374,13 @@ export default function StudentBookingsScreen({
                         <Text style={styles.rowPayButtonText}>
                           {payLoading && payNowBooking?.id === booking.id
                             ? payStatusLabel || 'Preparing payment...'
-                            : 'Pay now'}
+                            : 'Pay with Paystack'}
                         </Text>
+                        {!payLoading || payNowBooking?.id !== booking.id ? (
+                          <Text style={styles.rowPayHint}>
+                            MoMo · Card · Bank
+                          </Text>
+                        ) : null}
                       </Pressable>
                     ) : null}
                   </View>
@@ -511,8 +519,17 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontWeight: fontWeights.regular,
     color: colors.onPrimary,
     opacity: 0.92,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     lineHeight: lineHeights.body,
+  },
+  heroPayMethods: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
+    color: colors.onPrimary,
+    opacity: 0.88,
+    marginBottom: spacing.md,
+    lineHeight: lineHeights.caption,
   },
   heroCta: {
     flexDirection: 'row',
@@ -595,6 +612,7 @@ function createStyles({ colors, shadows }: AppTheme) {
     backgroundColor: colors.tealBright,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.xs / 2,
   },
   rowPayButtonDisabled: {
     opacity: 0.55,
@@ -604,6 +622,12 @@ function createStyles({ colors, shadows }: AppTheme) {
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.onPrimary,
+  },
+  rowPayHint: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    color: colors.onPrimary,
+    opacity: 0.9,
   },
   pressed: {
     opacity: 0.94,

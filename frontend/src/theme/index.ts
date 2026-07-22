@@ -21,4 +21,6 @@ export { navigationThemeFromTokens } from './navigationTheme';
 export {
   loadThemePreference,
   saveThemePreference,
+  SELECTABLE_THEME_PREFERENCES,
 } from './themePreferenceStorage';
+export { THEME_OPTIONS, type ThemeOption } from './themeCatalog';

@@ -18,11 +18,43 @@ public class UserController {
     private final UserProfileService userProfileService;
     private final UserRepository userRepository;
     private final BookingService bookingService;
+    private final com.nestbridge.notification.DeviceTokenService deviceTokenService;
 
     @GetMapping("/me/profile")
     public ResponseEntity<ApiResponse<AccountProfileDto>> getMyProfile(Authentication authentication) {
         UUID userId = (UUID) authentication.getPrincipal();
         return ResponseEntity.ok(ApiResponse.success("Profile retrieved", userProfileService.getMyProfile(userId)));
+    }
+
+    @GetMapping("/me/notifications-preference")
+    public ResponseEntity<ApiResponse<NotificationsPreferenceResponse>> getNotificationsPreference(
+            Authentication authentication) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        return ResponseEntity.ok(ApiResponse.success(
+                "Notifications preference retrieved",
+                NotificationsPreferenceResponse.builder()
+                        .enabled(user.isNotificationsEnabled())
+                        .build()));
+    }
+
+    @PutMapping("/me/notifications-preference")
+    public ResponseEntity<ApiResponse<NotificationsPreferenceResponse>> updateNotificationsPreference(
+            Authentication authentication,
+            @RequestBody @jakarta.validation.Valid NotificationsPreferenceRequest request) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        boolean enabled = Boolean.TRUE.equals(request.getEnabled());
+        user.setNotificationsEnabled(enabled);
+        userRepository.save(user);
+        if (!enabled) {
+            deviceTokenService.removeAllTokensForUser(userId);
+        }
+        return ResponseEntity.ok(ApiResponse.success(
+                "Notifications preference updated",
+                NotificationsPreferenceResponse.builder().enabled(enabled).build()));
     }
 
     @PutMapping("/me/profile")
