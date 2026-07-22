@@ -9,6 +9,7 @@ import Avatar from '../../components/Avatar';
 import ListRow from '../../components/ListRow';
 import SectionHeader from '../../components/SectionHeader';
 import AppIcon from '../../components/AppIcon';
+import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import Constants from 'expo-constants';
 import { profileCopy, splashCopy } from '../../data/appCopy';
 import BrandLogo from '../../components/BrandLogo';
@@ -39,6 +40,11 @@ export interface ProfileScreenProps {
   showTravelBooking?: boolean;
   /** When false, hide consumer account-setup entry (staff shell). */
   showAccountSetup?: boolean;
+  tabBarItems?: TabBarItem[];
+  activeTabId?: string;
+  showSosDock?: boolean;
+  onSosPress?: () => void;
+  onTabPress?: (tabId: string) => void;
   onBack?: () => void;
   onAccountSetupPress?: () => void;
   onTravelBookingPress?: () => void;
@@ -89,6 +95,11 @@ export default function ProfileScreen({
   setupSummary,
   showTravelBooking = false,
   showAccountSetup = true,
+  tabBarItems,
+  activeTabId = 'profile',
+  showSosDock = false,
+  onSosPress,
+  onTabPress,
   onBack,
   onAccountSetupPress,
   onTravelBookingPress,
@@ -106,6 +117,7 @@ export default function ProfileScreen({
 }: ProfileScreenProps) {
   const { preference, setPreference, colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const showTabBar = Boolean(tabBarItems?.length);
 
   return (
     <View style={styles.root}>
@@ -115,7 +127,7 @@ export default function ProfileScreen({
         greeting="Profile"
         userName={userName}
         userInitials={userInitials}
-        subtitle="Account and setup"
+        subtitle="Account setup and settings"
         onBack={onBack}
       />
 
@@ -127,6 +139,38 @@ export default function ProfileScreen({
             <Text style={styles.identityEmail}>{email}</Text>
             <Text style={styles.identitySummary}>{setupSummary}</Text>
           </View>
+        </Card>
+
+        <SectionHeader title="Settings" />
+        <Card padding="none" style={styles.groupCard}>
+          {showAccountSetup ? (
+            <ListRow
+              title="Account setup"
+              subtitle="View progress and finish remaining steps"
+              iconName="person-circle-outline"
+              onPress={onAccountSetupPress}
+              style={styles.listRowPad}
+              bordered={showTravelBooking}
+            />
+          ) : (
+            <ListRow
+              title="Staff account"
+              subtitle="Ops access — consumer onboarding is not shown here"
+              iconName="shield-checkmark-outline"
+              style={styles.listRowPad}
+              bordered={showTravelBooking}
+            />
+          )}
+          {showTravelBooking ? (
+            <ListRow
+              title="Book as a traveller"
+              subtitle="Find a homestay or local guide for your own trip in Ghana"
+              iconName="airplane-outline"
+              onPress={onTravelBookingPress}
+              style={styles.listRowPad}
+              bordered={false}
+            />
+          ) : null}
         </Card>
 
         <SectionHeader title="Appearance" />
@@ -191,44 +235,6 @@ export default function ProfileScreen({
               </Pressable>
             );
           })}
-        </Card>
-
-        {showTravelBooking ? (
-          <>
-            <SectionHeader title="Travel" />
-            <Card padding="none" style={styles.groupCard}>
-              <ListRow
-                title="Book as a traveller"
-                subtitle="Find a homestay or local guide for your own trip in Ghana"
-                iconName="airplane-outline"
-                onPress={onTravelBookingPress}
-                style={styles.listRowPad}
-                bordered={false}
-              />
-            </Card>
-          </>
-        ) : null}
-
-        <SectionHeader title="Account" />
-        <Card padding="none" style={styles.groupCard}>
-          {showAccountSetup ? (
-            <ListRow
-              title="Account setup"
-              subtitle="View progress and finish remaining steps"
-              iconName="person-circle-outline"
-              onPress={onAccountSetupPress}
-              style={styles.listRowPad}
-              bordered={false}
-            />
-          ) : (
-            <ListRow
-              title="Staff account"
-              subtitle="Ops access — consumer onboarding is not shown here"
-              iconName="shield-checkmark-outline"
-              style={styles.listRowPad}
-              bordered={false}
-            />
-          )}
         </Card>
 
         {showExitPreview || showReturnToOps || showAppPreview || showStaffTools ? (
@@ -322,6 +328,16 @@ export default function ProfileScreen({
           <SecondaryButton label="Sign out" onPress={onSignOut} />
         </View>
       </ScreenScroll>
+
+      {showTabBar && tabBarItems ? (
+        <AppTabBar
+          items={tabBarItems}
+          activeTabId={activeTabId}
+          showSosDock={showSosDock}
+          onSosPress={onSosPress}
+          onTabPress={onTabPress}
+        />
+      ) : null}
     </View>
   );
 }
