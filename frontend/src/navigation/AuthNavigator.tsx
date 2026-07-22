@@ -143,6 +143,12 @@ export default function AuthNavigator({
             }}
             onPasswordChange={setPassword}
             onToggleKeepSignedIn={() => setKeepSignedIn((value) => !value)}
+            onForgotPasswordPress={() => {
+              setStaffLoginError('');
+              setForgotError('');
+              setForgotStatus('');
+              navigation.navigate('ForgotPassword');
+            }}
             onSubmit={async () => {
               setStaffLoginError('');
               if (!email.trim()) {
@@ -155,7 +161,7 @@ export default function AuthNavigator({
               }
               setStaffLoginBusy(true);
               try {
-                const signedIn = await signIn(email, password, keepSignedIn);
+                const signedIn = await signIn(email.trim(), password, keepSignedIn);
                 if (!signedIn.isStaff) {
                   await signOut();
                   setStaffLoginError(
@@ -165,7 +171,11 @@ export default function AuthNavigator({
               } catch (error) {
                 const message =
                   error instanceof Error ? error.message : 'Email or password is incorrect.';
-                setStaffLoginError(message);
+                setStaffLoginError(
+                  message.includes('Invalid email or password')
+                    ? 'Incorrect email or password. Use Forgot password if you need to reset it — this is the same password as your NestBridge account.'
+                    : message,
+                );
               } finally {
                 setStaffLoginBusy(false);
               }
