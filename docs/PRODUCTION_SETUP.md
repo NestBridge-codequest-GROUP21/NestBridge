@@ -52,7 +52,11 @@ Services like Paystack, SendGrid, and Smile Identity give you **secret passwords
 
 New users receive a verification link. Demo accounts (`*@nestbridge.app`) are pre-verified.
 
-**Forgot password** uses the same SendGrid setup. Users tap **Forgot password?** on sign-in, receive a reset link (valid 1 hour), and set a new password in the app. The link opens via `nestbridge://reset-password?token=…` when the app is installed; otherwise the web landing page at `APP_PUBLIC_URL/api/auth/reset-password` explains next steps. Without SendGrid, reset URLs are logged on the Railway backend (same as verification).
+**Critical:** If `SENDGRID_API_KEY` is missing, NestBridge **auto-verifies** new accounts so users can sign in (no inbox required). When the key is set but `EMAIL_FROM` is not a verified sender, registration still creates the account and returns `emailDeliveryFailed` so the app can show Resend / Contact support. Staff tools can also **Mark email verified** for stuck users. Check Railway logs for `SendGrid` / `SENDGRID_API_KEY` messages.
+
+Set `APP_PUBLIC_URL` to the **same** public HTTPS URL the app uses (e.g. `https://nestbridge-production.up.railway.app`). Verification links are built as `{APP_PUBLIC_URL}/api/auth/verify-email?token=…`.
+
+**Forgot password** uses the same SendGrid setup. Users tap **Forgot password?** on sign-in, receive a reset link (valid 1 hour), and set a new password in the app. The link opens via `nestbridge://reset-password?token=…` when the app is installed; otherwise the web landing page at `APP_PUBLIC_URL/api/auth/reset-password` explains next steps.
 
 Optional: `APP_MOBILE_SCHEME` = `nestbridge` (must match `scheme` in `frontend/app.config.ts`).
 
@@ -62,14 +66,15 @@ Optional: `APP_MOBILE_SCHEME` = `nestbridge` (must match `scheme` in `frontend/a
 
 1. Sign up at [paystack.com](https://paystack.com) → complete business verification
 2. **Settings → API Keys & Webhooks**
-3. Copy **Live Secret Key**
+3. Copy **Live Secret Key** (or Test Secret Key for sandbox)
 4. Add to Railway:
    - `PAYSTACK_ENABLED` = `true`
-   - `PAYSTACK_SECRET_KEY` = live secret key
+   - `PAYSTACK_SECRET_KEY` = secret key
 5. Set webhook URL: `https://YOUR-RAILWAY-URL/api/webhooks/paystack`
 6. Enable `charge.success` event
+7. Ensure `APP_PUBLIC_URL` matches the Railway HTTPS URL (used as Paystack `callback_url`)
 
-**Pay now** in the app opens Paystack checkout. Without keys, dev mode uses mock payment.
+**Pay now** (Bookings → Active) opens Paystack checkout with **Mobile Money**, cards, bank, and USSD. The app verifies the charge with Paystack before marking the booking `CONFIRMED` / `PAID`. Without keys (`PAYSTACK_ENABLED=false`), the app uses a safe mock confirm for demos only — do not leave that on for real users.
 
 ---
 

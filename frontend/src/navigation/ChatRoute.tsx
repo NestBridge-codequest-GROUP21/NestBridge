@@ -1,15 +1,20 @@
-import React from 'react';
-import { ActivityIndicator, View, StyleSheet, Text } from 'react-native';
+import { useThemedStyles, type AppTheme } from '../theme';
+import React, { useState } from 'react';
+import { View, StyleSheet, Text } from 'react-native';
 import ChatScreen from '../screens/shared/ChatScreen';
 import { useChatMessages } from '../hooks/useChatMessages';
 import type { ConversationListItem } from '../types/messaging';
-import { colors, fontSizes, spacing } from '../constants/theme';
+import {
+  fontSizes,
+  spacing,
+} from '../constants/theme';
 
 export interface ChatRouteProps {
   conversation: ConversationListItem;
   currentUserId: string;
   onBack?: () => void;
   onMessageSent?: () => void;
+  onParticipantPress?: () => void;
 }
 
 export default function ChatRoute({
@@ -17,16 +22,16 @@ export default function ChatRoute({
   currentUserId,
   onBack,
   onMessageSent,
+  onParticipantPress,
 }: ChatRouteProps) {
-  const chat = useChatMessages(conversation.id, conversation.firebasePath, currentUserId);
+  const styles = useThemedStyles(createStyles);
+  const [isSending, setIsSending] = useState(false);
 
-  if (chat.isLoading && chat.messages.length === 0) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={colors.teal} />
-      </View>
-    );
-  }
+  const chat = useChatMessages(
+    conversation.id,
+    conversation.firebasePath,
+    currentUserId,
+  );
 
   return (
     <View style={styles.root}>
@@ -38,31 +43,41 @@ export default function ChatRoute({
       <ChatScreen
         participantName={conversation.participantName}
         participantInitials={conversation.participantInitials}
+        participantRole={conversation.participantRole}
+        verification={conversation.verification}
+        rating={conversation.rating}
+        ratingCount={conversation.ratingCount}
+        bookingContext={conversation.bookingContext}
         messages={chat.messages}
+        isLoading={chat.isLoading}
+        isSending={isSending}
         onBack={onBack}
-        onSendMessage={(text) => {
-          void chat.sendMessage(text).then(() => onMessageSent?.());
+        onParticipantPress={onParticipantPress}
+        onSendMessage={async (text) => {
+          setIsSending(true);
+          try {
+            await chat.sendMessage(text);
+            onMessageSent?.();
+          } finally {
+            setIsSending(false);
+          }
         }}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  loader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.background,
-  },
-  errorBanner: {
-    backgroundColor: colors.danger,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  errorText: {
-    color: colors.white,
-    fontSize: fontSizes.caption,
-  },
-});
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
+    root: { flex: 1 },
+    errorBanner: {
+      backgroundColor: colors.danger,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+    },
+    errorText: {
+      color: colors.onPrimary,
+      fontSize: fontSizes.caption,
+    },
+  });
+}

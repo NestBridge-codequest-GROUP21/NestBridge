@@ -17,6 +17,10 @@ export interface RegisterResult {
   email: string;
   displayName: string;
   requiresEmailVerification: boolean;
+  /** Account saved but outbound verification email failed. */
+  emailDeliveryFailed?: boolean;
+  /** Server success message when available. */
+  message?: string;
 }
 
 export interface AuthSession {

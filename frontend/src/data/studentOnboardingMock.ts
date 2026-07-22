@@ -11,7 +11,8 @@ export interface RoleOption {
 
 export const splashMock = {
   appName: 'NestBridge',
-  subtitle: splashCopy.tagline,
+  motto: splashCopy.tagline,
+  description: splashCopy.description,
 };
 
 export const welcomeMock = {

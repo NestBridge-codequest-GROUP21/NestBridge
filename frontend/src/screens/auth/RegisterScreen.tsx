@@ -1,20 +1,29 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FormTextField from '../../components/FormTextField';
+import ScreenScroll from '../../components/ScreenScroll';
+import BrandLogo from '../../components/BrandLogo';
 import PrimaryButton from '../../components/PrimaryButton';
-import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
-import type { DemoAccount } from '../../data/demoAccounts';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import InlineBanner from '../../components/InlineBanner';
+import CheckboxRow from '../../components/CheckboxRow';
+import {
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  lineHeights,
+  layout,
+  touchTarget,
+} from '../../constants/theme';
 
 export interface RegisterScreenProps {
   title: string;
@@ -24,9 +33,6 @@ export interface RegisterScreenProps {
   password: string;
   keepSignedIn: boolean;
   errorMessage?: string;
-  demoAccounts?: DemoAccount[];
-  demoLoginBusy?: boolean;
-  onDemoLogin?: (account: DemoAccount) => void;
   onFullNameChange?: (value: string) => void;
   onEmailChange?: (value: string) => void;
   onPasswordChange?: (value: string) => void;
@@ -44,9 +50,6 @@ export default function RegisterScreen({
   password,
   keepSignedIn,
   errorMessage,
-  demoAccounts = [],
-  demoLoginBusy = false,
-  onDemoLogin,
   onFullNameChange,
   onEmailChange,
   onPasswordChange,
@@ -55,180 +58,126 @@ export default function RegisterScreen({
   onSignInPress,
   onBack,
 }: RegisterScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { scheme } = useTheme();
+
   const insets = useSafeAreaInsets();
 
   return (
-    <KeyboardAvoidingView
-      style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <StatusBar style="dark" />
+    <View style={styles.root}>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
-      <ScrollView
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg },
+          { paddingTop: insets.top + layout.authContentTop },
         ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
       >
-        {onBack && (
-          <Pressable onPress={onBack} style={styles.backBtn} accessibilityRole="button">
-            <Text style={styles.backText}>← Back</Text>
-          </Pressable>
-        )}
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
+
+        <BrandLogo size="sm" style={styles.brandLogo} />
 
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
 
-        <View style={styles.formCard}>
-          <FormTextField
-            label="Full name"
-            value={fullName}
-            placeholder="e.g. Akosua Darko"
-            onChangeText={onFullNameChange}
-            autoCapitalize="words"
-          />
-          <FormTextField
-            label="Email address"
-            value={email}
-            placeholder="Enter email address..."
-            onChangeText={onEmailChange}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <FormTextField
-            label="Password"
-            value={password}
-            placeholder="Create a password..."
-            onChangeText={onPasswordChange}
-            secureTextEntry
-          />
+        <FormTextField
+          label="Full name"
+          value={fullName}
+          placeholder="e.g. Akosua Darko"
+          onChangeText={onFullNameChange}
+          autoCapitalize="words"
+        />
+        <FormTextField
+          label="Email address"
+          value={email}
+          placeholder="you@example.com"
+          onChangeText={onEmailChange}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <FormTextField
+          label="Password"
+          value={password}
+          placeholder="At least 6 characters"
+          onChangeText={onPasswordChange}
+          secureTextEntry
+          visibilityToggle
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="newPassword"
+        />
 
-          <Pressable
-            style={styles.checkboxRow}
-            onPress={onToggleKeepSignedIn}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: keepSignedIn }}
-          >
-            <View style={[styles.checkbox, keepSignedIn && styles.checkboxChecked]}>
-              {keepSignedIn && <Text style={styles.checkmark}>✓</Text>}
-            </View>
-            <Text style={styles.checkboxLabel}>Keep me signed in on this device</Text>
-          </Pressable>
-        </View>
+        <CheckboxRow
+          label="Keep me signed in on this device"
+          checked={keepSignedIn}
+          onPress={onToggleKeepSignedIn}
+          style={styles.checkboxRow}
+        />
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? <InlineBanner message={errorMessage} tone="error" /> : null}
 
-        <PrimaryButton label="Create Account" onPress={onSubmit} />
-
-        {demoAccounts.length > 0 ? (
-          <DemoActorQuickLogin
-            accounts={demoAccounts}
-            busy={demoLoginBusy}
-            variant="tabs"
-            title="Or try a demo account"
-            onSelect={onDemoLogin}
-          />
-        ) : null}
+        <PrimaryButton label="Create account" onPress={onSubmit} />
 
         <Pressable onPress={onSignInPress} style={styles.footerLink}>
           <Text style={styles.footerText}>
-            Already have an account? <Text style={styles.footerLinkBold}>Sign In</Text>
+            Already have an account? <Text style={styles.footerLinkBold}>Sign in</Text>
           </Text>
         </Pressable>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </ScreenScroll>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backBtn: {
-    minHeight: 44,
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backText: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
+  brandLogo: {
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
   },
   title: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.display,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
-    lineHeight: 20,
-  },
-  formCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    lineHeight: lineHeights.body,
   },
   checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.xs,
-    minHeight: 44,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: borderRadius.sm,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  checkboxChecked: {
-    backgroundColor: colors.teal,
-    borderColor: colors.teal,
-  },
-  checkmark: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  checkboxLabel: {
-    flex: 1,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.regular,
-    color: colors.textSecondary,
-  },
-  errorText: {
-    fontSize: fontSizes.body,
-    color: colors.danger,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   footerLink: {
     alignItems: 'center',
     paddingVertical: spacing.lg,
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
   },
   footerText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
   },
   footerLinkBold: {
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
 });
+}

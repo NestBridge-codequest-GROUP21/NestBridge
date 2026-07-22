@@ -2,6 +2,7 @@ import React from 'react';
 import TouristSiteDetailScreen from '../screens/tourist/TouristSiteDetailScreen';
 import RouteErrorState from '../components/RouteErrorState';
 import { useSite } from '../hooks/useContent';
+import { touristSiteFromId } from '../data/touristSitesMock';
 
 export interface SiteDetailRouteProps {
   siteKey: string;
@@ -15,12 +16,15 @@ export default function SiteDetailRoute({
   onFindGuidePress,
 }: SiteDetailRouteProps) {
   const siteApi = useSite(siteKey, !!siteKey);
+  // Tourist sites are platform catalog content — available to every account.
+  const mockSite = touristSiteFromId(siteKey);
 
-  if (siteApi.isLoading) {
+  if (siteApi.isLoading && !mockSite) {
     return <RouteErrorState isLoading message="" />;
   }
 
-  if (siteApi.error || !siteApi.data) {
+  const apiSite = siteApi.data;
+  if (!apiSite && !mockSite) {
     return (
       <RouteErrorState
         title="Site unavailable"
@@ -31,16 +35,19 @@ export default function SiteDetailRoute({
     );
   }
 
-  const site = siteApi.data;
+  const site = apiSite
+    ? {
+        name: apiSite.name,
+        city: apiSite.city,
+        description: apiSite.description,
+        openingHours: apiSite.openingHours ?? '',
+        admission: apiSite.admission ?? '',
+      }
+    : mockSite!;
+
   return (
     <TouristSiteDetailScreen
-      site={{
-        name: site.name,
-        city: site.city,
-        description: site.description,
-        openingHours: site.openingHours ?? '',
-        admission: site.admission ?? '',
-      }}
+      site={site}
       onBack={onBack}
       onFindGuidePress={onFindGuidePress}
     />

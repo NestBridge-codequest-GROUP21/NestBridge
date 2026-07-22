@@ -24,4 +24,18 @@ public class PaymentController {
                 "Payment initialized",
                 paystackService.initializePayment(id, userId)));
     }
+
+    /**
+     * Confirm Paystack payment after the guest returns from checkout.
+     * Never marks paid without a successful Paystack verify (or prior SUCCESS record).
+     */
+    @PostMapping("/{id}/payment/verify")
+    public ResponseEntity<ApiResponse<PaymentVerifyResponse>> verify(
+            Authentication authentication,
+            @PathVariable UUID id) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        PaymentVerifyResponse result = paystackService.verifyPaymentForGuest(id, userId);
+        String message = result.getMessage() != null ? result.getMessage() : "Payment checked.";
+        return ResponseEntity.ok(ApiResponse.success(message, result));
+    }
 }

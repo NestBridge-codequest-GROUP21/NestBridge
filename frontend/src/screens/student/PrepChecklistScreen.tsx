@@ -1,18 +1,31 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
 import ProgressBar from '../../components/ProgressBar';
+import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
+import EmptyState from '../../components/EmptyState';
+import PrimaryButton from '../../components/PrimaryButton';
+import SectionHeader from '../../components/SectionHeader';
+import FocusAwareTextInput from '../../components/FocusAwareTextInput';
 import type { ChecklistTask } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  lineHeights,
+  iconSizes,
+  touchTarget,
+  controlHeights,
+  layout,
 } from '../../constants/theme';
+import { emptyStates } from '../../data/appCopy';
 
 export interface PrepChecklistScreenProps {
   greeting: string;
@@ -27,16 +40,18 @@ export interface PrepChecklistScreenProps {
 }
 
 function ProgressRing({ completed, total }: { completed: number; total: number }) {
+  const styles = useThemedStyles(createStyles);
+
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
-    <View style={styles.progressRing}>
+    <Card style={styles.progressRing} padding="md">
       <Text style={styles.progressCount}>
         {completed}/{total}
       </Text>
-      <Text style={styles.progressLabel}>Completed</Text>
+      <Text style={styles.progressLabel}>Done</Text>
       <Text style={styles.progressPercent}>{percent}%</Text>
-    </View>
+    </Card>
   );
 }
 
@@ -51,6 +66,10 @@ export default function PrepChecklistScreen({
   onDeleteTask,
   onBack,
 }: PrepChecklistScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+  const empty = emptyStates.prepChecklist;
+
   const [customTasks, setCustomTasks] = useState<ChecklistTask[]>([]);
   const [newItemLabel, setNewItemLabel] = useState('');
 
@@ -89,7 +108,7 @@ export default function PrepChecklistScreen({
     onToggle: (id: string) => void,
     onDelete: (id: string) => void,
   ) => (
-    <View key={task.id} style={styles.taskRow}>
+    <Card key={task.id} style={styles.taskRow} padding="none">
       <Pressable
         style={styles.taskMain}
         onPress={() => onToggle(task.id)}
@@ -98,7 +117,9 @@ export default function PrepChecklistScreen({
         accessibilityLabel={task.label}
       >
         <View style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
-          {task.completed ? <Text style={styles.checkmark}>✓</Text> : null}
+          {task.completed ? (
+            <AppIcon name="checkmark" size={iconSizes.sm} color={colors.onPrimary} />
+          ) : null}
         </View>
         <Text
           style={[styles.taskLabel, task.completed && styles.taskLabelCompleted]}
@@ -109,13 +130,13 @@ export default function PrepChecklistScreen({
       <Pressable
         style={({ pressed }) => [styles.deleteButton, pressed && styles.deletePressed]}
         onPress={() => onDelete(task.id)}
-        hitSlop={8}
+        hitSlop={spacing.sm}
         accessibilityRole="button"
         accessibilityLabel={`Delete ${task.label}`}
       >
-        <Text style={styles.deleteIcon}>✕</Text>
+        <AppIcon name="close" size={iconSizes.md} color={colors.textTertiary} />
       </Pressable>
-    </View>
+    </Card>
   );
 
   return (
@@ -132,58 +153,70 @@ export default function PrepChecklistScreen({
 
       <ScreenScroll keyboardShouldPersistTaps="handled">
         <View style={styles.titleRow}>
-          <Text style={styles.screenTitle}>Prep & Packing Checklist</Text>
+          <View style={styles.titleTextWrap}>
+            <SectionHeader
+              title="Prep & packing"
+              subtitle="Get ready for your stay — adapters, documents, and local essentials."
+              style={styles.sectionHeader}
+            />
+          </View>
           <ProgressRing completed={completedCount} total={allTasks.length} />
         </View>
 
         <ProgressBar percent={percent} style={styles.progressBar} />
 
-        <View style={styles.taskList}>
-          {tasks.map((task) =>
-            renderTaskRow(
-              task,
-              (id) => onToggleTask?.(id),
-              (id) => onDeleteTask?.(id),
-            ),
-          )}
-          {customTasks.map((task) =>
-            renderTaskRow(task, handleToggleCustom, handleDeleteCustom),
-          )}
-        </View>
+        {allTasks.length === 0 ? (
+          <EmptyState
+            title={empty.title}
+            body={empty.body}
+            tip={empty.tip}
+            iconGlyph={empty.iconGlyph}
+            style={styles.emptyState}
+          />
+        ) : (
+          <View style={styles.taskList}>
+            {tasks.map((task) =>
+              renderTaskRow(
+                task,
+                (id) => onToggleTask?.(id),
+                (id) => onDeleteTask?.(id),
+              ),
+            )}
+            {customTasks.map((task) =>
+              renderTaskRow(task, handleToggleCustom, handleDeleteCustom),
+            )}
+          </View>
+        )}
 
-        <View style={styles.addCard}>
+        <Card style={styles.addCard} padding="md">
           <Text style={styles.addTitle}>Add your own item</Text>
           <View style={styles.addRow}>
-            <TextInput
+            <FocusAwareTextInput
               style={styles.addInput}
+              containerStyle={styles.addInputWrap}
               value={newItemLabel}
               onChangeText={setNewItemLabel}
-              placeholder="e.g. Travel adapter"
+              placeholder="e.g. UK plug adapter / MoMo float"
               placeholderTextColor={colors.textTertiary}
               onSubmitEditing={handleAddItem}
               returnKeyType="done"
               accessibilityLabel="New checklist item"
             />
-            <Pressable
-              style={[
-                styles.addButton,
-                newItemLabel.trim().length === 0 && styles.addButtonDisabled,
-              ]}
+            <PrimaryButton
+              label="Add"
               onPress={handleAddItem}
               disabled={newItemLabel.trim().length === 0}
-              accessibilityRole="button"
-              accessibilityLabel="Add item"
-            >
-              <Text style={styles.addButtonText}>Add</Text>
-            </Pressable>
+              style={styles.addButton}
+            />
           </View>
-        </View>
+        </Card>
       </ScreenScroll>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -192,44 +225,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
+    gap: spacing.md,
   },
-  screenTitle: {
+  titleTextWrap: {
     flex: 1,
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    paddingRight: spacing.md,
+  },
+  sectionHeader: {
+    marginBottom: 0,
   },
   progressRing: {
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    minWidth: 88,
+    minWidth: spacing.xxl + spacing.xl,
   },
   progressCount: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
+    lineHeight: lineHeights.subheading,
   },
   progressLabel: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginTop: spacing.xs,
+    lineHeight: lineHeights.caption,
   },
   progressPercent: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.success,
     marginTop: spacing.xs,
+    lineHeight: lineHeights.caption,
   },
   progressBar: {
-    marginBottom: spacing.lg,
+    marginBottom: layout.sectionGap,
+  },
+  emptyState: {
+    marginBottom: layout.sectionGap,
   },
   taskList: {
     gap: spacing.sm,
@@ -237,14 +273,10 @@ const styles = StyleSheet.create({
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
     paddingVertical: spacing.sm,
-    paddingLeft: spacing.md,
+    paddingLeft: layout.cardPadding,
     paddingRight: spacing.sm,
-    minHeight: 56,
+    minHeight: controlHeights.lg + spacing.sm,
     gap: spacing.xs,
   },
   taskMain: {
@@ -252,28 +284,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    minHeight: 44,
+    minHeight: touchTarget,
     paddingVertical: spacing.xs,
   },
   deleteButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: touchTarget,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },
   deletePressed: {
     opacity: 0.6,
   },
-  deleteIcon: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    color: colors.textTertiary,
-  },
   checkbox: {
-    width: 28,
-    height: 28,
+    width: iconSizes.xl,
+    height: iconSizes.xl,
     borderRadius: borderRadius.sm,
-    borderWidth: 2,
+    borderWidth: borderWidths.strong,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
@@ -282,28 +309,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.success,
     borderColor: colors.success,
   },
-  checkmark: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    color: colors.white,
-  },
   taskLabel: {
     flex: 1,
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
+    lineHeight: lineHeights.body,
   },
   taskLabelCompleted: {
     color: colors.textSecondary,
     textDecorationLine: 'line-through',
   },
   addCard: {
-    marginTop: spacing.lg,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
+    marginTop: layout.sectionGap,
   },
   addTitle: {
     fontFamily: fontFamilies.semibold,
@@ -319,10 +338,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
+  addInputWrap: {
+    flex: 1,
+  },
   addInput: {
     flex: 1,
     backgroundColor: colors.background,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
@@ -330,23 +352,15 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textPrimary,
-    minHeight: 48,
+    minHeight: controlHeights.md,
   },
   addButton: {
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.lg,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButtonDisabled: {
-    opacity: 0.5,
-  },
-  addButtonText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    minHeight: controlHeights.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    alignSelf: 'stretch',
   },
 });
+}
+
+

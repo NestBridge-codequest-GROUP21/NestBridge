@@ -1,14 +1,18 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import AppIcon from './AppIcon';
+import SectionHeader from './SectionHeader';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  iconSizes,
+  touchTarget,
+  layout,
+  lineHeights,
 } from '../constants/theme';
 
 export interface QuickActionItem {
@@ -28,9 +32,16 @@ export default function QuickActionsGrid({
   actions,
   onActionPress,
 }: QuickActionsGridProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+  if (actions.length === 0) {
+    return null;
+  }
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <SectionHeader title={title} />
       <View style={styles.grid}>
         {actions.map((action) => (
           <Pressable
@@ -48,11 +59,15 @@ export default function QuickActionsGrid({
             >
               <AppIcon
                 glyph={action.icon}
-                size={26}
-                color={action.id === 'sos' ? colors.white : colors.teal}
+                size={iconSizes.xl}
+                color={
+                  action.id === 'sos' ? colors.white : colors.onAccent
+                }
               />
             </View>
-            <Text style={styles.label}>{action.label}</Text>
+            <Text style={styles.label} numberOfLines={2}>
+              {action.label}
+            </Text>
           </Pressable>
         ))}
       </View>
@@ -60,16 +75,10 @@ export default function QuickActionsGrid({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   section: {
     marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
   },
   grid: {
     flexDirection: 'row',
@@ -82,14 +91,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xs,
     marginBottom: spacing.sm,
-    minHeight: 88,
+    minHeight: touchTarget * 2,
   },
   pressed: {
     opacity: 0.94,
   },
   iconWrap: {
-    width: 56,
-    height: 56,
+    width: layout.iconTileSize,
+    height: layout.iconTileSize,
     borderRadius: borderRadius.lg,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -97,13 +106,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   sosIconWrap: {
-    backgroundColor: colors.danger,
+    backgroundColor: colors.sos,
   },
   label: {
-    fontFamily: fontFamilies.semibold,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.textSecondary,
+    fontWeight: fontWeights.regular,
+    lineHeight: lineHeights.caption,
+    color: colors.textPrimary,
     textAlign: 'center',
+    width: '100%',
   },
 });
+}
+

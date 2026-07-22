@@ -34,4 +34,5 @@ public class HostProfileDto {
     private Map<String, Object> availabilityCalendar;
     private Integer matchPercentage;
     private List<String> matchReasons;
+    private com.nestbridge.common.ProviderVerificationDto verification;
 }

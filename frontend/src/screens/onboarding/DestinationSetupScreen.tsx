@@ -1,5 +1,6 @@
+import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker, {
@@ -8,15 +9,35 @@ import DateTimePicker, {
 import OnboardingProgress from '../../components/OnboardingProgress';
 import SelectField from '../../components/SelectField';
 import PrimaryButton from '../../components/PrimaryButton';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import Card from '../../components/Card';
+import ScreenScroll from '../../components/ScreenScroll';
+import FocusAwareTextInput from '../../components/FocusAwareTextInput';
+import {
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  borderWidths,
+  lineHeights,
+  layout,
+  controlHeights,
+  touchTarget,
+} from '../../constants/theme';
 import { isLikelyValidPlaceName } from '../../utils/textValidation';
 import { validationCopy } from '../../data/appCopy';
 import {
+  CITY_OTHER_OPTION,
   destinationCityOptions,
+  destinationCityOptionsWithOther,
+  isCityOtherOption,
+  isUniversityValidForCity,
   universityOptionsForCity,
 } from '../../data/ghanaReference';
 
 const DESTINATION_OPTIONS = destinationCityOptions();
+const DESTINATION_OPTIONS_WITH_OTHER = destinationCityOptionsWithOther();
 
 function parseDateValue(value: string): Date | null {
   const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -50,6 +71,8 @@ interface DatePickerFieldProps {
 }
 
 function DatePickerField({ label, value, placeholder, onChange }: DatePickerFieldProps) {
+  const styles = useThemedStyles(createStyles);
+
   const [show, setShow] = useState(false);
   const parsed = parseDateValue(value);
   const initialDate = parsed ?? new Date();
@@ -153,17 +176,32 @@ export default function DestinationSetupScreen({
   onContinue,
   onBack,
 }: DestinationSetupScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { scheme, colors } = useTheme();
+
   const insets = useSafeAreaInsets();
   const [destinationError, setDestinationError] = useState<'required' | 'gibberish' | null>(
     null,
+  );
+  const [customCityMode, setCustomCityMode] = useState(
+    () => city.trim().length > 0 && !DESTINATION_OPTIONS.includes(city),
   );
   const universityOptions = useMemo(
     () => universityOptionsForCity(city),
     [city],
   );
+  const selectCityValue = customCityMode
+    ? CITY_OTHER_OPTION
+    : DESTINATION_OPTIONS.includes(city)
+      ? city
+      : '';
 
   const handleContinue = () => {
-    if (city.trim().length === 0) {
+    if (customCityMode && city.trim().length === 0) {
+      setDestinationError('required');
+      return;
+    }
+    if (city.trim().length === 0 || isCityOtherOption(city)) {
       setDestinationError('required');
       return;
     }
@@ -173,12 +211,39 @@ export default function DestinationSetupScreen({
       return;
     }
 
+    // Drop stale campus selections that belong to another destination.
+    if (university && !isUniversityValidForCity(university, city)) {
+      onUniversityChange?.('');
+    }
+
     setDestinationError(null);
     onContinue?.();
   };
 
-  const handleCityChange = (value: string) => {
+  const handleCitySelect = (value: string) => {
+    if (isCityOtherOption(value)) {
+      setCustomCityMode(true);
+      onCityChange?.('');
+      if (university) {
+        onUniversityChange?.('');
+      }
+      return;
+    }
+    setCustomCityMode(false);
     onCityChange?.(value);
+    if (university && !isUniversityValidForCity(university, value)) {
+      onUniversityChange?.('');
+    }
+    if (destinationError && isLikelyValidPlaceName(value)) {
+      setDestinationError(null);
+    }
+  };
+
+  const handleCustomCityChange = (value: string) => {
+    onCityChange?.(value);
+    if (university && !isUniversityValidForCity(university, value)) {
+      onUniversityChange?.('');
+    }
     if (destinationError) {
       if (value.trim().length === 0) {
         return;
@@ -191,21 +256,15 @@ export default function DestinationSetupScreen({
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
-      <ScrollView
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg },
+          { paddingTop: insets.top + spacing.lg },
         ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
       >
-        {onBack && (
-          <Pressable onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Back</Text>
-          </Pressable>
-        )}
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
         <OnboardingProgress
           currentStep={currentStep}
@@ -216,16 +275,33 @@ export default function DestinationSetupScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
 
-        <View style={styles.formCard}>
+        <Card style={styles.formCard}>
           <SelectField
-            label="Destination"
-            value={city}
-            placeholder="Select a city"
-            options={DESTINATION_OPTIONS}
-            onSelect={handleCityChange}
+            label="Destination city"
+            value={selectCityValue}
+            placeholder="Select a city in Ghana"
+            options={DESTINATION_OPTIONS_WITH_OTHER}
+            onSelect={handleCitySelect}
           />
+          {customCityMode ? (
+            <View style={styles.customCityWrap}>
+              <Text style={styles.customCityLabel}>Your town or area</Text>
+              <FocusAwareTextInput
+                style={styles.customCityInput}
+                value={city}
+                placeholder="e.g. Elmina, Tarkwa, Hohoe"
+                placeholderTextColor={colors.textTertiary}
+                onChangeText={handleCustomCityChange}
+                accessibilityLabel="Type your town or area"
+              />
+            </View>
+          ) : null}
           {destinationError === 'required' && (
-            <Text style={styles.fieldError}>This field is required</Text>
+            <Text style={styles.fieldError}>
+              {customCityMode
+                ? 'Enter your town or area to continue'
+                : 'Choose a destination city to continue'}
+            </Text>
           )}
           {destinationError === 'gibberish' && (
             <Text style={styles.fieldError}>{validationCopy.placeInvalid}</Text>
@@ -233,7 +309,7 @@ export default function DestinationSetupScreen({
           <SelectField
             label="University or area"
             value={university}
-            placeholder="Select a university or area"
+            placeholder="Select a campus or neighbourhood"
             options={universityOptions}
             onSelect={onUniversityChange}
           />
@@ -255,56 +331,72 @@ export default function DestinationSetupScreen({
               />
             </View>
           </View>
-        </View>
+        </Card>
 
         <PrimaryButton label="Continue" onPress={handleContinue} />
-      </ScrollView>
+      </ScreenScroll>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows, overlays }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backBtn: {
-    minHeight: 44,
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backText: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
   title: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
+    lineHeight: lineHeights.display,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
   },
-  formCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+  customCityWrap: {
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
   },
-  fieldError: {
+  customCityLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  customCityInput: {
+    minHeight: controlHeights.md,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textPrimary,
+    backgroundColor: colors.surface,
+  },
+  formCard: {
+    marginBottom: spacing.lg,
+  },
+  fieldError: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.danger,
     marginTop: -spacing.sm,
     marginBottom: spacing.sm,
@@ -320,6 +412,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   fieldLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
@@ -329,15 +422,16 @@ const styles = StyleSheet.create({
   },
   dateField: {
     justifyContent: 'center',
-    backgroundColor: colors.white,
-    borderWidth: 1,
+    backgroundColor: colors.surface,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md - 2,
-    minHeight: 48,
+    minHeight: controlHeights.md,
   },
   dateText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textPrimary,
@@ -347,26 +441,30 @@ const styles = StyleSheet.create({
   },
   pickerBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: overlays.scrim,
     justifyContent: 'flex-end',
   },
   pickerSheet: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: borderRadius.lg,
     borderTopRightRadius: borderRadius.lg,
     padding: spacing.md,
+    ...shadows.raised,
   },
   pickerDoneBtn: {
     alignSelf: 'flex-end',
-    minHeight: 44,
-    minWidth: 44,
+    minHeight: touchTarget,
+    minWidth: touchTarget,
     paddingHorizontal: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pickerDoneText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
 });
+}
+

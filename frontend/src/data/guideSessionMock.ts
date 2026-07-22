@@ -5,6 +5,7 @@ import type {
   SessionPriceBreakdown,
 } from '../types/booking';
 import { FLEXIBLE_POLICY } from './bookingMock';
+import { guideVerification, EMPTY_VERIFICATION } from '../types/verification';
 
 export { FLEXIBLE_POLICY };
 
@@ -18,10 +19,11 @@ export const suggestedGuidesMock: GuideProfileSummary[] = [
     pricePerSession: 120,
     sessionDurationHours: 3,
     currency: 'GHS',
-    serviceTypes: ['City tour', 'Food tour'],
+    serviceTypes: ['City tour', 'Food tour', 'Market walk'],
     languages: ['English', 'Twi'],
     cancellationPolicy: FLEXIBLE_POLICY,
     icon: '🗺️',
+    verification: guideVerification(),
   },
   {
     id: 'guide-2',
@@ -32,10 +34,11 @@ export const suggestedGuidesMock: GuideProfileSummary[] = [
     pricePerSession: 95,
     sessionDurationHours: 4,
     currency: 'GHS',
-    serviceTypes: ['Cultural orientation', 'University walk'],
+    serviceTypes: ['Cultural orientation', 'University walk', 'Palace tour'],
     languages: ['English', 'French'],
     cancellationPolicy: FLEXIBLE_POLICY,
     icon: '🏛️',
+    verification: guideVerification({ experienceVerified: false }),
   },
   {
     id: 'guide-3',
@@ -46,10 +49,41 @@ export const suggestedGuidesMock: GuideProfileSummary[] = [
     pricePerSession: 150,
     sessionDurationHours: 2.5,
     currency: 'GHS',
-    serviceTypes: ['Airport pickup', 'Language exchange'],
+    serviceTypes: ['Airport pickup', 'Language exchange', 'City orientation'],
     languages: ['English', 'Hausa'],
     cancellationPolicy: FLEXIBLE_POLICY,
     icon: '✈️',
+    verification: { ...EMPTY_VERIFICATION },
+  },
+  {
+    id: 'guide-4',
+    name: 'Efua Mensah',
+    initials: 'EM',
+    location: 'Cape Coast — Castle & Kakum',
+    matchPercentage: 94,
+    pricePerSession: 130,
+    sessionDurationHours: 4,
+    currency: 'GHS',
+    serviceTypes: ['Heritage tour', 'Castle tour', 'Nature walk'],
+    languages: ['English', 'Fante'],
+    cancellationPolicy: FLEXIBLE_POLICY,
+    icon: '🏰',
+    verification: guideVerification(),
+  },
+  {
+    id: 'guide-5',
+    name: 'Abdul Razak',
+    initials: 'AR',
+    location: 'Tamale — Mole & Damongo corridor',
+    matchPercentage: 91,
+    pricePerSession: 140,
+    sessionDurationHours: 4,
+    currency: 'GHS',
+    serviceTypes: ['Wildlife safari', 'Cultural orientation', 'Food tour'],
+    languages: ['English', 'Dagbani'],
+    cancellationPolicy: FLEXIBLE_POLICY,
+    icon: '🐘',
+    verification: guideVerification(),
   },
 ];
 
@@ -237,10 +271,63 @@ export const touristBookingsMock: BookingListItem[] = [
   },
 ];
 
-export function guideSummaryFromId(guideId: string): GuideProfileSummary {
-  return (
-    suggestedGuidesMock.find((g) => g.id === guideId) ?? suggestedGuidesMock[0]
-  );
+export function guideSummaryFromId(guideId: string): GuideProfileSummary | null {
+  return suggestedGuidesMock.find((g) => g.id === guideId) ?? null;
+}
+
+/**
+ * Guides related to a tourist attraction — location + specialty keywords.
+ * Never returns Cape Coast guides for Makola (Accra), etc.
+ */
+export function guidesForAttraction(
+  guides: GuideProfileSummary[],
+  siteId: string | undefined,
+  siteCity: string | undefined,
+  guideKeywords: readonly string[] = [],
+): GuideProfileSummary[] {
+  if (!siteId && !siteCity) {
+    return guides;
+  }
+
+  const cityToken = (siteCity ?? '').toLowerCase().split(/[,—-]/)[0]?.trim() ?? '';
+  const keywords = guideKeywords.map((k) => k.toLowerCase());
+
+  const scored = guides
+    .map((guide) => {
+      const haystack = [
+        guide.location,
+        ...guide.serviceTypes,
+        guide.name,
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      let score = 0;
+      if (cityToken && haystack.includes(cityToken)) {
+        score += 3;
+      }
+      for (const keyword of keywords) {
+        if (keyword && haystack.includes(keyword)) {
+          score += 1;
+        }
+      }
+      return { guide, score };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (scored.length > 0) {
+    return scored.map((entry) => entry.guide);
+  }
+
+  // Soft fallback: same city only (never unrelated destinations).
+  if (cityToken) {
+    return guides.filter((guide) =>
+      guide.location.toLowerCase().includes(cityToken),
+    );
+  }
+
+  return [];
 }
 
 export function computeSessionPrice(

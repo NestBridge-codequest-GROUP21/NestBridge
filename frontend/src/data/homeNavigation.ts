@@ -2,13 +2,20 @@ import type { TabBarItem } from '../components/AppTabBar';
 import type { QuickActionItem } from '../components/QuickActionsGrid';
 import type { PrimaryIntent } from '../types/accountProfile';
 
-export type HomeRole = PrimaryIntent | 'BROWSE';
+export type HomeRole = PrimaryIntent | 'BROWSE' | 'STAFF';
 
 export const SEEKER_TAB_ITEMS: TabBarItem[] = [
   { id: 'home', label: 'Home', icon: 'home-outline' },
-  { id: 'search', label: 'Search', icon: 'search-outline' },
+  { id: 'explore', label: 'Explore', icon: 'compass-outline' },
   { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
+];
+
+export const STAFF_TAB_ITEMS: TabBarItem[] = [
+  { id: 'home', label: 'Ops', icon: 'grid-outline' },
+  { id: 'users', label: 'Users', icon: 'people-outline' },
+  { id: 'moderation', label: 'Moderation', icon: 'shield-checkmark-outline' },
+  { id: 'preview', label: 'Preview', icon: 'eye-outline' },
 ];
 
 export const HOST_TAB_ITEMS: TabBarItem[] = [
@@ -25,33 +32,33 @@ export const GUIDE_TAB_ITEMS: TabBarItem[] = [
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
 ];
 
-export const STUDENT_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'checklist', label: 'Checklist', icon: '✅' },
-  { id: 'cultural-tips', label: 'Local tips', icon: '👋' },
-  { id: 'transport', label: 'Transport', icon: '🚌' },
-  { id: 'sos', label: 'SOS', icon: '🆘' },
-];
+/**
+ * Student / tourist home quick actions: only keep items that are NOT already
+ * in Explore. Discovery (hosts, stays, attractions, tips) lives on Explore,
+ * so seeker home grids stay empty.
+ */
 
-export const TOURIST_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'book-guide', label: 'Book guide', icon: '🗺️' },
-  { id: 'explore-stays', label: 'Explore stays', icon: '🏡' },
-  { id: 'offline-map', label: 'Offline map', icon: '📍' },
-  { id: 'sos', label: 'SOS', icon: '🆘' },
-];
+export const TOURIST_QUICK_ACTIONS: QuickActionItem[] = [];
 
+/** Hosts/guides have no Explore tab — quick action is the entry. */
 export const HOST_QUICK_ACTIONS: QuickActionItem[] = [
   { id: 'listings', label: 'Listings', icon: '🏠' },
-  { id: 'earnings', label: 'Earnings', icon: '💰' },
   { id: 'calendar', label: 'Calendar', icon: '📅' },
+  { id: 'earnings', label: 'Earnings', icon: '💰' },
+  { id: 'explore', label: 'Explore', icon: '🧭' },
 ];
 
 export const GUIDE_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'calendar', label: 'Calendar', icon: '📅' },
+  { id: 'calendar', label: 'Availability', icon: '📅' },
   { id: 'tour-types', label: 'Tour types', icon: '🎯' },
+  { id: 'earnings', label: 'Earnings', icon: '💰' },
+  { id: 'explore', label: 'Explore', icon: '🧭' },
 ];
 
 export function getTabBarForRole(role: HomeRole): TabBarItem[] {
   switch (role) {
+    case 'STAFF':
+      return STAFF_TAB_ITEMS;
     case 'HOST':
       return HOST_TAB_ITEMS;
     case 'GUIDE':
@@ -67,16 +74,15 @@ export function getTabBarForRole(role: HomeRole): TabBarItem[] {
 export function getQuickActionsForRole(role: HomeRole): QuickActionItem[] {
   switch (role) {
     case 'STUDENT':
-      return STUDENT_QUICK_ACTIONS;
     case 'TOURIST':
     case 'BROWSE':
-      return TOURIST_QUICK_ACTIONS;
+      return [];
     case 'HOST':
       return HOST_QUICK_ACTIONS;
     case 'GUIDE':
       return GUIDE_QUICK_ACTIONS;
     default:
-      return STUDENT_QUICK_ACTIONS;
+      return [];
   }
 }
 
@@ -88,4 +94,15 @@ export function homeRoleFromIntent(
   if (intent === 'TOURIST') return 'TOURIST';
   if (intent === 'STUDENT') return 'STUDENT';
   return 'BROWSE';
+}
+
+/** Effective tab role for staff shell vs consumer preview. */
+export function homeRoleForSession(
+  isStaffShell: boolean,
+  previewRole: PrimaryIntent | null | undefined,
+  intent: PrimaryIntent | null | undefined,
+): HomeRole {
+  if (isStaffShell) return 'STAFF';
+  if (previewRole) return homeRoleFromIntent(previewRole);
+  return homeRoleFromIntent(intent);
 }

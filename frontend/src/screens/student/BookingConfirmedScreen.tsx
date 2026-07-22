@@ -1,17 +1,25 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
+import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import {
-  colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   motion,
+  lineHeights,
+  layout,
+  iconSizes,
+  avatarSizes,
 } from '../../constants/theme';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
 
@@ -32,6 +40,10 @@ export default function BookingConfirmedScreen({
   currency,
   onViewBookings,
 }: BookingConfirmedScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const entrance = useRef(new Animated.Value(0)).current;
 
@@ -56,7 +68,7 @@ export default function BookingConfirmedScreen({
 
   return (
     <LinearGradient
-      colors={[...gradients.header]}
+      colors={gradients.header}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={[
@@ -79,7 +91,7 @@ export default function BookingConfirmedScreen({
             },
           ]}
         >
-          <Text style={styles.checkIcon}>✓</Text>
+          <AppIcon name="checkmark" size={iconSizes.xl} color={colors.onPrimary} />
         </Animated.View>
 
         <Animated.View
@@ -92,11 +104,11 @@ export default function BookingConfirmedScreen({
         >
           <Text style={styles.title}>You're all booked!</Text>
           <Text style={styles.subtitle}>
-            Your stay with {hostName} is confirmed. We've sent the details to your
-            host family.
+            Your stay with {hostName} is confirmed. We've shared the details with
+            your host family so they can welcome you.
           </Text>
 
-          <View style={styles.summaryCard}>
+          <Card padding="lg" elevation="card" style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Host</Text>
               <Text style={styles.summaryValue}>{hostName}</Text>
@@ -115,7 +127,7 @@ export default function BookingConfirmedScreen({
                 {formatCurrency(totalAmount, currency)}
               </Text>
             </View>
-          </View>
+          </Card>
         </Animated.View>
       </View>
 
@@ -124,10 +136,11 @@ export default function BookingConfirmedScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     justifyContent: 'space-between',
   },
   content: {
@@ -136,43 +149,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconCircle: {
-    width: 88,
-    height: 88,
+    width: avatarSizes.xl + spacing.md,
+    height: avatarSizes.xl + spacing.md,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.tealBright,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
-    borderWidth: 4,
+    borderWidth: spacing.xs,
     borderColor: colors.white,
-  },
-  checkIcon: {
-    fontSize: 40,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    ...shadows.raised,
   },
   title: {
-    fontSize: fontSizes.display + 4,
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     textAlign: 'center',
     marginBottom: spacing.md,
-    lineHeight: 36,
+    lineHeight: lineHeights.display,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.subheading,
-    color: colors.white,
+    fontWeight: fontWeights.regular,
+    color: colors.onPrimary,
     opacity: 0.92,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: lineHeights.subheading,
     marginBottom: spacing.xl,
     paddingHorizontal: spacing.sm,
   },
   summaryCard: {
     width: '100%',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -181,10 +190,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   summaryLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
   summaryValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
@@ -193,11 +205,14 @@ const styles = StyleSheet.create({
     marginLeft: spacing.md,
   },
   summaryHighlight: {
-    color: colors.tealDeep,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    color: colors.onAccent,
+    fontWeight: fontWeights.semibold,
   },
   summaryDivider: {
-    height: 1,
+    height: borderWidths.hairline,
     backgroundColor: colors.border,
   },
 });
+}
+

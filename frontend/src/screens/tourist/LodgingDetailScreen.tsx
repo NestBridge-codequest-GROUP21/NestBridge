@@ -1,25 +1,36 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
   Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import Avatar from '../../components/Avatar';
+import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
+import ScreenScroll from '../../components/ScreenScroll';
 import {
-  colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
+  lineHeights,
+  layout,
+  iconSizes,
+  touchTarget,
 } from '../../constants/theme';
 import type { LodgingListing } from '../../types/lodging';
 import { lodgingCategoryLabel } from '../../data/lodgingDirectoryMock';
@@ -37,6 +48,10 @@ export default function LodgingDetailScreen({
   onSaveContact,
   onBack,
 }: LodgingDetailScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   const handleCall = () => {
@@ -62,69 +77,66 @@ export default function LodgingDetailScreen({
       <StatusBar style="light" />
 
       <LinearGradient
-        colors={[...gradients.header]}
+        colors={gradients.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + spacing.sm }]}
       >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
-        </Pressable>
+        <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backButton} />
 
         <View style={styles.heroContent}>
-          <View style={styles.heroAvatar}>
-            <Text style={styles.heroInitials}>
-              {listing.name.slice(0, 2).toUpperCase()}
-            </Text>
+          <View style={styles.heroAvatarWrap}>
+            <Avatar initials={listing.name.slice(0, 2)} size="xl" />
           </View>
           <Text style={styles.name}>{listing.name}</Text>
           <Text style={styles.meta}>
             {lodgingCategoryLabel(listing.category)} · {listing.area}, {listing.city}
           </Text>
           <View style={styles.ratingRow}>
-            <AppIcon name="star" size={fontSizes.body} color={colors.gold} />
+            <AppIcon name="star" size={iconSizes.md} color={colors.gold} />
             <Text style={styles.rating}>{listing.rating}</Text>
             <Text style={styles.price}>{listing.priceHint}</Text>
           </View>
         </View>
       </LinearGradient>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 200 },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <ScreenScroll
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + layout.scrollBottomInsetWithSos,
+        }}
       >
-        <View style={styles.disclaimer}>
-          <Text style={styles.disclaimerText}>
-            Booking happens on the provider site or by phone — not inside NestBridge.
-          </Text>
-        </View>
+        <InlineBanner
+          tone="info"
+          message="Book on the provider’s site or by phone — not inside NestBridge."
+        />
 
-        <Text style={styles.sectionTitle}>About</Text>
-        <Text style={styles.description}>{listing.description}</Text>
+        <Card padding="lg" elevation="card" style={styles.detailCard}>
+          <SectionHeader title="About" style={styles.aboutHeader} />
+          <Text style={styles.description}>{listing.description}</Text>
 
-        {listing.phone ? (
-          <View style={styles.contactRow}>
-            <Text style={styles.contactLabel}>Phone</Text>
-            <Text style={styles.contactValue}>{listing.phone}</Text>
-          </View>
-        ) : null}
-
-        {listing.email ? (
-          <View style={styles.contactRow}>
-            <Text style={styles.contactLabel}>Email</Text>
-            <Text style={styles.contactValue}>{listing.email}</Text>
-          </View>
-        ) : null}
-      </ScrollView>
+          {listing.phone || listing.email ? (
+            <View style={styles.contactBlock}>
+              {listing.phone ? (
+                <View style={styles.contactRow}>
+                  <Text style={styles.contactLabel}>Phone</Text>
+                  <Text style={styles.contactValue}>{listing.phone}</Text>
+                </View>
+              ) : null}
+              {listing.email ? (
+                <View
+                  style={[
+                    styles.contactRow,
+                    listing.phone ? styles.contactRowBorder : null,
+                  ]}
+                >
+                  <Text style={styles.contactLabel}>Email</Text>
+                  <Text style={styles.contactValue}>{listing.email}</Text>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+        </Card>
+      </ScreenScroll>
 
       <View
         style={[
@@ -153,6 +165,11 @@ export default function LodgingDetailScreen({
           accessibilityRole="button"
           accessibilityLabel={isSaved ? 'Saved to contacts' : 'Save to My contacts'}
         >
+          <AppIcon
+            name={isSaved ? 'checkmark-circle' : 'bookmark-outline'}
+            size={iconSizes.md}
+            color={colors.teal}
+          />
           <Text style={styles.saveButtonText}>
             {isSaved ? 'Saved to My contacts' : 'Save to My contacts'}
           </Text>
@@ -162,56 +179,44 @@ export default function LodgingDetailScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   hero: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingBottom: spacing.xl,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: 'flex-start',
     marginBottom: spacing.md,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
   },
   heroContent: {
     alignItems: 'center',
   },
-  heroAvatar: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
+  heroAvatarWrap: {
     marginBottom: spacing.md,
-  },
-  heroInitials: {
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
+    ...shadows.card,
   },
   name: {
-    fontSize: fontSizes.display,
+    fontFamily: fontFamilies.bold,
+    fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    lineHeight: lineHeights.heading,
+    color: colors.onPrimary,
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   meta: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    lineHeight: lineHeights.body,
+    color: colors.onPrimary,
     opacity: 0.9,
     marginBottom: spacing.md,
+    textAlign: 'center',
   },
   ratingRow: {
     flexDirection: 'row',
@@ -219,64 +224,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   rating: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.gold,
   },
   price: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.92,
   },
-  scroll: {
-    flex: 1,
-    marginTop: -spacing.lg,
+  detailCard: {
+    marginBottom: spacing.md,
   },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-  },
-  disclaimer: {
-    backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  disclaimerText: {
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
+  aboutHeader: {
     marginBottom: spacing.sm,
   },
   description: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
-    lineHeight: 24,
-    marginBottom: spacing.lg,
+    lineHeight: lineHeights.body,
+  },
+  contactBlock: {
+    marginTop: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: borderWidths.hairline,
+    borderTopColor: colors.border,
   },
   contactRow: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
+    paddingVertical: spacing.sm,
+  },
+  contactRowBorder: {
+    borderTopWidth: borderWidths.hairline,
+    borderTopColor: colors.border,
   },
   contactLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
   },
   contactValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.body,
     color: colors.textPrimary,
   },
   footer: {
@@ -284,12 +279,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     gap: spacing.sm,
+    ...shadows.raised,
   },
   actionRow: {
     flexDirection: 'row',
@@ -299,12 +295,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   saveButton: {
-    minHeight: 44,
+    minHeight: touchTarget,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.sm,
     paddingVertical: spacing.sm,
   },
   saveButtonText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
@@ -313,3 +312,5 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
 });
+}
+

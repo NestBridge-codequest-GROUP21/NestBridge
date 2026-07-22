@@ -2,7 +2,7 @@ import React from 'react';
 import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
 import {
-  GHANA_CITY_OPTIONS,
+  GHANA_CITY_OPTIONS_WITH_OTHER,
   LANGUAGE_OPTIONS,
   QUIET_SOCIAL_LABELS,
   QuizPageDefinition,
@@ -85,7 +85,7 @@ const HOST_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'pricePerNight',
-      question: 'What is your price per night?',
+      question: 'What is your nightly rate?',
       type: 'number',
       placeholder: 'Amount in GHS',
       required: true,
@@ -108,16 +108,16 @@ const HOST_PAGES: QuizPageDefinition[] = [
   [
     {
       id: 'city',
-      question: 'Which city is your home in?',
+      question: 'Which Ghanaian city is your home in?',
       type: 'single-select',
-      options: GHANA_CITY_OPTIONS,
+      options: GHANA_CITY_OPTIONS_WITH_OTHER,
       required: true,
     },
     {
       id: 'address',
-      question: 'Street address or neighborhood?',
+      question: 'Street address or neighbourhood?',
       type: 'text',
-      placeholder: 'Street, neighborhood',
+      placeholder: 'Street, neighbourhood, or landmark',
       required: true,
     },
   ],
@@ -151,7 +151,7 @@ const HOST_PAGES: QuizPageDefinition[] = [
       id: 'additionalHostNotes',
       question: 'Anything else students should know about your home?',
       type: 'text',
-      placeholder: 'House quirks, routines, or welcome tips',
+      placeholder: 'House routines, quiet hours, or welcome tips',
       required: false,
     },
   ],

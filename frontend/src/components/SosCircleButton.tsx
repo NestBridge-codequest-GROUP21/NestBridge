@@ -1,7 +1,7 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { Text, StyleSheet, Pressable } from 'react-native';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -18,7 +18,10 @@ export interface SosCircleButtonProps {
  * Raised circular SOS control. Anchored inside the bottom tab bar (or a
  * stack-screen bottom bar) — never floats over scrollable content.
  */
-export default function SosCircleButton({ onPress }: SosCircleButtonProps) {
+export default function SosCircleButton({
+ onPress }: SosCircleButtonProps) {
+  const styles = useThemedStyles(createStyles);
+
   if (!onPress) {
     return null;
   }
@@ -35,21 +38,18 @@ export default function SosCircleButton({ onPress }: SosCircleButtonProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows, chrome }: AppTheme) {
+  return StyleSheet.create({
   button: {
     width: layout.sosButtonSize,
     height: layout.sosButtonSize,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.danger,
+    backgroundColor: colors.sos,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: spacing.xs,
-    borderColor: colors.white,
-    shadowColor: colors.navy,
-    shadowOpacity: 0.22,
-    shadowRadius: spacing.sm,
-    shadowOffset: { width: 0, height: spacing.xs },
-    elevation: 6,
+    borderWidth: chrome.sosBorderWidth,
+    borderColor: colors.sosBorder,
+    ...shadows.floating,
   },
   pressed: {
     opacity: 0.88,
@@ -58,7 +58,9 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     letterSpacing: 0.5,
   },
 });
+}
+

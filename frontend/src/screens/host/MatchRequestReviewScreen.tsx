@@ -1,24 +1,26 @@
+import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ScreenHeader from '../../components/ScreenHeader';
+import ScreenScroll from '../../components/ScreenScroll';
+import Avatar from '../../components/Avatar';
+import Card from '../../components/Card';
 import PrimaryButton from '../../components/PrimaryButton';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
 import SecondaryButton from '../../components/SecondaryButton';
+import SectionHeader from '../../components/SectionHeader';
+import StatusBadge from '../../components/StatusBadge';
 import {
-  colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
-  gradients,
+  borderWidths,
+  lineHeights,
+  layout,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
@@ -40,6 +42,8 @@ function CapacityDots({
   accepted: number;
   max: number;
 }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.dotsRow}>
       {Array.from({ length: max }).map((_, index) => {
@@ -64,6 +68,8 @@ export default function MatchRequestReviewScreen({
   onContinueSetup,
   onBack,
 }: MatchRequestReviewScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const insets = useSafeAreaInsets();
   const { capacity, priceBreakdown } = request;
   const slotsLabel = `${capacity.overlappingAccepted} of ${capacity.maxAllowed} guest slots used`;
@@ -72,64 +78,50 @@ export default function MatchRequestReviewScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.headerCompact]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-      >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Booking request</Text>
-        <Text style={styles.headerSubtitle}>Review before accepting</Text>
-      </LinearGradient>
+      <ScreenHeader
+        title="Booking request"
+        subtitle="Review before accepting"
+        onBack={onBack}
+        compact
+      />
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 160 },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <ScreenScroll
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + spacing.xxl * 3 + layout.cardPadding,
+        }}
       >
-        <View style={styles.studentHero}>
-          <View style={styles.studentAvatar}>
-            <Text style={styles.studentAvatarText}>{request.studentInitials}</Text>
-          </View>
+        <Card padding="lg" style={styles.studentHero}>
+          <Avatar initials={request.studentInitials} size="lg" style={styles.heroAvatar} />
           <Text style={styles.studentName}>{request.studentName}</Text>
           <Text style={styles.studentMeta}>
             {request.studentOrigin} · {request.studentUniversity}
           </Text>
-          <View style={styles.compatBadge}>
-            <Text style={styles.compatText}>{request.compatibilityScore}% compatible</Text>
-          </View>
-        </View>
+          <StatusBadge
+            label={`${request.compatibilityScore}% compatible`}
+            tone="info"
+          />
+        </Card>
 
         {request.message ? (
-          <View style={styles.messageCard}>
+          <Card padding="lg" elevation="none" style={styles.messageCard}>
             <Text style={styles.messageLabel}>Message from student</Text>
             <Text style={styles.messageText}>{request.message}</Text>
-          </View>
+          </Card>
         ) : null}
 
-        <Text style={styles.sectionLabel}>Requested dates</Text>
-        <View style={styles.datesCard}>
+        <SectionHeader title="Requested dates" />
+        <Card padding="lg" style={styles.sectionCard}>
           <Text style={styles.datesValue}>
             {formatBookingDate(request.checkIn)} – {formatBookingDate(request.checkOut)}
           </Text>
           <Text style={styles.datesPeriod}>{capacity.periodLabel}</Text>
-        </View>
+        </Card>
 
-        <Text style={styles.sectionLabel}>Your capacity</Text>
-        <View
+        <SectionHeader title="Your capacity" />
+        <Card
+          padding="lg"
           style={[
-            styles.capacityCard,
+            styles.sectionCard,
             !capacity.canAccept && styles.capacityCardWarning,
           ]}
         >
@@ -143,10 +135,10 @@ export default function MatchRequestReviewScreen({
               ? 'You can accept up to 2 overlapping stays so every guest gets enough attention.'
               : capacity.declineReason}
           </Text>
-        </View>
+        </Card>
 
-        <Text style={styles.sectionLabel}>Earnings summary</Text>
-        <View style={styles.earningsCard}>
+        <SectionHeader title="Earnings summary" />
+        <Card padding="lg" elevation="none" style={styles.earningsCard}>
           <View style={styles.earningsRow}>
             <Text style={styles.earningsLabel}>Guest pays</Text>
             <Text style={styles.earningsValue}>
@@ -163,8 +155,8 @@ export default function MatchRequestReviewScreen({
               )}
             </Text>
           </View>
-        </View>
-      </ScrollView>
+        </Card>
+      </ScreenScroll>
 
       <View
         style={[
@@ -191,147 +183,74 @@ export default function MatchRequestReviewScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
-  },
-  headerTitle: {
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    marginBottom: spacing.xs,
-  },
-  headerSubtitle: {
-    fontSize: fontSizes.body,
-    color: colors.white,
-    opacity: 0.88,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-  },
   studentHero: {
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.xl,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
-  studentAvatar: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
+  heroAvatar: {
     marginBottom: spacing.md,
   },
-  studentAvatarText: {
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
-  },
   studentName: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.heading,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   studentMeta: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.md,
-    lineHeight: 22,
-  },
-  compatBadge: {
-    backgroundColor: colors.teal,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.pill,
-  },
-  compatText: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    lineHeight: lineHeights.body,
   },
   messageCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   messageLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.caption,
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: spacing.sm,
   },
   messageText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
-    lineHeight: 24,
+    lineHeight: lineHeights.body,
     fontStyle: 'italic',
   },
-  sectionLabel: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: spacing.sm,
-  },
-  datesCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+  sectionCard: {
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   datesValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   datesPeriod: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-  },
-  capacityCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   capacityCardWarning: {
     borderColor: colors.warning,
@@ -343,8 +262,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   dot: {
-    width: 16,
-    height: 16,
+    width: spacing.md,
+    height: spacing.md,
     borderRadius: borderRadius.pill,
   },
   dotFilled: {
@@ -354,22 +273,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   capacityTitle: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   capacityHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   earningsCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    marginBottom: spacing.lg,
   },
   earningsRow: {
     flexDirection: 'row',
@@ -378,22 +298,26 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   earningsLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     flex: 1,
     paddingRight: spacing.md,
   },
   earningsValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
   earningsHighlight: {
-    color: colors.tealDeep,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    color: colors.onAccent,
+    fontWeight: fontWeights.semibold,
   },
   earningsDivider: {
-    height: 1,
+    height: borderWidths.hairline,
     backgroundColor: colors.border,
     opacity: 0.6,
   },
@@ -402,13 +326,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
   declineSpacing: {
     marginTop: spacing.sm,
   },
 });
+}
+

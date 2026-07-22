@@ -1,5 +1,6 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -7,7 +8,12 @@ import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import ProviderBookingCard, {
   ProviderBookingsEmptyBlock,
 } from '../../components/ProviderBookingCard';
-import { colors, fontFamilies, fontSizes, spacing } from '../../constants/theme';
+import InlineBanner from '../../components/InlineBanner';
+import SkeletonLoader from '../../components/SkeletonLoader';
+import {
+  spacing,
+} from '../../constants/theme';
+import type { EmptyStateContent } from '../../data/appCopy';
 import type { ProviderBookingItem } from '../../types/providerBooking';
 
 export interface HostBookingsTabScreenProps {
@@ -20,7 +26,8 @@ export interface HostBookingsTabScreenProps {
   onSosPress?: () => void;
   isLoading?: boolean;
   errorMessage?: string | null;
-  emptyState: { title: string; body: string; tip?: string };
+  emptyState: EmptyStateContent;
+  onEmptyPrimaryAction?: () => void;
   onBookingPress?: (bookingId: string) => void;
   onTabPress?: (tabId: string) => void;
 }
@@ -36,9 +43,12 @@ export default function HostBookingsTabScreen({
   isLoading = false,
   errorMessage,
   emptyState,
+  onEmptyPrimaryAction,
   onBookingPress,
   onTabPress,
 }: HostBookingsTabScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const subtitle =
     bookings.length === 1
       ? '1 confirmed guest stay'
@@ -55,25 +65,35 @@ export default function HostBookingsTabScreen({
         compact
       />
       <ScreenScroll withTabBar withSosDock={showSosDock}>
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <InlineBanner message={errorMessage} tone="error" />
+        ) : null}
         {isLoading ? (
-          <ActivityIndicator color={colors.teal} style={styles.loader} />
+          <View accessibilityRole="progressbar" accessibilityLabel="Loading bookings">
+            <SkeletonLoader lines={2} style={styles.skeleton} />
+            <SkeletonLoader lines={2} style={styles.skeleton} />
+          </View>
         ) : null}
         {!isLoading && bookings.length === 0 ? (
           <ProviderBookingsEmptyBlock
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
+            iconGlyph={emptyState.iconGlyph}
+            primaryActionLabel={emptyState.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : null}
-        {bookings.map((booking, index) => (
-          <ProviderBookingCard
-            key={booking.id}
-            booking={booking}
-            isLast={index === bookings.length - 1}
-            onPress={onBookingPress}
-          />
-        ))}
+        {!isLoading
+          ? bookings.map((booking, index) => (
+              <ProviderBookingCard
+                key={booking.id}
+                booking={booking}
+                isLast={index === bookings.length - 1}
+                onPress={onBookingPress}
+              />
+            ))
+          : null}
       </ScreenScroll>
       <AppTabBar
         items={tabBarItems}
@@ -86,18 +106,15 @@ export default function HostBookingsTabScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  loader: {
-    marginVertical: spacing.xl,
-  },
-  errorText: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.danger,
+  skeleton: {
     marginBottom: spacing.md,
   },
 });
+}
+

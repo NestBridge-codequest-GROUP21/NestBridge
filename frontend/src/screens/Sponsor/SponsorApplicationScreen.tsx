@@ -1,21 +1,24 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
-  Pressable,
   StyleSheet,
-  TextInput,
   Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { SponsorListing } from '../../data/sponsorsMock';
+import BackButton from '../../components/BackButton';
+import PrimaryButton from '../../components/PrimaryButton';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import FormTextField from '../../components/FormTextField';
+import ScreenScroll from '../../components/ScreenScroll';
+import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
+import type { SponsorListing } from '../../data/sponsorsMock';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -24,6 +27,8 @@ import {
   layout,
   lineHeights,
   gradients,
+  iconSizes,
+  avatarSizes,
 } from '../../constants/theme';
 
 export interface SponsorApplicationForm {
@@ -49,6 +54,10 @@ export default function SponsorApplicationScreen({
   onSubmit,
   onReturnToList,
 }: SponsorApplicationScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients, scheme } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -71,23 +80,26 @@ export default function SponsorApplicationScreen({
 
   if (submitted) {
     return (
-      <View style={styles.successContainer}>
-        <StatusBar style="dark" />
+      <View
+        style={[
+          styles.successContainer,
+          { paddingBottom: insets.bottom + spacing.xl },
+        ]}
+      >
+        <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
         <View style={styles.successIcon}>
-          <AppIcon name="checkmark-circle" size={56} color={colors.success} />
+          <AppIcon
+            name="checkmark-circle"
+            size={avatarSizes.lg + spacing.sm}
+            color={colors.success}
+          />
         </View>
         <Text style={styles.successTitle}>Application submitted</Text>
         <Text style={styles.successMessage}>
-          Your application to {sponsor.name} has been received. You will be contacted within 5–7 business days.
+          Your application to {sponsor.name} has been received. Expect a reply
+          within 5–7 business days.
         </Text>
-        <Pressable
-          style={({ pressed }) => [styles.doneBtn, pressed && styles.pressed]}
-          onPress={onReturnToList}
-          accessibilityRole="button"
-          accessibilityLabel="Back to sponsors"
-        >
-          <Text style={styles.doneBtnText}>Back to sponsors</Text>
-        </Pressable>
+        <PrimaryButton label="Back to sponsors" onPress={onReturnToList} />
       </View>
     );
   }
@@ -96,156 +108,130 @@ export default function SponsorApplicationScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <ScrollView
-        style={styles.container}
+      <ScreenScroll
         contentContainerStyle={{
-          paddingBottom: insets.bottom + spacing.xl * 3,
+          paddingBottom: insets.bottom + layout.scrollBottomInset,
+          paddingHorizontal: 0,
+          paddingTop: 0,
         }}
-        showsVerticalScrollIndicator={false}
       >
         <LinearGradient
-          colors={[...gradients.headerCompact]}
+          colors={gradients.headerCompact}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.header, { paddingTop: insets.top + spacing.md }]}
         >
-          <Pressable
-            style={styles.backBtn}
-            onPress={onBack}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
-          </Pressable>
+          <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backBtn} />
           <View style={styles.logoTile}>
-            <AppIcon glyph={sponsor.logo} size={28} color={colors.white} />
+            <AppIcon
+              glyph={sponsor.logo}
+              size={iconSizes.xl}
+              color={colors.onPrimary}
+            />
           </View>
           <Text style={styles.headerTitle}>Apply for sponsorship</Text>
           <Text style={styles.headerSubtitle}>{sponsor.name}</Text>
         </LinearGradient>
 
         <View style={styles.formContainer}>
-          <Text style={styles.sectionTitle}>Personal information</Text>
-
-          <Text style={styles.label}>Full name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your full name"
-            placeholderTextColor={colors.textTertiary}
-            value={fullName}
-            onChangeText={setFullName}
-            accessibilityLabel="Full name"
+          <InlineBanner
+            tone="info"
+            message="Share accurate university details — sponsors in Ghana review student ID and enrollment first."
           />
 
-          <Text style={styles.label}>Email address</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            placeholderTextColor={colors.textTertiary}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            accessibilityLabel="Email address"
-          />
+          <Card padding="lg" elevation="card" style={styles.formCard}>
+            <SectionHeader title="Personal information" style={styles.sectionHeader} />
 
-          <Text style={[styles.sectionTitle, styles.sectionGap]}>Academic information</Text>
+            <FormTextField
+              label="Full name"
+              value={fullName}
+              placeholder="Enter your full name"
+              onChangeText={setFullName}
+              autoCapitalize="words"
+            />
 
-          <Text style={styles.label}>University / institution</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. KNUST, University of Ghana"
-            placeholderTextColor={colors.textTertiary}
-            value={university}
-            onChangeText={setUniversity}
-            accessibilityLabel="University"
-          />
+            <FormTextField
+              label="Email address"
+              value={email}
+              placeholder="Enter your email"
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </Card>
 
-          <Text style={styles.label}>Student ID</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your student ID"
-            placeholderTextColor={colors.textTertiary}
-            value={studentId}
-            onChangeText={setStudentId}
-            accessibilityLabel="Student ID"
-          />
+          <Card padding="lg" elevation="card" style={styles.formCard}>
+            <SectionHeader title="Academic information" style={styles.sectionHeader} />
 
-          <Text style={styles.label}>GPA (optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g. 3.5"
-            placeholderTextColor={colors.textTertiary}
-            value={gpa}
-            onChangeText={setGpa}
-            keyboardType="decimal-pad"
-            accessibilityLabel="GPA"
-          />
+            <FormTextField
+              label="University / institution"
+              value={university}
+              placeholder="e.g. KNUST, University of Ghana"
+              onChangeText={setUniversity}
+            />
 
-          <Text style={[styles.sectionTitle, styles.sectionGap]}>Personal statement</Text>
-          <Text style={styles.hint}>
-            Tell the sponsor why you deserve this sponsorship (min. 100 words)
-          </Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Write your personal statement here..."
-            placeholderTextColor={colors.textTertiary}
-            value={statement}
-            onChangeText={setStatement}
-            multiline
-            numberOfLines={6}
-            textAlignVertical="top"
-            accessibilityLabel="Personal statement"
-          />
-          <Text style={styles.wordCount}>{wordCount} words</Text>
+            <FormTextField
+              label="Student ID"
+              value={studentId}
+              placeholder="Enter your student ID"
+              onChangeText={setStudentId}
+              autoCapitalize="characters"
+            />
 
-          <Pressable
-            style={({ pressed }) => [styles.submitBtn, pressed && styles.pressed]}
-            onPress={handleSubmit}
-            accessibilityRole="button"
-            accessibilityLabel="Submit application"
-          >
-            <Text style={styles.submitBtnText}>Submit application</Text>
-          </Pressable>
+            <FormTextField
+              label="GPA (optional)"
+              value={gpa}
+              placeholder="e.g. 3.5"
+              onChangeText={setGpa}
+              keyboardType="decimal-pad"
+            />
+          </Card>
 
-          <Text style={styles.disclaimer}>
-            By submitting, you confirm all information provided is accurate and complete. Demo submissions are stored locally only.
-          </Text>
+          <Card padding="lg" elevation="card" style={styles.formCard}>
+            <SectionHeader title="Personal statement" style={styles.sectionHeader} />
+            <FormTextField
+              label="Statement"
+              value={statement}
+              placeholder="Write your personal statement here…"
+              onChangeText={setStatement}
+              multiline
+              numberOfLines={6}
+              helperText="Tell the sponsor why this support matters for your move or studies (min. 100 words)"
+            />
+            <Text style={styles.wordCount}>{wordCount} words</Text>
+
+            <PrimaryButton label="Submit application" onPress={handleSubmit} />
+
+            <Text style={styles.disclaimer}>
+              By submitting, you confirm the information is accurate and complete.
+            </Text>
+          </Card>
         </View>
-      </ScrollView>
+      </ScreenScroll>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const LOGO_TILE = avatarSizes.lg + spacing.sm;
+
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  container: {
-    flex: 1,
-  },
   header: {
-    paddingBottom: spacing.lg + 4,
+    paddingBottom: spacing.lg,
     paddingHorizontal: layout.screenPaddingHorizontal,
     alignItems: 'center',
   },
   backBtn: {
     alignSelf: 'flex-start',
-    minHeight: 44,
-    minWidth: 44,
-    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  backText: {
-    fontFamily: fontFamilies.bold,
-    color: colors.white,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-  },
   logoTile: {
-    width: 56,
-    height: 56,
+    width: LOGO_TILE,
+    height: LOGO_TILE,
     borderRadius: borderRadius.lg,
     backgroundColor: colors.navyMid,
     alignItems: 'center',
@@ -253,97 +239,44 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   headerTitle: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.heading,
+    color: colors.onPrimary,
   },
   headerSubtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.tealBright,
     marginTop: spacing.xs,
   },
   formContainer: {
     padding: spacing.lg,
+    gap: spacing.md,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
+  formCard: {
+    marginBottom: spacing.xs,
   },
-  sectionGap: {
-    marginTop: spacing.lg,
-  },
-  label: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs + 2,
-  },
-  input: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md + 2,
-    paddingHorizontal: spacing.md,
-    minHeight: 44,
-    paddingVertical: spacing.sm + 2,
-    fontSize: fontSizes.body - 1,
-    fontFamily: fontFamilies.regular,
-    color: colors.textPrimary,
-    borderWidth: 1,
-    borderColor: colors.border,
+  sectionHeader: {
     marginBottom: spacing.md,
-  },
-  hint: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption - 1,
-    color: colors.textTertiary,
-    marginBottom: spacing.sm,
-  },
-  textArea: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.md + 2,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    fontSize: fontSizes.body - 1,
-    fontFamily: fontFamilies.regular,
-    color: colors.textPrimary,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 140,
-    marginBottom: spacing.xs + 2,
   },
   wordCount: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption - 1,
+    fontSize: fontSizes.caption,
     color: colors.textTertiary,
     textAlign: 'right',
     marginBottom: spacing.lg,
-  },
-  submitBtn: {
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.lg,
-    minHeight: 44,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  submitBtnText: {
-    fontFamily: fontFamilies.bold,
-    color: colors.white,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    marginTop: -spacing.sm,
   },
   disclaimer: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption - 1,
+    fontSize: fontSizes.caption,
     color: colors.textTertiary,
     textAlign: 'center',
-    lineHeight: lineHeights.caption + 2,
+    lineHeight: lineHeights.caption,
+    marginTop: spacing.md,
   },
   successContainer: {
     flex: 1,
@@ -353,40 +286,24 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   successIcon: {
-    fontSize: spacing.xl * 2 + spacing.sm,
     marginBottom: spacing.lg,
   },
   successTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display - 6,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.heading,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   successMessage: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body - 1,
+    fontSize: fontSizes.body,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: lineHeights.body,
     marginBottom: spacing.xl,
   },
-  doneBtn: {
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.lg,
-    minHeight: 44,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl + spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  doneBtnText: {
-    fontFamily: fontFamilies.bold,
-    color: colors.white,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-  },
-  pressed: {
-    opacity: 0.88,
-  },
 });
+}
+

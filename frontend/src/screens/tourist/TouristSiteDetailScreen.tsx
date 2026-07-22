@@ -1,21 +1,25 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ScreenScroll from '../../components/ScreenScroll';
+import BackButton from '../../components/BackButton';
 import PrimaryButton from '../../components/PrimaryButton';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import AppIcon from '../../components/AppIcon';
 import {
-  colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   lineHeights,
   layout,
+  iconSizes,
+  avatarSizes,
 } from '../../constants/theme';
 
 export interface TouristSiteDetail {
@@ -37,21 +41,34 @@ export default function TouristSiteDetailScreen({
   onFindGuidePress,
   onBack,
 }: TouristSiteDetailScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, scheme } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + spacing.xl * 4 },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <View style={[styles.topBar, { paddingTop: insets.top + spacing.xs }]}>
+        <BackButton onPress={onBack} />
+      </View>
+
+      <ScreenScroll
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + layout.scrollBottomInsetWithSos,
+        }}
       >
-        <View style={styles.imagePlaceholder} accessibilityLabel="Site photo" />
+        <View style={styles.imagePlaceholder} accessibilityLabel="Site photo">
+          <View style={styles.imageIconWrap}>
+            <AppIcon
+              name="library-outline"
+              size={iconSizes.xl}
+              color={colors.onAccent}
+            />
+          </View>
+        </View>
 
         <View style={styles.content}>
           <Text style={styles.name}>{site.name}</Text>
@@ -59,8 +76,8 @@ export default function TouristSiteDetailScreen({
 
           <Text style={styles.description}>{site.description}</Text>
 
-          <Text style={styles.sectionTitle}>Details</Text>
-          <View style={styles.detailsCard}>
+          <SectionHeader title="Visit details" />
+          <Card padding="md" elevation="card">
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Opening hours</Text>
               <Text style={styles.detailValue}>{site.openingHours}</Text>
@@ -70,9 +87,9 @@ export default function TouristSiteDetailScreen({
               <Text style={styles.detailLabel}>Admission</Text>
               <Text style={styles.detailValue}>{site.admission}</Text>
             </View>
-          </View>
+          </Card>
         </View>
-      </ScrollView>
+      </ScreenScroll>
 
       <View
         style={[
@@ -89,27 +106,40 @@ export default function TouristSiteDetailScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const ICON_TILE = avatarSizes.lg + spacing.md;
+
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
+  topBar: {
+    paddingHorizontal: spacing.sm,
+    backgroundColor: colors.background,
   },
   imagePlaceholder: {
     width: '100%',
     height: layout.carouselMinHeight + spacing.xl,
-    backgroundColor: colors.border,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageIconWrap: {
+    width: ICON_TILE,
+    height: ICON_TILE,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.card,
   },
   content: {
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
   },
   name: {
+    fontFamily: fontFamilies.bold,
     fontSize: fontSizes.display,
     fontWeight: fontWeights.bold,
     color: colors.textPrimary,
@@ -117,6 +147,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   city: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
@@ -124,41 +155,30 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   description: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     lineHeight: lineHeights.body,
     marginBottom: layout.sectionGap,
   },
-  sectionTitle: {
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    lineHeight: lineHeights.heading,
-    marginBottom: spacing.sm,
-  },
-  detailsCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-  },
   detailRow: {
     gap: spacing.xs,
   },
   detailLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textTertiary,
     lineHeight: lineHeights.caption,
   },
   detailValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     lineHeight: lineHeights.body,
   },
   detailDivider: {
-    height: 1,
+    height: borderWidths.hairline,
     backgroundColor: colors.border,
     marginVertical: spacing.md,
   },
@@ -167,10 +187,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
+    ...shadows.raised,
   },
 });
+}
+

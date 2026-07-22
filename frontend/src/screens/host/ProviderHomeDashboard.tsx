@@ -1,5 +1,6 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -13,23 +14,24 @@ import QuickActionsGrid, {
 import HomeStatsCarousel, {
   type HomeStatItem,
 } from '../../components/HomeStatsCarousel';
-import ExploreSectionCarousel from '../../components/ExploreSectionCarousel';
+import ExploreSectionList from '../../components/ExploreSectionList';
 import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
 import ReminderBanner from '../../components/ReminderBanner';
 import IncomingRequestCard from '../../components/IncomingRequestCard';
 import { IncomingRequestsEmptyBlock } from '../../components/IncomingRequestCard';
+import SectionHeader from '../../components/SectionHeader';
+import RecommendedForYou from '../../components/RecommendedForYou';
+import { emptyStates } from '../../data/appCopy';
 import type { IncomingRequestsEmptyState } from './IncomingRequestsScreen';
 import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
 import {
-  colors,
-  fontFamilies,
-  fontSizes,
-  fontWeights,
   spacing,
+  layout,
 } from '../../constants/theme';
 import type { IncomingBookingRequest } from '../../types/booking';
+import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
 
 export type { TabBarItem } from '../../components/AppTabBar';
 
@@ -47,8 +49,12 @@ export interface ProviderHomeDashboardProps {
   performanceTitle?: string;
   tourSuggestions?: ExploreSectionItem[];
   tourSuggestionsTitle?: string;
+  recommendationSections?: RecommendationSection[];
+  recommendationHeadline?: string;
+  recommendationCity?: string;
   requests: IncomingBookingRequest[];
   emptyState?: IncomingRequestsEmptyState;
+  onEmptyPrimaryAction?: () => void;
   recentActivity?: RecentActivityItem[];
   reminder?: string;
   tabBarItems: TabBarItem[];
@@ -61,6 +67,8 @@ export interface ProviderHomeDashboardProps {
   onRequestPress?: (requestId: string) => void;
   onSeeAllRequestsPress?: () => void;
   onTourSuggestionPress?: (sectionId: string) => void;
+  onRecommendationItemPress?: (item: RecommendationItem) => void;
+  onRecommendationsEmptyPress?: () => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
 }
@@ -79,8 +87,12 @@ export default function ProviderHomeDashboard({
   performanceTitle = 'Your listing performance',
   tourSuggestions = [],
   tourSuggestionsTitle = 'Suggested tour requests',
+  recommendationSections = [],
+  recommendationHeadline = 'Recommended for you',
+  recommendationCity,
   requests,
   emptyState,
+  onEmptyPrimaryAction,
   recentActivity = [],
   reminder,
   tabBarItems,
@@ -93,9 +105,13 @@ export default function ProviderHomeDashboard({
   onRequestPress,
   onSeeAllRequestsPress,
   onTourSuggestionPress,
+  onRecommendationItemPress,
+  onRecommendationsEmptyPress,
   onReminderPress,
   onTabPress,
 }: ProviderHomeDashboardProps) {
+  const styles = useThemedStyles(createStyles);
+
   const secondaryRequests = featuredCard ? requests.slice(1) : requests;
 
   return (
@@ -122,6 +138,9 @@ export default function ProviderHomeDashboard({
             title={emptyState.title}
             body={emptyState.body}
             tip={emptyState.tip}
+            iconGlyph={emptyState.iconGlyph}
+            primaryActionLabel={emptyState.primaryActionLabel}
+            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : null}
 
@@ -130,15 +149,25 @@ export default function ProviderHomeDashboard({
           onActionPress={onQuickActionPress}
         />
 
-        {providerRole === 'host' && performanceStats.length > 0 ? (
+        <RecommendedForYou
+          headline={recommendationHeadline}
+          city={recommendationCity}
+          sections={recommendationSections}
+          emptyState={emptyStates.recommendations}
+          onEmptyPrimaryAction={onRecommendationsEmptyPress}
+          onItemPress={onRecommendationItemPress}
+        />
+
+        {performanceStats.length > 0 ? (
           <HomeStatsCarousel title={performanceTitle} items={performanceStats} />
         ) : null}
 
         {providerRole === 'guide' && tourSuggestions.length > 0 ? (
-          <View style={styles.carouselWrap}>
-            <Text style={styles.sectionTitle}>{tourSuggestionsTitle}</Text>
-            <ExploreSectionCarousel
+          <View style={styles.sectionWrap}>
+            <SectionHeader title={tourSuggestionsTitle} />
+            <ExploreSectionList
               sections={tourSuggestions}
+              variant="grid"
               onSectionPress={onTourSuggestionPress}
             />
           </View>
@@ -146,17 +175,11 @@ export default function ProviderHomeDashboard({
 
         {secondaryRequests.length > 0 ? (
           <View style={styles.requestsSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitleInline}>More requests</Text>
-              <Pressable
-                onPress={onSeeAllRequestsPress}
-                hitSlop={12}
-                accessibilityRole="button"
-                accessibilityLabel="See all requests"
-              >
-                <Text style={styles.seeAll}>View all</Text>
-              </Pressable>
-            </View>
+            <SectionHeader
+              title="More requests"
+              actionLabel="View all"
+              onActionPress={onSeeAllRequestsPress}
+            />
             {secondaryRequests.map((request, index) => (
               <IncomingRequestCard
                 key={request.id}
@@ -186,41 +209,18 @@ export default function ProviderHomeDashboard({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  carouselWrap: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
+  sectionWrap: {
+    marginBottom: layout.sectionGap,
   },
   requestsSection: {
-    marginBottom: spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  sectionTitleInline: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-  },
-  seeAll: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
+    marginBottom: layout.sectionGap,
   },
 });
+}
+

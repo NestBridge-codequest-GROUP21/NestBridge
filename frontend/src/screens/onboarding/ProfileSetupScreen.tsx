@@ -1,12 +1,29 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OnboardingProgress from '../../components/OnboardingProgress';
 import FormTextField from '../../components/FormTextField';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import Card from '../../components/Card';
+import ScreenScroll from '../../components/ScreenScroll';
+import {
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  borderWidths,
+  lineHeights,
+  layout,
+  touchTarget,
+  avatarSizes,
+} from '../../constants/theme';
+
+const AVATAR_SIZE = avatarSizes.xl + spacing.lg;
 
 export interface ProfileSetupScreenProps {
   currentStep: number;
@@ -41,25 +58,22 @@ export default function ProfileSetupScreen({
   onSkip,
   onBack,
 }: ProfileSetupScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { scheme } = useTheme();
+
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
-      <ScrollView
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg },
+          { paddingTop: insets.top + spacing.lg },
         ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
       >
-        {onBack && (
-          <Pressable onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Back</Text>
-          </Pressable>
-        )}
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
         <OnboardingProgress
           currentStep={currentStep}
@@ -70,7 +84,12 @@ export default function ProfileSetupScreen({
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
 
-        <Pressable style={styles.avatarSection} onPress={onAddPhoto}>
+        <Pressable
+          style={styles.avatarSection}
+          onPress={onAddPhoto}
+          accessibilityRole="button"
+          accessibilityLabel={photoUri ? 'Change photo' : 'Add photo'}
+        >
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.avatar} />
           ) : (
@@ -79,10 +98,12 @@ export default function ProfileSetupScreen({
             </View>
           )}
           <Text style={styles.addPhoto}>{photoUri ? 'Change photo' : 'Add photo'}</Text>
-          <Text style={styles.addPhotoHint}>Optional — helps hosts recognize you</Text>
+          <Text style={styles.addPhotoHint}>
+            Optional — helps hosts and guides recognize you in Ghana
+          </Text>
         </Pressable>
 
-        <View style={styles.formCard}>
+        <Card style={styles.formCard}>
           <FormTextField
             label="Display name"
             value={displayName}
@@ -93,95 +114,91 @@ export default function ProfileSetupScreen({
           <FormTextField
             label="Short bio"
             value={bio}
-            placeholder="Exchange student, loves cooking & history..."
+            placeholder="Exchange student in Accra — love cooking and history"
             onChangeText={onBioChange}
           />
-        </View>
+        </Card>
 
         <PrimaryButton label="Continue" onPress={onContinue} />
         <View style={styles.skipSpacer} />
         <SecondaryButton label="Skip for now" onPress={onSkip} />
-      </ScrollView>
+      </ScreenScroll>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backBtn: {
-    minHeight: 44,
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backText: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
   title: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
+    lineHeight: lineHeights.display,
     marginBottom: spacing.sm,
   },
   subtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
   },
   avatarSection: {
     alignItems: 'center',
     marginBottom: spacing.lg,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   avatar: {
-    width: 96,
-    height: 96,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
     borderRadius: borderRadius.pill,
     backgroundColor: colors.teal,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
-    borderWidth: 3,
+    borderWidth: borderWidths.strong + borderWidths.hairline,
     borderColor: colors.white,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 4,
+    ...shadows.raised,
   },
   avatarText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
   },
   addPhoto: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
   },
   addPhotoHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    lineHeight: lineHeights.caption,
     color: colors.textTertiary,
     marginTop: spacing.xs,
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
   },
   formCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   skipSpacer: {
     height: spacing.sm,
   },
 });
+}
+

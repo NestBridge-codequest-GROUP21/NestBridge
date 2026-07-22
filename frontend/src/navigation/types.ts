@@ -4,6 +4,7 @@ export type AuthStackParamList = {
   Welcome: undefined;
   Register: undefined;
   Login: undefined;
+  StaffSignIn: undefined;
   VerifyEmail: { email: string };
   ForgotPassword: undefined;
   ResetPassword: { token: string };
@@ -16,7 +17,11 @@ export type AppStackParamList = {
   ExploreHome: undefined;
   HostHome: undefined;
   GuideHome: undefined;
+  AdminHome: undefined;
+  AdminModeration: undefined;
+  AdminPreview: undefined;
   Profile: undefined;
+  ExploreHub: undefined;
   DevTesting: undefined;
   StaffUserSearch: undefined;
   StaffUserDetail: { userId: string };
@@ -43,7 +48,14 @@ export type AppStackParamList = {
   HostProfile: { hostId: string };
   Booking: { hostId: string; bookingContext?: import('../types/booking').BookingContext };
   BookingConfirmed: { bookingId: string };
-  GuideSearch: undefined;
+  GuideSearch:
+    | {
+        siteId?: string;
+        siteName?: string;
+        /** nearby = Guides Nearby; book = Book a Trip */
+        mode?: 'nearby' | 'book';
+      }
+    | undefined;
   GuideProfile: { guideId: string };
   SessionBooking: { guideId: string; bookingContext?: import('../types/booking').BookingContext };
   LodgingDirectory: undefined;
@@ -55,7 +67,8 @@ export type AppStackParamList = {
   SOS: undefined;
   TouristSiteDetail: { siteId: string };
   PrepChecklist: undefined;
-  LocalTips: undefined;
+  LocalTips: { focus?: 'culture' | 'language' } | undefined;
+  PracticalTips: undefined;
   TransportGuide: undefined;
   ExploreStays: undefined;
   OfflineMap: undefined;
@@ -64,6 +77,7 @@ export type AppStackParamList = {
   TourTypesSetup: undefined;
   GuideAvailability: undefined;
   SitesDirectory: undefined;
+  UniversitiesDirectory: undefined;
   StudentEvents: undefined;
   CreateEvent: undefined;
   VideoLibrary: undefined;

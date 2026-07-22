@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React, { useCallback, useRef } from 'react';
 import {
   View,
@@ -13,15 +14,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ExploreSectionItem } from '../screens/tourist/ExploreHomeScreen';
 import AppIcon from './AppIcon';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   layout,
-  gradients,
+  iconSizes,
+  controlHeights,
+  lineHeights,
 } from '../constants/theme';
 
 export interface ExploreSectionCarouselProps {
@@ -32,7 +34,11 @@ export interface ExploreSectionCarouselProps {
 
 const CARD_GAP = spacing.md;
 
-function sectionGradient(sectionId: string): readonly [string, string, ...string[]] {
+function sectionGradient(
+  sectionId: string,
+  colors: AppTheme['colors'],
+  gradients: AppTheme['gradients'],
+): readonly [string, string, ...string[]] {
   if (sectionId === 'guides') {
     return gradients.accent;
   }
@@ -61,6 +67,9 @@ function CarouselCard({
   savedLodgingCount,
   onSectionPress,
 }: CarouselCardProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
   const inputRange = [
     (index - 1) * snapWidth,
     index * snapWidth,
@@ -105,7 +114,7 @@ function CarouselCard({
           accessibilityHint="Swipe for more options"
         >
           <LinearGradient
-            colors={[...sectionGradient(item.id)]}
+            colors={[...sectionGradient(item.id, colors, gradients)]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradientStrip}
@@ -115,7 +124,7 @@ function CarouselCard({
               <Animated.View
                 style={[styles.iconTile, { transform: [{ scale: iconScale }] }]}
               >
-                <AppIcon glyph={item.icon} size={26} color={colors.tealDeep} />
+                <AppIcon glyph={item.icon} size={iconSizes.lg} color={colors.onAccent} />
               </Animated.View>
             ) : null}
             <Text style={styles.title}>{item.title}</Text>
@@ -140,6 +149,10 @@ export default function ExploreSectionCarousel({
   savedLodgingCount = 0,
   onSectionPress,
 }: ExploreSectionCarouselProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const screenWidth = Dimensions.get('window').width;
   const contentWidth = screenWidth - layout.screenPaddingHorizontal * 2;
   const cardWidth = contentWidth * 0.88;
@@ -232,7 +245,8 @@ export default function ExploreSectionCarousel({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   wrap: {
     marginBottom: layout.sectionGap,
     marginHorizontal: -layout.screenPaddingHorizontal,
@@ -246,18 +260,14 @@ const styles = StyleSheet.create({
   },
   cardOuter: {
     minHeight: layout.carouselMinHeight,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 4,
+    ...shadows.raised,
   },
   cardPressable: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
   },
   pressed: {
@@ -270,10 +280,12 @@ const styles = StyleSheet.create({
   cardBody: {
     padding: spacing.lg,
     justifyContent: 'center',
+    width: '100%',
+    alignSelf: 'stretch',
   },
   iconTile: {
-    width: 52,
-    height: 52,
+    width: controlHeights.lg,
+    height: controlHeights.lg,
     borderRadius: borderRadius.lg,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -282,16 +294,20 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.heading,
+    fontSize: fontSizes.subheading,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
+    lineHeight: lineHeights.subheading,
+    alignSelf: 'stretch',
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.body,
+    alignSelf: 'stretch',
   },
   savedBadge: {
     alignSelf: 'flex-start',
@@ -304,7 +320,7 @@ const styles = StyleSheet.create({
   savedBadgeText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   cta: {
     fontFamily: fontFamilies.semibold,
@@ -329,3 +345,5 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
 });
+}
+

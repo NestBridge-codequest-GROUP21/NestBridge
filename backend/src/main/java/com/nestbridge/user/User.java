@@ -59,6 +59,9 @@ public class User {
     @Column(name = "email_verified_at")
     private java.time.OffsetDateTime emailVerifiedAt;
 
+    @Column(name = "phone_verified")
+    private boolean phoneVerified;
+
     @Column(name = "trust_score")
     private BigDecimal trustScore;
 

@@ -1,21 +1,35 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
-  TextInput,
   LayoutChangeEvent,
   GestureResponderEvent,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
-import SecondaryButton from '../../components/SecondaryButton';
-import { colors, fontSizes, fontWeights, spacing, borderRadius } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import Card from '../../components/Card';
+import ScreenScroll from '../../components/ScreenScroll';
+import FocusAwareTextInput from '../../components/FocusAwareTextInput';
+import {
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderRadius,
+  borderWidths,
+  lineHeights,
+  layout,
+  controlHeights,
+  touchTarget,
+} from '../../constants/theme';
 import { isLikelyValidPlaceName, isLikelyValidText } from '../../utils/textValidation';
 import {
+  isCityOtherOption,
   isOtherOption,
   otherSpecifyKey,
 } from './quizConstants';
@@ -158,12 +172,21 @@ function questionHasOtherSelected(
 }
 
 function getOtherSpecifyQuestion(question: QuizQuestion): QuizQuestion {
+  const isPlaceField =
+    question.id === 'city' ||
+    question.id === 'destination' ||
+    question.id === 'operatingAreas' ||
+    (question.options ?? []).some((option) => isCityOtherOption(option));
+
   return {
     id: otherSpecifyKey(question.id),
-    question: 'Tell us which one',
+    question: isPlaceField ? 'Which town or area?' : 'Tell us which one',
     type: 'text',
-    placeholder: 'A few words is enough',
+    placeholder: isPlaceField
+      ? 'e.g. Elmina, Tarkwa, Hohoe'
+      : 'A few words is enough',
     required: true,
+    textValidation: isPlaceField ? 'place' : 'text',
   };
 }
 
@@ -182,6 +205,14 @@ function getFieldValidationError(
     const specifyAnswer = allAnswers?.[otherSpecifyKey(question.id)];
     if (isRequiredAnswerMissing(specifyQuestion, specifyAnswer, true)) {
       return 'other';
+    }
+    if (
+      specifyQuestion.textValidation === 'place' &&
+      typeof specifyAnswer === 'string' &&
+      specifyAnswer.trim().length > 0 &&
+      !isLikelyValidPlaceName(specifyAnswer)
+    ) {
+      return 'gibberish';
     }
   }
 
@@ -264,6 +295,8 @@ interface QuizSliderProps {
 }
 
 function QuizSlider({ value, minLabel, maxLabel, onChange }: QuizSliderProps) {
+  const styles = useThemedStyles(createStyles);
+
   const trackWidth = useRef(0);
 
   const updateFromTouch = (locationX: number) => {
@@ -315,6 +348,10 @@ export default function QuizPage({
   onBack,
   stepLabel = 'Preferences',
 }: QuizPageProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, scheme } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const [answers, setAnswers] = useState<QuizAnswers>(() =>
     buildPageAnswers(questions, savedAnswers),
@@ -435,7 +472,7 @@ export default function QuizPage({
     const specifyQuestion = getOtherSpecifyQuestion(question);
     return (
       <View style={styles.otherSpecifyWrap}>
-        <TextInput
+        <FocusAwareTextInput
           style={styles.textInput}
           value={String(answers[specifyId] ?? '')}
           placeholder={specifyQuestion.placeholder}
@@ -444,6 +481,9 @@ export default function QuizPage({
         />
         {fieldErrors[question.id] === 'other' && (
           <Text style={styles.fieldError}>{validationCopy.otherRequired}</Text>
+        )}
+        {fieldErrors[question.id] === 'gibberish' && (
+          <Text style={styles.fieldError}>{validationCopy.placeInvalid}</Text>
         )}
       </View>
     );
@@ -491,17 +531,23 @@ export default function QuizPage({
                 <Pressable
                   key={option}
                   style={({ pressed }) => [
-                    styles.optionCard,
-                    selected && styles.optionCardSelected,
+                    styles.optionPressable,
                     pressed && styles.optionCardPressed,
                   ]}
                   onPress={() => setAnswer(question.id, option)}
                   accessibilityRole="radio"
                   accessibilityState={{ selected }}
                 >
-                  <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
-                    {option}
-                  </Text>
+                  <Card
+                    style={[
+                      styles.optionCard,
+                      selected && styles.optionCardSelected,
+                    ]}
+                  >
+                    <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
+                      {option}
+                    </Text>
+                  </Card>
                 </Pressable>
               );
             })}
@@ -513,8 +559,8 @@ export default function QuizPage({
         return (
           <QuizSlider
             value={typeof value === 'number' ? value : 50}
-            minLabel={question.sliderLabels?.min ?? 'Low'}
-            maxLabel={question.sliderLabels?.max ?? 'High'}
+            minLabel={question.sliderLabels?.min ?? 'Quiet'}
+            maxLabel={question.sliderLabels?.max ?? 'Social'}
             onChange={(next) => {
               markInteracted(question.id);
               setAnswers((prev) => ({ ...prev, [question.id]: next }));
@@ -525,7 +571,7 @@ export default function QuizPage({
 
       case 'number':
         return (
-          <TextInput
+          <FocusAwareTextInput
             style={styles.textInput}
             value={String(value ?? '')}
             placeholder={question.placeholder}
@@ -538,7 +584,7 @@ export default function QuizPage({
       case 'text':
       default:
         return (
-          <TextInput
+          <FocusAwareTextInput
             style={[styles.textInput, styles.textInputMultiline]}
             value={String(value ?? '')}
             placeholder={question.placeholder}
@@ -554,16 +600,18 @@ export default function QuizPage({
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
-      <ScrollView
+      <ScreenScroll
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg },
+          { paddingTop: insets.top + spacing.lg },
         ]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
       >
+        {showBack && onBack ? (
+          <BackButton onPress={() => onBack(answers)} style={styles.back} />
+        ) : null}
+
         <View style={styles.progressWrap}>
           <View style={styles.progressLabelRow}>
             <Text style={styles.progressStepLabel}>{stepLabel}</Text>
@@ -613,25 +661,23 @@ export default function QuizPage({
             label={isLastPage ? 'Finish' : 'Continue'}
             onPress={handleContinuePress}
           />
-          {showBack && onBack && (
-            <>
-              <View style={styles.footerSpacer} />
-              <SecondaryButton label="Back" onPress={() => onBack(answers)} />
-            </>
-          )}
         </View>
-      </ScrollView>
+      </ScreenScroll>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
+  },
+  back: {
+    marginBottom: spacing.sm,
   },
   progressWrap: {
     marginBottom: spacing.lg,
@@ -643,6 +689,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   progressStepLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
@@ -650,12 +697,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   progressCount: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.regular,
     color: colors.textTertiary,
   },
   progressTrack: {
-    height: 4,
+    height: spacing.xs,
     backgroundColor: colors.border,
     borderRadius: borderRadius.pill,
     overflow: 'hidden',
@@ -669,15 +717,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   question: {
-    fontSize: fontSizes.display - 2,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-    lineHeight: 32,
+    lineHeight: lineHeights.heading,
     marginBottom: spacing.md,
   },
   fieldError: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.danger,
     marginTop: spacing.sm,
   },
@@ -690,11 +740,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    borderWidth: 1.5,
+    borderWidth: borderWidths.strong,
     borderColor: colors.border,
-    backgroundColor: colors.white,
-    minHeight: 44,
+    backgroundColor: colors.surface,
+    minHeight: touchTarget,
     justifyContent: 'center',
+    ...shadows.card,
   },
   chipSelected: {
     borderColor: colors.teal,
@@ -704,40 +755,44 @@ const styles = StyleSheet.create({
     opacity: 0.95,
   },
   chipLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
   },
   chipLabelSelected: {
-    color: colors.tealDeep,
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
+    color: colors.onAccent,
   },
   otherSpecifyWrap: {
     marginTop: spacing.md,
   },
-  optionCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
+  optionPressable: {
     marginBottom: spacing.sm,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    minHeight: 52,
+  },
+  optionCard: {
+    minHeight: controlHeights.lg,
     justifyContent: 'center',
   },
   optionCardSelected: {
     borderColor: colors.teal,
+    borderWidth: borderWidths.strong,
     backgroundColor: colors.warmCream,
   },
   optionCardPressed: {
     opacity: 0.95,
   },
   optionLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
   },
   optionLabelSelected: {
-    color: colors.tealDeep,
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
+    color: colors.onAccent,
   },
   sliderWrap: {
     marginTop: spacing.sm,
@@ -748,16 +803,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   sliderLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
   },
   sliderTrackPressable: {
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
   },
   sliderTrack: {
-    height: 6,
+    height: spacing.sm - borderWidths.strong,
     backgroundColor: colors.border,
     borderRadius: borderRadius.pill,
     position: 'relative',
@@ -772,43 +828,42 @@ const styles = StyleSheet.create({
   },
   sliderThumb: {
     position: 'absolute',
-    top: -9,
-    width: 24,
-    height: 24,
-    marginLeft: -12,
+    top: -(spacing.sm + spacing.xs / 2),
+    width: spacing.lg,
+    height: spacing.lg,
+    marginLeft: -(spacing.sm + spacing.xs),
     borderRadius: borderRadius.pill,
     backgroundColor: colors.tealBright,
-    borderWidth: 3,
+    borderWidth: borderWidths.strong + borderWidths.hairline,
     borderColor: colors.white,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    ...shadows.card,
   },
   textInput: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
+    backgroundColor: colors.surface,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textPrimary,
-    minHeight: 48,
+    minHeight: controlHeights.md,
+    ...shadows.card,
   },
   textInputMultiline: {
-    minHeight: 96,
+    minHeight: controlHeights.lg + spacing.lg,
     textAlignVertical: 'top',
   },
   skipLink: {
     marginTop: spacing.md,
-    minHeight: 44,
+    minHeight: touchTarget,
     justifyContent: 'center',
     alignItems: 'center',
   },
   skipLinkText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
@@ -817,7 +872,6 @@ const styles = StyleSheet.create({
   footer: {
     marginTop: spacing.lg,
   },
-  footerSpacer: {
-    height: spacing.sm,
-  },
 });
+}
+

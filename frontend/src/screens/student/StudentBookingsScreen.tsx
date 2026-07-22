@@ -1,27 +1,36 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
-import AppIcon from '../../components/AppIcon';
+import BackButton from '../../components/BackButton';
+import Avatar from '../../components/Avatar';
+import Card from '../../components/Card';
+import EmptyState from '../../components/EmptyState';
+import ListRow from '../../components/ListRow';
+import ScreenScroll from '../../components/ScreenScroll';
+import StatusBadge, { type StatusBadgeTone } from '../../components/StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   layout,
+  lineHeights,
+  touchTarget,
 } from '../../constants/theme';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
+import { emptyStates } from '../../data/appCopy';
 import type { BookingListItem, BookingStatus, BookingTabFilter, BookingType } from '../../types/booking';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
 import { formatSessionSchedule } from '../../data/guideSessionMock';
@@ -39,6 +48,10 @@ export interface StudentBookingsScreenProps {
   onFilterChange?: (filter: BookingTabFilter) => void;
   onBookingPress?: (bookingId: string) => void;
   onPayPress?: (bookingId: string) => void;
+  /** True while Paystack / mock confirm is in flight. */
+  payLoading?: boolean;
+  /** Shown on the Pay CTA while payment is in progress (e.g. Preparing payment...). */
+  payStatusLabel?: string;
   payBlocked?: boolean;
   payBlockedMessage?: string;
   onContinueSetupPay?: () => void;
@@ -55,30 +68,28 @@ const FILTERS: { id: BookingTabFilter; label: string }[] = [
 
 function statusMeta(status: BookingStatus, bookingType: BookingType): {
   label: string;
-  bg: string;
-  text: string;
+  tone: StatusBadgeTone;
 } {
   switch (status) {
     case 'PENDING_HOST':
       return {
         label: bookingType === 'GUIDE' ? 'Awaiting guide' : 'Awaiting host',
-        bg: colors.warmCream,
-        text: colors.warning,
+        tone: 'warning',
       };
     case 'ACCEPTED':
-      return { label: 'Ready to pay', bg: colors.teal, text: colors.white };
+      return { label: 'Ready to pay', tone: 'info' };
     case 'CONFIRMED':
-      return { label: 'Confirmed', bg: colors.success, text: colors.white };
+      return { label: 'Confirmed', tone: 'success' };
     case 'CHECKED_IN':
-      return { label: 'Checked in', bg: colors.success, text: colors.white };
+      return { label: 'Checked in', tone: 'success' };
     case 'DECLINED':
-      return { label: 'Declined', bg: colors.border, text: colors.textSecondary };
+      return { label: 'Declined', tone: 'neutral' };
     case 'EXPIRED':
-      return { label: 'Expired', bg: colors.border, text: colors.textSecondary };
+      return { label: 'Expired', tone: 'neutral' };
     case 'CANCELLED':
-      return { label: 'Cancelled', bg: colors.border, text: colors.textSecondary };
+      return { label: 'Cancelled', tone: 'neutral' };
     default:
-      return { label: status, bg: colors.border, text: colors.textSecondary };
+      return { label: status, tone: 'neutral' };
   }
 }
 
@@ -136,6 +147,8 @@ export default function StudentBookingsScreen({
   onFilterChange,
   onBookingPress,
   onPayPress,
+  payLoading = false,
+  payStatusLabel,
   payBlocked = false,
   payBlockedMessage = 'Finish your Student or Tourist profile to complete payment.',
   onContinueSetupPay,
@@ -144,8 +157,18 @@ export default function StudentBookingsScreen({
   onHostReviewPress,
   onGuideReviewPress,
 }: StudentBookingsScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const filtered = filterBookings(bookings, activeFilter);
+  const emptyCopy =
+    activeFilter === 'pending'
+      ? emptyStates.studentBookings.pending
+      : activeFilter === 'past'
+        ? emptyStates.studentBookings.past
+        : emptyStates.studentBookings.active;
   const payNowBooking = bookings.find((b) => b.status === 'ACCEPTED');
 
   return (
@@ -153,29 +176,22 @@ export default function StudentBookingsScreen({
       <StatusBar style="light" />
 
       <LinearGradient
-        colors={[...gradients.headerCompact]}
+        colors={gradients.headerCompact}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
       >
         <View style={styles.headerTop}>
           {onBack ? (
-            <Pressable
-              onPress={onBack}
-              style={styles.backButton}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-            >
-              <Text style={styles.backIcon}>←</Text>
-            </Pressable>
+            <BackButton onPress={onBack} color={colors.onPrimary} style={styles.backButton} />
           ) : (
             <View style={styles.backPlaceholder} />
           )}
-          <Text style={styles.headerTitle}>My Bookings</Text>
+          <Text style={styles.headerTitle}>My bookings</Text>
           <View style={styles.backPlaceholder} />
         </View>
         <Text style={styles.headerSubtitle}>
-          Track requests, payments, and confirmed stays
+          Your stay and guide booking requests
         </Text>
       </LinearGradient>
 
@@ -193,6 +209,7 @@ export default function StudentBookingsScreen({
               >
                 <Text
                   style={[styles.segmentLabel, isActive && styles.segmentLabelActive]}
+                  numberOfLines={2}
                 >
                   {tab.label}
                 </Text>
@@ -202,52 +219,33 @@ export default function StudentBookingsScreen({
         </View>
       </View>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + layout.scrollBottomInset },
-        ]}
-        showsVerticalScrollIndicator={false}
+      <ScreenScroll
+        withTabBar
+        withSosDock={showSosDock}
+        contentContainerStyle={styles.scrollContent}
       >
         {showGuideReviewEntry ? (
-          <Pressable
-            style={({ pressed }) => [styles.hostEntryCard, pressed && styles.pressed]}
-            onPress={onGuideReviewPress ?? onHostReviewPress}
-            accessibilityRole="button"
-            accessibilityLabel="Review incoming session requests"
-          >
-            <View style={styles.hostEntryIconWrap}>
-              <Text style={styles.hostEntryInitial}>G</Text>
-            </View>
-            <View style={styles.hostEntryText}>
-              <Text style={styles.hostEntryTitle}>Session requests</Text>
-              <Text style={styles.hostEntrySubtitle}>
-                Students and tourists who want to book a tour
-              </Text>
-            </View>
-            <Text style={styles.hostEntryAction}>Review</Text>
-          </Pressable>
+          <Card padding="none" style={styles.entryCard}>
+            <ListRow
+              title="Session requests"
+              subtitle="Students and tourists who want to book a tour"
+              iconName="map-outline"
+              onPress={onGuideReviewPress ?? onHostReviewPress}
+              bordered={false}
+            />
+          </Card>
         ) : null}
 
         {showHostReviewEntry ? (
-          <Pressable
-            style={({ pressed }) => [styles.hostEntryCard, pressed && styles.pressed]}
-            onPress={onHostReviewPress}
-            accessibilityRole="button"
-            accessibilityLabel="Review incoming booking requests"
-          >
-            <View style={styles.hostEntryIconWrap}>
-              <Text style={styles.hostEntryInitial}>H</Text>
-            </View>
-            <View style={styles.hostEntryText}>
-              <Text style={styles.hostEntryTitle}>Incoming requests</Text>
-              <Text style={styles.hostEntrySubtitle}>
-                Review students who want to stay with you
-              </Text>
-            </View>
-            <Text style={styles.hostEntryAction}>Review</Text>
-          </Pressable>
+          <Card padding="none" style={styles.entryCard}>
+            <ListRow
+              title="Incoming requests"
+              subtitle="Review students who want to stay with you"
+              iconName="home-outline"
+              onPress={onHostReviewPress}
+              bordered={false}
+            />
+          </Card>
         ) : null}
 
         {activeFilter === 'active' && payNowBooking ? (
@@ -259,54 +257,54 @@ export default function StudentBookingsScreen({
               />
             ) : null}
             <Pressable
-              style={({ pressed }) => [styles.heroCard, pressed && !payBlocked && styles.pressed]}
+              style={({ pressed }) => [
+                styles.heroCard,
+                pressed && !payBlocked && !payLoading && styles.pressed,
+              ]}
               onPress={() => {
-                if (!payBlocked) {
+                if (!payBlocked && !payLoading) {
                   onPayPress?.(payNowBooking.id);
                 }
               }}
               accessibilityRole="button"
               accessibilityLabel={`Complete payment for ${payNowBooking.hostName}`}
-              accessibilityState={{ disabled: payBlocked }}
+              accessibilityState={{ disabled: payBlocked || payLoading, busy: payLoading }}
             >
               <LinearGradient
-                colors={[...gradients.accent]}
+                colors={gradients.accent}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={[styles.heroGradient, payBlocked && styles.heroGradientDisabled]}
+                style={[
+                  styles.heroGradient,
+                  (payBlocked || payLoading) && styles.heroGradientDisabled,
+                ]}
               >
-              <Text style={styles.heroEyebrow}>Action needed</Text>
-              <Text style={styles.heroTitle}>
-                Complete payment for {payNowBooking.hostName}
-              </Text>
-              <Text style={styles.heroDates}>
-                {bookingScheduleLine(payNowBooking)}
-              </Text>
-              <View style={styles.heroCta}>
-                <Text style={styles.heroCtaText}>Pay now</Text>
-              </View>
-            </LinearGradient>
-          </Pressable>
+                <Text style={styles.heroEyebrow}>Action needed</Text>
+                <Text style={styles.heroTitle}>
+                  Complete payment for {payNowBooking.hostName}
+                </Text>
+                <Text style={styles.heroDates}>
+                  {bookingScheduleLine(payNowBooking)}
+                </Text>
+                <View style={styles.heroCta}>
+                  <Text style={styles.heroCtaText}>
+                    {payLoading
+                      ? payStatusLabel || 'Preparing payment...'
+                      : 'Pay now'}
+                  </Text>
+                </View>
+              </LinearGradient>
+            </Pressable>
           </>
         ) : null}
 
         {filtered.length === 0 ? (
-          <View style={styles.emptyState}>
-            <AppIcon
-              name="clipboard-outline"
-              size={fontSizes.display}
-              color={colors.textTertiary}
-              style={styles.emptyIcon}
-            />
-            <Text style={styles.emptyTitle}>Nothing here yet</Text>
-            <Text style={styles.emptySubtitle}>
-              {activeFilter === 'pending'
-                ? 'Send a request to a host — it will show here while they review it.'
-                : activeFilter === 'past'
-                  ? 'Completed stays and declined requests land here.'
-                  : 'Confirmed stays and payment-ready bookings show up here.'}
-            </Text>
-          </View>
+          <EmptyState
+            title={emptyCopy.title}
+            body={emptyCopy.body}
+            tip={emptyCopy.tip}
+            iconGlyph={emptyCopy.iconGlyph}
+          />
         ) : (
           filtered.map((booking, index) => {
             const meta = statusMeta(booking.status, booking.bookingType);
@@ -315,7 +313,6 @@ export default function StudentBookingsScreen({
               <Pressable
                 key={booking.id}
                 style={({ pressed }) => [
-                  styles.bookingCard,
                   !isLast && styles.bookingCardSpacing,
                   pressed && styles.pressed,
                 ]}
@@ -323,42 +320,68 @@ export default function StudentBookingsScreen({
                 accessibilityRole="button"
                 accessibilityLabel={`${booking.hostName}, ${meta.label}`}
               >
-                <View style={styles.hostAvatar}>
-                  <Text style={styles.hostAvatarText}>{booking.hostInitials}</Text>
-                </View>
+                <Card style={styles.bookingCard}>
+                  <Avatar
+                    initials={booking.hostInitials}
+                    size="lg"
+                    style={styles.hostAvatar}
+                  />
 
-                <View style={styles.bookingBody}>
-                  <View style={styles.typeChipRow}>
-                    <View style={styles.typeChip}>
-                      <Text style={styles.typeChipText}>
-                        {bookingTypeLabel(booking.bookingType)}
-                      </Text>
+                  <View style={styles.bookingBody}>
+                    <View style={styles.typeChipRow}>
+                      <StatusBadge
+                        label={bookingTypeLabel(booking.bookingType)}
+                        tone="info"
+                      />
                     </View>
-                  </View>
-                  <View style={styles.bookingTopRow}>
-                    <Text style={styles.hostName} numberOfLines={1}>
-                      {booking.hostName}
+                    <View style={styles.bookingTopRow}>
+                      <Text style={styles.hostName} numberOfLines={2}>
+                        {booking.hostName}
+                      </Text>
+                      <StatusBadge label={meta.label} tone={meta.tone} />
+                    </View>
+
+                    <Text style={styles.location} numberOfLines={2}>
+                      {booking.hostLocation}
                     </Text>
-                    <View style={[styles.statusPill, { backgroundColor: meta.bg }]}>
-                      <Text style={[styles.statusText, { color: meta.text }]}>
-                        {meta.label}
-                      </Text>
-                    </View>
+
+                    <Text style={styles.dates}>{bookingScheduleLine(booking)}</Text>
+
+                    <Text style={styles.total}>{bookingTotalLine(booking)}</Text>
+
+                    {booking.status === 'ACCEPTED' ? (
+                      <Pressable
+                        style={({ pressed }) => [
+                          styles.rowPayButton,
+                          pressed && !payBlocked && !payLoading && styles.pressed,
+                          (payBlocked || payLoading) && styles.rowPayButtonDisabled,
+                        ]}
+                        onPress={() => {
+                          if (!payBlocked && !payLoading) {
+                            onPayPress?.(booking.id);
+                          }
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Pay now for ${booking.hostName}`}
+                        accessibilityState={{
+                          disabled: payBlocked || payLoading,
+                          busy: payLoading,
+                        }}
+                      >
+                        <Text style={styles.rowPayButtonText}>
+                          {payLoading && payNowBooking?.id === booking.id
+                            ? payStatusLabel || 'Preparing payment...'
+                            : 'Pay now'}
+                        </Text>
+                      </Pressable>
+                    ) : null}
                   </View>
-
-                  <Text style={styles.location} numberOfLines={1}>
-                    {booking.hostLocation}
-                  </Text>
-
-                  <Text style={styles.dates}>{bookingScheduleLine(booking)}</Text>
-
-                  <Text style={styles.total}>{bookingTotalLine(booking)}</Text>
-                </View>
+                </Card>
               </Pressable>
             );
           })
         )}
-      </ScrollView>
+      </ScreenScroll>
 
       <AppTabBar
         items={tabBarItems}
@@ -371,13 +394,14 @@ export default function StudentBookingsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
   header: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingBottom: spacing.lg,
   },
   headerTop: {
@@ -387,257 +411,141 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginLeft: -spacing.sm,
   },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
-  },
   backPlaceholder: {
-    width: 44,
+    width: touchTarget,
   },
   headerTitle: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
+    lineHeight: lineHeights.heading,
   },
   headerSubtitle: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    fontWeight: fontWeights.regular,
+    color: colors.onPrimary,
     opacity: 0.85,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   segmentWrap: {
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     marginTop: -spacing.md,
     marginBottom: spacing.md,
   },
   segment: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.xs,
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    ...shadows.card,
   },
   segmentItem: {
     flex: 1,
+    minWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44,
+    minHeight: touchTarget,
     borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.xs,
   },
   segmentItemActive: {
     backgroundColor: colors.navy,
   },
   segmentLabel: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.body,
     color: colors.textSecondary,
+    textAlign: 'center',
   },
   segmentLabelActive: {
-    color: colors.white,
-  },
-  scroll: {
-    flex: 1,
+    color: colors.onPrimary,
   },
   scrollContent: {
-    paddingHorizontal: spacing.md,
+    paddingTop: 0,
   },
-  hostEntryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  hostEntryIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  hostEntryIcon: {
-    fontSize: 22,
-  },
-  hostEntryInitial: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
-  },
-  hostEntryAction: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-    marginLeft: spacing.sm,
-  },
-  hostEntryText: {
-    flex: 1,
-  },
-  hostEntryTitle: {
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  hostEntrySubtitle: {
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
-  hostEntryArrow: {
-    fontSize: fontSizes.heading,
-    color: colors.teal,
-    marginLeft: spacing.sm,
+  entryCard: {
+    marginBottom: layout.sectionGap,
   },
   heroCard: {
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    marginBottom: spacing.lg,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 4,
+    marginBottom: layout.sectionGap,
+    ...shadows.raised,
   },
   heroGradient: {
-    padding: spacing.lg,
+    padding: layout.cardPaddingLarge,
   },
   heroGradientDisabled: {
     opacity: 0.55,
   },
   heroEyebrow: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
     opacity: 0.9,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
     marginBottom: spacing.sm,
   },
   heroTitle: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    lineHeight: 28,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
+    lineHeight: lineHeights.heading,
     marginBottom: spacing.sm,
   },
   heroDates: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    fontWeight: fontWeights.regular,
+    color: colors.onPrimary,
     opacity: 0.92,
     marginBottom: spacing.md,
+    lineHeight: lineHeights.body,
   },
   heroCta: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.pill,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   heroCtaText: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.teal,
-    marginRight: spacing.xs,
-  },
-  heroCtaArrow: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-    color: colors.teal,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl * 2,
-    paddingHorizontal: spacing.lg,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptySubtitle: {
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
   },
   bookingCard: {
     flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    alignItems: 'flex-start',
   },
   bookingCardSpacing: {
     marginBottom: spacing.md,
   },
   hostAvatar: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: spacing.md,
-  },
-  hostAvatarText: {
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   bookingBody: {
     flex: 1,
+    minWidth: 0,
   },
   typeChipRow: {
     marginBottom: spacing.sm,
-  },
-  typeChip: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.warmCream,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  typeChipText: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   bookingTopRow: {
     flexDirection: 'row',
@@ -648,92 +556,59 @@ const styles = StyleSheet.create({
   },
   hostName: {
     flex: 1,
+    minWidth: 0,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-  },
-  statusPill: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-  },
-  statusText: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    lineHeight: lineHeights.subheading,
   },
   location: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.caption,
   },
   dates: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
+    lineHeight: lineHeights.body,
   },
   total: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
-    color: colors.tealDeep,
+    color: colors.onAccent,
+  },
+  rowPayButton: {
+    marginTop: spacing.md,
+    alignSelf: 'flex-start',
+    minHeight: touchTarget,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.tealBright,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowPayButtonDisabled: {
+    opacity: 0.55,
+  },
+  rowPayButtonText: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.semibold,
+    color: colors.onPrimary,
   },
   pressed: {
     opacity: 0.94,
     transform: [{ scale: 0.995 }],
   },
-  tabBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    backgroundColor: colors.navy,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.navyMid,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-    paddingVertical: spacing.xs,
-  },
-  tabIconWrap: {
-    position: 'relative',
-    marginBottom: spacing.xs,
-  },
-  tabIcon: {
-    fontSize: 18,
-    opacity: 0.55,
-  },
-  tabBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -10,
-    minWidth: 18,
-    height: 18,
-    borderRadius: borderRadius.pill,
-    backgroundColor: colors.danger,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-  },
-  tabBadgeText: {
-    fontSize: 10,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  tabIconActive: {
-    opacity: 1,
-  },
-  tabLabel: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.regular,
-    color: colors.white,
-    opacity: 0.55,
-  },
-  tabLabelActive: {
-    fontWeight: fontWeights.semibold,
-    opacity: 1,
-  },
 });
+}
+

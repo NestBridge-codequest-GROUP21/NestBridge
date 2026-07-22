@@ -73,7 +73,7 @@ export function HostProfileRoute({
     return (
       <RouteErrorState
         title="Host not found"
-        message={error ?? 'Could not load host profile.'}
+        message={error ?? 'Could not load this host profile. Check your connection and try again.'}
         onBack={onBack}
       />
     );
@@ -83,6 +83,13 @@ export function HostProfileRoute({
     <HostProfileScreen
       host={host}
       showMatchScores={showMatchScores}
+      about={`A welcoming host home in ${host.location}. Quiet study space, home-cooked meals when arranged, and an easy commute to campus and city amenities.`}
+      highlights={['Meals available', 'Study-friendly', 'Near campus']}
+      setupIncomplete={!canBookHomestay}
+      setupMessage={
+        'Complete your travel profile to message this host and request a stay.'
+      }
+      onContinueSetup={onContinueSetup}
       onBack={onBack}
       onBookPress={() => {
         if (!canBookHomestay) {
@@ -91,7 +98,13 @@ export function HostProfileRoute({
         }
         onBookPress(host);
       }}
-      onMessagePress={() => onMessagePress(host)}
+      onMessagePress={() => {
+        if (!canBookHomestay) {
+          onContinueSetup();
+          return;
+        }
+        onMessagePress(host);
+      }}
     />
   );
 }
@@ -170,6 +183,9 @@ export function GuideProfileRoute({
     <GuideProfileDetailScreen
       guide={guide}
       showMatchScores={showMatchScores}
+      setupIncomplete={!canBookGuideSession}
+      setupMessage="Complete your travel profile to message this guide and book a session."
+      onContinueSetup={onContinueSetup}
       onBack={onBack}
       onBookPress={() => {
         if (!canBookGuideSession) {
@@ -178,7 +194,13 @@ export function GuideProfileRoute({
         }
         onBookPress(guide);
       }}
-      onMessagePress={() => onMessagePress(guide)}
+      onMessagePress={() => {
+        if (!canBookGuideSession) {
+          onContinueSetup();
+          return;
+        }
+        onMessagePress(guide);
+      }}
     />
   );
 }

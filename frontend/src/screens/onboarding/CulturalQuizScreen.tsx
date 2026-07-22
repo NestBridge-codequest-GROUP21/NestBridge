@@ -1,10 +1,24 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OnboardingProgress from '../../components/OnboardingProgress';
 import PrimaryButton from '../../components/PrimaryButton';
-import { colors, fontFamilies, fontSizes, fontWeights, spacing, borderRadius, lineHeights, layout } from '../../constants/theme';
+import BackButton from '../../components/BackButton';
+import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
+import {
+  fontFamilies,
+  fontSizes,
+  fontWeights,
+  spacing,
+  borderWidths,
+  lineHeights,
+  layout,
+  iconSizes,
+  controlHeights,
+} from '../../constants/theme';
 
 export interface QuizOption {
   id: string;
@@ -39,24 +53,27 @@ export default function CulturalQuizScreen({
   onContinue,
   onBack,
 }: CulturalQuizScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, scheme } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + spacing.md, paddingBottom: insets.bottom + spacing.lg },
+          {
+            paddingTop: insets.top + spacing.lg,
+            paddingBottom: insets.bottom + spacing.lg,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {onBack && (
-          <Pressable onPress={onBack} style={styles.backBtn}>
-            <Text style={styles.backText}>← Back</Text>
-          </Pressable>
-        )}
+        {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
         <OnboardingProgress
           currentStep={currentStep}
@@ -76,18 +93,28 @@ export default function CulturalQuizScreen({
             <Pressable
               key={option.id}
               style={({ pressed }) => [
-                styles.optionCard,
-                selected && styles.optionCardSelected,
+                styles.optionPressable,
                 pressed && styles.optionCardPressed,
               ]}
               onPress={() => onSelectOption?.(option.id)}
               accessibilityRole="radio"
               accessibilityState={{ selected }}
             >
-              {option.icon && <Text style={styles.optionIcon}>{option.icon}</Text>}
-              <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
-                {option.label}
-              </Text>
+              <Card
+                style={[styles.optionCard, selected && styles.optionCardSelected]}
+              >
+                {option.icon ? (
+                  <AppIcon
+                    glyph={option.icon}
+                    size={iconSizes.lg}
+                    color={colors.onAccent}
+                    style={styles.optionIcon}
+                  />
+                ) : null}
+                <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
+                  {option.label}
+                </Text>
+              </Card>
             </Pressable>
           );
         })}
@@ -104,7 +131,8 @@ export default function CulturalQuizScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -112,17 +140,11 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: layout.screenPaddingHorizontal,
   },
-  backBtn: {
-    minHeight: 44,
-    justifyContent: 'center',
+  back: {
     marginBottom: spacing.sm,
   },
-  backText: {
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-  },
   questionMeta: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
@@ -131,51 +153,55 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   question: {
-    fontSize: fontSizes.display - 2,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
-    lineHeight: 32,
+    lineHeight: lineHeights.heading,
     marginBottom: spacing.sm,
   },
   helper: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
-    lineHeight: 20,
+    lineHeight: lineHeights.body,
+  },
+  optionPressable: {
+    marginBottom: spacing.sm,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    minHeight: 56,
+    minHeight: controlHeights.lg + spacing.xs,
   },
   optionCardSelected: {
     borderColor: colors.teal,
+    borderWidth: borderWidths.strong,
     backgroundColor: colors.warmCream,
   },
   optionCardPressed: {
     opacity: 0.95,
   },
   optionIcon: {
-    fontSize: 22,
     marginRight: spacing.md,
   },
   optionLabel: {
     flex: 1,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
   },
   optionLabelSelected: {
-    color: colors.tealDeep,
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
+    color: colors.teal,
   },
   footer: {
     marginTop: spacing.md,
   },
 });
+}
+

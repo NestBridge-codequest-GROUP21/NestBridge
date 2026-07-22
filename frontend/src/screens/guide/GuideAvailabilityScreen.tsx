@@ -1,20 +1,27 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Switch } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import Card from '../../components/Card';
+import EmptyState from '../../components/EmptyState';
+import InlineBanner from '../../components/InlineBanner';
+import SectionHeader from '../../components/SectionHeader';
 import MonthCalendarGrid, {
   buildGuideCalendarGrid,
 } from '../../components/MonthCalendarGrid';
 import type { GuideCalendarDay, GuideShiftBlock } from '../../data/featureScreensMock';
 import { GUIDE_SHIFT_LABELS } from '../../data/featureScreensMock';
+import { emptyStates } from '../../data/appCopy';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  lineHeights,
+  touchTarget,
 } from '../../constants/theme';
 
 export interface GuideAvailabilityScreenProps {
@@ -45,38 +52,45 @@ function ShiftDetailCard({
   editable?: boolean;
   onShiftToggle?: (shift: GuideShiftBlock, enabled: boolean) => void;
 }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
   if (!editable) {
     if (shifts.length === 0) {
+      const empty = emptyStates.guideAvailability;
       return (
-        <View style={styles.shiftCard}>
-          <Text style={styles.shiftTitle}>No shifts scheduled</Text>
-          <Text style={styles.shiftDetail}>Tap a day to manage availability</Text>
-        </View>
+        <EmptyState
+          title={empty.title}
+          body={empty.body}
+          tip={empty.tip}
+          iconGlyph={empty.iconGlyph}
+          style={styles.shiftCard}
+        />
       );
     }
 
     return (
-      <View style={styles.shiftCard}>
+      <Card padding="lg" style={styles.shiftCard}>
         <Text style={styles.shiftTitle}>Working shifts</Text>
         {shifts.map((shift) => (
           <View key={shift} style={styles.shiftRow}>
-            <View style={[styles.shiftDot, shiftDotStyle(shift)]} />
+            <View style={[styles.shiftDot, shiftDotStyle(shift, colors)]} />
             <Text style={styles.shiftDetail}>{GUIDE_SHIFT_LABELS[shift]}</Text>
           </View>
         ))}
-      </View>
+      </Card>
     );
   }
 
   return (
-    <View style={styles.shiftCard}>
+    <Card padding="lg" style={styles.shiftCard}>
       <Text style={styles.shiftTitle}>Shifts for selected day</Text>
       {GUIDE_SHIFTS.map((shift) => {
         const enabled = shifts.includes(shift);
         return (
           <View key={shift} style={styles.shiftToggleRow}>
             <View style={styles.shiftToggleInfo}>
-              <View style={[styles.shiftDot, shiftDotStyle(shift)]} />
+              <View style={[styles.shiftDot, shiftDotStyle(shift, colors)]} />
               <Text style={styles.shiftDetail}>{GUIDE_SHIFT_LABELS[shift]}</Text>
             </View>
             <Switch
@@ -89,11 +103,14 @@ function ShiftDetailCard({
           </View>
         );
       })}
-    </View>
+    </Card>
   );
 }
 
-function shiftDotStyle(shift: GuideShiftBlock) {
+function shiftDotStyle(
+  shift: GuideShiftBlock,
+  colors: AppTheme['colors'],
+) {
   switch (shift) {
     case 'morning':
       return { backgroundColor: colors.success };
@@ -122,6 +139,10 @@ export default function GuideAvailabilityScreen({
   onShiftToggle,
   onBack,
 }: GuideAvailabilityScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const [selectedDay, setSelectedDay] = useState(11);
 
   const gridDays = useMemo(
@@ -150,12 +171,14 @@ export default function GuideAvailabilityScreen({
       />
 
       <ScreenScroll>
-        <Text style={styles.screenTitle}>{calendarTitle}</Text>
-        <Text style={styles.screenSubtitle}>
-          {editable
-            ? 'Tap a day, then toggle Morning, Afternoon, or Evening shifts below.'
-            : 'Manage Morning, Afternoon, and Evening availability blocks.'}
-        </Text>
+        <SectionHeader
+          title={calendarTitle}
+          subtitle={
+            editable
+              ? 'Tap a day, then toggle Morning, Afternoon, or Evening shifts below.'
+              : 'Manage Morning, Afternoon, and Evening availability blocks.'
+          }
+        />
 
         <MonthCalendarGrid
           monthLabel={monthLabel}
@@ -165,7 +188,9 @@ export default function GuideAvailabilityScreen({
           onDayPress={handleDayPress}
         />
 
-        {statusMessage ? <Text style={styles.statusMessage}>{statusMessage}</Text> : null}
+        {statusMessage ? (
+          <InlineBanner message={statusMessage} tone="info" style={styles.statusBanner} />
+        ) : null}
 
         <ShiftDetailCard
           shifts={selectedShifts}
@@ -177,41 +202,22 @@ export default function GuideAvailabilityScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  screenTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  screenSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-  },
-  statusMessage: {
-    marginTop: spacing.sm,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
+  statusBanner: {
+    marginTop: spacing.md,
   },
   shiftCard: {
     marginTop: spacing.lg,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
   },
   shiftTitle: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -222,6 +228,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.sm,
+    minHeight: touchTarget,
   },
   shiftToggleRow: {
     flexDirection: 'row',
@@ -229,7 +236,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.sm,
     marginBottom: spacing.sm,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   shiftToggleInfo: {
     flexDirection: 'row',
@@ -245,6 +252,16 @@ const styles = StyleSheet.create({
   shiftDetail: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
   },
+  shiftDetailMuted: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.body,
+  },
 });
+}
+

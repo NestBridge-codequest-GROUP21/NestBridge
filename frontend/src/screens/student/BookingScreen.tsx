@@ -1,22 +1,30 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GatedPrimaryButton } from '../../components/ProfileIncompleteBanner';
+import InlineBanner from '../../components/InlineBanner';
+import AppIcon from '../../components/AppIcon';
+import ScreenHeader from '../../components/ScreenHeader';
+import Card from '../../components/Card';
+import SectionHeader from '../../components/SectionHeader';
+import Avatar from '../../components/Avatar';
+import StatusBadge from '../../components/StatusBadge';
 import {
-  colors,
+  fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
-  gradients,
+  borderWidths,
+  lineHeights,
+  layout,
+  iconSizes,
 } from '../../constants/theme';
 import type { HostProfileSummary, PriceBreakdown } from '../../types/booking';
 import { formatBookingDate, formatCurrency } from '../../data/bookingMock';
@@ -46,6 +54,8 @@ function PriceRow({
   bold?: boolean;
   accent?: boolean;
 }) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.priceRow}>
       <Text style={[styles.priceLabel, bold && styles.priceLabelBold]}>{label}</Text>
@@ -75,6 +85,10 @@ export default function BookingScreen({
   onContinueSetup,
   onBack,
 }: BookingScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const { currency, nightlyRate, nights, subtotal, platformFee, total } =
     priceBreakdown;
@@ -83,25 +97,12 @@ export default function BookingScreen({
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      <LinearGradient
-        colors={[...gradients.headerCompact]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
-      >
-        <Pressable
-          onPress={onBack}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Request to book</Text>
-        <Text style={styles.headerSubtitle}>
-          Review your stay details before sending
-        </Text>
-      </LinearGradient>
+      <ScreenHeader
+        title="Request to book"
+        subtitle="Review your stay details before sending a request to the host"
+        compact
+        onBack={onBack}
+      />
 
       <ScrollView
         style={styles.scroll}
@@ -111,41 +112,43 @@ export default function BookingScreen({
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.hostCard}>
-          <View style={styles.hostIconWrap}>
-            <Text style={styles.hostInitials}>{host.initials}</Text>
-          </View>
-          <View style={styles.hostInfo}>
-            <Text style={styles.hostName}>{host.name}</Text>
-            <Text style={styles.hostLocation}>{host.location}</Text>
-            {showMatchScores ? (
-            <View style={styles.matchRow}>
-              <View style={styles.matchBadge}>
-                <Text style={styles.matchBadgeText}>{host.matchPercentage}% match</Text>
-              </View>
+        <Card padding="lg" elevation="card" style={styles.hostCard}>
+          <View style={styles.hostRow}>
+            <Avatar initials={host.initials} size="lg" style={styles.hostAvatar} />
+            <View style={styles.hostInfo}>
+              <Text style={styles.hostName}>{host.name}</Text>
+              <Text style={styles.hostLocation}>{host.location}</Text>
+              {showMatchScores ? (
+                <StatusBadge
+                  label={`${host.matchPercentage}% match`}
+                  tone="success"
+                  style={styles.matchBadge}
+                />
+              ) : null}
             </View>
-            ) : null}
           </View>
-        </View>
+        </Card>
 
-        <Text style={styles.sectionLabel}>Your stay</Text>
-        <View style={styles.datesCard}>
-          <View style={styles.dateBlock}>
-            <Text style={styles.dateLabel}>Check-in</Text>
-            <Text style={styles.dateValue}>{formatBookingDate(checkIn)}</Text>
+        <SectionHeader title="Your stay" />
+        <Card padding="lg" elevation="card" style={styles.datesCard}>
+          <View style={styles.datesInner}>
+            <View style={styles.dateBlock}>
+              <Text style={styles.dateLabel}>Check-in</Text>
+              <Text style={styles.dateValue}>{formatBookingDate(checkIn)}</Text>
+            </View>
+            <View style={styles.dateDivider} />
+            <View style={styles.dateBlock}>
+              <Text style={styles.dateLabel}>Check-out</Text>
+              <Text style={styles.dateValue}>{formatBookingDate(checkOut)}</Text>
+            </View>
           </View>
-          <View style={styles.dateDivider} />
-          <View style={styles.dateBlock}>
-            <Text style={styles.dateLabel}>Check-out</Text>
-            <Text style={styles.dateValue}>{formatBookingDate(checkOut)}</Text>
-          </View>
-        </View>
+        </Card>
         <Text style={styles.nightsHint}>
           {nights} {nights === 1 ? 'night' : 'nights'} · Host will review before you pay
         </Text>
 
-        <Text style={styles.sectionLabel}>Price summary</Text>
-        <View style={styles.priceCard}>
+        <SectionHeader title="Price summary" />
+        <Card padding="lg" elevation="card" style={styles.priceCard}>
           <PriceRow
             label={`${formatCurrency(nightlyRate, currency)} × ${nights} nights`}
             value={formatCurrency(subtotal, currency)}
@@ -162,23 +165,36 @@ export default function BookingScreen({
             bold
             accent
           />
-        </View>
+        </Card>
 
-        <Text style={styles.sectionLabel}>Cancellation policy</Text>
-        <View style={styles.policyCard}>
+        <SectionHeader title="Cancellation policy" />
+        <Card padding="lg" elevation="card" style={styles.policyCard}>
+          <AppIcon
+            name="document-text-outline"
+            size={iconSizes.md}
+            color={colors.onAccent}
+            style={styles.policyIcon}
+          />
           <Text style={styles.policyText}>{host.cancellationPolicy}</Text>
-        </View>
+        </Card>
 
-        <View style={styles.escrowCard}>
-          <Text style={styles.escrowTitle}>Held in escrow</Text>
+        <Card padding="lg" elevation="card" style={styles.escrowCard}>
+          <View style={styles.escrowTitleRow}>
+            <AppIcon
+              name="shield-checkmark-outline"
+              size={iconSizes.md}
+              color={colors.onAccent}
+            />
+            <Text style={styles.escrowTitle}>Held in escrow</Text>
+          </View>
           <Text style={styles.escrowText}>
             Payment is held securely until 24 hours after check-in. You are only
             charged after the host accepts your request.
           </Text>
-        </View>
+        </Card>
 
         {submitErrorMessage ? (
-          <Text style={styles.submitError}>{submitErrorMessage}</Text>
+          <InlineBanner message={submitErrorMessage} tone="error" style={styles.errorBanner} />
         ) : null}
       </ScrollView>
 
@@ -203,152 +219,91 @@ export default function BookingScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, shadows }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  backIcon: {
-    fontSize: fontSizes.heading,
-    color: colors.white,
-    fontWeight: fontWeights.bold,
-  },
-  headerTitle: {
-    fontSize: fontSizes.display,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-    marginBottom: spacing.sm,
-  },
-  headerSubtitle: {
-    fontSize: fontSizes.body,
-    color: colors.white,
-    opacity: 0.88,
-    lineHeight: 22,
-  },
   scroll: {
     flex: 1,
-    marginTop: -spacing.sm,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
   },
   hostCard: {
+    marginBottom: spacing.xl,
+  },
+  hostRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
   },
-  hostIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
+  hostAvatar: {
     marginRight: spacing.md,
-  },
-  hostInitials: {
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.tealDeep,
   },
   hostInfo: {
     flex: 1,
   },
   hostName: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
+    lineHeight: lineHeights.heading,
   },
   hostLocation: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.sm,
-  },
-  matchRow: {
-    flexDirection: 'row',
+    lineHeight: lineHeights.body,
   },
   matchBadge: {
-    backgroundColor: colors.teal,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-  },
-  matchBadgeText: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
-  },
-  sectionLabel: {
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: spacing.sm,
+    alignSelf: 'flex-start',
   },
   datesCard: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginBottom: spacing.sm,
+  },
+  datesInner: {
+    flexDirection: 'row',
   },
   dateBlock: {
     flex: 1,
   },
   dateLabel: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     marginBottom: spacing.xs,
+    lineHeight: lineHeights.caption,
   },
   dateValue: {
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
+    lineHeight: lineHeights.subheading,
   },
   dateDivider: {
-    width: 1,
+    width: borderWidths.hairline,
     backgroundColor: colors.border,
     marginHorizontal: spacing.md,
   },
   nightsHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     marginBottom: spacing.xl,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   priceCard: {
     backgroundColor: colors.warmCream,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   priceRow: {
     flexDirection: 'row',
@@ -358,96 +313,101 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     flex: 1,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     paddingRight: spacing.md,
   },
   priceLabelBold: {
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
   },
   priceValue: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
   },
   priceValueBold: {
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontWeight: fontWeights.semibold,
     fontSize: fontSizes.subheading,
+    lineHeight: lineHeights.subheading,
   },
   priceValueAccent: {
-    color: colors.tealDeep,
+    color: colors.onAccent,
   },
   priceDivider: {
-    height: 1,
+    height: borderWidths.hairline,
     backgroundColor: colors.border,
     opacity: 0.6,
   },
   policyCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   policyIcon: {
-    fontSize: 20,
     marginRight: spacing.md,
     marginTop: spacing.xs,
   },
   policyText: {
     flex: 1,
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
   },
   escrowCard: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginTop: spacing.lg,
   },
-  escrowTitle: {
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
+  escrowTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     marginBottom: spacing.sm,
   },
+  escrowTitle: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+    lineHeight: lineHeights.subheading,
+  },
   escrowText: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: lineHeights.body,
+  },
+  errorBanner: {
+    marginTop: spacing.lg,
+    marginBottom: 0,
   },
   footer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surface,
+    paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 8,
+    ...shadows.raised,
   },
   footerHint: {
+    fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     textAlign: 'center',
     marginTop: spacing.sm,
-    lineHeight: 18,
-  },
-  submitError: {
-    fontSize: fontSizes.caption,
-    color: colors.danger,
-    textAlign: 'center',
-    marginTop: spacing.md,
+    lineHeight: lineHeights.caption,
   },
 });
+}
+

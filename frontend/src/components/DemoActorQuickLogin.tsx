@@ -1,17 +1,19 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import AppIcon from './AppIcon';
 import type { DemoAccount } from '../data/demoAccounts';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
-  tints,
+  lineHeights,
+  iconSizes,
 } from '../constants/theme';
 
-const ROLE_ICONS: Record<string, string> = {
+const ROLE_GLYPHS: Record<string, string> = {
   student: '🎓',
   tourist: '🧳',
   host: '🏠',
@@ -31,10 +33,14 @@ export default function DemoActorQuickLogin({
   accounts,
   busy = false,
   variant = 'tabs',
-  title = 'Try a demo account',
-  hint = 'One tap — password for all: password',
+  title = 'Quick sign-in',
+  hint = 'Use a NestBridge sample profile to look around.',
   onSelect,
 }: DemoActorQuickLoginProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+
+
   if (accounts.length === 0) {
     return null;
   }
@@ -59,9 +65,15 @@ export default function DemoActorQuickLogin({
               accessibilityRole="button"
               accessibilityLabel={`Demo ${account.label}, ${account.name}`}
             >
-              <Text style={styles.tabIcon}>{ROLE_ICONS[account.id] ?? '👤'}</Text>
+              <View style={styles.tabIconTile}>
+                <AppIcon
+                  glyph={ROLE_GLYPHS[account.id] ?? '👤'}
+                  size={iconSizes.md}
+                  color={colors.onAccent}
+                />
+              </View>
               <Text style={styles.tabLabel}>{account.label}</Text>
-              <Text style={styles.tabName} numberOfLines={1}>
+              <Text style={styles.tabName} numberOfLines={2}>
                 {account.name}
               </Text>
             </Pressable>
@@ -95,7 +107,8 @@ export default function DemoActorQuickLogin({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints, shadows }: AppTheme) {
+  return StyleSheet.create({
   section: {
     marginBottom: spacing.md,
   },
@@ -110,7 +123,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textSecondary,
-    lineHeight: 18,
+    lineHeight: lineHeights.caption,
     marginBottom: spacing.md,
   },
   tabGrid: {
@@ -122,28 +135,34 @@ const styles = StyleSheet.create({
     width: '48%',
     flexGrow: 1,
     minWidth: '46%',
-    minHeight: 88,
-    backgroundColor: colors.white,
+    minHeight: 96,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
+    ...shadows.card,
   },
   tabCardPressed: {
     backgroundColor: tints.teal,
     borderColor: colors.teal,
   },
-  tabIcon: {
-    fontSize: fontSizes.heading,
+  tabIconTile: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    backgroundColor: tints.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.xs,
   },
   tabLabel: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.navy,
+    color: colors.textPrimary,
     textAlign: 'center',
   },
   tabName: {
@@ -154,13 +173,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   demoCard: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.sm,
     minHeight: 44,
+    ...shadows.card,
   },
   demoCardPressed: {
     opacity: 0.94,
@@ -173,7 +193,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   demoRolePill: {
-    backgroundColor: colors.navy,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.pill,
@@ -182,7 +204,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
     fontWeight: fontWeights.semibold,
-    color: colors.white,
+    color: colors.textPrimary,
   },
   demoName: {
     flex: 1,
@@ -195,9 +217,11 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
     color: colors.textSecondary,
-    lineHeight: 18,
+    lineHeight: lineHeights.caption,
   },
   disabled: {
     opacity: 0.6,
   },
 });
+}
+

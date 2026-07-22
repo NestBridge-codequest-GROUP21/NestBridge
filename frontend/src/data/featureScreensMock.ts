@@ -4,20 +4,18 @@ export type ChecklistTask = {
   completed: boolean;
 };
 
-export type CulturalPhraseCard = {
-  id: string;
-  emoji: string;
-  phrase: string;
-  translation: string;
-  hasAudio: boolean;
-};
-
-export type CulturalTopicCard = {
-  id: string;
-  emoji: string;
-  title: string;
-  description: string;
-};
+export type {
+  CulturalPhraseCard,
+  CulturalTopicCard,
+  PhraseGuideSection,
+  TopicGuideSection,
+} from './cultureLanguageGuide';
+import {
+  culturePhraseSections,
+  cultureTopicSections,
+  flattenCulturePhrases,
+  flattenCultureTopics,
+} from './cultureLanguageGuide';
 
 export type TransportRoute = {
   id: string;
@@ -39,6 +37,7 @@ export type StayListing = {
   location: string;
   rating: number;
   pricePerNight: string;
+  /** True only when host identity/provider verification is confirmed. */
   verifiedHost: boolean;
   amenities: string[];
   imageEmoji: string;
@@ -96,37 +95,13 @@ export const prepChecklistMock: ChecklistTask[] = [
   { id: 'sim', label: 'Secure a local SIM card', completed: false },
 ];
 
-export const localTipsPhrasesMock: CulturalPhraseCard[] = [
-  {
-    id: 'akwaaba',
-    emoji: '👋',
-    phrase: 'Akwaaba',
-    translation: 'Welcome',
-    hasAudio: true,
-  },
-  {
-    id: 'eti-sen',
-    emoji: '😊',
-    phrase: 'Eti sen?',
-    translation: 'How are you?',
-    hasAudio: true,
-  },
-];
+/** @deprecated Prefer culturePhraseSections — kept for API mock mapping. */
+export const localTipsPhrasesMock = flattenCulturePhrases(culturePhraseSections);
 
-export const localTipsTopicsMock: CulturalTopicCard[] = [
-  {
-    id: 'handshake',
-    emoji: '🤝',
-    title: 'Handshake norms',
-    description: 'Right-hand greetings and respectful eye contact',
-  },
-  {
-    id: 'phrases',
-    emoji: '📣',
-    title: 'Essential phrases',
-    description: 'Common Twi greetings for daily interactions',
-  },
-];
+/** Culture/etiquette topics only — practical living moved to practicalLocalTips. */
+export const localTipsTopicsMock = flattenCultureTopics(cultureTopicSections);
+
+export { culturePhraseSections, cultureTopicSections };
 
 export const transportTabsMock: TransportTab[] = [
   {
@@ -215,7 +190,7 @@ export const exploreStaysMock: StayListing[] = [
     location: 'Cantonments, Accra',
     rating: 4,
     pricePerNight: 'GHS 350/night',
-    verifiedHost: true,
+    verifiedHost: false,
     amenities: ['Wifi', 'Breakfast'],
     imageEmoji: '🏨',
   },
@@ -225,7 +200,7 @@ export const exploreStaysMock: StayListing[] = [
     location: 'University of Ghana, Legon',
     rating: 4,
     pricePerNight: 'GHS 90/night',
-    verifiedHost: true,
+    verifiedHost: false,
     amenities: ['Wifi', 'Laundry'],
     imageEmoji: '🛏️',
   },

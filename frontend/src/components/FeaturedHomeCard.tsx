@@ -1,12 +1,14 @@
+import { useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import Avatar from './Avatar';
+import Card from './Card';
+import StatusBadge from './StatusBadge';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
   lineHeights,
 } from '../constants/theme';
 
@@ -31,65 +33,55 @@ export default function FeaturedHomeCard({
   initials,
   onPress,
 }: FeaturedHomeCardProps) {
+  const styles = useThemedStyles(createStyles);
+
   const avatarText = initials ?? name.slice(0, 2).toUpperCase();
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${sectionLabel}. ${name}. ${details}`}
     >
-      <Text style={styles.sectionLabel}>{sectionLabel}</Text>
+      <Card padding="lg" elevation="card" style={styles.card}>
+        <Text style={styles.sectionLabel}>{sectionLabel}</Text>
 
-      <View style={styles.body}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{avatarText}</Text>
-        </View>
+        <View style={styles.body}>
+          <Avatar initials={avatarText} size="lg" style={styles.avatar} />
 
-        <View style={styles.content}>
-          <View style={styles.titleRow}>
-            <Text style={styles.name} numberOfLines={1}>
-              {name}
-            </Text>
-            {badge ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{badge}</Text>
+          <View style={styles.content}>
+            <View style={styles.titleRow}>
+              <Text style={styles.name} numberOfLines={2}>
+                {name}
+              </Text>
+              {badge ? <StatusBadge label={badge} tone="info" /> : null}
+            </View>
+            <Text style={styles.details}>{details}</Text>
+            {matchReasons && matchReasons.length > 0 ? (
+              <View style={styles.reasons}>
+                {matchReasons.map((reason) => (
+                  <Text key={reason} style={styles.reason}>
+                    {reason}
+                  </Text>
+                ))}
               </View>
             ) : null}
           </View>
-          <Text style={styles.details}>{details}</Text>
-          {matchReasons && matchReasons.length > 0 ? (
-            <View style={styles.reasons}>
-              {matchReasons.map((reason) => (
-                <Text key={reason} style={styles.reason}>
-                  {reason}
-                </Text>
-              ))}
-            </View>
-          ) : null}
         </View>
-      </View>
 
-      <Text style={styles.cta}>{ctaLabel}</Text>
+        <Text style={styles.cta}>{ctaLabel}</Text>
+      </Card>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
+  pressable: {
     marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    shadowColor: colors.navy,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
   },
+  card: {},
   pressed: {
     opacity: 0.94,
   },
@@ -108,47 +100,28 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.warmCream,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: spacing.md,
-  },
-  avatarText: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.caption,
-    color: colors.tealDeep,
   },
   content: {
     flex: 1,
+    minWidth: 0,
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexWrap: 'wrap',
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
   name: {
+    flexGrow: 1,
     flexShrink: 1,
-    fontFamily: fontFamilies.bold,
+    minWidth: '40%',
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.textPrimary,
-  },
-  badge: {
-    backgroundColor: colors.teal,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.pill,
-  },
-  badgeText: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
-    color: colors.white,
   },
   details: {
     fontFamily: fontFamilies.regular,
@@ -172,3 +145,5 @@ const styles = StyleSheet.create({
     color: colors.teal,
   },
 });
+}
+

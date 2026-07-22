@@ -2,52 +2,35 @@
  * NestBridge design tokens — single source of truth for all visual styling.
  *
  * Usage:
- *   import { colors, fontSizes, fontFamilies, lineHeights, spacing, borderRadius, gradients, layout } from '../constants/theme';
+ *   import { colors, fontSizes, fontFamilies, lineHeights, spacing, borderRadius, gradients, layout, shadows } from '../constants/theme';
+ *   // Prefer useTheme() / useThemedStyles() in components so light / dark-* variants update at runtime.
  *
  * Do NOT hardcode hex values, font sizes, or spacing in components.
- * If a token is missing, add it here first.
+ * If a token is missing, add it to theme/palettes.ts (colors) or here (layout).
  */
 
-export const colors = {
-  navy: '#0C1735',
-  navyMid: '#142247',
-  tealDeep: '#135062',
-  teal: '#0F7871',
-  tealBright: '#1AA68C',
-  gold: '#D4A017',
-  terracotta: '#D85A30',
-  warmCream: '#FBF8F2',
-  white: '#FFFFFF',
-  background: '#EFF5F3',
-  textPrimary: '#21273D',
-  textSecondary: '#6B7280',
-  textTertiary: '#9CA3AF',
-  border: '#D8DEDC',
-  success: '#2C8A7C',
-  warning: '#D4A017',
-  danger: '#C0392B',
-} as const;
+import {
+  lightColors,
+  lightTints,
+  lightGradients,
+  lightShadows,
+  lightOverlays,
+} from '../theme/palettes';
+
+/** @deprecated Prefer useTheme().colors — static light palette for module-scope fallbacks. */
+export const colors = lightColors;
 
 export type ColorToken = keyof typeof colors;
 
-/**
- * Soft, low-saturation tints derived from the brand palette. Used only as
- * backgrounds behind icons/tiles and progress-bar tracks — never for text.
- */
-export const tints = {
-  teal: '#E3F1EE',
-  gold: '#F7ECCF',
-  terracotta: '#F8E3D9',
-  navy: '#E4E8F0',
-  cream: colors.warmCream,
-} as const;
+/** @deprecated Prefer useTheme().tints */
+export const tints = lightTints;
 
 export type TintToken = keyof typeof tints;
 
 export const fontFamilies = {
-  regular: 'Inter_400Regular',
-  semibold: 'Inter_600SemiBold',
-  bold: 'Inter_700Bold',
+  regular: 'Poppins_400Regular',
+  semibold: 'Poppins_600SemiBold',
+  bold: 'Poppins_700Bold',
 } as const;
 
 export type FontFamilyToken = keyof typeof fontFamilies;
@@ -58,6 +41,8 @@ export const fontSizes = {
   subheading: 17,
   body: 16,
   caption: 13,
+  /** Badges and dense chrome only — never body copy. */
+  micro: 10,
 } as const;
 
 export type FontSizeToken = keyof typeof fontSizes;
@@ -68,6 +53,7 @@ export const lineHeights = {
   subheading: 24,
   body: 24,
   caption: 18,
+  micro: 12,
 } as const;
 
 export type LineHeightToken = keyof typeof lineHeights;
@@ -86,6 +72,7 @@ export const spacing = {
   md: 16,
   lg: 24,
   xl: 32,
+  xxl: 40,
 } as const;
 
 export type SpacingToken = keyof typeof spacing;
@@ -99,6 +86,46 @@ export const borderRadius = {
 
 export type BorderRadiusToken = keyof typeof borderRadius;
 
+export const borderWidths = {
+  hairline: 1,
+  strong: 1.5,
+} as const;
+
+export type BorderWidthToken = keyof typeof borderWidths;
+
+/** Minimum interactive control heights. */
+export const controlHeights = {
+  sm: 40,
+  md: 48,
+  lg: 52,
+} as const;
+
+export type ControlHeightToken = keyof typeof controlHeights;
+
+/** Standard icon sizes for AppIcon / Ionicons. */
+export const iconSizes = {
+  sm: 16,
+  md: 20,
+  lg: 24,
+  xl: 28,
+} as const;
+
+export type IconSizeToken = keyof typeof iconSizes;
+
+/** Initials avatar diameters. */
+export const avatarSizes = {
+  sm: 32,
+  md: 40,
+  lg: 48,
+  /** Profile / detail heroes only. */
+  xl: 72,
+} as const;
+
+export type AvatarSizeToken = keyof typeof avatarSizes;
+
+/** Minimum touch target edge length (pt). */
+export const touchTarget = 44;
+
 export const layout = {
   screenPaddingHorizontal: spacing.lg,
   tabBarHeight: 56,
@@ -106,23 +133,36 @@ export const layout = {
   sosDockHeight: 52,
   sosButtonSize: 56,
   sosRaise: spacing.lg,
+  /** Icon wells on empty states and quick-action tiles. */
+  iconTileSize: 56,
   sectionGap: spacing.lg,
   scrollBottomInset: 72,
   scrollBottomInsetWithSos: 124,
   listingCardWidth: 272,
   carouselMinHeight: 168,
+  cardPadding: spacing.md,
+  cardPaddingLarge: spacing.lg,
+  /** Top inset offset below safe area on auth forms. */
+  authContentTop: spacing.lg,
 } as const;
 
-export const gradients = {
-  header: [colors.navy, colors.navyMid, colors.tealDeep, colors.teal] as const,
-  headerCompact: [colors.navy, colors.tealDeep] as const,
-  accent: [colors.teal, colors.tealBright] as const,
-} as const;
+/** @deprecated Prefer useTheme().gradients */
+export const gradients = lightGradients;
 
 export const motion = {
   durationFast: 200,
   durationNormal: 400,
+  /** Cold-start splash: logo beat before name/motto reveal. */
+  durationSplashBeat1: 2000,
+  /** Cold-start splash total auto-continue (max). */
+  durationSplashTotal: 5000,
 } as const;
+
+/** @deprecated Prefer useTheme().shadows */
+export const shadows = lightShadows;
+
+/** @deprecated Prefer useTheme().overlays */
+export const overlays = lightOverlays;
 
 const theme = {
   colors,
@@ -133,9 +173,16 @@ const theme = {
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
+  controlHeights,
+  iconSizes,
+  avatarSizes,
+  touchTarget,
   layout,
   gradients,
   motion,
+  shadows,
+  overlays,
 };
 
 export default theme;

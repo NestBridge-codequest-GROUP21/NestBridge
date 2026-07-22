@@ -20,14 +20,26 @@ function youtubeThumb(youtubeId: string): string {
   return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
 }
 
+function video(
+  partial: Omit<VideoResourceApi, 'thumbnailUrl' | 'city'> & { city?: string },
+): VideoResourceApi {
+  return {
+    city: 'Accra',
+    thumbnailUrl: youtubeThumb(partial.youtubeId),
+    ...partial,
+  };
+}
+
 export const phrasesApiMock: PhraseApi[] = localTipsPhrasesMock.map((item) => ({
   id: item.id,
   emoji: item.emoji,
   phrase: item.phrase,
   translation: item.translation,
   hasAudio: item.hasAudio,
+  // Pronunciation guides live on the Culture & Language screen (not the thin API shape).
 }));
 
+/** Culture/etiquette topics only — practical living is local to PracticalTips. */
 export const topicsApiMock: TopicApi[] = localTipsTopicsMock.map((item) => ({
   id: item.id,
   emoji: item.emoji,
@@ -70,71 +82,127 @@ export const landmarksApiMock: MapLandmarkApi[] = offlineMapLandmarksMock.map((l
   leftPercent: landmark.leftPercent,
 }));
 
-/** Ghana relocation / Accra orientation videos (public YouTube embeds). */
+/**
+ * Curated Ghana video library for students, tourists, exchange visitors,
+ * volunteers, and expatriates. Every youtubeId is unique and playable —
+ * no placeholders, memes, or repeated clips.
+ */
 export const videosApiMock: VideoResourceApi[] = [
-  {
+  video({
     id: 'video-arrival',
     videoKey: 'arrival-tips',
-    title: 'Arriving in Ghana — What to Expect',
+    title: 'Arriving in Ghana — Visa, Money & Essentials',
     description:
-      'Visa, SIM cards, money, safety, and practical tips before you land at Kotoka.',
+      'Visa basics, SIM cards, Ghana cedis & ATMs, safety, plugs, and hotels — practical briefing for students, tourists, volunteers, and expats landing at Kotoka.',
     category: 'Orientation',
     youtubeId: 'ejJcat0HzQQ',
-    thumbnailUrl: youtubeThumb('ejJcat0HzQQ'),
-    city: 'Accra',
-  },
-  {
-    id: 'video-trotro',
-    videoKey: 'trotro-safety',
-    title: 'Getting Around Accra',
+  }),
+  video({
+    id: 'video-evisa',
+    videoKey: 'evisa-guide',
+    title: 'Ghana eVisa Portal — How to Apply',
     description:
-      'Neighborhoods, landmarks, and how visitors move through Ghana’s capital.',
-    category: 'Transport',
-    youtubeId: '7-VI47c0Q4A',
-    thumbnailUrl: youtubeThumb('7-VI47c0Q4A'),
-    city: 'Accra',
-  },
-  {
-    id: 'video-homestay',
-    videoKey: 'homestay-etiquette',
-    title: 'Accra Culture, Food & Safety Tips',
-    description:
-      'First-trip culture notes, food moments, and safety awareness for visitors.',
-    category: 'Culture',
-    youtubeId: 'Gjd_rKh5o64',
-    thumbnailUrl: youtubeThumb('Gjd_rKh5o64'),
-    city: 'Accra',
-  },
-  {
-    id: 'video-accra',
+      'Walkthrough of Ghana’s official eVisa platform: eligibility checks, tourist and student options, and how to track your application online.',
+    category: 'Visas',
+    youtubeId: 'sPXAY_ADui4',
+  }),
+  video({
+    id: 'video-accra-stay',
     videoKey: 'accra-orientation',
     title: 'Accra Neighborhood Guide',
     description:
-      'Black Star Square, Jamestown, and getting oriented in the capital.',
-    category: 'Orientation',
+      'Where to base yourself in Accra — areas near campus life (Legon), visitor hubs, and landmarks useful when choosing a homestay, hostel, or hotel.',
+    category: 'Accommodation',
     youtubeId: '8JLOminF2Do',
-    thumbnailUrl: youtubeThumb('8JLOminF2Do'),
-    city: 'Accra',
-  },
-  {
+  }),
+  video({
+    id: 'video-trotro',
+    videoKey: 'trotro-safety',
+    title: 'How to Take a Trotro in Ghana',
+    description:
+      'Beginner-friendly guide to Accra’s shared minibuses: spotting routes, paying the mate, signaling your stop, and riding confidently as a newcomer.',
+    category: 'Transport',
+    youtubeId: 'CiA_beyAAGg',
+  }),
+  video({
+    id: 'video-accra-tour',
+    videoKey: 'accra-getting-around',
+    title: 'Getting Around Accra',
+    description:
+      'Neighborhood landmarks and how visitors move through the capital — Independence Square, Jamestown, and everyday Accra navigation.',
+    category: 'Transport',
+    youtubeId: '7-VI47c0Q4A',
+  }),
+  video({
+    id: 'video-etiquette',
+    videoKey: 'homestay-etiquette',
+    title: 'Accra Culture, Food & Etiquette Tips',
+    description:
+      'First-trip culture notes, greetings, food moments, and respectful behavior for hosts, markets, and everyday Accra life.',
+    category: 'Etiquette',
+    youtubeId: 'Gjd_rKh5o64',
+  }),
+  video({
     id: 'video-market',
     videoKey: 'market-tips',
     title: 'Street Food & Markets in Accra',
     description:
-      'Chop-bar lunch and West African food markets — useful before you explore with hosts.',
-    category: 'Culture',
+      'Chop-bar lunch and West African food markets — practical for tourists, volunteers, and students exploring Accra with local hosts.',
+    category: 'Food',
     youtubeId: 'YvlYjLPgrCE',
-    thumbnailUrl: youtubeThumb('YvlYjLPgrCE'),
-    city: 'Accra',
-  },
-  {
+  }),
+  video({
     id: 'video-food',
     videoKey: 'food-intro',
-    title: 'Introduction to Ghanaian Food',
-    description: 'Must-try Accra dishes — jollof, banku, and local favorites.',
+    title: 'Must-Try Ghanaian Food in Accra',
+    description:
+      'Jollof, banku, waakye, and other Accra favorites — a food primer for international students and short-stay visitors.',
     category: 'Food',
     youtubeId: 'Yk4cpG1BOHg',
-    thumbnailUrl: youtubeThumb('Yk4cpG1BOHg'),
-    city: 'Accra',
-  },
+  }),
+  video({
+    id: 'video-twi',
+    videoKey: 'twi-basics',
+    title: 'Learn Basic Twi in 10 Minutes',
+    description:
+      'Essential Twi phrases for greetings and everyday conversation — ideal for tourists, exchange students, and newcomers settling in.',
+    category: 'Language',
+    youtubeId: 'QI3cVpxmXmI',
+  }),
+  video({
+    id: 'video-momo',
+    videoKey: 'momo-app',
+    title: 'MTN Mobile Money (MoMo) Tutorial',
+    description:
+      'How to use Ghana’s most common mobile wallet for transfers, payments, and everyday purchases once you have a local SIM.',
+    category: 'Mobile Money',
+    youtubeId: '5UWu7pNuUNE',
+  }),
+  video({
+    id: 'video-safety',
+    videoKey: 'ghana-safety',
+    title: 'Is Ghana Safe? An Honest Traveler Take',
+    description:
+      'Practical safety context for Accra and beyond — what advisories mean, everyday precautions, and when to use NestBridge SOS / dial 112.',
+    category: 'Safety',
+    youtubeId: 'Ws3iD0aF9ok',
+  }),
+  video({
+    id: 'video-cape-coast',
+    videoKey: 'cape-coast-heritage',
+    title: 'Cape Coast Castle — History & Visit',
+    description:
+      'Guided look at Cape Coast Castle and the Door of No Return — essential heritage context for diaspora travelers, students, and culture-focused trips.',
+    category: 'Culture',
+    youtubeId: 'icherdbJIWA',
+  }),
+  video({
+    id: 'video-homowo',
+    videoKey: 'homowo-festival',
+    title: 'Ga Mashie Homowo Festival',
+    description:
+      'Scenes from Homowo in Accra — Ghana’s Ga harvest festival with kpokpoi, drumming, and community processions visitors may encounter in August.',
+    category: 'Festivals',
+    youtubeId: 'PBDPQtR741Y',
+  }),
 ];

@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -7,6 +8,7 @@ import {
   Easing,
   Dimensions,
   ScrollView,
+  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -16,19 +18,22 @@ import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
 import DemoActorQuickLogin from '../../components/DemoActorQuickLogin';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
 import type { DemoAccount } from '../../data/demoAccounts';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
+  borderWidths,
   gradients,
   lineHeights,
   layout,
   motion,
+  touchTarget,
+  iconSizes,
+  avatarSizes,
 } from '../../constants/theme';
 
 const WELCOME_LOGO_SIZE = spacing.xl * 3;
@@ -49,9 +54,12 @@ export interface WelcomeScreenProps {
   onDemoLogin?: (account: DemoAccount) => void;
   onCreateAccount?: () => void;
   onSignIn?: () => void;
+  onStaffSignIn?: () => void;
 }
 
 function DriftRing({ size, style }: { size: number; style: object }) {
+  const styles = useThemedStyles(createStyles);
+
   const drift = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -107,7 +115,12 @@ export default function WelcomeScreen({
   onDemoLogin,
   onCreateAccount,
   onSignIn,
+  onStaffSignIn,
 }: WelcomeScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = Dimensions.get('window');
   const entrance = useRef(new Animated.Value(0)).current;
@@ -138,7 +151,7 @@ export default function WelcomeScreen({
         keyboardShouldPersistTaps="handled"
       >
         <LinearGradient
-          colors={[...gradients.header]}
+          colors={gradients.header}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.hero, { paddingTop: insets.top + spacing.lg }]}
@@ -148,7 +161,7 @@ export default function WelcomeScreen({
             style={{ position: 'absolute', top: -spacing.xl, right: -spacing.lg }}
           />
 
-          <BrandLogoMark size={WELCOME_LOGO_SIZE} />
+          <BrandLogoMark size={WELCOME_LOGO_SIZE} framed />
 
           {tagline ? <Text style={styles.tagline}>{tagline}</Text> : null}
 
@@ -175,12 +188,12 @@ export default function WelcomeScreen({
         >
           <View style={styles.pillsWrap}>
             {valuePills.map((pill) => (
-              <View key={pill.label} style={styles.pill}>
+              <Card key={pill.label} style={styles.pill} padding="md">
                 <View style={styles.pillIconTile}>
-                  <AppIcon glyph={pill.icon} size={20} color={colors.tealDeep} />
+                  <AppIcon glyph={pill.icon} size={iconSizes.md} color={colors.onAccent} />
                 </View>
                 <Text style={styles.pillLabel}>{pill.label}</Text>
-              </View>
+              </Card>
             ))}
           </View>
         </Animated.View>
@@ -200,8 +213,8 @@ export default function WelcomeScreen({
               accounts={demoAccounts}
               busy={demoLoginBusy}
               variant="tabs"
-              title="Jump into a demo"
-              hint="Backend + demo data — password: password"
+              title="Quick sign-in"
+              hint="Use a NestBridge sample profile to look around."
               onSelect={onDemoLogin}
             />
             <Text style={styles.dividerLabel}>or continue with your account</Text>
@@ -210,12 +223,26 @@ export default function WelcomeScreen({
         <PrimaryButton label="Create account" onPress={onCreateAccount} />
         <View style={styles.signInSpacer} />
         <SecondaryButton label="Sign in" onPress={onSignIn} />
+        {onStaffSignIn ? (
+          <>
+            <View style={styles.signInSpacer} />
+            <Pressable
+              onPress={onStaffSignIn}
+              accessibilityRole="button"
+              accessibilityLabel="Staff sign-in"
+              style={({ pressed }) => [styles.staffLink, pressed && { opacity: 0.85 }]}
+            >
+              <Text style={styles.staffLinkText}>Staff sign-in</Text>
+            </Pressable>
+          </>
+        ) : null}
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
@@ -236,15 +263,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   driftRing: {
-    borderWidth: 1,
+    borderWidth: borderWidths.hairline,
     borderColor: colors.white,
     opacity: 0.1,
     backgroundColor: 'transparent',
   },
   tagline: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
-    fontWeight: fontWeights.bold,
+    fontWeight: fontWeights.semibold,
     color: colors.gold,
     letterSpacing: spacing.xs,
     textTransform: 'uppercase',
@@ -254,7 +281,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     lineHeight: lineHeights.heading,
     marginTop: spacing.sm,
     marginBottom: spacing.sm,
@@ -264,7 +291,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     fontWeight: fontWeights.regular,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     lineHeight: lineHeights.body,
     textAlign: 'center',
@@ -282,17 +309,12 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
     gap: spacing.md,
-    minHeight: 44,
+    minHeight: touchTarget,
   },
   pillIconTile: {
-    width: 40,
-    height: 40,
+    width: avatarSizes.md,
+    height: avatarSizes.md,
     borderRadius: borderRadius.md,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -309,12 +331,23 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: borderWidths.hairline,
     borderTopColor: colors.border,
     backgroundColor: colors.background,
   },
   signInSpacer: {
     height: spacing.sm,
+  },
+  staffLink: {
+    minHeight: touchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  staffLinkText: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
+    color: colors.teal,
   },
   dividerLabel: {
     fontFamily: fontFamilies.regular,
@@ -324,3 +357,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 });
+}
+

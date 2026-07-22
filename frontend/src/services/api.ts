@@ -12,6 +12,7 @@ import type {
 } from '../types/booking';
 import type { AuthSession, AuthUser } from '../types/auth';
 import type { LodgingCategory, LodgingListing } from '../types/lodging';
+import { normalizeVerification } from '../types/verification';
 import type {
   StudentEvent,
   StudentEventDraft,
@@ -101,6 +102,53 @@ export interface AdminUserActivity {
   recentSosAlerts: AdminSosActivity[];
 }
 
+export interface AdminOverview {
+  totalUsers: number;
+  studentCount: number;
+  touristCount: number;
+  hostCount: number;
+  guideCount: number;
+  staffCount: number;
+  suspendedCount: number;
+  unverifiedIdentityCount: number;
+  unverifiedEmailCount: number;
+  activeHostListings: number;
+  activeGuideListings: number;
+  hiddenHostListings: number;
+  hiddenGuideListings: number;
+  pendingBookings: number;
+  confirmedBookings: number;
+  sosLast24Hours: number;
+  sosLast7Days: number;
+  recentBookings: AdminBookingActivity[];
+  recentSosAlerts: AdminSosActivity[];
+}
+
+export interface AdminListingModeration {
+  listingId: string;
+  type: string;
+  ownerUserId: string;
+  ownerName: string;
+  ownerEmail?: string | null;
+  city?: string | null;
+  active: boolean;
+  hidden: boolean;
+}
+
+export interface AdminListingVisibilityResult {
+  listingId: string;
+  type: string;
+  active: boolean;
+  hidden: boolean;
+}
+
+export interface StaffAuditResult {
+  auditId: string;
+  action: string;
+  detail?: string | null;
+  createdAt?: string | null;
+}
+
 function authUserFromPayload(payload: AuthTokenPayload): AuthUser {
   return {
     userId: payload.userId,
@@ -119,6 +167,13 @@ export interface MatchResult {
   compatibilityScore: number;
   matchReasons: string[];
   trustBadge?: string;
+  verification?: {
+    providerVerified?: boolean;
+    identityVerified?: boolean;
+    phoneVerified?: boolean;
+    locationVerified?: boolean;
+    experienceVerified?: boolean;
+  };
   pricePerNight?: number;
   distanceKm?: number;
   location?: string;
@@ -179,6 +234,7 @@ export interface BookingApi {
   totalPrice?: number;
   platformFee?: number;
   status: BookingStatus;
+  paymentStatus?: string | null;
   guestName?: string;
   guestInitials?: string;
   providerName?: string;
@@ -320,6 +376,13 @@ export interface HostProfileApi {
   reviewCount?: number;
   active?: boolean;
   availabilityCalendar?: Record<string, unknown>;
+  verification?: {
+    providerVerified?: boolean;
+    identityVerified?: boolean;
+    phoneVerified?: boolean;
+    locationVerified?: boolean;
+    experienceVerified?: boolean;
+  };
 }
 
 export interface GuideProfileApi {
@@ -339,6 +402,13 @@ export interface GuideProfileApi {
   reviewCount?: number;
   active?: boolean;
   availabilitySchedule?: Record<string, unknown>;
+  verification?: {
+    providerVerified?: boolean;
+    identityVerified?: boolean;
+    phoneVerified?: boolean;
+    locationVerified?: boolean;
+    experienceVerified?: boolean;
+  };
 }
 
 export interface HostCalendarDayApi {
@@ -361,7 +431,8 @@ export interface HostActiveBookingApi {
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 8000,
+  // Railway free/hobby tiers often cold-start past 8s; short timeouts look like "offline".
+  timeout: 25000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -540,6 +611,7 @@ export async function register(
       email: string;
       displayName: string;
       requiresEmailVerification: boolean;
+      emailDeliveryFailed?: boolean;
     }>
   >('/api/auth/register', {
     fullName: displayName,
@@ -551,6 +623,8 @@ export async function register(
     email: payload.email,
     displayName: payload.displayName,
     requiresEmailVerification: payload.requiresEmailVerification,
+    emailDeliveryFailed: Boolean(payload.emailDeliveryFailed),
+    message: data?.message,
   };
 }
 
@@ -627,6 +701,17 @@ export async function setAdminUserKycStatus(
   return unwrap({ data });
 }
 
+export async function setAdminUserEmailVerified(
+  userId: string,
+  emailVerified: boolean,
+): Promise<AdminUserDetail> {
+  const { data } = await api.patch<ApiResponse<AdminUserDetail>>(
+    `/api/admin/users/${userId}/email-verified`,
+    { emailVerified },
+  );
+  return unwrap({ data });
+}
+
 export async function setAdminUserStaffStatus(
   userId: string,
   isStaff: boolean,
@@ -642,6 +727,43 @@ export async function getAdminUserActivity(userId: string): Promise<AdminUserAct
   const { data } = await api.get<ApiResponse<AdminUserActivity>>(
     `/api/admin/users/${userId}/activity`,
   );
+  return unwrap({ data });
+}
+
+export async function getAdminOverview(): Promise<AdminOverview> {
+  const { data } = await api.get<ApiResponse<AdminOverview>>('/api/admin/overview');
+  return unwrap({ data });
+}
+
+export async function listAdminListings(params?: {
+  type?: string;
+  hidden?: boolean;
+}): Promise<AdminListingModeration[]> {
+  const { data } = await api.get<ApiResponse<AdminListingModeration[]>>('/api/admin/listings', {
+    params,
+  });
+  return unwrap({ data });
+}
+
+export async function setAdminListingVisibility(
+  listingId: string,
+  hidden: boolean,
+): Promise<AdminListingVisibilityResult> {
+  const { data } = await api.patch<ApiResponse<AdminListingVisibilityResult>>(
+    `/api/admin/listings/${listingId}/visibility`,
+    { hidden },
+  );
+  return unwrap({ data });
+}
+
+export async function recordStaffAudit(
+  action: string,
+  detail?: string,
+): Promise<StaffAuditResult> {
+  const { data } = await api.post<ApiResponse<StaffAuditResult>>('/api/admin/audit', {
+    action,
+    detail,
+  });
   return unwrap({ data });
 }
 
@@ -678,6 +800,7 @@ export function mapHostProfileApi(dto: HostProfileApi): HostProfileSummary {
     currency: 'GHS',
     cancellationPolicy: dto.cancellationPolicy ?? 'FLEXIBLE',
     icon: '🏡',
+    verification: normalizeVerification(dto.verification),
   };
 }
 
@@ -697,6 +820,7 @@ export function mapGuideProfileApi(dto: GuideProfileApi): GuideProfileSummary {
     languages: dto.languagesOffered ?? ['English'],
     cancellationPolicy: 'FLEXIBLE',
     icon: '🗺️',
+    verification: normalizeVerification(dto.verification),
   };
 }
 
@@ -765,6 +889,16 @@ export async function getMyGuideCalendar(
 
 export async function findMatches(params: MatchFindParams): Promise<MatchResult[]> {
   const { data } = await api.post<ApiResponse<MatchResult[]>>('/api/matches/find', params);
+  return unwrap({ data });
+}
+
+export async function getHomeRecommendations(params?: {
+  city?: string;
+  role?: string;
+}): Promise<import('../types/recommendations').HomeRecommendations> {
+  const { data } = await api.get<
+    ApiResponse<import('../types/recommendations').HomeRecommendations>
+  >('/api/recommendations/home', { params });
   return unwrap({ data });
 }
 
@@ -838,6 +972,17 @@ export interface PaymentInitializeResult {
   mockPayment: boolean;
   authorizationUrl?: string;
   reference?: string;
+  bookingId?: string;
+  amount?: number;
+  currency?: string;
+}
+
+export interface PaymentVerifyResult {
+  paid: boolean;
+  reference?: string;
+  bookingStatus?: string;
+  paymentStatus?: string;
+  message?: string;
 }
 
 export async function initializeBookingPayment(
@@ -845,6 +990,15 @@ export async function initializeBookingPayment(
 ): Promise<PaymentInitializeResult> {
   const { data } = await api.post<ApiResponse<PaymentInitializeResult>>(
     `/api/bookings/${bookingId}/payment/initialize`,
+  );
+  return unwrap({ data });
+}
+
+export async function verifyBookingPayment(
+  bookingId: string,
+): Promise<PaymentVerifyResult> {
+  const { data } = await api.post<ApiResponse<PaymentVerifyResult>>(
+    `/api/bookings/${bookingId}/payment/verify`,
   );
   return unwrap({ data });
 }
@@ -1167,11 +1321,39 @@ export async function leaveStudentEvent(eventId: string): Promise<StudentEventAp
 
 export function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
+    const status = error.response?.status;
     const msg = (error.response?.data as ApiResponse<unknown> | undefined)?.message;
-    if (msg) return msg;
-    if (error.code === 'ECONNABORTED') return 'Request timed out. Check your connection.';
-    if (!error.response) return 'Cannot reach the server. Start the backend and try again.';
-    return error.message;
+
+    if (msg && typeof msg === 'string' && msg.trim()) {
+      return msg;
+    }
+
+    if (error.code === 'ECONNABORTED') {
+      return 'NestBridge is taking too long to respond. Wait a few seconds for the server to wake up, then try again.';
+    }
+
+    // No HTTP response → DNS / TLS / offline / server unreachable (phone can still show 4G).
+    if (!error.response) {
+      return 'Cannot reach NestBridge right now. Check your connection, wait a few seconds if the server is waking up, then try again.';
+    }
+
+    if (status === 429) {
+      return 'Too many attempts. Please wait a minute and try again.';
+    }
+    if (status === 503 || status === 502) {
+      return 'Email delivery is temporarily unavailable. Please try again shortly.';
+    }
+    if (status === 401) {
+      return 'Your session has expired. Please sign in again.';
+    }
+    if (status === 403) {
+      return 'You do not have permission to do that.';
+    }
+    if (status != null && status >= 500) {
+      return 'The server ran into a problem. Please try again.';
+    }
+
+    return error.message || 'Something went wrong.';
   }
   if (error instanceof Error) return error.message;
   return 'Something went wrong.';

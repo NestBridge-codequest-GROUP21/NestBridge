@@ -1,5 +1,6 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -7,23 +8,28 @@ import AppTabBar, { type TabBarItem } from '../../components/AppTabBar';
 import FeaturedHomeCard, {
   type FeaturedHomeCardProps,
 } from '../../components/FeaturedHomeCard';
-import QuickActionsGrid, {
-  type QuickActionItem,
-} from '../../components/QuickActionsGrid';
-import ExploreSectionCarousel from '../../components/ExploreSectionCarousel';
 import DiscoveryListingSection, {
   type DiscoveryListingItem,
 } from '../../components/DiscoveryListingSection';
+import RecommendedForYou from '../../components/RecommendedForYou';
+import JourneyProgressCard from '../../components/JourneyProgressCard';
 import RecentActivityList, {
   type RecentActivityItem,
 } from '../../components/RecentActivityList';
 import ReminderBanner from '../../components/ReminderBanner';
+import SectionRetryBanner from '../../components/SectionRetryBanner';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
-import { colors, spacing, fontFamilies, fontSizes, fontWeights } from '../../constants/theme';
-import type { ExploreSectionItem } from '../tourist/ExploreHomeScreen';
+import SkeletonLoader from '../../components/SkeletonLoader';
+import {
+  spacing,
+  layout,
+} from '../../constants/theme';
+import type { RecommendationItem, RecommendationSection } from '../../types/recommendations';
+import type { EmptyStateContent } from '../../data/appCopy';
+import { emptyStates } from '../../data/appCopy';
+import type { JourneyProgress } from '../../types/journeyProgress';
 
 export type { TabBarItem } from '../../components/AppTabBar';
-export type { QuickActionItem } from '../../components/QuickActionsGrid';
 
 export interface SuggestedHostItem {
   id: string;
@@ -42,16 +48,22 @@ export interface StudentHomeDashboardProps {
   statusLabel?: string;
   notificationCount?: number;
   featuredMatch?: Omit<FeaturedHomeCardProps, 'onPress'>;
-  quickActions: QuickActionItem[];
-  recommendedSections?: ExploreSectionItem[];
-  recommendedSectionTitle?: string;
+  /** Personalized destination-aware recommendations (slim nearby only). */
+  recommendationSections?: RecommendationSection[];
+  recommendationHeadline?: string;
+  recommendationCity?: string;
   suggestedHosts?: SuggestedHostItem[];
   suggestedHostsTitle?: string;
+  hostsEmptyState?: EmptyStateContent;
   showMatchScores?: boolean;
+  journeyProgress?: JourneyProgress | null;
   recentActivity?: RecentActivityItem[];
   reminder?: string;
   isHomeLoading?: boolean;
+  /** Fatal only — every home section failed. Partial failures use section props. */
   homeDataError?: string | null;
+  hostsLoadError?: string | null;
+  activityLoadError?: string | null;
   tabBarItems: TabBarItem[];
   activeTabId: string;
   showSosDock?: boolean;
@@ -61,8 +73,12 @@ export interface StudentHomeDashboardProps {
   onNotificationPress?: () => void;
   onFeaturedMatchPress?: () => void;
   onSuggestedHostPress?: (hostId: string) => void;
-  onRecommendedSectionPress?: (sectionId: string) => void;
-  onQuickActionPress?: (actionId: string) => void;
+  onHostsEmptyPrimaryAction?: () => void;
+  onRetryHosts?: () => void;
+  onRetryActivity?: () => void;
+  onRetryHome?: () => void;
+  onRecommendationItemPress?: (item: RecommendationItem) => void;
+  onRecommendationsEmptyPress?: () => void;
   onReminderPress?: () => void;
   onTabPress?: (tabId: string) => void;
 }
@@ -75,16 +91,20 @@ export default function StudentHomeDashboard({
   statusLabel,
   notificationCount = 0,
   featuredMatch,
-  quickActions,
-  recommendedSections = [],
-  recommendedSectionTitle = 'Prep before you arrive',
+  recommendationSections = [],
+  recommendationHeadline = 'Nearby for you',
+  recommendationCity,
   suggestedHosts = [],
-  suggestedHostsTitle = 'Suggested hosts',
+  suggestedHostsTitle = 'Homestays nearby',
+  hostsEmptyState,
   showMatchScores = false,
+  journeyProgress = null,
   recentActivity = [],
   reminder,
   isHomeLoading = false,
   homeDataError,
+  hostsLoadError,
+  activityLoadError,
   tabBarItems,
   activeTabId,
   showSosDock = false,
@@ -94,11 +114,17 @@ export default function StudentHomeDashboard({
   onNotificationPress,
   onFeaturedMatchPress,
   onSuggestedHostPress,
-  onRecommendedSectionPress,
-  onQuickActionPress,
+  onHostsEmptyPrimaryAction,
+  onRetryHosts,
+  onRetryActivity,
+  onRetryHome,
+  onRecommendationItemPress,
+  onRecommendationsEmptyPress,
   onReminderPress,
   onTabPress,
 }: StudentHomeDashboardProps) {
+  const styles = useThemedStyles(createStyles);
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -116,14 +142,28 @@ export default function StudentHomeDashboard({
       <ScreenScroll withTabBar withSosDock={showSosDock}>
         {showSetupBanner ? (
           <ProfileIncompleteBanner
-            message="Complete your travel profile to unlock homestay booking."
+            message="Complete your travel profile to unlock messaging, bookings, and personalized matches."
+            continueLabel="Complete Profile"
             onContinueSetup={onSetupPress}
           />
         ) : null}
 
+        {homeDataError ? (
+          <SectionRetryBanner
+            message={homeDataError}
+            onRetry={onRetryHome}
+            retryLabel="Retry home"
+          />
+        ) : null}
+
         {isHomeLoading ? (
-          <View style={styles.loadingWrap}>
-            <ActivityIndicator size="large" color={colors.teal} />
+          <View
+            style={styles.loadingWrap}
+            accessibilityRole="progressbar"
+            accessibilityLabel="Loading your home"
+          >
+            <SkeletonLoader lines={3} style={styles.skeletonCard} />
+            <SkeletonLoader lines={2} style={styles.skeletonCard} />
           </View>
         ) : null}
 
@@ -134,12 +174,17 @@ export default function StudentHomeDashboard({
           />
         ) : null}
 
-        <QuickActionsGrid
-          actions={quickActions}
-          onActionPress={onQuickActionPress}
-        />
+        {journeyProgress ? (
+          <JourneyProgressCard journey={journeyProgress} />
+        ) : null}
 
-        {suggestedHosts.length > 0 ? (
+        {hostsLoadError ? (
+          <SectionRetryBanner
+            message={hostsLoadError}
+            onRetry={onRetryHosts}
+            retryLabel="Retry hosts"
+          />
+        ) : (
           <DiscoveryListingSection
             title={suggestedHostsTitle}
             items={suggestedHosts.map((host): DiscoveryListingItem => ({
@@ -156,28 +201,37 @@ export default function StudentHomeDashboard({
               matchPercentage: host.matchPercentage,
             }))}
             showMatchScores={showMatchScores}
+            emptyState={hostsEmptyState}
+            onEmptyPrimaryAction={onHostsEmptyPrimaryAction}
             onItemPress={onSuggestedHostPress}
+            actionLabel="See all"
+            onActionPress={onHostsEmptyPrimaryAction}
+          />
+        )}
+
+        {recommendationSections.length > 0 ? (
+          <RecommendedForYou
+            headline={recommendationHeadline}
+            city={recommendationCity}
+            sections={recommendationSections}
+            emptyState={emptyStates.recommendations}
+            onEmptyPrimaryAction={onRecommendationsEmptyPress}
+            onItemPress={onRecommendationItemPress}
           />
         ) : null}
 
-        {recommendedSections.length > 0 ? (
-          <View style={styles.carouselSection}>
-            <Text style={styles.sectionTitle}>{recommendedSectionTitle}</Text>
-            <ExploreSectionCarousel
-              sections={recommendedSections}
-              onSectionPress={onRecommendedSectionPress}
-            />
-          </View>
-        ) : null}
-
-        <RecentActivityList items={recentActivity} />
-
-        {homeDataError || reminder ? (
-          <ReminderBanner
-            icon={homeDataError ? '⚠️' : '🔔'}
-            message={homeDataError ?? reminder ?? ''}
-            onPress={onReminderPress}
+        {activityLoadError ? (
+          <SectionRetryBanner
+            message={activityLoadError}
+            onRetry={onRetryActivity}
+            retryLabel="Retry activity"
           />
+        ) : (
+          <RecentActivityList items={recentActivity} />
+        )}
+
+        {!homeDataError && reminder ? (
+          <ReminderBanner message={reminder} onPress={onReminderPress} />
         ) : null}
       </ScreenScroll>
 
@@ -192,25 +246,25 @@ export default function StudentHomeDashboard({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  carouselSection: {
-    marginTop: spacing.md,
+  sectionBlock: {
+    marginBottom: layout.sectionGap,
   },
-  sectionTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
+  sectionHeader: {
     marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
   },
   loadingWrap: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
     marginBottom: spacing.lg,
+    gap: spacing.md,
+  },
+  skeletonCard: {
+    width: '100%',
   },
 });
+}
+

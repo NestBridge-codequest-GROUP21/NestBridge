@@ -1,17 +1,14 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppIcon from '../../components/AppIcon';
+import Card from '../../components/Card';
+import PrimaryButton from '../../components/PrimaryButton';
+import SecondaryButton from '../../components/SecondaryButton';
 import type { KYCPromptData } from '../../data/kycPromptMock';
 import {
-  colors,
-  tints,
   fontFamilies,
   fontSizes,
   fontWeights,
@@ -19,6 +16,8 @@ import {
   borderRadius,
   layout,
   lineHeights,
+  iconSizes,
+  avatarSizes,
 } from '../../constants/theme';
 
 export interface KYCPromptScreenProps {
@@ -33,16 +32,20 @@ export default function KYCPromptScreen({
   onVerifyNow,
   onVerifyLater,
 }: KYCPromptScreenProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, scheme } = useTheme();
+
+
   const insets = useSafeAreaInsets();
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
       <View
         style={[
           styles.topSection,
-          { paddingTop: insets.top + spacing.xl },
+          { paddingTop: insets.top + spacing.xxl },
         ]}
       >
         <Text style={styles.roleLabel}>{data.roleLabel}</Text>
@@ -51,42 +54,27 @@ export default function KYCPromptScreen({
       </View>
 
       <View style={styles.iconContainer} accessibilityLabel="Identity verification">
-        <View style={styles.iconTile}>
-          <AppIcon name="card-outline" size={64} color={colors.tealDeep} />
-        </View>
+        <Card padding="none" elevation="none" style={styles.iconTile}>
+          <AppIcon name="card-outline" size={avatarSizes.lg + iconSizes.lg} color={colors.onAccent} />
+        </Card>
       </View>
 
       <View
         style={[
           styles.buttonContainer,
-          { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.xl },
+          { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.xxl },
         ]}
       >
-        <Pressable
-          style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
-          onPress={onVerifyNow}
-          accessibilityRole="button"
-          accessibilityLabel="Verify now"
-        >
-          <Text style={styles.primaryButtonText}>Verify now</Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
-          onPress={onVerifyLater}
-          accessibilityRole="button"
-          accessibilityLabel="Verify later"
-        >
-          <Text style={styles.secondaryButtonText}>Verify later</Text>
-        </Pressable>
-
+        <PrimaryButton label="Verify now" onPress={onVerifyNow} />
+        <SecondaryButton label="Verify later" onPress={onVerifyLater} />
         <Text style={styles.note}>{data.note}</Text>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors, tints }: AppTheme) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -106,16 +94,18 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   heading: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.display - 6,
-    fontWeight: fontWeights.bold,
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.heading,
+    fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.md,
+    lineHeight: lineHeights.heading,
   },
   explanation: {
     fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body - 1,
+    fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: lineHeights.body,
@@ -125,8 +115,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconTile: {
-    width: 120,
-    height: 120,
+    width: layout.iconTileSize + avatarSizes.xl,
+    height: layout.iconTileSize + avatarSizes.xl,
     borderRadius: borderRadius.lg,
     backgroundColor: tints.teal,
     alignItems: 'center',
@@ -135,44 +125,15 @@ const styles = StyleSheet.create({
   buttonContainer: {
     gap: spacing.sm,
   },
-  primaryButton: {
-    backgroundColor: colors.teal,
-    borderRadius: borderRadius.lg,
-    minHeight: 44,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    fontFamily: fontFamilies.bold,
-    color: colors.white,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.bold,
-  },
-  secondaryButton: {
-    borderRadius: borderRadius.lg,
-    minHeight: 44,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.teal,
-  },
-  secondaryButtonText: {
-    fontFamily: fontFamilies.semibold,
-    color: colors.teal,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-  },
   note: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.regular,
     color: colors.textTertiary,
     textAlign: 'center',
     marginTop: spacing.sm,
     lineHeight: lineHeights.caption,
   },
-  pressed: {
-    opacity: 0.88,
-  },
 });
+}
+

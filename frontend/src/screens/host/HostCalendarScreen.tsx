@@ -1,19 +1,22 @@
+import { useThemedStyles, type AppTheme } from '../../theme';
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
+import Card from '../../components/Card';
+import InlineBanner from '../../components/InlineBanner';
+import SectionHeader from '../../components/SectionHeader';
 import MonthCalendarGrid, {
   buildHostCalendarGrid,
 } from '../../components/MonthCalendarGrid';
 import type { ActiveBookingDetail, HostCalendarDay } from '../../data/featureScreensMock';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
-  borderRadius,
+  lineHeights,
 } from '../../constants/theme';
 
 export interface HostCalendarScreenProps {
@@ -26,7 +29,7 @@ export interface HostCalendarScreenProps {
   monthLabel: string;
   startWeekday: number;
   days: HostCalendarDay[];
-  activeBooking: ActiveBookingDetail;
+  activeBooking: ActiveBookingDetail | null;
   editable?: boolean;
   statusMessage?: string | null;
   onDayInteract?: (day: number) => void;
@@ -49,6 +52,8 @@ export default function HostCalendarScreen({
   onDayInteract,
   onBack,
 }: HostCalendarScreenProps) {
+  const styles = useThemedStyles(createStyles);
+
   const [selectedDay, setSelectedDay] = useState(10);
 
   const gridDays = useMemo(
@@ -76,12 +81,14 @@ export default function HostCalendarScreen({
       />
 
       <ScreenScroll>
-        <Text style={styles.screenTitle}>{calendarTitle}</Text>
-        {editable ? (
-          <Text style={styles.screenSubtitle}>
-            Tap an open day to block or unblock it. Booked days cannot be changed.
-          </Text>
-        ) : null}
+        <SectionHeader
+          title={calendarTitle}
+          subtitle={
+            editable
+              ? 'Tap an open day to block or unblock it. Booked days cannot be changed.'
+              : undefined
+          }
+        />
 
         <MonthCalendarGrid
           monthLabel={monthLabel}
@@ -91,55 +98,40 @@ export default function HostCalendarScreen({
           onDayPress={handleDayPress}
         />
 
-        {statusMessage ? <Text style={styles.statusMessage}>{statusMessage}</Text> : null}
+        {statusMessage ? (
+          <InlineBanner message={statusMessage} tone="info" style={styles.statusBanner} />
+        ) : null}
 
-        <View style={styles.bookingCard}>
-          <Text style={styles.bookingTitle}>Active booking</Text>
-          <Text style={styles.bookingDetail}>
-            Guest: {activeBooking.guestName}, {activeBooking.dateRange}
-          </Text>
-          <Text style={styles.bookingTotal}>Total: {activeBooking.totalAmount}</Text>
-        </View>
+        {activeBooking ? (
+          <Card padding="lg" style={styles.bookingCard}>
+            <Text style={styles.bookingTitle}>Active booking</Text>
+            <Text style={styles.bookingDetail}>
+              Guest: {activeBooking.guestName}, {activeBooking.dateRange}
+            </Text>
+            <Text style={styles.bookingTotal}>Total: {activeBooking.totalAmount}</Text>
+          </Card>
+        ) : null}
       </ScreenScroll>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  screenTitle: {
-    fontFamily: fontFamilies.bold,
-    fontSize: fontSizes.heading,
-    fontWeight: fontWeights.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  screenSubtitle: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-  },
-  statusMessage: {
-    marginTop: spacing.sm,
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
+  statusBanner: {
+    marginTop: spacing.md,
   },
   bookingCard: {
     marginTop: spacing.lg,
-    backgroundColor: colors.white,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
   },
   bookingTitle: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.caption,
+    fontWeight: fontWeights.semibold,
     color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
@@ -148,12 +140,18 @@ const styles = StyleSheet.create({
   bookingDetail: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
+    fontWeight: fontWeights.regular,
     color: colors.textPrimary,
     marginBottom: spacing.xs,
+    lineHeight: lineHeights.body,
   },
   bookingTotal: {
-    fontFamily: fontFamilies.bold,
+    fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.semibold,
+    lineHeight: lineHeights.subheading,
     color: colors.teal,
   },
 });
+}
+

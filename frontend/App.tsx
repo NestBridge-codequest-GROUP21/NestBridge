@@ -1,43 +1,66 @@
 import React, { useEffect, useState } from 'react';
-import BootLoader from './src/components/BootLoader';
+import { View, StyleSheet } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import AppErrorBoundary from './src/components/AppErrorBoundary';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import {
+  useFonts,
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
 import { AuthProvider } from './src/context/AuthContext';
 import { AccountProfileProvider } from './src/context/AccountProfileContext';
+import { StaffSessionProvider } from './src/context/StaffSessionContext';
+import { ThemeProvider } from './src/theme';
 import RootNavigator from './src/navigation/RootNavigator';
 import {
   recordBootError,
   setBootStage,
 } from './src/services/bootDiagnostics';
+import { colors } from './src/constants/theme';
 
-function AppProviders() {
+void SplashScreen.preventAutoHideAsync().catch(() => {
+  // Native splash may already be hidden in some environments.
+});
+
+function AppProviders({ onReady }: { onReady: () => void }) {
   useEffect(() => {
     setBootStage('providers_mount');
-  }, []);
+    onReady();
+  }, [onReady]);
 
   return (
-    <AuthProvider>
-      <AccountProfileProvider>
-        <RootNavigator />
-      </AccountProfileProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AccountProfileProvider>
+          <StaffSessionProvider>
+            <RootNavigator />
+          </StaffSessionProvider>
+        </AccountProfileProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
+}
+
+/** Navy hold matching native splash — not a second branded splash. */
+function NativeSplashHold() {
+  return <View style={styles.hold} />;
 }
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_600SemiBold,
-    Inter_700Bold,
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
   });
   const [fontWaitTimedOut, setFontWaitTimedOut] = useState(false);
+  const [appReady, setAppReady] = useState(false);
 
   useEffect(() => {
     setBootStage('fonts');
   }, []);
 
-  // Never block forever on font loading in a standalone build.
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!fontsLoaded) {
@@ -51,10 +74,19 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [fontsLoaded]);
 
-  if (!fontsLoaded && !fontWaitTimedOut) {
+  const fontsReady = fontsLoaded || fontWaitTimedOut;
+
+  useEffect(() => {
+    if (!fontsReady || !appReady) {
+      return;
+    }
+    void SplashScreen.hideAsync().catch(() => undefined);
+  }, [fontsReady, appReady]);
+
+  if (!fontsReady) {
     return (
       <SafeAreaProvider>
-        <BootLoader />
+        <NativeSplashHold />
       </SafeAreaProvider>
     );
   }
@@ -62,8 +94,15 @@ export default function App() {
   return (
     <AppErrorBoundary>
       <SafeAreaProvider>
-        <AppProviders />
+        <AppProviders onReady={() => setAppReady(true)} />
       </SafeAreaProvider>
     </AppErrorBoundary>
   );
 }
+
+const styles = StyleSheet.create({
+  hold: {
+    flex: 1,
+    backgroundColor: colors.navy,
+  },
+});

@@ -1,3 +1,4 @@
+import { useTheme, useThemedStyles, type AppTheme } from '../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,14 +9,15 @@ import StatusPill from './StatusPill';
 import AppIcon from './AppIcon';
 import type { AppStackParamList } from '../navigation/types';
 import {
-  colors,
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
   borderRadius,
-  gradients,
   lineHeights,
+  iconSizes,
+  touchTarget,
+  avatarSizes,
 } from '../constants/theme';
 
 export interface ScreenHeaderProps {
@@ -47,6 +49,10 @@ export default function ScreenHeader({
   onHelpPress,
   onNotificationPress,
 }: ScreenHeaderProps) {
+  const styles = useThemedStyles(createStyles);
+  const { colors, gradients } = useTheme();
+
+
   const insets = useSafeAreaInsets();
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
@@ -64,7 +70,7 @@ export default function ScreenHeader({
 
   return (
     <LinearGradient
-      colors={[...(compact ? gradients.headerCompact : gradients.header)]}
+      colors={compact ? gradients.headerCompact : gradients.header}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={[styles.header, { paddingTop: insets.top + spacing.sm }]}
@@ -78,7 +84,7 @@ export default function ScreenHeader({
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
-              <AppIcon name="chevron-back" size={fontSizes.heading} color={colors.white} />
+              <AppIcon name="chevron-back" size={iconSizes.lg} color={colors.onPrimary} />
             </Pressable>
           ) : (
             <View style={styles.actionSpacer} />
@@ -90,7 +96,7 @@ export default function ScreenHeader({
               accessibilityRole="button"
               accessibilityLabel="Help"
             >
-              <AppIcon name="help-circle-outline" size={fontSizes.heading} color={colors.white} />
+              <AppIcon name="help-circle-outline" size={iconSizes.lg} color={colors.onPrimary} />
             </Pressable>
           ) : (
             <View style={styles.actionSpacer} />
@@ -124,8 +130,8 @@ export default function ScreenHeader({
                 >
                   <AppIcon
                     name="notifications-outline"
-                    size={fontSizes.subheading}
-                    color={colors.white}
+                    size={iconSizes.md}
+                    color={colors.onPrimary}
                   />
                   {notificationCount > 0 ? (
                     <View style={styles.notificationBadge}>
@@ -139,12 +145,19 @@ export default function ScreenHeader({
               {userInitials ? (
                 <Pressable
                   onPress={() => navigation.navigate('Profile')}
-                  style={styles.avatar}
+                  style={({ pressed }) => [
+                    styles.avatar,
+                    pressed && styles.avatarPressed,
+                  ]}
                   accessibilityRole="button"
                   accessibilityLabel="Open profile"
+                  accessibilityHint="Opens your account and settings"
                   hitSlop={spacing.sm}
                 >
                   <Text style={styles.avatarText}>{userInitials}</Text>
+                  <View style={styles.avatarBadge}>
+                    <AppIcon name="person" size={fontSizes.micro} color={colors.onPrimary} />
+                  </View>
                 </Pressable>
               ) : null}
             </View>
@@ -167,7 +180,8 @@ export default function ScreenHeader({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles({ colors }: AppTheme) {
+  return StyleSheet.create({
   header: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
@@ -180,18 +194,18 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   actionButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: touchTarget,
+    minHeight: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionSpacer: {
-    width: 44,
+    width: touchTarget,
   },
   actionText: {
     fontFamily: fontFamilies.semibold,
     fontSize: fontSizes.heading,
-    color: colors.white,
+    color: colors.onPrimary,
   },
   titleRow: {
     flexDirection: 'row',
@@ -204,14 +218,14 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.heading,
     lineHeight: lineHeights.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     textAlign: 'center',
   },
   subtitle: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
     lineHeight: lineHeights.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     marginTop: spacing.sm,
   },
@@ -222,12 +236,13 @@ const styles = StyleSheet.create({
   },
   userText: {
     flex: 1,
+    minWidth: 0,
     paddingRight: spacing.md,
   },
   greeting: {
     fontFamily: fontFamilies.regular,
     fontSize: fontSizes.body,
-    color: colors.white,
+    color: colors.onPrimary,
     opacity: 0.88,
     marginBottom: spacing.xs,
   },
@@ -236,7 +251,7 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.heading,
     lineHeight: lineHeights.heading,
     fontWeight: fontWeights.bold,
-    color: colors.white,
+    color: colors.onPrimary,
     marginBottom: spacing.xs,
   },
   subtitleInline: {
@@ -250,8 +265,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   notificationButton: {
-    width: 44,
-    height: 44,
+    width: touchTarget,
+    height: touchTarget,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -273,20 +288,42 @@ const styles = StyleSheet.create({
   },
   notificationBadgeText: {
     fontFamily: fontFamilies.bold,
-    fontSize: 10,
-    color: colors.white,
+    fontSize: fontSizes.micro,
+    lineHeight: lineHeights.micro,
+    color: colors.onPrimary,
   },
   avatar: {
-    width: 48,
-    height: 48,
+    width: avatarSizes.lg,
+    height: avatarSizes.lg,
     borderRadius: borderRadius.pill,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.gold,
+  },
+  avatarPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.96 }],
   },
   avatarText: {
     fontFamily: fontFamilies.bold,
     fontSize: fontSizes.subheading,
-    color: colors.tealDeep,
+    color: colors.teal,
+  },
+  avatarBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 18,
+    height: 18,
+    borderRadius: borderRadius.pill,
+    backgroundColor: colors.tealBright,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.navy,
   },
 });
+}
+

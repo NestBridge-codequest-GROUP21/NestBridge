@@ -59,6 +59,9 @@ public class GuideProfile {
     @Column(name = "is_active")
     private boolean active;
 
+    @Column(name = "experience_verified")
+    private boolean experienceVerified;
+
     @Column(name = "review_count")
     private int reviewCount;
 
