@@ -8,7 +8,17 @@ export type PickedImage = {
  * Lazily loads expo-image-picker so a missing/broken native module cannot
  * crash the app at import time. Never throws — returns null on any failure.
  */
-export async function pickProfileImage(): Promise<PickedImage | null> {
+type PickImageOptions = {
+  aspect?: [number, number];
+  permissionMessage?: string;
+};
+
+async function pickImage(options: PickImageOptions = {}): Promise<PickedImage | null> {
+  const {
+    aspect = [1, 1],
+    permissionMessage = 'Allow photo library access to add a photo, or skip for now.',
+  } = options;
+
   let ImagePicker: typeof import('expo-image-picker');
   try {
     ImagePicker = await import('expo-image-picker');
@@ -24,10 +34,7 @@ export async function pickProfileImage(): Promise<PickedImage | null> {
   try {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert(
-        'Photo access needed',
-        'Allow photo library access to add a profile picture, or skip for now.',
-      );
+      Alert.alert('Photo access needed', permissionMessage);
       return null;
     }
 
@@ -36,7 +43,7 @@ export async function pickProfileImage(): Promise<PickedImage | null> {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'] as never,
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect,
       quality: 0.7,
     });
 
@@ -54,4 +61,21 @@ export async function pickProfileImage(): Promise<PickedImage | null> {
     );
     return null;
   }
+}
+
+export async function pickProfileImage(): Promise<PickedImage | null> {
+  return pickImage({
+    aspect: [1, 1],
+    permissionMessage:
+      'Allow photo library access to add a profile picture, or skip for now.',
+  });
+}
+
+/** Wider crop for host listing / property photos. */
+export async function pickListingImage(): Promise<PickedImage | null> {
+  return pickImage({
+    aspect: [4, 3],
+    permissionMessage:
+      'Allow photo library access to add listing photos, or skip for now.',
+  });
 }

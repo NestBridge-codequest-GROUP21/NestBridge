@@ -75,7 +75,7 @@ export default function ForgotPasswordScreen({
         <Text style={styles.title}>{sent ? 'Check your inbox' : 'Forgot password?'}</Text>
         <Text style={styles.subtitle}>
           {sent
-            ? 'If an account exists for this email, we sent a reset link. Open it on this device, then set a new password in the app.'
+            ? 'If an account exists for this email, we sent a reset link. Open the email, choose a new password on the page (in your browser), then sign in.'
             : 'Enter the email on your NestBridge account and we will send a reset link.'}
         </Text>
 

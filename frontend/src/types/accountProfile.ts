@@ -12,7 +12,15 @@ export interface ProfileData {
   arrivalDate?: string;
   departureDate?: string;
   displayName?: string;
+  /** Short one-line intro shown on cards and search results. */
   bio?: string;
+  /** Longer “about you” — locked once saved; how others decide who they’re meeting. */
+  about?: string;
+  /**
+   * Set when bio + about are first saved. While true, those fields are
+   * immutable in-app and on the API (identity for other users).
+   */
+  identityLocked?: boolean;
   quizAnswers?: QuizAnswers;
   checklistCompleted?: string[];
   checklistRemoved?: string[];

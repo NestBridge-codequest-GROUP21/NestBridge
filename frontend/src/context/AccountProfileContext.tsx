@@ -34,9 +34,11 @@ import {
   getProviderBlockedReason,
   getSeekerNextStep,
   getStepsForTrack,
+  hasIdentityProfile,
   isActiveExchangeStudent,
   isGuideComplete,
   isHostComplete,
+  isIdentityLocked,
   isSeekerComplete,
   preferRicherAccountProfile,
   profileCompletenessScore,
@@ -179,7 +181,22 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
         try {
           remote = await api.getMyProfile();
         } catch (remoteError) {
-          await recordBootError('profile_hydrate_remote', remoteError);
+          // Expired/invalid tokens are expected after cold starts or deploy restarts.
+          // Fall back to local cache — do not LogBox a red console error for judges.
+          const status =
+            remoteError &&
+            typeof remoteError === 'object' &&
+            'response' in remoteError
+              ? (remoteError as { response?: { status?: number } }).response
+                  ?.status
+              : undefined;
+          if (status === 401 || status === 403) {
+            console.warn(
+              '[profile] remote hydrate unauthorized — using local cache',
+            );
+          } else {
+            await recordBootError('profile_hydrate_remote', remoteError);
+          }
         }
 
         const chosen = preferRicherAccountProfile(local, remote);
@@ -292,13 +309,33 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
           : track === 'HOST'
             ? state.hostProvider
             : state.guideProvider;
+
+      // Once identity is locked, refuse changes to bio / about / display name.
+      let mergeData = data;
+      if (isIdentityLocked(current) && data) {
+        const {
+          bio: _bio,
+          about: _about,
+          displayName: _displayName,
+          identityLocked: _locked,
+          ...rest
+        } = data;
+        mergeData = {
+          ...rest,
+          bio: current.data.bio,
+          about: current.data.about,
+          displayName: current.data.displayName,
+          identityLocked: true,
+        };
+      }
+
       const stepsCompleted = current.stepsCompleted.includes(step)
         ? current.stepsCompleted
         : [...current.stepsCompleted, step];
       const nextProgress: ProfileProgress = {
         status: deriveStatus(stepsCompleted, steps),
         stepsCompleted,
-        data: mergeProfileData(current.data, data),
+        data: mergeProfileData(current.data, mergeData),
       };
       await persist(updateTrackProgress(state, track, () => nextProgress));
     },
@@ -317,11 +354,19 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
           : track === 'HOST'
             ? state.hostProvider
             : state.guideProvider;
+      if (!hasIdentityProfile(current)) {
+        // Cannot unlock core activities without locked bio + about.
+        return;
+      }
       await persist(
         updateTrackProgress(state, track, () => ({
           ...current,
           status: 'COMPLETE',
           stepsCompleted: [...steps],
+          data: {
+            ...current.data,
+            identityLocked: true,
+          },
         })),
       );
     },

@@ -1,7 +1,46 @@
 /**
- * NestBridge color palettes — light (default) plus three dark variants.
+ * NestBridge color palettes — Original light plus Coastal / Savanna / Kente variants.
  * Layout/spacing never change between variants; only these tokens swap.
  */
+
+import {
+  coastalBlueDarkChrome,
+  coastalBlueDarkColors,
+  coastalBlueDarkGradients,
+  coastalBlueDarkOverlays,
+  coastalBlueDarkShadows,
+  coastalBlueDarkTints,
+  coastalBlueLightChrome,
+  coastalBlueLightColors,
+  coastalBlueLightGradients,
+  coastalBlueLightOverlays,
+  coastalBlueLightShadows,
+  coastalBlueLightTints,
+  kenteVibrantDarkChrome,
+  kenteVibrantDarkColors,
+  kenteVibrantDarkGradients,
+  kenteVibrantDarkOverlays,
+  kenteVibrantDarkShadows,
+  kenteVibrantDarkTints,
+  kenteVibrantLightChrome,
+  kenteVibrantLightColors,
+  kenteVibrantLightGradients,
+  kenteVibrantLightOverlays,
+  kenteVibrantLightShadows,
+  kenteVibrantLightTints,
+  sunsetSavannaDarkChrome,
+  sunsetSavannaDarkColors,
+  sunsetSavannaDarkGradients,
+  sunsetSavannaDarkOverlays,
+  sunsetSavannaDarkShadows,
+  sunsetSavannaDarkTints,
+  sunsetSavannaLightChrome,
+  sunsetSavannaLightColors,
+  sunsetSavannaLightGradients,
+  sunsetSavannaLightOverlays,
+  sunsetSavannaLightShadows,
+  sunsetSavannaLightTints,
+} from './themeVariants';
 
 export type ColorPalette = {
   navy: string;
@@ -98,11 +137,20 @@ export type ThemeChrome = {
   headerMode: 'gradient' | 'solid';
 };
 
-/** User-selectable appearance. Light is the default. */
+/** User-selectable appearance. Original light is the default. */
 export type ThemePreference =
   | 'light'
+  | 'coastal-blue-light'
+  | 'coastal-blue-dark'
+  | 'sunset-savanna-light'
+  | 'sunset-savanna-dark'
+  | 'kente-vibrant-light'
+  | 'kente-vibrant-dark'
+  /** @deprecated Migrated to coastal-blue-dark */
   | 'dark-teal'
+  /** @deprecated Migrated to sunset-savanna-dark */
   | 'dark-warm'
+  /** @deprecated Migrated to kente-vibrant-dark */
   | 'dark-bold';
 
 /** Coarse scheme for status bar / React Navigation base theme. */
@@ -430,38 +478,74 @@ export function themeTokensForPreference(
   preference: ThemePreference,
 ): AppThemeTokens {
   switch (preference) {
+    case 'coastal-blue-light':
+      return {
+        scheme: 'light',
+        variant: 'coastal-blue-light',
+        colors: coastalBlueLightColors,
+        tints: coastalBlueLightTints,
+        gradients: coastalBlueLightGradients,
+        shadows: coastalBlueLightShadows,
+        overlays: coastalBlueLightOverlays,
+        chrome: coastalBlueLightChrome,
+      };
+    case 'coastal-blue-dark':
     case 'dark-teal':
       return {
         scheme: 'dark',
-        variant: 'dark-teal',
-        colors: darkTealColors,
-        tints: darkTealTints,
-        gradients: darkTealGradients,
-        shadows: darkTealShadows,
-        overlays: darkTealOverlays,
-        chrome: darkTealChrome,
+        variant: 'coastal-blue-dark',
+        colors: coastalBlueDarkColors,
+        tints: coastalBlueDarkTints,
+        gradients: coastalBlueDarkGradients,
+        shadows: coastalBlueDarkShadows,
+        overlays: coastalBlueDarkOverlays,
+        chrome: coastalBlueDarkChrome,
       };
+    case 'sunset-savanna-light':
+      return {
+        scheme: 'light',
+        variant: 'sunset-savanna-light',
+        colors: sunsetSavannaLightColors,
+        tints: sunsetSavannaLightTints,
+        gradients: sunsetSavannaLightGradients,
+        shadows: sunsetSavannaLightShadows,
+        overlays: sunsetSavannaLightOverlays,
+        chrome: sunsetSavannaLightChrome,
+      };
+    case 'sunset-savanna-dark':
     case 'dark-warm':
       return {
         scheme: 'dark',
-        variant: 'dark-warm',
-        colors: darkWarmColors,
-        tints: darkWarmTints,
-        gradients: darkWarmGradients,
-        shadows: darkWarmShadows,
-        overlays: darkWarmOverlays,
-        chrome: darkWarmChrome,
+        variant: 'sunset-savanna-dark',
+        colors: sunsetSavannaDarkColors,
+        tints: sunsetSavannaDarkTints,
+        gradients: sunsetSavannaDarkGradients,
+        shadows: sunsetSavannaDarkShadows,
+        overlays: sunsetSavannaDarkOverlays,
+        chrome: sunsetSavannaDarkChrome,
       };
+    case 'kente-vibrant-light':
+      return {
+        scheme: 'light',
+        variant: 'kente-vibrant-light',
+        colors: kenteVibrantLightColors,
+        tints: kenteVibrantLightTints,
+        gradients: kenteVibrantLightGradients,
+        shadows: kenteVibrantLightShadows,
+        overlays: kenteVibrantLightOverlays,
+        chrome: kenteVibrantLightChrome,
+      };
+    case 'kente-vibrant-dark':
     case 'dark-bold':
       return {
         scheme: 'dark',
-        variant: 'dark-bold',
-        colors: darkBoldColors,
-        tints: darkBoldTints,
-        gradients: darkBoldGradients,
-        shadows: darkBoldShadows,
-        overlays: darkBoldOverlays,
-        chrome: darkBoldChrome,
+        variant: 'kente-vibrant-dark',
+        colors: kenteVibrantDarkColors,
+        tints: kenteVibrantDarkTints,
+        gradients: kenteVibrantDarkGradients,
+        shadows: kenteVibrantDarkShadows,
+        overlays: kenteVibrantDarkOverlays,
+        chrome: kenteVibrantDarkChrome,
       };
     case 'light':
     default:

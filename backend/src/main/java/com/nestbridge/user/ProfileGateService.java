@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -51,6 +52,8 @@ public class ProfileGateService {
                     HttpStatus.FORBIDDEN,
                     "Complete your travel profile before booking.");
         }
+        requireIdentityProfile(userId, seeker.getProfileData(),
+                "Add and lock your short bio and about section before booking. Browsing stays open.");
     }
 
     public void requireHostProviderComplete(UUID userId) {
@@ -64,6 +67,8 @@ public class ProfileGateService {
                     HttpStatus.FORBIDDEN,
                     "Complete your host listing setup before accepting requests.");
         }
+        requireIdentityProfile(userId, host.getProfileData(),
+                "Add and lock your short bio and about section before accepting requests.");
         if (!hostProfileRepository.findByUserId(userId).isPresent()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
@@ -82,11 +87,39 @@ public class ProfileGateService {
                     HttpStatus.FORBIDDEN,
                     "Complete your guide listing setup before accepting sessions.");
         }
+        requireIdentityProfile(userId, guide.getProfileData(),
+                "Add and lock your short bio and about section before accepting sessions.");
         if (!guideProfileRepository.findByUserId(userId).isPresent()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Publish your guide listing before accepting sessions.");
         }
+    }
+
+    /**
+     * Messaging is a core activity — require locked bio + about so the other
+     * person knows who they are talking to.
+     */
+    public void requireSeekerIdentityForMessaging(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        SeekerProfile seeker = seekerProfileRepository.findById(userId).orElse(null);
+        Map<String, Object> data = seeker != null ? seeker.getProfileData() : Map.of();
+        if (UserProfileService.hasIdentity(user) || UserProfileService.hasIdentityInData(data)) {
+            return;
+        }
+        throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Add and lock your short bio and about section before messaging.");
+    }
+
+    private void requireIdentityProfile(UUID userId, Map<String, Object> trackData, String message) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        if (UserProfileService.hasIdentity(user) || UserProfileService.hasIdentityInData(trackData)) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, message);
     }
 
     public void requireProviderCompleteForBooking(UUID providerUserId, BookingType type) {

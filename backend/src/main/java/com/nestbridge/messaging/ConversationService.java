@@ -4,6 +4,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.nestbridge.guide.GuideProfileRepository;
 import com.nestbridge.host.HostProfileRepository;
+import com.nestbridge.user.ProfileGateService;
 import com.nestbridge.user.User;
 import com.nestbridge.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +26,14 @@ public class ConversationService {
     private final UserRepository userRepository;
     private final HostProfileRepository hostProfileRepository;
     private final GuideProfileRepository guideProfileRepository;
+    private final ProfileGateService profileGateService;
 
     @Value("${firebase.enabled:false}")
     private boolean firebaseEnabled;
 
     @Transactional
     public ConversationDto createConversation(UUID userId, CreateConversationRequest request) {
+        profileGateService.requireSeekerIdentityForMessaging(userId);
         if (request.getParticipantId() == null) {
             throw new IllegalArgumentException("participantId is required.");
         }

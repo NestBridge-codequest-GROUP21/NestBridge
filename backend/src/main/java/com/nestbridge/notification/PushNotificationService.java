@@ -1,6 +1,7 @@
 package com.nestbridge.notification;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nestbridge.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,10 +20,17 @@ import java.util.Map;
 public class PushNotificationService {
 
     private final DeviceTokenRepository deviceTokenRepository;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public void sendToUser(java.util.UUID userId, String title, String body, Map<String, Object> data) {
+        boolean enabled = userRepository.findById(userId)
+                .map(user -> user.isNotificationsEnabled())
+                .orElse(true);
+        if (!enabled) {
+            return;
+        }
         List<DeviceToken> tokens = deviceTokenRepository.findByUserId(userId);
         if (tokens.isEmpty()) {
             return;

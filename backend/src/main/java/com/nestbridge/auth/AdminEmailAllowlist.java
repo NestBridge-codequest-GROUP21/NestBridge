@@ -23,8 +23,13 @@ public class AdminEmailAllowlist {
      * Used when {@code ADMIN_EMAIL_ALLOWLIST} is missing or empty
      * (e.g. Railway not configured yet).
      */
+    /** Group 21 staff — personal Gmails get is_staff on register/login. */
     static final String DEFAULT_ALLOWLIST =
-            "bsbhackman@gmail.com,abdulsamedtaslima@gmail.com,angelonwe54@gmail.com";
+            "bsbhackman@gmail.com,"
+                    + "abigailadusei17@gmail.com,"
+                    + "angelonwe54@gmail.com,"
+                    + "sirinaabbas2@gmail.com,"
+                    + "abdulsamedtaslima@gmail.com";
 
     private final Set<String> emails;
 

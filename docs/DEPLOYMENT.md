@@ -57,7 +57,7 @@ docker build -t nestbridge-api .
 | `SENDGRID_API_KEY` | SendGrid API key |
 | `EMAIL_FROM` | Verified sender address |
 | `EMAIL_VERIFICATION_ENABLED` | `true` in production |
-| `ADMIN_EMAIL_ALLOWLIST` | Comma-separated emails that get `is_staff=true` at registration (defaults to the three group emails if unset) |
+| `ADMIN_EMAIL_ALLOWLIST` | Comma-separated emails that get `is_staff=true` at registration/login (defaults to all five Group 21 Gmails if unset). If set, it replaces the default — include every staff email. |
 
 Flyway runs automatically on startup.
 

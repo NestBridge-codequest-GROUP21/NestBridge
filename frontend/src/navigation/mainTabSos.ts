@@ -69,7 +69,7 @@ export function handleProfileCulturalItem(
     return;
   }
   if (itemId === 'listings') {
-    navigation.navigate('HostListings');
+    navigation.navigate('HostListingEdit', { focus: 'photos' });
     return;
   }
   if (itemId === 'calendar') {

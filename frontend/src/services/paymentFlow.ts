@@ -1,4 +1,4 @@
-import { AppState, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import {
   confirmBooking,
@@ -86,6 +86,29 @@ async function waitUntilBookingConfirmed(
   }
 }
 
+async function openPaystackCheckout(authorizationUrl: string): Promise<'opened' | 'cancelled'> {
+  try {
+    const browserResult = await WebBrowser.openBrowserAsync(authorizationUrl, {
+      dismissButtonStyle: 'close',
+      showTitle: true,
+      enableBarCollapsing: false,
+      createTask: false,
+    });
+    if (browserResult.type === 'cancel' || browserResult.type === 'dismiss') {
+      return 'cancelled';
+    }
+    return 'opened';
+  } catch (error) {
+    console.warn('[payment] WebBrowser failed, falling back to Linking', error);
+    const canOpen = await Linking.canOpenURL(authorizationUrl);
+    if (!canOpen) {
+      throw new Error('Could not open Paystack checkout on this device.');
+    }
+    await Linking.openURL(authorizationUrl);
+    return 'opened';
+  }
+}
+
 export type PaymentCompletionResult = {
   booking: BookingApi;
   /** True when Paystack checkout was opened. */
@@ -99,13 +122,15 @@ export type PaymentCompletionResult = {
 
 export type CompleteBookingPaymentOptions = {
   onProgress?: PaymentProgressHandler;
+  /** Preferred Paystack channels, e.g. ['mobile_money']. */
+  channels?: string[];
 };
 
 /**
  * Single reusable payment orchestrator for every NestBridge "Pay now" CTA.
  *
  * - Paystack off → initialize returns mockPayment → confirm booking via API
- * - Paystack on → open authorization URL (cards + Mobile Money) → verify → confirm
+ * - Paystack on → open authorization URL (MoMo / card / bank) → verify → confirm
  *
  * Never treats a booking as paid until the backend confirms CONFIRMED/PAID
  * (via Paystack verify, webhook, or mock confirm when Paystack is disabled).
@@ -114,10 +139,10 @@ export async function completeBookingPayment(
   bookingId: string,
   options: CompleteBookingPaymentOptions = {},
 ): Promise<PaymentCompletionResult> {
-  const { onProgress } = options;
+  const { onProgress, channels } = options;
   onProgress?.('preparing', 'Preparing payment...');
 
-  const init = await initializeBookingPayment(bookingId);
+  const init = await initializeBookingPayment(bookingId, { channels });
 
   if (init.mockPayment) {
     onProgress?.('verifying', 'Confirming payment...');
@@ -137,17 +162,10 @@ export async function completeBookingPayment(
   }
 
   onProgress?.('opening_checkout', 'Opening Paystack...');
-  const browserResult = await WebBrowser.openBrowserAsync(init.authorizationUrl, {
-    dismissButtonStyle: 'close',
-    showTitle: true,
-    enableBarCollapsing: false,
-    // Keep the session in-app so cancel returns here without losing booking context.
-    createTask: false,
-  });
+  const openResult = await openPaystackCheckout(init.authorizationUrl);
 
-  if (browserResult.type === 'cancel' || browserResult.type === 'dismiss') {
+  if (openResult === 'cancelled') {
     onProgress?.('verifying', 'Checking payment status...');
-    // User may have paid then closed — always verify once.
     try {
       const verified = await verifyBookingPayment(bookingId);
       if (verified.paid) {

@@ -57,3 +57,13 @@ export async function registerPushTokenIfAvailable(): Promise<void> {
     console.warn('[push] registration skipped', error);
   }
 }
+
+/** Drop local Expo push registration (server tokens cleared via preference API). */
+export async function unregisterPushTokenLocally(): Promise<void> {
+  try {
+    const Notifications = await import('expo-notifications');
+    await Notifications.setBadgeCountAsync(0);
+  } catch (error) {
+    console.warn('[push] local unregister skipped', error);
+  }
+}

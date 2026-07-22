@@ -50,6 +50,13 @@ public class User {
 
     private String bio;
 
+    /** Longer about-you text shown on public profiles; locked with bio once set. */
+    @Column(columnDefinition = "TEXT")
+    private String about;
+
+    @Column(name = "identity_locked")
+    private boolean identityLocked;
+
     @Column(name = "is_verified")
     private boolean identityVerified;
 
@@ -82,6 +89,10 @@ public class User {
 
     @Column(name = "is_suspended")
     private boolean suspended;
+
+    @Builder.Default
+    @Column(name = "notifications_enabled", nullable = false)
+    private boolean notificationsEnabled = true;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
