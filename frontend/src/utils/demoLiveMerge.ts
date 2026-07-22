@@ -152,7 +152,13 @@ export function presentableError(
 
 /** Normalize phone/SMS dial strings for uniqueness checks. */
 export function normalizeContactNumber(value: string): string {
-  return value.replace(/[^\d+]/g, '');
+  let digits = value.replace(/[^\d]/g, '');
+  // Ghana local 0XXXXXXXXX → 233XXXXXXXXX
+  if (digits.length === 10 && digits.startsWith('0')) {
+    digits = `233${digits.slice(1)}`;
+  }
+  // Drop a leading + country trunk already captured as digits-only.
+  return digits;
 }
 
 /** Keep the first contact for each normalized phone number. */

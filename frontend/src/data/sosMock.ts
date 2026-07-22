@@ -56,7 +56,7 @@ export const emergencyContactsMock: EmergencyContact[] = [
   },
   {
     organisation: 'NestBridge Support',
-    contactName: 'Sirina Abbas',
+    contactName: 'Sirina Safianu Abbas',
     contactTitle: 'Platform support',
     number: '+233 59 661 4273',
     description: 'NestBridge team contact for travellers, hosts, and guides',
@@ -81,7 +81,30 @@ export const emergencyContactsMock: EmergencyContact[] = [
 export const localEmergencyNumber = '112';
 
 function digitsOnly(value: string): string {
-  return value.replace(/[^\d]/g, '');
+  let digits = value.replace(/[^\d]/g, '');
+  if (digits.length === 10 && digits.startsWith('0')) {
+    digits = `233${digits.slice(1)}`;
+  }
+  return digits;
+}
+
+/** Parse "Name — NestBridge Support" even when the dash was mangled in transit. */
+function parseNestBridgeOwnerLabel(
+  label: string,
+): { contactName: string; organisation: string } | null {
+  const cleaned = label.replace(/\uFFFD/g, '—').trim();
+  const match = cleaned.match(
+    /^(.+?)\s*[—–\-\uFFFD]+\s*(NestBridge\b.*)$/i,
+  );
+  if (!match) {
+    return null;
+  }
+  const contactName = match[1].trim();
+  const organisation = match[2].trim() || 'NestBridge Support';
+  if (!contactName) {
+    return null;
+  }
+  return { contactName, organisation };
 }
 
 /** Enrich thin API contacts (label + number) with known Ghana / NestBridge context. */
@@ -113,6 +136,7 @@ export function enrichEmergencyContact(contact: {
     };
   }
 
+  // Prefer the known NestBridge / Ghana catalog row for this phone number.
   if (known) {
     return {
       ...known,
@@ -122,14 +146,16 @@ export function enrichEmergencyContact(contact: {
   }
 
   const label = contact.label?.trim() ?? '';
-  const dashParts = label.split(/\s+[—–-]\s+/);
-  if (dashParts.length >= 2 && /nestbridge/i.test(dashParts[1] ?? '')) {
+  const parsed = parseNestBridgeOwnerLabel(label);
+  if (parsed) {
     return {
-      organisation: dashParts[1].trim(),
-      contactName: dashParts[0].trim(),
+      organisation: parsed.organisation,
+      contactName: parsed.contactName,
       contactTitle: 'Platform support',
       number,
-      description: contact.description,
+      description:
+        contact.description ??
+        'NestBridge team contact for travellers, hosts, and guides',
     };
   }
 

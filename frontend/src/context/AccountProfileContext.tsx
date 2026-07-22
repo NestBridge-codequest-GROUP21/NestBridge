@@ -181,7 +181,22 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
         try {
           remote = await api.getMyProfile();
         } catch (remoteError) {
-          await recordBootError('profile_hydrate_remote', remoteError);
+          // Expired/invalid tokens are expected after cold starts or deploy restarts.
+          // Fall back to local cache — do not LogBox a red console error for judges.
+          const status =
+            remoteError &&
+            typeof remoteError === 'object' &&
+            'response' in remoteError
+              ? (remoteError as { response?: { status?: number } }).response
+                  ?.status
+              : undefined;
+          if (status === 401 || status === 403) {
+            console.warn(
+              '[profile] remote hydrate unauthorized — using local cache',
+            );
+          } else {
+            await recordBootError('profile_hydrate_remote', remoteError);
+          }
         }
 
         const chosen = preferRicherAccountProfile(local, remote);
