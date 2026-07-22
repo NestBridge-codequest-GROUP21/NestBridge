@@ -109,7 +109,7 @@ public class EmailService {
                     fromAddress,
                     debugExtra);
             throw new EmailDeliveryException(
-                    "Verification email could not be sent. Email delivery is not configured on the server. Please try again later or contact support.");
+                    "Email could not be sent. Email delivery is not configured on the server. Please try again later or contact support.");
         }
 
         StringBuilder content = new StringBuilder();
@@ -157,22 +157,22 @@ public class EmailService {
             throw e;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new EmailDeliveryException("Verification email could not be sent. Please try again.");
+            throw new EmailDeliveryException("Email could not be sent. Please try again.");
         } catch (Exception e) {
             log.error("SendGrid request failed to={} from={}", toEmail, fromAddress, e);
             throw new EmailDeliveryException(
-                    "Verification email could not be sent. Please try again later.", e);
+                    "Email could not be sent. Please try again later.", e);
         }
     }
 
     private static String mapSendGridFailure(int status) {
         if (status == 401 || status == 403) {
-            return "Verification email could not be sent. The mail provider rejected the request (check API key and verified sender).";
+            return "Email could not be sent. The mail provider rejected the request — check SENDGRID_API_KEY and that EMAIL_FROM is a Verified Sender in SendGrid.";
         }
         if (status == 413 || status == 429) {
-            return "Verification email could not be sent right now. Please wait a minute and try again.";
+            return "Email could not be sent right now. Please wait a minute and try again.";
         }
-        return "Verification email could not be sent. Please try again later.";
+        return "Email could not be sent. Please try again later.";
     }
 
     private static String escapeJson(String value) {

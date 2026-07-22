@@ -185,7 +185,7 @@ export default function AuthNavigator({
                   error instanceof Error ? error.message : 'Email or password is incorrect.';
                 setStaffLoginError(
                   message.includes('Invalid email or password')
-                    ? 'Incorrect email or password. Tap Forgot password to choose a new one — then sign in here with that new password.'
+                    ? 'Incorrect email or password. Use your full personal Gmail. If you have never registered on NestBridge, Register once with that Gmail (staff access is automatic for Group 21), or try password “password” if your account was just seeded. Forgot password needs SendGrid email delivery.'
                     : message,
                 );
               } finally {
@@ -342,7 +342,7 @@ export default function AuthNavigator({
               try {
                 await api.requestPasswordReset(normalizedEmail);
                 setForgotStatus(
-                  'If an account exists for this email, we sent a reset link. Open the email, choose a new password on the page, then sign in.',
+                  'If an account exists for this email, we sent a reset link. Open the email (and spam), set a new password, then sign in. Prefer the https://…/api/auth/reset-password link in the email if the in-app link fails.',
                 );
               } catch (error) {
                 setForgotError(api.getApiErrorMessage(error));
