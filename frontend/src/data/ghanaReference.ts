@@ -426,6 +426,9 @@ export const GHANA_UNIVERSITIES: readonly GhanaUniversity[] = [
 
 export const UNIVERSITY_OTHER_OPTION = 'Other / area not listed';
 
+/** Select-list sentinel — user types their town/area in a follow-up field. */
+export const CITY_OTHER_OPTION = 'Other area (not listed)';
+
 /** Accra neighbourhoods and common search tokens beyond regional capitals. */
 export const GHANA_NEIGHBOURHOODS = [
   'Legon',
@@ -496,6 +499,15 @@ export function destinationCityOptions(): string[] {
   return GHANA_REGIONS.map((region) => region.capital).sort((a, b) =>
     a.localeCompare(b),
   );
+}
+
+/** Listed capitals plus “Other area” so users can type a town not in the quiz list. */
+export function destinationCityOptionsWithOther(): string[] {
+  return [...destinationCityOptions(), CITY_OTHER_OPTION];
+}
+
+export function isCityOtherOption(value: string | null | undefined): boolean {
+  return (value ?? '').trim() === CITY_OTHER_OPTION;
 }
 
 export function regionForCapital(capital: string): GhanaRegion | undefined {

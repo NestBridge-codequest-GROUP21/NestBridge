@@ -32,19 +32,21 @@ function hasBooking(
 }
 
 /**
- * Builds the "Your Ghana Journey" progress model from existing profile,
- * bookings, and soft milestones (SOS / culture / language).
+ * Personal settle-in status for Home — not a second Explore / SOS menu.
+ * Emergency contacts live only on the SOS screen.
  */
 export function buildJourneyProgress(input: {
   profileState: AccountProfileState;
   bookings: BookingListItem[];
+  /** Kept for call-site compatibility; emergency is SOS-only and unused here. */
   milestones: JourneyMilestones;
   destinationLabel?: string;
-  /** When true, accommodation CTA prefers ExploreStays over MatchSearch. */
+  /** @deprecated Unused — journey is status-only, not a navigation hub. */
   preferStayCatalogue?: boolean;
   /** Tourist copy focuses on visiting — not academic settle-in. */
   journeyAudience?: 'student' | 'tourist';
 }): JourneyProgress {
+  void input.milestones;
   const place =
     input.destinationLabel?.trim() ||
     input.profileState.seekerSetup.data.city?.trim() ||
@@ -65,75 +67,32 @@ export function buildJourneyProgress(input: {
   const steps: JourneyStep[] = [
     {
       id: 'profile',
-      title: isTourist ? 'Trip profile ready' : 'Profile completed',
+      title: isTourist ? 'Trip profile ready' : 'Travel profile ready',
       subtitle: isTourist
         ? 'Destination, dates, and travel basics'
         : 'Destination, preferences, and basics',
       iconGlyph: '👤',
       completed: isSeekerComplete(input.profileState),
-      routeHint: 'AccountSetup',
     },
     {
       id: 'accommodation',
-      title: isTourist ? 'Stay booked' : 'Accommodation found',
+      title: isTourist ? 'Stay booked' : 'Homestay booked',
       subtitle: accommodationFound
         ? isTourist
-          ? 'Open your lodging booking'
-          : 'Open your stay booking'
-        : isTourist
-          ? 'Find lodging or a host stay'
-          : 'Browse or match with a host stay',
+          ? 'Lodging is on your bookings'
+          : 'A host stay is on your bookings'
+        : 'No stay booked yet',
       iconGlyph: '🏡',
       completed: accommodationFound,
-      routeHint: accommodationFound
-        ? 'StudentBookings'
-        : input.preferStayCatalogue
-          ? 'ExploreStays'
-          : 'MatchSearch',
     },
     {
       id: 'guide',
-      title: isTourist ? 'Guided trip planned' : 'Guide connected',
+      title: isTourist ? 'Guided trip planned' : 'Guide session planned',
       subtitle: guideConnected
-        ? isTourist
-          ? 'Open your guided experience'
-          : 'Open your guide session'
-        : isTourist
-          ? 'Book a local guide or tour'
-          : 'Find a local guide near you',
+        ? 'A guide session is on your bookings'
+        : 'No guide session yet',
       iconGlyph: '🗺️',
       completed: guideConnected,
-      routeHint: guideConnected ? 'StudentBookings' : 'GuideSearch',
-    },
-    {
-      id: 'emergency',
-      title: 'Emergency contacts saved',
-      subtitle: 'Know who to call when you need help',
-      iconGlyph: '🆘',
-      completed: input.milestones.emergencyContactsSaved,
-      routeHint: 'SOS',
-    },
-    {
-      id: 'culture',
-      title: isTourist
-        ? 'Culture tips reviewed'
-        : 'Ghana culture tips completed',
-      subtitle: isTourist
-        ? 'Customs and etiquette for your visit'
-        : 'Local customs and everyday etiquette',
-      iconGlyph: '🤝',
-      completed: input.milestones.cultureTipsCompleted,
-      routeHint: 'LocalTips',
-    },
-    {
-      id: 'language',
-      title: isTourist
-        ? 'Useful phrases learned'
-        : 'Local language basics completed',
-      subtitle: 'A few phrases to open doors',
-      iconGlyph: '💬',
-      completed: input.milestones.languageBasicsCompleted,
-      routeHint: 'LocalTips',
     },
   ];
 
@@ -143,22 +102,22 @@ export function buildJourneyProgress(input: {
     totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
   let subtitle = isTourist
-    ? `Planning your visit to ${place}`
-    : `Settling into ${place}`;
+    ? `Your trip readiness for ${place}`
+    : `Your settle-in status for ${place}`;
   if (percent === 0) {
     subtitle = isTourist
-      ? `Your path from landing to exploring ${place}`
-      : `Your path from arrival to belonging in ${place}`;
+      ? `Track trip readiness for ${place}`
+      : `Track settle-in status for ${place}`;
   } else if (percent < 100) {
-    subtitle = `${completedCount} of ${totalCount} milestones · keep going`;
+    subtitle = `${completedCount} of ${totalCount} complete`;
   } else {
     subtitle = isTourist
-      ? `You are ready to explore ${place}`
-      : `You are settling in beautifully in ${place}`;
+      ? `Ready for your visit to ${place}`
+      : `Ready to settle into ${place}`;
   }
 
   return {
-    title: isTourist ? 'Your Ghana Trip' : 'Your Ghana Journey',
+    title: isTourist ? 'Trip readiness' : 'Settle-in status',
     subtitle,
     percent,
     completedCount,

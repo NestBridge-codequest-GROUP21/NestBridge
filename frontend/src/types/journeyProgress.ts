@@ -12,7 +12,10 @@ export interface JourneyStep {
   subtitle: string;
   iconGlyph: string;
   completed: boolean;
-  /** Navigation hint for tapping an incomplete step. */
+  /**
+   * @deprecated Journey is status-only on Home. Explore owns navigation.
+   * Kept optional for older callers; new builders omit this.
+   */
   routeHint?:
     | 'AccountSetup'
     | 'MatchSearch'

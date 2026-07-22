@@ -2,7 +2,7 @@ import React from 'react';
 import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
 import {
-  GHANA_CITY_OPTIONS,
+  GHANA_CITY_OPTIONS_WITH_OTHER,
   LANGUAGE_OPTIONS,
   QUIET_SOCIAL_LABELS,
   QuizPageDefinition,
@@ -110,7 +110,7 @@ const HOST_PAGES: QuizPageDefinition[] = [
       id: 'city',
       question: 'Which Ghanaian city is your home in?',
       type: 'single-select',
-      options: GHANA_CITY_OPTIONS,
+      options: GHANA_CITY_OPTIONS_WITH_OTHER,
       required: true,
     },
     {

@@ -9,6 +9,7 @@ export const SEEKER_TAB_ITEMS: TabBarItem[] = [
   { id: 'explore', label: 'Explore', icon: 'compass-outline' },
   { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
+  { id: 'profile', label: 'Profile', icon: 'person-outline' },
 ];
 
 export const STAFF_TAB_ITEMS: TabBarItem[] = [
@@ -16,6 +17,7 @@ export const STAFF_TAB_ITEMS: TabBarItem[] = [
   { id: 'users', label: 'Users', icon: 'people-outline' },
   { id: 'moderation', label: 'Moderation', icon: 'shield-checkmark-outline' },
   { id: 'preview', label: 'Preview', icon: 'eye-outline' },
+  { id: 'profile', label: 'Profile', icon: 'person-outline' },
 ];
 
 export const HOST_TAB_ITEMS: TabBarItem[] = [
@@ -23,6 +25,7 @@ export const HOST_TAB_ITEMS: TabBarItem[] = [
   { id: 'requests', label: 'Requests', icon: 'documents-outline' },
   { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
+  { id: 'profile', label: 'Profile', icon: 'person-outline' },
 ];
 
 export const GUIDE_TAB_ITEMS: TabBarItem[] = [
@@ -30,22 +33,16 @@ export const GUIDE_TAB_ITEMS: TabBarItem[] = [
   { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
   { id: 'earnings', label: 'Earnings', icon: 'cash-outline' },
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
+  { id: 'profile', label: 'Profile', icon: 'person-outline' },
 ];
 
-/** Home shortcuts only — Explore tab covers discovery catalogues. */
-export const STUDENT_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'checklist', label: 'Checklist', icon: '✅' },
-  { id: 'events', label: 'Events', icon: '📅' },
-  { id: 'cultural-tips', label: 'Culture', icon: '👋' },
-  { id: 'practical-tips', label: 'Local tips', icon: '📍' },
-];
+/**
+ * Student / tourist home quick actions: only keep items that are NOT already
+ * in Explore. Discovery (hosts, stays, attractions, tips) lives on Explore,
+ * so seeker home grids stay empty.
+ */
 
-export const TOURIST_QUICK_ACTIONS: QuickActionItem[] = [
-  { id: 'book-guide', label: 'Book a trip', icon: '🧳' },
-  { id: 'explore-stays', label: 'Stays', icon: '🏡' },
-  { id: 'sites-directory', label: 'Attractions', icon: '🏛️' },
-  { id: 'offline-map', label: 'Maps', icon: '🗺️' },
-];
+export const TOURIST_QUICK_ACTIONS: QuickActionItem[] = [];
 
 /** Hosts/guides have no Explore tab — quick action is the entry. */
 export const HOST_QUICK_ACTIONS: QuickActionItem[] = [
@@ -81,16 +78,15 @@ export function getTabBarForRole(role: HomeRole): TabBarItem[] {
 export function getQuickActionsForRole(role: HomeRole): QuickActionItem[] {
   switch (role) {
     case 'STUDENT':
-      return STUDENT_QUICK_ACTIONS;
     case 'TOURIST':
     case 'BROWSE':
-      return TOURIST_QUICK_ACTIONS;
+      return [];
     case 'HOST':
       return HOST_QUICK_ACTIONS;
     case 'GUIDE':
       return GUIDE_QUICK_ACTIONS;
     default:
-      return STUDENT_QUICK_ACTIONS;
+      return [];
   }
 }
 

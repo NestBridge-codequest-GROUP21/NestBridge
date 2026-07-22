@@ -1,7 +1,17 @@
-import { destinationCityOptions } from '../../data/ghanaReference';
-import { QuizQuestion } from './QuizPage';
+import {
+  CITY_OTHER_OPTION,
+  destinationCityOptions,
+  destinationCityOptionsWithOther,
+  isCityOtherOption,
+} from '../../data/ghanaReference';
+import { QuizQuestion, type QuizAnswers } from './QuizPage';
 
 export const GHANA_CITY_OPTIONS = destinationCityOptions();
+
+/** Capitals + “Other area (not listed)” for city / operating-area questions. */
+export const GHANA_CITY_OPTIONS_WITH_OTHER = destinationCityOptionsWithOther();
+
+export { CITY_OTHER_OPTION, isCityOtherOption };
 
 export const LANGUAGE_OPTIONS = [
   'English',
@@ -31,7 +41,45 @@ export const PREFER_NOT_TO_SAY = 'Prefer not to say';
 export const OTHER_OPTION_LABELS = ['Other', 'Other (specify)'] as const;
 
 export function isOtherOption(label: string): boolean {
-  return (OTHER_OPTION_LABELS as readonly string[]).includes(label);
+  return (
+    (OTHER_OPTION_LABELS as readonly string[]).includes(label) ||
+    isCityOtherOption(label)
+  );
+}
+
+const PLACE_OTHER_FIELD_IDS = new Set([
+  'city',
+  'destination',
+  'operatingAreas',
+]);
+
+/**
+ * Replace “Other area” sentinels with the typed place name before persisting quiz answers.
+ */
+export function resolvePlaceOtherAnswers(answers: QuizAnswers): QuizAnswers {
+  const next: QuizAnswers = { ...answers };
+
+  for (const fieldId of PLACE_OTHER_FIELD_IDS) {
+    const value = next[fieldId];
+    const specify = next[otherSpecifyKey(fieldId)];
+    const specifyText =
+      typeof specify === 'string' && specify.trim().length > 0
+        ? specify.trim()
+        : '';
+
+    if (typeof value === 'string' && isCityOtherOption(value) && specifyText) {
+      next[fieldId] = specifyText;
+      continue;
+    }
+
+    if (Array.isArray(value) && specifyText) {
+      next[fieldId] = value.map((item) =>
+        isCityOtherOption(item) ? specifyText : item,
+      );
+    }
+  }
+
+  return next;
 }
 
 export function otherSpecifyKey(questionId: string): string {

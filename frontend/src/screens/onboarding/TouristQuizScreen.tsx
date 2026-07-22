@@ -3,7 +3,7 @@ import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
 import {
   DIETARY_OPTIONS,
-  GHANA_CITY_OPTIONS,
+  GHANA_CITY_OPTIONS_WITH_OTHER,
   LANGUAGE_OPTIONS,
   QUIET_SOCIAL_LABELS,
   QuizPageDefinition,
@@ -75,7 +75,7 @@ const TOURIST_PAGES: QuizPageDefinition[] = [
       id: 'destination',
       question: 'Which Ghanaian city are you visiting?',
       type: 'single-select',
-      options: GHANA_CITY_OPTIONS,
+      options: GHANA_CITY_OPTIONS_WITH_OTHER,
       required: true,
     },
   ],

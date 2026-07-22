@@ -29,6 +29,7 @@ import {
 } from '../../constants/theme';
 import { isLikelyValidPlaceName, isLikelyValidText } from '../../utils/textValidation';
 import {
+  isCityOtherOption,
   isOtherOption,
   otherSpecifyKey,
 } from './quizConstants';
@@ -171,12 +172,21 @@ function questionHasOtherSelected(
 }
 
 function getOtherSpecifyQuestion(question: QuizQuestion): QuizQuestion {
+  const isPlaceField =
+    question.id === 'city' ||
+    question.id === 'destination' ||
+    question.id === 'operatingAreas' ||
+    (question.options ?? []).some((option) => isCityOtherOption(option));
+
   return {
     id: otherSpecifyKey(question.id),
-    question: 'Tell us which one',
+    question: isPlaceField ? 'Which town or area?' : 'Tell us which one',
     type: 'text',
-    placeholder: 'A few words is enough',
+    placeholder: isPlaceField
+      ? 'e.g. Elmina, Tarkwa, Hohoe'
+      : 'A few words is enough',
     required: true,
+    textValidation: isPlaceField ? 'place' : 'text',
   };
 }
 
@@ -195,6 +205,14 @@ function getFieldValidationError(
     const specifyAnswer = allAnswers?.[otherSpecifyKey(question.id)];
     if (isRequiredAnswerMissing(specifyQuestion, specifyAnswer, true)) {
       return 'other';
+    }
+    if (
+      specifyQuestion.textValidation === 'place' &&
+      typeof specifyAnswer === 'string' &&
+      specifyAnswer.trim().length > 0 &&
+      !isLikelyValidPlaceName(specifyAnswer)
+    ) {
+      return 'gibberish';
     }
   }
 
@@ -463,6 +481,9 @@ export default function QuizPage({
         />
         {fieldErrors[question.id] === 'other' && (
           <Text style={styles.fieldError}>{validationCopy.otherRequired}</Text>
+        )}
+        {fieldErrors[question.id] === 'gibberish' && (
+          <Text style={styles.fieldError}>{validationCopy.placeInvalid}</Text>
         )}
       </View>
     );

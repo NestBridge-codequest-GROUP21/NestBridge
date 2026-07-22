@@ -32,7 +32,7 @@ export interface EmergencyContact {
   contactTitle?: string;
   number: string;
   description?: string;
-  /** Saved name for user-added personal contacts only. */
+  /** Person who owns this line (NestBridge team or a saved personal contact). */
   contactName?: string;
   isUserContact?: boolean;
 }
@@ -62,7 +62,7 @@ function uniqueContacts(contacts: EmergencyContact[]): EmergencyContact[] {
 }
 
 function contactHeading(contact: EmergencyContact): string {
-  if (contact.isUserContact && contact.contactName?.trim()) {
+  if (contact.contactName?.trim()) {
     return contact.contactName.trim();
   }
   return contact.organisation;
@@ -70,20 +70,20 @@ function contactHeading(contact: EmergencyContact): string {
 
 function contactContextLines(contact: EmergencyContact): string[] {
   const lines: string[] = [];
-  const office =
-    contact.contactTitle?.trim() || contact.department?.trim() || '';
+  const org = contact.organisation?.trim() ?? '';
+  const name = contact.contactName?.trim() ?? '';
+  if (name && org && org.toLowerCase() !== name.toLowerCase()) {
+    lines.push(org);
+  }
+
+  const office = contact.contactTitle?.trim() || '';
+  const department = contact.department?.trim() || '';
+  if (department && department.toLowerCase() !== office.toLowerCase()) {
+    lines.push(department);
+  }
   if (office) {
     lines.push(office);
   }
-  if (
-    contact.department?.trim() &&
-    contact.contactTitle?.trim() &&
-    contact.department.trim().toLowerCase() !==
-      contact.contactTitle.trim().toLowerCase()
-  ) {
-    lines.unshift(contact.department.trim());
-  }
-  lines.push(contact.number);
   if (contact.description?.trim()) {
     lines.push(contact.description.trim());
   }
@@ -136,12 +136,25 @@ export default function SOSScreen({
             <AppIcon name="call" size={iconSizes.lg} color={colors.onPrimary} />
           </View>
           <View style={styles.emergencyTextBlock}>
-            <Text style={styles.emergencyTitle}>Call emergency services</Text>
+            <Text
+              style={styles.emergencyTitle}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.85}
+            >
+              Call emergency services
+            </Text>
             <Text style={styles.emergencySubtitle}>
               Reach Ghana’s national emergency line (112)
             </Text>
           </View>
-          <AppIcon name="chevron-forward" size={iconSizes.lg} color={colors.onPrimary} />
+          <View style={styles.emergencyChevron}>
+            <AppIcon
+              name="chevron-forward"
+              size={iconSizes.lg}
+              color={colors.onPrimary}
+            />
+          </View>
         </Pressable>
 
         <SectionHeader title="Your emergency contacts" />
@@ -176,22 +189,18 @@ export default function SOSScreen({
                       />
                     </View>
                     <View style={styles.contactText}>
-                      <Text style={styles.contactOrg} numberOfLines={2}>
-                        {heading}
-                      </Text>
-                      {contextLines.map((line) => (
+                      <Text style={styles.contactOrg}>{heading}</Text>
+                      {contextLines.map((line, lineIndex) => (
                         <Text
-                          key={`${heading}-${line}`}
-                          style={
-                            line === contact.number
-                              ? styles.contactNumber
-                              : styles.contactMeta
-                          }
-                          numberOfLines={2}
+                          key={`${heading}-${lineIndex}-${line}`}
+                          style={styles.contactMeta}
                         >
                           {line}
                         </Text>
                       ))}
+                      <Text style={styles.contactNumber} numberOfLines={1}>
+                        {contact.number}
+                      </Text>
                     </View>
                   </View>
                   <Pressable
@@ -203,8 +212,14 @@ export default function SOSScreen({
                     accessibilityRole="button"
                     accessibilityLabel={`Call ${heading}`}
                   >
-                    <AppIcon name="call-outline" size={iconSizes.sm} color={colors.danger} />
-                    <Text style={styles.callActionText}>Call</Text>
+                    <AppIcon
+                      name="call-outline"
+                      size={iconSizes.sm}
+                      color={colors.danger}
+                    />
+                    <Text style={styles.callActionText} numberOfLines={1}>
+                      Call
+                    </Text>
                   </Pressable>
                 </View>
               );
@@ -241,6 +256,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     padding: layout.cardPaddingLarge,
     marginBottom: layout.sectionGap,
     minHeight: controlHeights.lg + spacing.xl,
+    gap: spacing.md,
     ...shadows.raised,
   },
   pressed: {
@@ -253,8 +269,8 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     borderRadius: borderRadius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
     overflow: 'hidden',
+    flexShrink: 0,
   },
   emergencyIconTint: {
     ...StyleSheet.absoluteFillObject,
@@ -263,7 +279,14 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
   },
   emergencyTextBlock: {
     flex: 1,
-    paddingRight: spacing.sm,
+    minWidth: 0,
+  },
+  emergencyChevron: {
+    width: touchTarget,
+    height: touchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   emergencyTitle: {
     fontFamily: fontFamilies.semibold,
@@ -280,21 +303,17 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     opacity: 0.9,
   },
   contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingRight: spacing.md,
-    minHeight: touchTarget + spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
   },
   contactRowBorder: {
     borderBottomWidth: borderWidths.hairline,
     borderBottomColor: colors.border,
   },
   contactBody: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
     gap: spacing.md,
   },
   iconTile: {
@@ -304,9 +323,11 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     backgroundColor: tints.teal,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   contactText: {
     flex: 1,
+    minWidth: 0,
     gap: spacing.xs,
   },
   contactOrg: {
@@ -314,6 +335,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.textPrimary,
+    lineHeight: lineHeights.body,
   },
   contactMeta: {
     fontFamily: fontFamilies.regular,
@@ -326,14 +348,17 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.teal,
+    lineHeight: lineHeights.body,
+    marginTop: spacing.xs,
   },
   callAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    justifyContent: 'center',
+    alignSelf: 'stretch',
+    gap: spacing.sm,
     minHeight: touchTarget,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.lg,
     borderWidth: borderWidths.strong,
     borderColor: colors.danger,
@@ -348,6 +373,7 @@ function createStyles({ colors, tints, shadows }: AppTheme) {
     fontSize: fontSizes.body,
     fontWeight: fontWeights.semibold,
     color: colors.danger,
+    flexShrink: 0,
   },
   footerSpacer: {
     flex: 1,

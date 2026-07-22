@@ -3,7 +3,7 @@ import type { EmergencyContact } from '../screens/shared/SOSScreen';
 /**
  * Unique Ghana emergency + NestBridge support contacts.
  * National emergency (112) is the SOS primary CTA — not repeated in this list.
- * Organisation / department / title only — no invented personal names.
+ * NestBridge rows include the team member who owns that line.
  */
 export const emergencyContactsMock: EmergencyContact[] = [
   {
@@ -43,17 +43,35 @@ export const emergencyContactsMock: EmergencyContact[] = [
   },
   {
     organisation: 'NestBridge Support',
-    department: '24/7 Support Desk',
-    contactTitle: 'Support Desk',
+    contactName: 'Blessing Hackman',
+    contactTitle: 'Platform support',
     number: '+233 59 556 2101',
-    description: 'Platform support for NestBridge travellers and hosts',
+    description: 'NestBridge team contact for travellers, hosts, and guides',
+  },
+  {
+    organisation: 'NestBridge Support',
+    contactName: 'Abdulsamed Taslima',
+    contactTitle: 'Platform support',
+    number: '+233 24 300 8368',
+    description: 'NestBridge team contact for travellers, hosts, and guides',
+  },
+  {
+    organisation: 'NestBridge Support',
+    contactName: 'Angelo Onwe',
+    contactTitle: 'Platform support',
+    number: '+233 59 661 4273',
+    description: 'NestBridge team contact for travellers, hosts, and guides',
   },
 ];
 
 /** Ghana national emergency line — used by the SOS primary CTA. */
 export const localEmergencyNumber = '112';
 
-/** Enrich thin API contacts (label + number) with known Ghana context. */
+function digitsOnly(value: string): string {
+  return value.replace(/[^\d]/g, '');
+}
+
+/** Enrich thin API contacts (label + number) with known Ghana / NestBridge context. */
 export function enrichEmergencyContact(contact: {
   label?: string;
   organisation?: string;
@@ -65,12 +83,12 @@ export function enrichEmergencyContact(contact: {
   isUserContact?: boolean;
 }): EmergencyContact {
   const number = contact.number.trim();
-  const digits = number.replace(/[^\d]/g, '');
+  const digits = digitsOnly(number);
   const known = emergencyContactsMock.find(
-    (entry) => entry.number.replace(/[^\d]/g, '') === digits,
+    (entry) => digitsOnly(entry.number) === digits,
   );
 
-  if (contact.isUserContact || contact.contactName) {
+  if (contact.isUserContact || (contact.contactName && !known)) {
     return {
       organisation: contact.organisation ?? contact.label ?? 'Personal contact',
       department: contact.department,

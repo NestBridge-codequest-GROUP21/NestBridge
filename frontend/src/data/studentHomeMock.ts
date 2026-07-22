@@ -1,7 +1,6 @@
 import type { StudentHomeDashboardProps, SuggestedHostItem } from '../screens/student/StudentHomeDashboard';
 import {
   getTabBarForRole,
-  getQuickActionsForRole,
   homeRoleFromIntent,
 } from './homeNavigation';
 import {
@@ -97,7 +96,6 @@ export const studentHomeMockData: Omit<
   StudentHomeDashboardProps,
   | 'onNotificationPress'
   | 'onFeaturedMatchPress'
-  | 'onQuickActionPress'
   | 'onReminderPress'
   | 'onTabPress'
 > = {
@@ -108,7 +106,6 @@ export const studentHomeMockData: Omit<
   statusLabel: studentStatusMock.label,
   notificationCount: 2,
   featuredMatch: studentFeaturedMatchMock,
-  quickActions: getQuickActionsForRole('STUDENT'),
   recentActivity: studentRecentActivityMock,
   reminder: studentReminderMock,
   tabBarItems: getTabBarForRole('STUDENT'),

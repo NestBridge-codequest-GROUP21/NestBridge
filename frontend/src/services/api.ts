@@ -431,7 +431,8 @@ export interface HostActiveBookingApi {
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 8000,
+  // Railway free/hobby tiers often cold-start past 8s; short timeouts look like "offline".
+  timeout: 25000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -1328,15 +1329,12 @@ export function getApiErrorMessage(error: unknown): string {
     }
 
     if (error.code === 'ECONNABORTED') {
-      return 'Request timed out. Check your connection and try again.';
+      return 'NestBridge is taking too long to respond. Wait a few seconds for the server to wake up, then try again.';
     }
 
-    // No HTTP response → network / DNS / TLS / offline (not an auth business error).
+    // No HTTP response → DNS / TLS / offline / server unreachable (phone can still show 4G).
     if (!error.response) {
-      if (error.message?.toLowerCase().includes('network')) {
-        return 'No network connection. Check your internet and try again.';
-      }
-      return 'Cannot reach the NestBridge server. Check your connection and try again.';
+      return 'Cannot reach NestBridge right now. Check your connection, wait a few seconds if the server is waking up, then try again.';
     }
 
     if (status === 429) {

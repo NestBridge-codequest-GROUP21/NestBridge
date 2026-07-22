@@ -7,15 +7,12 @@ export interface ProfileHubItem {
   icon: string;
 }
 
-const HOMESTAYS_HUB_ITEM: ProfileHubItem = {
-  id: 'homestays',
-  label: 'Homestays',
-  description: 'Browse verified host family stays near your destination',
-  icon: '🏠',
-};
+/**
+ * Homestays are reached via Explore’s stay shortcut (“Browse homestays” /
+ * “Find stays & lodging”), not duplicated in the guidance list below.
+ */
 
 const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
-  HOMESTAYS_HUB_ITEM,
   {
     id: 'universities',
     label: 'Nearby universities',
@@ -68,7 +65,6 @@ const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
 
 /** Tourist Explore hub — visit Ghana (no student events / sponsors / prep). */
 const TOURIST_CULTURAL_ITEMS: ProfileHubItem[] = [
-  HOMESTAYS_HUB_ITEM,
   {
     id: 'video-library',
     label: 'Video library',
@@ -107,7 +103,10 @@ const TOURIST_CULTURAL_ITEMS: ProfileHubItem[] = [
   },
 ];
 
-/** Host Explore hub — guest management tools, not student settle-in content. */
+/**
+ * Host / guide Explore — local ops + travel booking entry points.
+ * No newcomer “local tips” / culture primers (hosts and guides are locals).
+ */
 const HOST_EXPLORE_ITEMS: ProfileHubItem[] = [
   {
     id: 'listings',
@@ -139,15 +138,8 @@ const HOST_EXPLORE_ITEMS: ProfileHubItem[] = [
     description: 'Share safe ways for guests to get around',
     icon: '🚌',
   },
-  {
-    id: 'cultural-tips',
-    label: 'Culture tips for guests',
-    description: 'Etiquette pointers you can share with arrivals',
-    icon: '👋',
-  },
 ];
 
-/** Guide Explore hub — tour operations, not student/newcomer prep. */
 const GUIDE_EXPLORE_ITEMS: ProfileHubItem[] = [
   {
     id: 'tour-types',
@@ -184,12 +176,6 @@ const GUIDE_EXPLORE_ITEMS: ProfileHubItem[] = [
     label: 'Transport guide',
     description: 'Pickup points and local transfers',
     icon: '🚌',
-  },
-  {
-    id: 'cultural-tips',
-    label: 'Culture & language',
-    description: 'Phrases and etiquette for visitor groups',
-    icon: '👋',
   },
 ];
 

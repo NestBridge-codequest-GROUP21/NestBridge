@@ -278,7 +278,9 @@ export default function AuthNavigator({
               setRegisterError('');
               navigation.navigate('Register');
             }}
-            onContactSupport={openNestBridgeSupportEmail}
+            onContactSupport={() => {
+              void openNestBridgeSupportEmail(route.params.email);
+            }}
             onBackToSignIn={() => {
               setVerifyStatus('');
               setVerifyError('');

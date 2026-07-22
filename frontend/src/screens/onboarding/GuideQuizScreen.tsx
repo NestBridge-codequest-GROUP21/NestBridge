@@ -3,7 +3,7 @@ import QuizPage from './QuizPage';
 import type { QuizAnswers } from './QuizPage';
 import {
   DIETARY_OPTIONS,
-  GHANA_CITY_OPTIONS,
+  GHANA_CITY_OPTIONS_WITH_OTHER,
   LANGUAGE_OPTIONS,
   QuizPageDefinition,
   RELIGION_OPTIONS,
@@ -69,7 +69,7 @@ const GUIDE_PAGES: QuizPageDefinition[] = [
       id: 'operatingAreas',
       question: 'Which Ghanaian cities do you operate in?',
       type: 'multi-select',
-      options: GHANA_CITY_OPTIONS,
+      options: GHANA_CITY_OPTIONS_WITH_OTHER,
       required: true,
     },
   ],

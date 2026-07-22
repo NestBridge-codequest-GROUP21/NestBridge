@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Card from './Card';
 import AppIcon from './AppIcon';
 import ProgressBar from './ProgressBar';
@@ -16,20 +16,18 @@ import {
   touchTarget,
   layout,
 } from '../constants/theme';
-import type { JourneyProgress, JourneyStep } from '../types/journeyProgress';
+import type { JourneyProgress } from '../types/journeyProgress';
 
 export interface JourneyProgressCardProps {
   journey: JourneyProgress;
-  onStepPress?: (step: JourneyStep) => void;
 }
 
 /**
- * Home-dashboard journey tracker — Duolingo/Airbnb-style milestones
- * without redesigning the surrounding screen.
+ * Read-only settle-in / trip readiness tracker.
+ * Not a navigation hub — Explore owns catalogues and tips.
  */
 export default function JourneyProgressCard({
   journey,
-  onStepPress,
 }: JourneyProgressCardProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
@@ -39,7 +37,7 @@ export default function JourneyProgressCard({
       <Card padding="lg" elevation="card" style={styles.card}>
         <View style={styles.headerRow}>
           <View style={styles.headerText}>
-            <Text style={styles.eyebrow}>Journey</Text>
+            <Text style={styles.eyebrow}>Progress</Text>
             <Text style={styles.title}>{journey.title}</Text>
             <Text style={styles.subtitle}>{journey.subtitle}</Text>
           </View>
@@ -59,21 +57,16 @@ export default function JourneyProgressCard({
           style={styles.bar}
         />
 
-        <View style={styles.steps}>
+        <View style={styles.steps} pointerEvents="none">
           {journey.steps.map((step, index) => {
             const isLast = index === journey.steps.length - 1;
             return (
-              <Pressable
+              <View
                 key={step.id}
-                style={({ pressed }) => [
-                  styles.stepRow,
-                  !isLast && styles.stepRowBorder,
-                  pressed && styles.pressed,
-                ]}
-                onPress={() => onStepPress?.(step)}
-                accessibilityRole="button"
-                accessibilityState={{ checked: step.completed }}
-                accessibilityLabel={`${step.title}${step.completed ? ', completed' : ''}`}
+                style={[styles.stepRow, !isLast && styles.stepRowBorder]}
+                accessibilityRole="text"
+                accessibilityState={{ checked: step.completed, disabled: true }}
+                accessibilityLabel={`${step.title}${step.completed ? ', completed' : `, ${step.subtitle}`}`}
               >
                 <View
                   style={[
@@ -109,14 +102,16 @@ export default function JourneyProgressCard({
                     {step.completed ? 'Complete' : step.subtitle}
                   </Text>
                 </View>
-                <View style={styles.stepChevron}>
-                  <AppIcon
-                    name={step.completed ? 'checkmark-circle' : 'chevron-forward'}
-                    size={iconSizes.md}
-                    color={step.completed ? colors.success : colors.textTertiary}
-                  />
-                </View>
-              </Pressable>
+                {step.completed ? (
+                  <View style={styles.stepStatus}>
+                    <AppIcon
+                      name="checkmark-circle"
+                      size={iconSizes.md}
+                      color={colors.success}
+                    />
+                  </View>
+                ) : null}
+              </View>
             );
           })}
         </View>
@@ -200,16 +195,12 @@ function createStyles({ colors, tints, chrome }: AppTheme) {
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: spacing.md,
-      minHeight: touchTarget,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.sm,
     },
     stepRowBorder: {
       borderBottomWidth: chrome.minimalBorders ? 0 : borderWidths.hairline,
       borderBottomColor: colors.border,
-    },
-    pressed: {
-      opacity: 0.92,
     },
     stepIcon: {
       width: iconSizes.xl,
@@ -228,7 +219,7 @@ function createStyles({ colors, tints, chrome }: AppTheme) {
       flex: 1,
       minWidth: 0,
     },
-    stepChevron: {
+    stepStatus: {
       marginTop: spacing.xs,
       flexShrink: 0,
     },

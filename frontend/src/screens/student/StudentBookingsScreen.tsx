@@ -48,7 +48,6 @@ export interface StudentBookingsScreenProps {
   onFilterChange?: (filter: BookingTabFilter) => void;
   onBookingPress?: (bookingId: string) => void;
   onPayPress?: (bookingId: string) => void;
-  onEmptyPrimaryAction?: () => void;
   /** True while Paystack / mock confirm is in flight. */
   payLoading?: boolean;
   /** Shown on the Pay CTA while payment is in progress (e.g. Preparing payment...). */
@@ -148,7 +147,6 @@ export default function StudentBookingsScreen({
   onFilterChange,
   onBookingPress,
   onPayPress,
-  onEmptyPrimaryAction,
   payLoading = false,
   payStatusLabel,
   payBlocked = false,
@@ -193,7 +191,7 @@ export default function StudentBookingsScreen({
           <View style={styles.backPlaceholder} />
         </View>
         <Text style={styles.headerSubtitle}>
-          Track requests, payments, and confirmed stays
+          Your stay and guide booking requests
         </Text>
       </LinearGradient>
 
@@ -306,8 +304,6 @@ export default function StudentBookingsScreen({
             body={emptyCopy.body}
             tip={emptyCopy.tip}
             iconGlyph={emptyCopy.iconGlyph}
-            primaryActionLabel={emptyCopy.primaryActionLabel}
-            onPrimaryAction={onEmptyPrimaryAction}
           />
         ) : (
           filtered.map((booking, index) => {
