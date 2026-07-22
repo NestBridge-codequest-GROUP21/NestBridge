@@ -3183,7 +3183,7 @@ export default function AppNavigator() {
             showAppPreview={isStaffShell}
             showExitPreview={Boolean(preview)}
             tabBarItems={profileTabItems}
-            activeTabId="profile"
+            activeTabId=""
             {...(isStaffShell ? {} : homeTabSosProps(navigation))}
             onTabPress={(tabId) =>
               routeTabPress(

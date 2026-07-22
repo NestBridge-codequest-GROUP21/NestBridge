@@ -96,7 +96,7 @@ export default function ProfileScreen({
   showTravelBooking = false,
   showAccountSetup = true,
   tabBarItems,
-  activeTabId = 'profile',
+  activeTabId = '',
   showSosDock = false,
   onSosPress,
   onTabPress,

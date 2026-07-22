@@ -9,7 +9,6 @@ export const SEEKER_TAB_ITEMS: TabBarItem[] = [
   { id: 'explore', label: 'Explore', icon: 'compass-outline' },
   { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
-  { id: 'profile', label: 'Profile', icon: 'person-outline' },
 ];
 
 export const STAFF_TAB_ITEMS: TabBarItem[] = [
@@ -17,7 +16,6 @@ export const STAFF_TAB_ITEMS: TabBarItem[] = [
   { id: 'users', label: 'Users', icon: 'people-outline' },
   { id: 'moderation', label: 'Moderation', icon: 'shield-checkmark-outline' },
   { id: 'preview', label: 'Preview', icon: 'eye-outline' },
-  { id: 'profile', label: 'Profile', icon: 'person-outline' },
 ];
 
 export const HOST_TAB_ITEMS: TabBarItem[] = [
@@ -25,7 +23,6 @@ export const HOST_TAB_ITEMS: TabBarItem[] = [
   { id: 'requests', label: 'Requests', icon: 'documents-outline' },
   { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
-  { id: 'profile', label: 'Profile', icon: 'person-outline' },
 ];
 
 export const GUIDE_TAB_ITEMS: TabBarItem[] = [
@@ -33,7 +30,6 @@ export const GUIDE_TAB_ITEMS: TabBarItem[] = [
   { id: 'bookings', label: 'Bookings', icon: 'calendar-outline' },
   { id: 'earnings', label: 'Earnings', icon: 'cash-outline' },
   { id: 'messages', label: 'Messages', icon: 'chatbubble-ellipses-outline' },
-  { id: 'profile', label: 'Profile', icon: 'person-outline' },
 ];
 
 /**

@@ -128,13 +128,23 @@ public class AuthService {
             throw new IllegalArgumentException("This account has been suspended.");
         }
         if (!user.isEmailVerified()) {
-            if (inboxVerificationActive()) {
+            boolean allowlistedStaff = adminEmailAllowlist.contains(email);
+            if (inboxVerificationActive() && !allowlistedStaff) {
                 throw new EmailNotVerifiedException();
             }
             // Mail cannot be delivered — do not permanently lock the account.
-            log.warn(
-                    "Allowing unverified login for {} because SendGrid is not configured (or verification is off)",
-                    email);
+            // Allowlisted staff can always reach ops even if inbox verification is stuck.
+            if (!user.isEmailVerified()) {
+                log.warn(
+                        "Allowing unverified login for {} (SendGrid off or allowlisted staff)",
+                        email);
+            }
+        }
+        // Heal staff flag for allowlisted emails (accounts created before staff ops, etc.).
+        if (!user.isStaff() && adminEmailAllowlist.contains(email)) {
+            user.setStaff(true);
+            user = userRepository.save(user);
+            log.info("Granted staff access to {} via allowlist on login", email);
         }
         return issueTokens(user);
     }
