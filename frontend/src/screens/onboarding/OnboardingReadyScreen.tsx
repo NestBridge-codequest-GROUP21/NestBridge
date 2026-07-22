@@ -32,7 +32,7 @@ import {
 
 export interface OnboardingReadyScreenProps {
   subtitle: string;
-  heroImageUri: string;
+  heroImageUri: string | ReturnType<typeof require>;
   carouselCards: OnboardingNextStep[];
   ctaLabel: string;
   roleLabel: string;
@@ -82,8 +82,7 @@ export default function OnboardingReadyScreen({
       <View style={[styles.heroWrap, { height: heroHeight }]}>
         {!heroFailed ? (
           <Image
-            source={{ uri: heroImageUri }}
-            style={styles.heroImage}
+          source={typeof heroImageUri === 'string' ? { uri: heroImageUri } : heroImageUri}            style={styles.heroImage}
             resizeMode="cover"
             accessibilityIgnoresInvertColors
             onError={() => setHeroFailed(true)}
