@@ -176,7 +176,7 @@ export default function MatchRequestReviewScreen({
           disabled={!capacity.canAccept || acceptBlocked}
         />
         <View style={styles.declineSpacing}>
-          <SecondaryButton label="Decline" onPress={onDecline} />
+          <SecondaryButton label="Decline" tone="danger" onPress={onDecline} />
         </View>
       </View>
     </View>

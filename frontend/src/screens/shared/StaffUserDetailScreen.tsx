@@ -161,12 +161,14 @@ export default function StaffUserDetailScreen({
                     {listing.hidden ? (
                       <SecondaryButton
                         label={actionBusy ? 'Working…' : 'Restore listing'}
+                        tone="success"
                         onPress={() => onRestoreListing?.(listing.listingId)}
                         disabled={actionBusy}
                       />
                     ) : (
                       <SecondaryButton
                         label={actionBusy ? 'Working…' : 'Hide listing'}
+                        tone="danger"
                         onPress={() => onHideListing?.(listing.listingId)}
                         disabled={actionBusy}
                       />
@@ -180,12 +182,14 @@ export default function StaffUserDetailScreen({
               {user.suspended ? (
                 <PrimaryButton
                   label={actionBusy ? 'Working…' : 'Unsuspend account'}
+                  tone="success"
                   onPress={onUnsuspend}
                   disabled={actionBusy}
                 />
               ) : (
                 <PrimaryButton
                   label={actionBusy ? 'Working…' : 'Suspend account'}
+                  tone="danger"
                   onPress={onSuspend}
                   disabled={actionBusy || user.staff}
                 />
@@ -194,12 +198,14 @@ export default function StaffUserDetailScreen({
               {user.identityVerified ? (
                 <SecondaryButton
                   label={actionBusy ? 'Working…' : 'Clear KYC flag'}
+                  tone="danger"
                   onPress={onClearKyc}
                   disabled={actionBusy}
                 />
               ) : (
                 <SecondaryButton
                   label={actionBusy ? 'Working…' : 'Force-verify KYC'}
+                  tone="success"
                   onPress={onForceVerify}
                   disabled={actionBusy}
                 />
@@ -208,12 +214,14 @@ export default function StaffUserDetailScreen({
               {user.emailVerified ? (
                 <SecondaryButton
                   label={actionBusy ? 'Working…' : 'Clear email verified'}
+                  tone="danger"
                   onPress={onClearEmailVerified}
                   disabled={actionBusy}
                 />
               ) : (
                 <SecondaryButton
                   label={actionBusy ? 'Working…' : 'Mark email verified'}
+                  tone="success"
                   onPress={onMarkEmailVerified}
                   disabled={actionBusy}
                 />
@@ -222,12 +230,14 @@ export default function StaffUserDetailScreen({
               {user.staff ? (
                 <SecondaryButton
                   label={actionBusy ? 'Working…' : 'Revoke staff access'}
+                  tone="danger"
                   onPress={onRevokeStaff}
                   disabled={actionBusy}
                 />
               ) : (
                 <SecondaryButton
                   label={actionBusy ? 'Working…' : 'Grant staff access'}
+                  tone="success"
                   onPress={onGrantStaff}
                   disabled={actionBusy}
                 />

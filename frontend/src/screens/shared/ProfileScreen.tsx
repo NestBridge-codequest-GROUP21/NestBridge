@@ -249,7 +249,7 @@ export default function ProfileScreen({
         ) : null}
 
         <View style={styles.signOutWrap}>
-          <SecondaryButton label="Sign out" onPress={onSignOut} />
+          <SecondaryButton label="Sign out" tone="danger" onPress={onSignOut} />
         </View>
       </ScreenScroll>
 

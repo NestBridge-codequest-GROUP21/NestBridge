@@ -133,12 +133,14 @@ export default function AdminModerationScreen({
             {listing.hidden ? (
               <PrimaryButton
                 label={actionBusy ? 'Working…' : 'Restore listing'}
+                tone="success"
                 onPress={() => onToggleVisibility?.(listing.listingId, false)}
                 disabled={actionBusy}
               />
             ) : (
               <SecondaryButton
                 label={actionBusy ? 'Working…' : 'Hide listing'}
+                tone="danger"
                 onPress={() => onToggleVisibility?.(listing.listingId, true)}
                 disabled={actionBusy}
               />

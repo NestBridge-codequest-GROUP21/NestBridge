@@ -110,12 +110,16 @@ export default function WelfareCheckInScreen({
                 {(['yes', 'no'] as const).map((choice) => {
                   const value = choice === 'yes';
                   const selected = answers[question.id] === value;
+                  const isYes = choice === 'yes';
                   return (
                     <Pressable
                       key={choice}
                       style={({ pressed }) => [
                         styles.answerButton,
-                        selected && styles.answerButtonSelected,
+                        selected &&
+                          (isYes
+                            ? styles.answerButtonSelectedYes
+                            : styles.answerButtonSelectedNo),
                         pressed && styles.answerButtonPressed,
                       ]}
                       onPress={() =>
@@ -127,10 +131,13 @@ export default function WelfareCheckInScreen({
                       <Text
                         style={[
                           styles.answerLabel,
-                          selected && styles.answerLabelSelected,
+                          selected &&
+                            (isYes
+                              ? styles.answerLabelSelectedYes
+                              : styles.answerLabelSelectedNo),
                         ]}
                       >
-                        {choice === 'yes' ? 'Yes' : 'No'}
+                        {isYes ? 'Yes' : 'No'}
                       </Text>
                     </Pressable>
                   );
@@ -265,8 +272,13 @@ function createStyles({ colors }: AppTheme) {
     borderColor: colors.border,
     backgroundColor: colors.background,
   },
-  answerButtonSelected: {
-    borderColor: colors.teal,
+  answerButtonSelectedYes: {
+    borderColor: colors.success,
+    borderWidth: borderWidths.strong,
+    backgroundColor: colors.warmCream,
+  },
+  answerButtonSelectedNo: {
+    borderColor: colors.danger,
     borderWidth: borderWidths.strong,
     backgroundColor: colors.warmCream,
   },
@@ -279,8 +291,11 @@ function createStyles({ colors }: AppTheme) {
     color: colors.textSecondary,
     fontWeight: fontWeights.semibold,
   },
-  answerLabelSelected: {
-    color: colors.onAccent,
+  answerLabelSelectedYes: {
+    color: colors.success,
+  },
+  answerLabelSelectedNo: {
+    color: colors.danger,
   },
   sosLink: {
     minHeight: touchTarget,
