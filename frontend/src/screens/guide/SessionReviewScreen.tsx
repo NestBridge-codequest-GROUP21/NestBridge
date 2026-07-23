@@ -177,7 +177,7 @@ export default function SessionReviewScreen({
           disabled={!capacity.canAccept || acceptBlocked}
         />
         <View style={styles.declineWrap}>
-          <SecondaryButton label="Decline" onPress={onDecline} />
+          <SecondaryButton label="Decline" tone="danger" onPress={onDecline} />
         </View>
       </View>
     </View>

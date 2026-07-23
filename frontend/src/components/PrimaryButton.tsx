@@ -20,12 +20,16 @@ import {
   lineHeights,
 } from '../constants/theme';
 
+export type PrimaryButtonTone = 'default' | 'danger' | 'success';
+
 export interface PrimaryButtonProps {
   label: string;
   onPress?: () => void;
   disabled?: boolean;
   loading?: boolean;
   iconName?: IoniconName;
+  /** default = teal CTA; danger = red (suspend); success = green (restore / unsuspend). */
+  tone?: PrimaryButtonTone;
   style?: ViewStyle;
 }
 
@@ -35,18 +39,21 @@ export default function PrimaryButton({
   disabled = false,
   loading = false,
   iconName,
+  tone = 'default',
   style,
 }: PrimaryButtonProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
 
-
   const isDisabled = disabled || loading;
+  const spinnerColor = isDisabled ? colors.textTertiary : colors.onPrimary;
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.button,
+        tone === 'danger' && styles.buttonDanger,
+        tone === 'success' && styles.buttonSuccess,
         isDisabled && styles.buttonDisabled,
         pressed && !isDisabled && styles.buttonPressed,
         style,
@@ -58,7 +65,7 @@ export default function PrimaryButton({
       accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {loading ? (
-        <ActivityIndicator color={colors.onPrimary} />
+        <ActivityIndicator color={spinnerColor} />
       ) : (
         <View style={styles.content}>
           {iconName ? (
@@ -83,44 +90,49 @@ export default function PrimaryButton({
 
 function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
-  button: {
-    backgroundColor: colors.tealBright,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    minHeight: controlHeights.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonDisabled: {
-    backgroundColor: colors.border,
-  },
-  buttonPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.99 }],
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    maxWidth: '100%',
-    gap: spacing.sm,
-  },
-  icon: {
-    flexShrink: 0,
-  },
-  label: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    lineHeight: lineHeights.subheading,
-    color: colors.onPrimary,
-    flexShrink: 1,
-    textAlign: 'center',
-  },
-  labelDisabled: {
-    color: colors.textTertiary,
-  },
-});
+    button: {
+      backgroundColor: colors.tealBright,
+      borderRadius: borderRadius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      minHeight: controlHeights.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    buttonDanger: {
+      backgroundColor: colors.danger,
+    },
+    buttonSuccess: {
+      backgroundColor: colors.success,
+    },
+    buttonDisabled: {
+      backgroundColor: colors.border,
+    },
+    buttonPressed: {
+      opacity: 0.9,
+      transform: [{ scale: 0.99 }],
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      maxWidth: '100%',
+      gap: spacing.sm,
+    },
+    icon: {
+      flexShrink: 0,
+    },
+    label: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.subheading,
+      fontWeight: fontWeights.semibold,
+      lineHeight: lineHeights.subheading,
+      color: colors.onPrimary,
+      flexShrink: 1,
+      textAlign: 'center',
+    },
+    labelDisabled: {
+      color: colors.textTertiary,
+    },
+  });
 }
-

@@ -21,12 +21,16 @@ import {
   lineHeights,
 } from '../constants/theme';
 
+export type SecondaryButtonTone = 'default' | 'danger' | 'success';
+
 export interface SecondaryButtonProps {
   label: string;
   onPress?: () => void;
   disabled?: boolean;
   loading?: boolean;
   iconName?: IoniconName;
+  /** default = teal; danger = red (sign out / decline / no); success = green (yes / confirm). */
+  tone?: SecondaryButtonTone;
   style?: ViewStyle;
 }
 
@@ -36,11 +40,18 @@ export default function SecondaryButton({
   disabled = false,
   loading = false,
   iconName,
+  tone = 'default',
   style,
 }: SecondaryButtonProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
 
+  const accent =
+    tone === 'danger'
+      ? colors.danger
+      : tone === 'success'
+        ? colors.success
+        : colors.teal;
 
   const isDisabled = disabled || loading;
 
@@ -48,6 +59,8 @@ export default function SecondaryButton({
     <Pressable
       style={({ pressed }) => [
         styles.button,
+        tone === 'danger' && styles.buttonDanger,
+        tone === 'success' && styles.buttonSuccess,
         isDisabled && styles.buttonDisabled,
         pressed && !isDisabled && styles.buttonPressed,
         style,
@@ -59,19 +72,24 @@ export default function SecondaryButton({
       accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {loading ? (
-        <ActivityIndicator color={colors.teal} />
+        <ActivityIndicator color={isDisabled ? colors.textTertiary : accent} />
       ) : (
         <View style={styles.content}>
           {iconName ? (
             <AppIcon
               name={iconName}
               size={iconSizes.md}
-              color={isDisabled ? colors.textTertiary : colors.teal}
+              color={isDisabled ? colors.textTertiary : accent}
               style={styles.icon}
             />
           ) : null}
           <Text
-            style={[styles.label, isDisabled && styles.labelDisabled]}
+            style={[
+              styles.label,
+              tone === 'danger' && styles.labelDanger,
+              tone === 'success' && styles.labelSuccess,
+              isDisabled && styles.labelDisabled,
+            ]}
             numberOfLines={2}
           >
             {label}
@@ -84,47 +102,58 @@ export default function SecondaryButton({
 
 function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
-  button: {
-    borderWidth: borderWidths.strong,
-    borderColor: colors.teal,
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    minHeight: controlHeights.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-  },
-  buttonDisabled: {
-    borderColor: colors.border,
-    opacity: 0.6,
-  },
-  buttonPressed: {
-    opacity: 0.9,
-    backgroundColor: colors.warmCream,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    maxWidth: '100%',
-    gap: spacing.sm,
-  },
-  icon: {
-    flexShrink: 0,
-  },
-  label: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.subheading,
-    fontWeight: fontWeights.semibold,
-    lineHeight: lineHeights.subheading,
-    color: colors.teal,
-    flexShrink: 1,
-    textAlign: 'center',
-  },
-  labelDisabled: {
-    color: colors.textTertiary,
-  },
-});
+    button: {
+      borderWidth: borderWidths.strong,
+      borderColor: colors.teal,
+      borderRadius: borderRadius.lg,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.lg,
+      minHeight: controlHeights.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surface,
+    },
+    buttonDanger: {
+      borderColor: colors.danger,
+    },
+    buttonSuccess: {
+      borderColor: colors.success,
+    },
+    buttonDisabled: {
+      borderColor: colors.border,
+      opacity: 0.6,
+    },
+    buttonPressed: {
+      opacity: 0.9,
+      backgroundColor: colors.warmCream,
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      maxWidth: '100%',
+      gap: spacing.sm,
+    },
+    icon: {
+      flexShrink: 0,
+    },
+    label: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.subheading,
+      fontWeight: fontWeights.semibold,
+      lineHeight: lineHeights.subheading,
+      color: colors.teal,
+      flexShrink: 1,
+      textAlign: 'center',
+    },
+    labelDanger: {
+      color: colors.danger,
+    },
+    labelSuccess: {
+      color: colors.success,
+    },
+    labelDisabled: {
+      color: colors.textTertiary,
+    },
+  });
 }
-
