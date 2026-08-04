@@ -41,9 +41,9 @@ export interface MatchSearchDefaults {
 }
 
 export const matchSearchDefaults: MatchSearchDefaults = {
-  destinationCity: 'Accra',
-  checkIn: '2026-08-10',
-  checkOut: '2026-08-20',
+  destinationCity: '',
+  checkIn: '',
+  checkOut: '',
   budgetMin: 100,
   budgetMax: 200,
   currency: 'GHS',

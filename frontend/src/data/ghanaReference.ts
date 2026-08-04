@@ -520,7 +520,7 @@ export function regionForCapital(capital: string): GhanaRegion | undefined {
 export function normalizeCity(city: string): string {
   const trimmed = city.trim();
   if (!trimmed) {
-    return 'Accra';
+    return '';
   }
 
   const firstPart = trimmed.split(',')[0]?.trim() ?? trimmed;

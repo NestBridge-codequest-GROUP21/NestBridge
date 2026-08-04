@@ -14,6 +14,8 @@ import {
   type VideoWatchStatus,
 } from '../types/videoLibrary';
 import { toVideoLibraryCard } from '../utils/videoLibraryHub';
+import { shouldUseDemoFallbackForAccount } from '../config/demoMode';
+import { useAuth } from '../context/AuthContext';
 
 export interface VideoDetailRouteProps {
   videoKey: string;
@@ -41,6 +43,8 @@ export default function VideoDetailRoute({
   onBack,
   onProgressChanged,
 }: VideoDetailRouteProps) {
+  const { user } = useAuth();
+  const demoFallbackEnabled = shouldUseDemoFallbackForAccount(user?.email);
   const videoApi = useVideo(videoKey, !!videoKey);
   const [progress, setProgress] = useState<VideoProgressState>({
     ...EMPTY_VIDEO_PROGRESS,
@@ -67,10 +71,12 @@ export default function VideoDetailRoute({
     if (videoApi.data) {
       return sanitizeVideoResource(videoApi.data);
     }
-    // Video library is app catalog content — available to every signed-in user.
+    if (!demoFallbackEnabled) {
+      return null;
+    }
     const fallback = videosApiMock.find((item) => item.videoKey === videoKey);
     return fallback ? sanitizeVideoResource(fallback) : null;
-  }, [videoApi.data, videoKey]);
+  }, [videoApi.data, videoKey, demoFallbackEnabled]);
 
   const card = useMemo(
     () => (video ? toVideoLibraryCard(video, progress) : null),

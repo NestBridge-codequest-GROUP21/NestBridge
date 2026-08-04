@@ -1,17 +1,15 @@
 /**
  * Demo presentation layer for CodeQuest / pre-launch judging.
  *
- * Two merge modes:
- * - {@link withCatalogFallback} — platform content for every signed-in user
- *   (videos, tourist sites, transport, landmarks, checklist, emergency numbers).
- *   Live API wins; catalog fills gaps.
- * - {@link withDemoFallback} — location-personalized or personal rows (lodging
- *   partners, explore stays, bookings, messages, notifications, match
- *   hosts/guides, provider inbox). Only for seeded demo actor accounts when
- *   the global flag is on; real accounts see genuine empty states.
+ * - {@link withCatalogFallback} / {@link withDemoFallback} — fill gaps with
+ *   bundled mock/catalog rows only for seeded demo actor accounts when the
+ *   global flag is on. Real Create Account users see live API data only
+ *   (or genuine empty / error states).
+ * - {@link withProductCatalogFallback} — always-available product safety
+ *   content (e.g. Ghana emergency numbers). Not fake personal data.
  *
  * Global kill switch: EXPO_PUBLIC_ENABLE_DEMO_FALLBACK=false
- * Per-account gate (demo merge only): shouldUseDemoFallbackForAccount(email)
+ * Per-account gate: shouldUseDemoFallbackForAccount(email)
  */
 
 import { shouldUseDemoFallbackForAccount } from '../config/demoMode';
@@ -61,11 +59,10 @@ function resolveMatchKey<T>(
   return value != null ? String(value).trim() : '';
 }
 
-/** Prefer live rows; when empty/partial, fill with app catalog content for every user. */
-export function withCatalogFallback<T>(
+function mergeCatalogRows<T>(
   live: T[],
   catalog: T[],
-  options?: Omit<DemoFallbackOptions, 'accountEmail'> & { idKey?: keyof T },
+  options?: DemoFallbackOptions & { idKey?: keyof T },
 ): T[] {
   if (live.length === 0) {
     return catalog;
@@ -93,12 +90,46 @@ export function withCatalogFallback<T>(
   return extras.length > 0 ? [...live, ...extras] : live;
 }
 
-/** Prefer a live catalog item; otherwise use the bundled catalog entry for every user. */
+/**
+ * Prefer live rows; fill from bundled catalog only for demo actors.
+ * Real accounts get live API rows only (empty when the API returns empty).
+ */
+export function withCatalogFallback<T>(
+  live: T[],
+  catalog: T[],
+  options?: DemoFallbackOptions & { idKey?: keyof T },
+): T[] {
+  if (!isFallbackActive(options)) {
+    return live;
+  }
+  return mergeCatalogRows(live, catalog, options);
+}
+
+/** Prefer a live item; otherwise use bundled catalog only for demo actors. */
 export function withCatalogFallbackValue<T>(
   live: T | null | undefined,
   catalog: T,
+  options?: DemoFallbackOptions,
 ): T | null {
-  return live ?? catalog;
+  if (live !== null && live !== undefined) {
+    return live;
+  }
+  if (!isFallbackActive(options)) {
+    return null;
+  }
+  return catalog;
+}
+
+/**
+ * Prefer live rows; always fill gaps from product catalog (safety content).
+ * Use only for non-personal constants like national emergency numbers.
+ */
+export function withProductCatalogFallback<T>(
+  live: T[],
+  catalog: T[],
+  options?: Omit<DemoFallbackOptions, 'accountEmail'> & { idKey?: keyof T },
+): T[] {
+  return mergeCatalogRows(live, catalog, options);
 }
 
 /** Prefer live rows; only for demo actors, append demo-only rows when empty/partial. */
@@ -110,7 +141,7 @@ export function withDemoFallback<T>(
   if (!isFallbackActive(options)) {
     return live;
   }
-  return withCatalogFallback(live, demo, options);
+  return mergeCatalogRows(live, demo, options);
 }
 
 /** Prefer a live value; otherwise show the demo default for demo actors only. */
@@ -119,10 +150,7 @@ export function withDemoFallbackValue<T>(
   demo: T,
   options?: DemoFallbackOptions,
 ): T | null {
-  if (!isFallbackActive(options)) {
-    return live !== null && live !== undefined ? live : null;
-  }
-  return withCatalogFallbackValue(live, demo);
+  return withCatalogFallbackValue(live, demo, options);
 }
 
 export function isPresentingDemoData<T>(live: T[], display: T[]): boolean {

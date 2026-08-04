@@ -256,6 +256,7 @@ import { conversationsMock } from '../data/conversationsMock';
 import {
   bindDemoFallbackSession,
   withCatalogFallback,
+  withProductCatalogFallback,
   withDemoFallback,
   withDemoFallbackValue,
   presentableLoading,
@@ -568,12 +569,19 @@ function handleExploreSectionPress(
   navigation.navigate('SitesDirectory');
 }
 
+function isoDatePlusDays(daysAhead: number): string {
+  const date = new Date();
+  date.setHours(12, 0, 0, 0);
+  date.setDate(date.getDate() + daysAhead);
+  return date.toISOString().slice(0, 10);
+}
+
 function defaultCheckIn(arrivalDate: string): string {
-  return arrivalDate || '2026-09-01';
+  return arrivalDate || isoDatePlusDays(7);
 }
 
 function defaultCheckOut(departureDate: string): string {
-  return departureDate || '2026-12-15';
+  return departureDate || isoDatePlusDays(17);
 }
 
 function resetToBookingsTab(
@@ -939,13 +947,17 @@ function HostCalendarStackScreen({
   userInitials,
   navigation,
   fallbackActiveBooking,
-}: ProviderScreenHeaderProps & { fallbackActiveBooking: ActiveBookingDetail }) {
+}: ProviderScreenHeaderProps & {
+  fallbackActiveBooking: ActiveBookingDetail | null;
+}) {
   const { user } = useAuth();
   const calendarMonth = useMemo(() => getProviderCalendarMonth(), []);
   const [days, setDays] = useState(() =>
     buildEmptyHostMonthDays(calendarMonth.year, calendarMonth.month),
   );
-  const [activeBooking, setActiveBooking] = useState(fallbackActiveBooking);
+  const [activeBooking, setActiveBooking] = useState<ActiveBookingDetail | null>(
+    fallbackActiveBooking,
+  );
   const [loadedFromApi, setLoadedFromApi] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -1058,9 +1070,9 @@ function TourTypesStackScreen({
   navigation,
   onProfileSaved,
 }: TourTypesStackProps) {
-  const [tourTypes, setTourTypes] = useState(tourTypesMock);
-  const [baseRate, setBaseRate] = useState('45');
-  const [maxGroupSize, setMaxGroupSize] = useState('8');
+  const [tourTypes, setTourTypes] = useState<TourTypeOption[]>([]);
+  const [baseRate, setBaseRate] = useState('');
+  const [maxGroupSize, setMaxGroupSize] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -1071,7 +1083,12 @@ function TourTypesStackScreen({
         setBaseRate(merged.baseRate);
         setMaxGroupSize(readMaxGroupSize(profile.availabilitySchedule));
       })
-      .catch(() => undefined);
+      .catch(() => {
+        // Form template only — not personal mock rows.
+        setTourTypes(tourTypesMock.map((option) => ({ ...option, enabled: false })));
+        setBaseRate('45');
+        setMaxGroupSize('8');
+      });
   }, []);
 
   return (
@@ -1344,7 +1361,7 @@ function syncFieldsFromProfileState(
   setters.setAbout(data.about ?? '');
 }
 
-const DEFAULT_SESSION_DATE = '2026-09-05';
+const DEFAULT_SESSION_DATE = isoDatePlusDays(7);
 const DEFAULT_SESSION_TIME = '10:00';
 
 const SEARCH_CATEGORIES = [
@@ -1512,9 +1529,9 @@ export default function AppNavigator() {
   );
   const [cultureGuideProgress, setCultureGuideProgress] =
     useState<CultureGuideProgress>(EMPTY_CULTURE_GUIDE_PROGRESS);
-  const [tourTypes, setTourTypes] = useState(tourTypesMock);
-  const [tourBaseRate, setTourBaseRate] = useState('45');
-  const [tourMaxGroupSize, setTourMaxGroupSize] = useState('8');
+  const [tourTypes, setTourTypes] = useState<TourTypeOption[]>([]);
+  const [tourBaseRate, setTourBaseRate] = useState('');
+  const [tourMaxGroupSize, setTourMaxGroupSize] = useState('');
   const [hostProfileCache, setHostProfileCache] = useState<Record<string, HostProfileSummary>>(
     () => (shouldUseDemoFallbackForAccount(user?.email) ? buildDemoHostProfileCache() : {}),
   );
@@ -1970,7 +1987,7 @@ export default function AppNavigator() {
     preview?.role,
     profileState,
   );
-  const cityLabel = profileFields.city || city || 'Accra';
+  const cityLabel = (profileFields.city || city || '').trim();
 
   const universityDirectoryItems = useMemo(() => {
     const capital = normalizeCity(cityLabel);
@@ -2023,20 +2040,26 @@ export default function AppNavigator() {
     ? homeApi.topGuideTargetId ?? demoTopGuideId
     : homeApi.topGuideTargetId ?? null;
 
-  const lodgingApi = useLodgingPartners(cityLabel, !!user);
-  const contentTransport = useTransport(cityLabel, !!user);
-  const contentSites = useSites(cityLabel, !!user);
-  const contentChecklist = useChecklist(cityLabel, !!user);
+  const hasCity = cityLabel.length > 0;
+  const lodgingApi = useLodgingPartners(cityLabel, !!user && hasCity);
+  const contentTransport = useTransport(cityLabel, !!user && hasCity);
+  const contentSites = useSites(cityLabel, !!user && hasCity);
+  const contentChecklist = useChecklist(cityLabel, !!user && hasCity);
   const contentEmergency = useEmergencyContacts(!!user);
-  const contentLandmarks = useMapLandmarks(cityLabel, !!user);
-  const contentVideos = useVideos(cityLabel, undefined, !!user);
+  const contentLandmarks = useMapLandmarks(cityLabel, !!user && hasCity);
+  const contentVideos = useVideos(
+    hasCity ? cityLabel : undefined,
+    undefined,
+    !!user,
+  );
 
   const emergencyContactsDisplay = useMemo(() => {
     const liveContacts = contentEmergency.data.map((contact) =>
       enrichEmergencyContact(contact),
     );
+    // Real Ghana emergency numbers — product safety content, not personal mock data.
     return uniqueByContactNumber(
-      withCatalogFallback(liveContacts, emergencyContactsMock, {
+      withProductCatalogFallback(liveContacts, emergencyContactsMock, {
         isLoading: contentEmergency.isLoading,
         error: contentEmergency.error,
         matchKey: (item) =>
@@ -2602,10 +2625,10 @@ export default function AppNavigator() {
 
   const firstName = resolvedName.split(' ')[0] || resolvedName;
 
-  const hostCalendarActiveBooking = useMemo(() => {
+  const hostCalendarActiveBooking = useMemo((): ActiveBookingDetail | null => {
     const active = hostActiveDisplay[0];
     if (!active) {
-      return hostActiveBookingMock;
+      return demoFallbackEnabled ? hostActiveBookingMock : null;
     }
     const range =
       active.checkIn === active.checkOut
@@ -2616,7 +2639,7 @@ export default function AppNavigator() {
       dateRange: range,
       totalAmount: `GHS ${active.hostPayout.toLocaleString('en-GH')}`,
     };
-  }, [hostActiveDisplay]);
+  }, [hostActiveDisplay, demoFallbackEnabled]);
 
   const personalizedGreeting = getPersonalizedGreeting(firstName);
 
@@ -4265,7 +4288,9 @@ export default function AppNavigator() {
               statusLabel={hostLive.statusLabel}
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('HOST')}
-              performanceStats={hostPerformanceMock}
+              performanceStats={
+                demoFallbackEnabled ? hostPerformanceMock : []
+              }
               recommendationSections={dashboardRecommendations.sections}
               recommendationHeadline={dashboardRecommendations.headline}
               recommendationCity={cityLabel}
@@ -4342,7 +4367,9 @@ export default function AppNavigator() {
               statusLabel={guideLive.statusLabel}
               featuredCard={featuredCard}
               quickActions={getQuickActionsForRole('GUIDE')}
-              performanceStats={guidePerformanceMock}
+              performanceStats={
+                demoFallbackEnabled ? guidePerformanceMock : []
+              }
               performanceTitle="Your tour performance"
               recommendationSections={dashboardRecommendations.sections}
               recommendationHeadline={dashboardRecommendations.headline}
@@ -5238,7 +5265,7 @@ export default function AppNavigator() {
       <Stack.Screen name="SponsorList">
         {({ navigation }) => (
           <SponsorListScreen
-            sponsors={SPONSORS_MOCK}
+            sponsors={demoFallbackEnabled ? SPONSORS_MOCK : []}
             onBack={() => navigation.goBack()}
             onSponsorPress={(sponsorId) =>
               navigation.navigate('SponsorDetail', { sponsorId })
@@ -5249,7 +5276,9 @@ export default function AppNavigator() {
 
       <Stack.Screen name="SponsorDetail">
         {({ navigation, route }) => {
-          const sponsor = getSponsorById(route.params.sponsorId);
+          const sponsor = demoFallbackEnabled
+            ? getSponsorById(route.params.sponsorId)
+            : undefined;
           if (!sponsor) {
             return (
               <RouteErrorState
@@ -5275,7 +5304,9 @@ export default function AppNavigator() {
 
       <Stack.Screen name="SponsorApplication">
         {({ navigation, route }) => {
-          const sponsor = getSponsorById(route.params.sponsorId);
+          const sponsor = demoFallbackEnabled
+            ? getSponsorById(route.params.sponsorId)
+            : undefined;
           if (!sponsor) {
             return (
               <RouteErrorState

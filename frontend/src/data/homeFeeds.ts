@@ -244,7 +244,7 @@ export function buildHostMatchParams(
   overrides?: Partial<MatchFindParams>,
 ): MatchFindParams {
   const data = profileState.seekerSetup.data;
-  const city = data.city ? normalizeCity(data.city) : 'Accra';
+  const city = data.city ? normalizeCity(data.city) : '';
   return {
     city,
     checkIn: data.arrivalDate || undefined,
@@ -263,7 +263,7 @@ export function buildGuideMatchParams(
   overrides?: Partial<MatchFindParams>,
 ): MatchFindParams {
   const data = profileState.seekerSetup.data;
-  const city = data.city ? normalizeCity(data.city) : 'Accra';
+  const city = data.city ? normalizeCity(data.city) : '';
   return {
     city,
     maxBudget: 300,
@@ -287,7 +287,7 @@ export function buildSearchMatchParams(
   const searchCity = search.destinationCity
     ? normalizeCity(search.destinationCity)
     : undefined;
-  const city = searchCity || profileCity || 'Accra';
+  const city = searchCity || profileCity || '';
 
   return {
     city,

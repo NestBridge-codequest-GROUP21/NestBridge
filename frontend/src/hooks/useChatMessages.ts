@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import {
   getConversationMessages,
   sendConversationMessage,
@@ -7,12 +8,39 @@ import {
 import { messagesForConversation } from '../data/conversationsMock';
 import {
   isFirebaseConfigured,
-  sendFirebaseMessage,
   subscribeToMessages,
 } from '../services/firebase';
 import type { ChatMessage } from '../types/messaging';
 import { shouldUseDemoFallbackForAccount } from '../config/demoMode';
 import { useAuth } from '../context/AuthContext';
+
+/** REST poll interval when Firebase client config is unavailable. */
+const REST_POLL_MS = 1500;
+
+function mapApiMessages(
+  items: Array<{ messageId: string; senderId: string; text: string; sentAt: string }>,
+  currentUserId: string,
+): ChatMessage[] {
+  return items.map((item) => ({
+    id: item.messageId,
+    senderId: item.senderId,
+    text: item.text,
+    sentAt: item.sentAt,
+    isOwn: item.senderId === currentUserId,
+  }));
+}
+
+/** Merge by message id; prefer newer/longer list order by sentAt. */
+function mergeMessages(existing: ChatMessage[], incoming: ChatMessage[]): ChatMessage[] {
+  const byId = new Map<string, ChatMessage>();
+  for (const message of existing) {
+    byId.set(message.id, message);
+  }
+  for (const message of incoming) {
+    byId.set(message.id, message);
+  }
+  return Array.from(byId.values()).sort((a, b) => a.sentAt.localeCompare(b.sentAt));
+}
 
 export function useChatMessages(
   conversationId: string | undefined,
@@ -29,6 +57,11 @@ export function useChatMessages(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const messagesRef = useRef<ChatMessage[]>([]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const loadRestMessages = useCallback(async () => {
     if (!conversationId || !currentUserId) {
@@ -36,15 +69,12 @@ export function useChatMessages(
     }
     const items = await getConversationMessages(conversationId);
     if (items.length > 0) {
-      setMessages(
-        items.map((item) => ({
-          id: item.messageId,
-          senderId: item.senderId,
-          text: item.text,
-          sentAt: item.sentAt,
-          isOwn: item.senderId === currentUserId,
-        })),
-      );
+      setMessages((prev) => mergeMessages(prev, mapApiMessages(items, currentUserId)));
+      return;
+    }
+
+    // Keep any optimistic/local rows; only seed demo when the thread is empty.
+    if (messagesRef.current.length > 0) {
       return;
     }
 
@@ -83,16 +113,24 @@ export function useChatMessages(
         await loadRestMessages();
         if (cancelled) return;
 
+        // Always poll Postgres — source of truth even when Firebase is enabled.
+        pollRef.current = setInterval(() => {
+          void loadRestMessages().catch(() => undefined);
+        }, REST_POLL_MS);
+
+        // Optional realtime boost: merge Firebase pushes without wiping REST history.
+        // Backend already writes to Firebase; client must NOT double-write.
         if (isFirebaseConfigured() && firebasePath) {
           unsubscribeFirebase = subscribeToMessages(
             firebasePath,
             currentUserId,
-            setMessages,
+            (firebaseMessages) => {
+              if (firebaseMessages.length === 0) {
+                return;
+              }
+              setMessages((prev) => mergeMessages(prev, firebaseMessages));
+            },
           );
-        } else {
-          pollRef.current = setInterval(() => {
-            void loadRestMessages().catch(() => undefined);
-          }, 4000);
         }
       } catch (err) {
         if (!cancelled) {
@@ -105,8 +143,15 @@ export function useChatMessages(
       }
     })();
 
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        void loadRestMessages().catch(() => undefined);
+      }
+    });
+
     return () => {
       cancelled = true;
+      appStateSub.remove();
       if (unsubscribeFirebase) {
         unsubscribeFirebase();
       }
@@ -127,26 +172,33 @@ export function useChatMessages(
         return;
       }
       setError(null);
+
+      const optimisticId = `local-${Date.now()}`;
+      const optimistic: ChatMessage = {
+        id: optimisticId,
+        senderId: currentUserId,
+        text: trimmed,
+        sentAt: new Date().toISOString(),
+        isOwn: true,
+      };
+      setMessages((prev) => mergeMessages(prev, [optimistic]));
+
       try {
+        // Persist via API. Backend also pushes to Firebase when enabled —
+        // do not write again from the client (avoids duplicate messages).
         const saved = await sendConversationMessage(conversationId, trimmed);
-        const mapped: ChatMessage = {
-          id: saved.messageId,
-          senderId: saved.senderId,
-          text: saved.text,
-          sentAt: saved.sentAt,
-          isOwn: saved.senderId === currentUserId,
-        };
-        if (isFirebaseConfigured() && firebasePath) {
-          await sendFirebaseMessage(firebasePath, currentUserId, trimmed);
-        } else {
-          setMessages((prev) => [...prev, mapped]);
-        }
+        const mapped = mapApiMessages([saved], currentUserId)[0]!;
+        setMessages((prev) => {
+          const withoutOptimistic = prev.filter((message) => message.id !== optimisticId);
+          return mergeMessages(withoutOptimistic, [mapped]);
+        });
       } catch (err) {
+        setMessages((prev) => prev.filter((message) => message.id !== optimisticId));
         setError(getApiErrorMessage(err));
         throw err;
       }
     },
-    [conversationId, currentUserId, firebasePath],
+    [conversationId, currentUserId],
   );
 
   return { messages, isLoading, error, sendMessage };

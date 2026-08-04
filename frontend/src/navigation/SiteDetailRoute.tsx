@@ -3,6 +3,8 @@ import TouristSiteDetailScreen from '../screens/tourist/TouristSiteDetailScreen'
 import RouteErrorState from '../components/RouteErrorState';
 import { useSite } from '../hooks/useContent';
 import { touristSiteFromId } from '../data/touristSitesMock';
+import { shouldUseDemoFallbackForAccount } from '../config/demoMode';
+import { useAuth } from '../context/AuthContext';
 
 export interface SiteDetailRouteProps {
   siteKey: string;
@@ -15,9 +17,10 @@ export default function SiteDetailRoute({
   onBack,
   onFindGuidePress,
 }: SiteDetailRouteProps) {
+  const { user } = useAuth();
+  const demoFallbackEnabled = shouldUseDemoFallbackForAccount(user?.email);
   const siteApi = useSite(siteKey, !!siteKey);
-  // Tourist sites are platform catalog content — available to every account.
-  const mockSite = touristSiteFromId(siteKey);
+  const mockSite = demoFallbackEnabled ? touristSiteFromId(siteKey) : null;
 
   if (siteApi.isLoading && !mockSite) {
     return <RouteErrorState isLoading message="" />;
