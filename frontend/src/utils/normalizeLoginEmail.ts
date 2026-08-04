@@ -24,7 +24,6 @@ export function normalizeLoginEmail(raw: string): string {
     taslima: 'abdulsamedtaslima@gmail.com',
     taslimah: 'abdulsamedtaslima@gmail.com',
     tassy: 'abdulsamedtaslima@gmail.com',
-    admin: 'admin@nestbridge.app',
   };
 
   return aliases[trimmed] ?? trimmed;

@@ -30,19 +30,6 @@ export interface DemoAccount {
   description: string;
 }
 
-/**
- * Seeded staff account — use Staff sign-in or email/password only.
- * Never include in Quick sign-in tiles (anyone with the APK could one-tap into ops).
- */
-export const DEMO_STAFF_ACCOUNT: DemoAccount = {
-  id: 'staff',
-  label: 'Staff',
-  name: 'NestBridge Staff',
-  email: 'admin@nestbridge.app',
-  intent: 'TOURIST',
-  description: 'Ops dashboard — Staff sign-in with email/password only',
-};
-
 /** Complete profile preset for a seeded demo actor (Accra / UG context). */
 export function demoPresetForAccount(account: DemoAccount): AccountProfileState {
   const base = presetHomeDashboard(account.intent);
@@ -91,8 +78,8 @@ export function demoPresetForAccount(account: DemoAccount): AccountProfileState 
 }
 
 /**
- * Consumer demo actors for Quick sign-in on the post-splash Welcome screen only.
- * Staff is intentionally omitted — ops access is via Staff sign-in only.
+ * Consumer demo actors (email/password Sign in; Quick tiles currently off).
+ * Staff/ops: personal allowlisted Gmails only — no shared demo admin account.
  * Password for all: {@link DEMO_PASSWORD}
  */
 export const DEMO_ACTOR_ACCOUNTS: DemoAccount[] = [
@@ -130,8 +117,5 @@ export const DEMO_ACTOR_ACCOUNTS: DemoAccount[] = [
   },
 ];
 
-/** All seeded demo emails (consumer actors + staff). */
-export const ALL_DEMO_ACCOUNTS: DemoAccount[] = [
-  DEMO_STAFF_ACCOUNT,
-  ...DEMO_ACTOR_ACCOUNTS,
-];
+/** All seeded consumer demo emails. */
+export const ALL_DEMO_ACCOUNTS: DemoAccount[] = [...DEMO_ACTOR_ACCOUNTS];

@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import { ALL_DEMO_ACCOUNTS } from '../data/demoAccounts';
 
 /**
- * Global kill switch for demo UX (Quick sign-in tiles + mock fallbacks).
+ * Global kill switch for mock/fallback content after a demo actor signs in.
  * Set EXPO_PUBLIC_ENABLE_DEMO_FALLBACK=false in EAS production to disable for everyone.
  */
 export function isDemoFallbackEnabled(): boolean {
@@ -17,9 +17,13 @@ export function isDemoFallbackEnabled(): boolean {
   return true;
 }
 
-/** Demo actor buttons on Welcome / Login / Register — same global kill switch. */
+/**
+ * Welcome-screen Quick sign-in tiles.
+ * Off for now — demo actors still work via email/password Sign in.
+ * Flip to `return isDemoFallbackEnabled()` when bringing tiles back.
+ */
 export function isDemoQuickLoginEnabled(): boolean {
-  return isDemoFallbackEnabled();
+  return false;
 }
 
 /**
@@ -29,8 +33,8 @@ export function isDemoQuickLoginEnabled(): boolean {
  *   - zara.tourist@nestbridge.app (Tourist)
  *   - abena.host@nestbridge.app (Host family)
  *   - kofi.guide@nestbridge.app (Local guide)
- *   - admin@nestbridge.app (Staff — ops only, not Quick sign-in)
  *
+ * Staff/ops uses personal allowlisted Gmails only (not a shared demo admin).
  * Not by domain alone: a real user who registers with any other address
  * (including a non-seeded *@nestbridge.app address) is treated as a production account.
  */
