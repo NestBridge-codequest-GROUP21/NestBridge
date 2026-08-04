@@ -173,16 +173,6 @@ public class AdminController {
                 adminService.setListingVisibility(actorId, id, hidden)));
     }
 
-    @PatchMapping("/listings/{id}/hide")
-    public ResponseEntity<ApiResponse<AdminListingHideResultDto>> hideListing(
-            Authentication authentication,
-            @PathVariable UUID id) {
-        UUID actorId = (UUID) authentication.getPrincipal();
-        return ResponseEntity.ok(ApiResponse.success(
-                "Listing hidden",
-                adminService.hideListing(actorId, id)));
-    }
-
     @PostMapping("/audit")
     public ResponseEntity<ApiResponse<StaffAuditResultDto>> recordAudit(
             Authentication authentication,

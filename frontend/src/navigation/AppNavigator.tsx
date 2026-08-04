@@ -1715,7 +1715,7 @@ export default function AppNavigator() {
     if (!demoAccount || demoProfileSyncedForUser.current === user.userId) {
       return;
     }
-    if (demoAccount.id === 'staff' || user.isStaff) {
+    if (user.isStaff) {
       demoProfileSyncedForUser.current = user.userId;
       return;
     }
@@ -2531,7 +2531,7 @@ export default function AppNavigator() {
     setDemoLoginBusy(true);
     try {
       const signedIn = await signIn(account.email, DEMO_PASSWORD, true);
-      if (account.id === 'staff' || signedIn.isStaff) {
+      if (signedIn.isStaff) {
         return;
       }
       await applyDevPreset(demoPresetForAccount(account));

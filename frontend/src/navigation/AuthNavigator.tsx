@@ -85,7 +85,7 @@ export default function AuthNavigator({
     setDemoLoginBusy(true);
     try {
       const signedIn = await signIn(account.email, DEMO_PASSWORD, keepSignedIn);
-      if (account.id === 'staff' || signedIn.isStaff) {
+      if (signedIn.isStaff) {
         // Staff lands on the ops shell — do not apply a tourist consumer preset.
         return;
       }

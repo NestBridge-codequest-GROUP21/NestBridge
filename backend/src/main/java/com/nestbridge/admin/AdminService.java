@@ -419,12 +419,6 @@ public class AdminService {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Listing not found.");
     }
 
-    /** @deprecated Prefer {@link #setListingVisibility(UUID, UUID, boolean)} */
-    @Transactional
-    public AdminListingHideResultDto hideListing(UUID actorId, UUID listingId) {
-        return setListingVisibility(actorId, listingId, true);
-    }
-
     @Transactional
     public StaffAuditResultDto recordAudit(UUID actorId, String action, String detail) {
         staffGuard.requireStaff(actorId);
