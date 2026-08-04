@@ -41,6 +41,7 @@ export interface ProfileScreenProps {
   onAccountSetupPress?: () => void;
   onTravelBookingPress?: () => void;
   onSettingsPress?: () => void;
+  onHelpPress?: () => void;
   onRatingsPress?: () => void;
   onSignOut?: () => void;
   onResetDemo?: () => void;
@@ -71,6 +72,7 @@ export default function ProfileScreen({
   onAccountSetupPress,
   onTravelBookingPress,
   onSettingsPress,
+  onHelpPress,
   onRatingsPress,
   onSignOut,
   onResetDemo,
@@ -136,7 +138,11 @@ export default function ProfileScreen({
               iconName="airplane-outline"
               onPress={onTravelBookingPress}
               style={styles.listRowPad}
-              bordered={Boolean(onSettingsPress) || Boolean(onRatingsPress)}
+              bordered={
+                Boolean(onSettingsPress) ||
+                Boolean(onRatingsPress) ||
+                Boolean(onHelpPress)
+              }
             />
           ) : null}
           {onRatingsPress ? (
@@ -146,7 +152,7 @@ export default function ProfileScreen({
               iconName="star-outline"
               onPress={onRatingsPress}
               style={styles.listRowPad}
-              bordered={Boolean(onSettingsPress)}
+              bordered={Boolean(onSettingsPress) || Boolean(onHelpPress)}
             />
           ) : null}
           {onSettingsPress ? (
@@ -155,6 +161,16 @@ export default function ProfileScreen({
               subtitle="Appearance themes and notifications"
               iconName="settings-outline"
               onPress={onSettingsPress}
+              style={styles.listRowPad}
+              bordered={Boolean(onHelpPress)}
+            />
+          ) : null}
+          {onHelpPress ? (
+            <ListRow
+              title="Help desk"
+              subtitle="Stuck on booking, payment, KYC, or sign-in"
+              iconName="help-circle-outline"
+              onPress={onHelpPress}
               style={styles.listRowPad}
               bordered={false}
             />

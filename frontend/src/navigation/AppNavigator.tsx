@@ -53,6 +53,8 @@ import GuideEarningsTabScreen from '../screens/guide/GuideEarningsTabScreen';
 import BrowseHomeScreen from '../screens/shared/BrowseHomeScreen';
 import ProfileScreen from '../screens/shared/ProfileScreen';
 import SettingsScreen from '../screens/shared/SettingsScreen';
+import HelpDeskScreen from '../screens/shared/HelpDeskScreen';
+import { HELP_TOPICS, nestBridgeSupportContacts } from '../data/helpDesk';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
 import DevTestingScreen from '../screens/shared/DevTestingScreen';
 import {
@@ -3580,6 +3582,7 @@ export default function AppNavigator() {
             }}
             onTravelBookingPress={() => navigation.navigate('UnifiedSearch')}
             onSettingsPress={() => navigation.navigate('Settings')}
+            onHelpPress={() => navigation.navigate('HelpDesk')}
             onRatingsPress={() => navigation.navigate('Ratings')}
             onStaffToolsPress={() => navigation.navigate('StaffUserSearch')}
             onReturnToOpsPress={() => navigateToHome(navigation, 'AdminHome')}
@@ -3614,7 +3617,22 @@ export default function AppNavigator() {
             onNotificationsChange={(enabled) => {
               void handleNotificationsPreferenceChange(enabled);
             }}
+            onHelpPress={() => navigation.navigate('HelpDesk')}
             onBack={() => navigation.goBack()}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="HelpDesk">
+        {({ navigation }) => (
+          <HelpDeskScreen
+            topics={HELP_TOPICS}
+            supportContacts={nestBridgeSupportContacts()}
+            onBack={() => navigation.goBack()}
+            onOpenSos={() => navigation.navigate('SOS')}
+            onCallSupport={(contact) => {
+              dialPhoneNumber(contact.number);
+            }}
           />
         )}
       </Stack.Screen>

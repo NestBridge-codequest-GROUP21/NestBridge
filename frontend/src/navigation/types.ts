@@ -87,6 +87,7 @@ export type AppStackParamList = {
   SponsorList: undefined;
   SponsorDetail: { sponsorId: string };
   SponsorApplication: { sponsorId: string };
+  HelpDesk: undefined;
   WelfareCheckIn: { bookingId: string };
   ReviewPrompt: { bookingId: string; hostName: string };
   Ratings: undefined;

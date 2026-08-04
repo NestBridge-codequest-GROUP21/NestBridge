@@ -32,6 +32,7 @@ export interface SettingsScreenProps {
   notificationsSaving?: boolean;
   notificationsError?: string;
   onNotificationsChange?: (enabled: boolean) => void;
+  onHelpPress?: () => void;
   onBack?: () => void;
 }
 
@@ -40,6 +41,7 @@ export default function SettingsScreen({
   notificationsSaving = false,
   notificationsError,
   onNotificationsChange,
+  onHelpPress,
   onBack,
 }: SettingsScreenProps) {
   const { preference, setPreference, colors, scheme } = useTheme();
@@ -147,6 +149,35 @@ export default function SettingsScreen({
             />
           ) : null}
         </Card>
+
+        {onHelpPress ? (
+          <>
+            <SectionHeader title="Support" />
+            <Card padding="none" style={styles.groupCard}>
+              <Pressable
+                onPress={onHelpPress}
+                style={({ pressed }) => [
+                  styles.themeRow,
+                  pressed && styles.pressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel="Open help desk"
+              >
+                <View style={styles.themeText}>
+                  <Text style={styles.themeLabel}>Help desk</Text>
+                  <Text style={styles.themeSubtitle}>
+                    Guidance and NestBridge support contacts
+                  </Text>
+                </View>
+                <AppIcon
+                  name="chevron-forward"
+                  size={iconSizes.lg}
+                  color={colors.textTertiary}
+                />
+              </Pressable>
+            </Card>
+          </>
+        ) : null}
       </ScreenScroll>
     </View>
   );

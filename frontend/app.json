@@ -49,10 +49,10 @@
     ],
     "extra": {
       "apiBaseUrl": "https://nestbridge-production.up.railway.app",
-      "firebaseApiKey": "",
-      "firebaseAuthDomain": "",
-      "firebaseDatabaseUrl": "",
-      "firebaseProjectId": "",
+      "firebaseApiKey": "AIzaSyCYUz_n-2ScRvX4TL1GLGpItMZ0Twi9de8",
+      "firebaseAuthDomain": "nestbridge-chat-f9722.firebaseapp.com",
+      "firebaseDatabaseUrl": "https://nestbridge-chat-f9722-default-rtdb.firebaseio.com",
+      "firebaseProjectId": "nestbridge-chat-f9722",
       "enableDemoFallback": true,
       "eas": {
         "projectId": "6da19fa0-dbf6-42e2-b6ac-32b29cb37aa9"
