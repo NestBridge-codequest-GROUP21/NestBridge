@@ -5,9 +5,7 @@ import Constants from 'expo-constants';
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
-import VerifyEmailScreen, {
-  openNestBridgeSupportEmail,
-} from '../screens/auth/VerifyEmailScreen';
+import VerifyEmailScreen from '../screens/auth/VerifyEmailScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import { welcomeMock, registerMock, loginMock } from '../data/studentOnboardingMock';
@@ -225,9 +223,6 @@ export default function AuthNavigator({
               setVerifyError('');
               setRegisterError('');
               navigation.navigate('Register');
-            }}
-            onContactSupport={() => {
-              void openNestBridgeSupportEmail(route.params.email);
             }}
             onBackToSignIn={() => {
               setVerifyStatus('');

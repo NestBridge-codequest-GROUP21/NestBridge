@@ -39,18 +39,20 @@ export const browseGateCopy = {
 
 export const bookingGateCopy = {
   homestay:
-    'Add and lock in your short bio and about section before booking or messaging hosts. Browsing stays open.',
+    'Finish your travel profile and wait for NestBridge staff to verify your identity before booking. You can still browse.',
   guide:
-    'Add and lock in your short bio and about section before booking or messaging guides. Browsing stays open.',
+    'Finish your travel profile and wait for NestBridge staff to verify your identity before booking a guide. You can still browse.',
   messaging:
-    'Finish your bio and about section before messaging — that is how others know who they are meeting.',
+    'NestBridge staff must verify your identity before messaging. You can still browse hosts, guides, and content.',
   identity:
     'Your short bio and about section are required and locked once saved. Other users rely on them to know who they are going in for.',
   acceptHost:
     'Finish your host listing (locked bio + about) and wait for NestBridge staff to verify your identity before accepting requests. You can still browse.',
   acceptGuide:
     'Finish your guide listing (locked bio + about) and wait for NestBridge staff to verify your identity before accepting sessions. You can still browse.',
-  pay: 'Complete your travel profile (bio + about) before paying for a booking.',
+  pay: 'NestBridge staff must verify your identity before you can pay. You can still browse.',
+  kyc:
+    'NestBridge staff must verify your identity before you can book, pay, message, or accept requests. You can still browse.',
 };
 
 /** Shared shape for polished empty experiences (icon + copy + optional CTA label). */

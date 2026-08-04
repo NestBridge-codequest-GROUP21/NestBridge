@@ -32,13 +32,20 @@ public class ProfileGateService {
         }
     }
 
+    /**
+     * Staff KYC gate for marketplace actions (book, pay, chat, accept).
+     * Browse / explore stays open. NestBridge staff accounts are exempt (ops + preview).
+     */
     public void requireIdentityVerified(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
+        if (user.isStaff()) {
+            return;
+        }
         if (!user.isIdentityVerified()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Staff must verify your identity before you can host, guide, or accept bookings.");
+                    "NestBridge staff must verify your identity before you can book, pay, message, or accept requests. You can still browse.");
         }
     }
 

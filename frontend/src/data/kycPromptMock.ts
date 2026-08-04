@@ -1,3 +1,5 @@
+export type KycPromptTrack = 'HOST' | 'GUIDE' | 'SEEKER';
+
 export interface KYCPromptData {
   roleLabel: string;
   message: string;
@@ -7,22 +9,33 @@ export interface KYCPromptData {
 
 export const HOST_KYC_PROMPT: KYCPromptData = {
   roleLabel: 'Host Family',
-  message: 'One last step to go live.',
+  message: 'Identity check required before you go live.',
   explanation:
-    'Verification helps students trust that you are a safe and reliable host. It only takes a few minutes.',
+    'NestBridge staff must verify your identity before you can accept stays or earn. Browse and finish your listing anytime.',
   note:
-    'Complete verification to earn a trust badge on your listing. You can go live now and verify later.',
+    'Tap Verify now to submit for staff review. You can keep browsing until you are approved.',
 };
 
 export const GUIDE_KYC_PROMPT: KYCPromptData = {
   roleLabel: 'Local Guide',
-  message: 'One last step to go live.',
+  message: 'Identity check required before you go live.',
   explanation:
-    'Verification helps travellers trust your profile and book sessions with confidence.',
+    'NestBridge staff must verify your identity before you can accept sessions or earn. Browse and finish your listing anytime.',
   note:
-    'Complete verification to earn a trust badge on your profile. You can go live now and verify later.',
+    'Tap Verify now to submit for staff review. You can keep browsing until you are approved.',
 };
 
-export function kycPromptForTrack(track: 'HOST' | 'GUIDE'): KYCPromptData {
-  return track === 'HOST' ? HOST_KYC_PROMPT : GUIDE_KYC_PROMPT;
+export const SEEKER_KYC_PROMPT: KYCPromptData = {
+  roleLabel: 'NestBridge member',
+  message: 'Verify now, or skip and browse.',
+  explanation:
+    'Everyone goes through identity verification. NestBridge staff approve accounts before you can book, pay, or chat. You can submit now or keep browsing and verify later.',
+  note:
+    'Until staff approves you, explore stays open — booking, paying, and messaging stay locked.',
+};
+
+export function kycPromptForTrack(track: KycPromptTrack): KYCPromptData {
+  if (track === 'HOST') return HOST_KYC_PROMPT;
+  if (track === 'GUIDE') return GUIDE_KYC_PROMPT;
+  return SEEKER_KYC_PROMPT;
 }

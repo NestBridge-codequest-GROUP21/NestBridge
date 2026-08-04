@@ -54,6 +54,7 @@ public class BookingService {
     @Transactional
     public BookingDto createBooking(UUID guestId, CreateBookingRequest request) {
         profileGateService.requireEmailVerified(guestId);
+        profileGateService.requireIdentityVerified(guestId);
         profileGateService.requireSeekerComplete(guestId);
         BookingType type = request.getBookingType();
         BigDecimal total;
@@ -176,6 +177,7 @@ public class BookingService {
     @Transactional
     public BookingDto confirmBooking(UUID bookingId, UUID guestId) {
         profileGateService.requireEmailVerified(guestId);
+        profileGateService.requireIdentityVerified(guestId);
         if (paystackEnabled && paystackSecretKey != null && !paystackSecretKey.isBlank()) {
             throw new IllegalArgumentException("Use the in-app payment flow for this booking.");
         }

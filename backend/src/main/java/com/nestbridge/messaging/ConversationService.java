@@ -33,6 +33,7 @@ public class ConversationService {
 
     @Transactional
     public ConversationDto createConversation(UUID userId, CreateConversationRequest request) {
+        profileGateService.requireIdentityVerified(userId);
         profileGateService.requireSeekerIdentityForMessaging(userId);
         if (request.getParticipantId() == null) {
             throw new IllegalArgumentException("participantId is required.");
@@ -109,6 +110,7 @@ public class ConversationService {
 
     @Transactional
     public ChatMessageDto sendMessage(UUID userId, UUID conversationId, SendMessageRequest request) {
+        profileGateService.requireIdentityVerified(userId);
         assertParticipant(userId, conversationId);
         String text = request.getText().trim();
         if (text.isEmpty()) {

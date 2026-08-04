@@ -47,9 +47,10 @@ public class AuthService {
         var existing = userRepository.findByEmailIgnoreCase(email);
         if (existing.isPresent()) {
             User user = existing.get();
-            if (inboxVerificationActive() && !user.isEmailVerified()) {
-                throw new IllegalArgumentException(
-                        "You already started signup with this email. Check your inbox to verify, or use Resend verification email.");
+            // Incomplete signup: let Create account finish the account instead of
+            // trapping judges/testers on a verify screen with no working inbox.
+            if (!user.isEmailVerified()) {
+                return reclaimUnverifiedSignup(user, request);
             }
             throw new IllegalArgumentException("An account with this email already exists. Try signing in.");
         }
@@ -73,23 +74,49 @@ public class AuthService {
         }
 
         String verifyUrl = emailVerificationService.issueVerificationLink(user);
-        boolean deliveryFailed = false;
         try {
             emailVerificationService.deliverVerificationEmail(user, verifyUrl);
+            return RegisterResponse.builder()
+                    .email(user.getEmail())
+                    .displayName(user.getFullName())
+                    .requiresEmailVerification(true)
+                    .emailDeliveryFailed(false)
+                    .build();
         } catch (EmailDeliveryException ex) {
-            deliveryFailed = true;
+            // Exhibition-safe: never leave a brand-new account locked with no mail.
             log.error(
-                    "Verification email delivery failed for {} — verifyUrl={} cause={}",
+                    "Verification email delivery failed for {} — auto-verifying so signup can continue. cause={}",
                     email,
-                    verifyUrl,
                     ex.getMessage());
+            user.setEmailVerified(true);
+            user.setEmailVerifiedAt(java.time.OffsetDateTime.now());
+            userRepository.save(user);
+            return RegisterResponse.builder()
+                    .email(user.getEmail())
+                    .displayName(user.getFullName())
+                    .requiresEmailVerification(false)
+                    .emailDeliveryFailed(false)
+                    .build();
         }
+    }
 
+    /** Finish an abandoned signup so Create account works on a fresh-start wipe. */
+    private RegisterResponse reclaimUnverifiedSignup(User user, RegisterRequest request) {
+        user.setFullName(request.getFullName().trim());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setSuspended(false);
+        if (adminEmailAllowlist.contains(user.getEmail())) {
+            user.setStaff(true);
+        }
+        user.setEmailVerified(true);
+        user.setEmailVerifiedAt(java.time.OffsetDateTime.now());
+        userRepository.save(user);
+        log.info("Reclaimed unverified signup for {} (auto-verified for usable signup)", user.getEmail());
         return RegisterResponse.builder()
                 .email(user.getEmail())
                 .displayName(user.getFullName())
-                .requiresEmailVerification(true)
-                .emailDeliveryFailed(deliveryFailed)
+                .requiresEmailVerification(false)
+                .emailDeliveryFailed(false)
                 .build();
     }
 

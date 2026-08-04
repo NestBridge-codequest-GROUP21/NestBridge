@@ -1,11 +1,6 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
@@ -24,12 +19,8 @@ import {
   lineHeights,
   layout,
   iconSizes,
-  touchTarget,
 } from '../../constants/theme';
-import { NESTBRIDGE_SUPPORT_EMAIL } from '../../constants/support';
 import { openNestBridgeSupportEmail as openSupportEmail } from '../../utils/supportEmail';
-
-export { NESTBRIDGE_SUPPORT_EMAIL };
 
 export interface VerifyEmailScreenProps {
   email: string;
@@ -40,7 +31,6 @@ export interface VerifyEmailScreenProps {
   resendBusy?: boolean;
   onResend?: () => void;
   onChangeEmail?: () => void;
-  onContactSupport?: () => void;
   onBackToSignIn?: () => void;
 }
 
@@ -53,7 +43,6 @@ export default function VerifyEmailScreen({
   resendBusy = false,
   onResend,
   onChangeEmail,
-  onContactSupport,
   onBackToSignIn,
 }: VerifyEmailScreenProps) {
   const styles = useThemedStyles(createStyles);
@@ -106,17 +95,6 @@ export default function VerifyEmailScreen({
         <View style={styles.secondaryWrap}>
           <SecondaryButton label="Back to sign in" onPress={onBackToSignIn} />
         </View>
-
-        {onContactSupport ? (
-          <Pressable
-            onPress={onContactSupport}
-            style={styles.supportRow}
-            accessibilityRole="link"
-            accessibilityLabel="Contact support"
-          >
-            <Text style={styles.supportText}>Contact support</Text>
-          </Pressable>
-        ) : null}
       </ScreenScroll>
     </View>
   );
@@ -195,18 +173,6 @@ function createStyles({ colors, tints }: AppTheme) {
     },
     secondaryWrap: {
       marginTop: spacing.sm,
-    },
-    supportRow: {
-      minHeight: touchTarget,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: spacing.sm,
-    },
-    supportText: {
-      fontFamily: fontFamilies.semibold,
-      fontSize: fontSizes.body,
-      fontWeight: fontWeights.semibold,
-      color: colors.teal,
     },
   });
 }

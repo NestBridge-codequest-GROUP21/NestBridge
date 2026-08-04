@@ -31,7 +31,7 @@ export const ACCOUNT_CREATED_VERIFY_COPY =
   'Your account has been created successfully. Please check your email to verify your account before signing in.';
 
 export const EMAIL_DELIVERY_FAILED_COPY =
-  'Your account was created, but we could not send the verification email. Use Resend below, or change your email and try again. Contact support if this keeps happening.';
+  'Your account was created, but we could not send the verification email. Use Resend below, or change your email and try Create account again.';
 
 export const UNVERIFIED_LOGIN_COPY =
   'Your email has not yet been verified. Please verify your email before signing in.';

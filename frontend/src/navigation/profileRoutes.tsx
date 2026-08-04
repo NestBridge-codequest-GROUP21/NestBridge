@@ -87,7 +87,7 @@ export function HostProfileRoute({
       highlights={['Meals available', 'Study-friendly', 'Near campus']}
       setupIncomplete={!canBookHomestay}
       setupMessage={
-        'Complete your travel profile to message this host and request a stay.'
+        'Finish your profile and get NestBridge staff identity verification before messaging or booking. Browsing stays open.'
       }
       onContinueSetup={onContinueSetup}
       onBack={onBack}
@@ -184,7 +184,7 @@ export function GuideProfileRoute({
       guide={guide}
       showMatchScores={showMatchScores}
       setupIncomplete={!canBookGuideSession}
-      setupMessage="Complete your travel profile to message this guide and book a session."
+      setupMessage="Finish your profile and get NestBridge staff identity verification before messaging or booking. Browsing stays open."
       onContinueSetup={onContinueSetup}
       onBack={onBack}
       onBookPress={() => {

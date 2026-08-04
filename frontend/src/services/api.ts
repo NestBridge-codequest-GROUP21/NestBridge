@@ -1365,12 +1365,12 @@ export function getApiErrorMessage(error: unknown): string {
     }
 
     if (error.code === 'ECONNABORTED') {
-      return 'NestBridge is taking too long to respond. Wait a few seconds for the server to wake up, then try again.';
+      return 'Server is waking up — wait a few seconds and try again.';
     }
 
     // No HTTP response → DNS / TLS / offline / server unreachable (phone can still show 4G).
     if (!error.response) {
-      return 'Cannot reach NestBridge right now. Check your connection, wait a few seconds if the server is waking up, then try again.';
+      return 'Connection issue — wait a few seconds and try again.';
     }
 
     if (status === 429) {

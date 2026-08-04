@@ -34,7 +34,7 @@ export type AppStackParamList = {
   TouristQuiz: { track: 'SEEKER' };
   GuideQuiz: { track: 'GUIDE' };
   ProfileSetup: { track: SetupTrack };
-  KYCPrompt: { track: 'HOST' | 'GUIDE' };
+  KYCPrompt: { track: 'SEEKER' | 'HOST' | 'GUIDE' };
   OnboardingReady: { track: SetupTrack };
   StudentBookings: undefined;
   MatchSearch: undefined;

@@ -66,7 +66,7 @@ export default function KYCPromptScreen({
         ]}
       >
         <PrimaryButton label="Verify now" onPress={onVerifyNow} />
-        <SecondaryButton label="Verify later" onPress={onVerifyLater} />
+        <SecondaryButton label="Keep browsing" onPress={onVerifyLater} />
         <Text style={styles.note}>{data.note}</Text>
       </View>
     </View>

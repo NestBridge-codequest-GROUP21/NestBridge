@@ -80,6 +80,7 @@ public class PaystackService {
             UUID guestId,
             List<String> preferredChannels) {
         profileGateService.requireEmailVerified(guestId);
+        profileGateService.requireIdentityVerified(guestId);
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
         if (!booking.getGuestId().equals(guestId)) {
@@ -222,6 +223,7 @@ public class PaystackService {
     @Transactional
     public PaymentVerifyResponse verifyPaymentForGuest(UUID bookingId, UUID guestId) {
         profileGateService.requireEmailVerified(guestId);
+        profileGateService.requireIdentityVerified(guestId);
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking not found."));
         if (!booking.getGuestId().equals(guestId)) {

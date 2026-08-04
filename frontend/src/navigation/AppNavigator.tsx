@@ -1426,11 +1426,14 @@ export default function AppNavigator() {
     applyDevPreset,
   } = useAccountProfile();
 
-  // Host/guide core actions require listing+bio AND staff KYC — browse stays open before that.
-  const canAcceptHostBookings =
-    hostSetupComplete && Boolean(user?.identityVerified);
-  const canAcceptGuideSessions =
-    guideSetupComplete && Boolean(user?.identityVerified);
+  // Marketplace actions require staff KYC. Browse stays open. Staff accounts are exempt.
+  const marketplaceUnlocked =
+    Boolean(user?.isStaff) || Boolean(user?.identityVerified);
+  const canBookHomestayNow = canBookHomestay && marketplaceUnlocked;
+  const canBookGuideSessionNow = canBookGuideSession && marketplaceUnlocked;
+  // Host/guide accept also needs listing+bio AND staff KYC.
+  const canAcceptHostBookings = hostSetupComplete && marketplaceUnlocked;
+  const canAcceptGuideSessions = guideSetupComplete && marketplaceUnlocked;
 
   const [city, setCity] = useState('');
   const [university, setUniversity] = useState('');
@@ -1819,6 +1822,10 @@ export default function AppNavigator() {
         ratingCount?: number;
       },
     ) => {
+      if (!marketplaceUnlocked) {
+        navigation.navigate('KYCPrompt', { track: 'SEEKER' });
+        return;
+      }
       const conv = await createConversation(participant.userId);
       const listItem: ConversationListItem = {
         id: conv.conversationId,
@@ -1838,7 +1845,7 @@ export default function AppNavigator() {
       conversationsApi.upsertConversation(listItem);
       navigation.navigate('Chat', { conversationId: conv.conversationId });
     },
-    [conversationsApi],
+    [conversationsApi, marketplaceUnlocked],
   );
 
   const messageHost = useCallback(
@@ -4095,21 +4102,14 @@ export default function AppNavigator() {
               onContinue={() => {
                 void (async () => {
                   await saveProfileSetupStep(track);
-                  if (track === 'HOST' || track === 'GUIDE') {
-                    navigation.navigate('KYCPrompt', { track });
-                    return;
-                  }
-                  navigation.navigate('OnboardingReady', { track });
+                  // Everyone hits KYC (verify now or later). Marketplace stays locked until staff approves.
+                  navigation.navigate('KYCPrompt', { track });
                 })();
               }}
               onSkipForNow={() => {
                 void (async () => {
                   await saveProfileSetupStep(track, { skipIdentity: true });
-                  if (track === 'HOST' || track === 'GUIDE') {
-                    navigation.navigate('KYCPrompt', { track });
-                    return;
-                  }
-                  navigation.navigate('OnboardingReady', { track });
+                  navigation.navigate('KYCPrompt', { track });
                 })();
               }}
               onBack={() => navigation.goBack()}
@@ -4134,7 +4134,7 @@ export default function AppNavigator() {
                       Alert.alert(
                         session.enabled ? 'Verification' : 'Verification pending',
                         session.message
-                          ?? 'Your verification is pending manual review',
+                          ?? 'Submitted for NestBridge staff review. You can browse now — book, pay, and chat unlock after approval.',
                       );
                     }
                   } catch (error) {
@@ -4143,10 +4143,17 @@ export default function AppNavigator() {
                       getApiErrorMessage(error),
                     );
                   }
+                  // Signup path always finishes onboarding; mid-app KYC also lands here safely.
                   navigation.navigate('OnboardingReady', { track });
                 })();
               }}
-              onVerifyLater={() => navigation.navigate('OnboardingReady', { track })}
+              onVerifyLater={() => {
+                Alert.alert(
+                  'Browse for now',
+                  'You can explore NestBridge, but booking, paying, messaging, and accepting requests stay locked until staff verifies you.',
+                );
+                navigation.navigate('OnboardingReady', { track });
+              }}
             />
           );
         }}
@@ -4486,9 +4493,11 @@ export default function AppNavigator() {
               }
               navigation.navigate('HostProfile', { hostId: booking.hostId });
             }}
-            payBlocked={false}
+            payBlocked={!marketplaceUnlocked}
             payBlockedMessage={bookingGateCopy.pay}
-            onContinueSetupPay={() => continueSeekerSetup(navigation)}
+            onContinueSetupPay={() =>
+              navigation.navigate('KYCPrompt', { track: 'SEEKER' })
+            }
             payLoading={payLoading}
             payStatusLabel={payStatusLabel}
             onPayPress={(bookingId) => {
@@ -4554,8 +4563,14 @@ export default function AppNavigator() {
             hostId={route.params.hostId}
             showMatchScores={showMatchScores}
             resolveHost={resolveHost}
-            canBookHomestay={canBookHomestay}
-            onContinueSetup={() => continueSeekerSetup(navigation)}
+            canBookHomestay={canBookHomestayNow}
+            onContinueSetup={() => {
+              if (!marketplaceUnlocked) {
+                navigation.navigate('KYCPrompt', { track: 'SEEKER' });
+                return;
+              }
+              continueSeekerSetup(navigation);
+            }}
             onBack={() => navigation.goBack()}
             onBookPress={(host) =>
               navigation.navigate('Booking', {
@@ -4578,9 +4593,17 @@ export default function AppNavigator() {
             showMatchScores={showMatchScores}
             checkIn={checkIn}
             checkOut={checkOut}
-            canBookHomestay={canBookHomestay}
-            requestBlockedMessage={bookingGateCopy.homestay}
-            onContinueSetup={() => continueSeekerSetup(navigation)}
+            canBookHomestay={canBookHomestayNow}
+            requestBlockedMessage={
+              marketplaceUnlocked ? bookingGateCopy.homestay : bookingGateCopy.kyc
+            }
+            onContinueSetup={() => {
+              if (!marketplaceUnlocked) {
+                navigation.navigate('KYCPrompt', { track: 'SEEKER' });
+                return;
+              }
+              continueSeekerSetup(navigation);
+            }}
             onBack={() => navigation.goBack()}
             onSendRequest={async (host) => {
               await submitHostBookingRequest(host);
@@ -4680,8 +4703,14 @@ export default function AppNavigator() {
             guideId={route.params.guideId}
             showMatchScores={showMatchScores}
             resolveGuide={resolveGuide}
-            canBookGuideSession={canBookGuideSession}
-            onContinueSetup={() => continueSeekerSetup(navigation)}
+            canBookGuideSession={canBookGuideSessionNow}
+            onContinueSetup={() => {
+              if (!marketplaceUnlocked) {
+                navigation.navigate('KYCPrompt', { track: 'SEEKER' });
+                return;
+              }
+              continueSeekerSetup(navigation);
+            }}
             onBack={() => navigation.goBack()}
             onBookPress={(guide) =>
               navigation.navigate('SessionBooking', {
@@ -4703,9 +4732,17 @@ export default function AppNavigator() {
             resolveGuide={resolveGuide}
             sessionDate={sessionDate}
             sessionStartTime={DEFAULT_SESSION_TIME}
-            canBookGuideSession={canBookGuideSession}
-            requestBlockedMessage={bookingGateCopy.guide}
-            onContinueSetup={() => continueSeekerSetup(navigation)}
+            canBookGuideSession={canBookGuideSessionNow}
+            requestBlockedMessage={
+              marketplaceUnlocked ? bookingGateCopy.guide : bookingGateCopy.kyc
+            }
+            onContinueSetup={() => {
+              if (!marketplaceUnlocked) {
+                navigation.navigate('KYCPrompt', { track: 'SEEKER' });
+                return;
+              }
+              continueSeekerSetup(navigation);
+            }}
             onBack={() => navigation.goBack()}
             onSendRequest={async (guide) => {
               await submitGuideBookingRequest(guide);
