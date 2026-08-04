@@ -37,6 +37,8 @@ export interface AdminHomeScreenProps {
   onOpenModeration?: () => void;
   onOpenPreview?: () => void;
   onOpenProfile?: () => void;
+  notificationCount?: number;
+  onNotificationPress?: () => void;
   onSosPress?: () => void;
 }
 
@@ -79,6 +81,8 @@ export default function AdminHomeScreen({
   onOpenModeration,
   onOpenPreview,
   onOpenProfile,
+  notificationCount = 0,
+  onNotificationPress,
   onSosPress,
 }: AdminHomeScreenProps) {
   const styles = useThemedStyles(createStyles);
@@ -91,6 +95,8 @@ export default function AdminHomeScreen({
         title="Ops dashboard"
         subtitle={`Signed in as ${firstName}`}
         compact
+        notificationCount={notificationCount}
+        onNotificationPress={onNotificationPress}
       />
       <ScreenScroll>
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}

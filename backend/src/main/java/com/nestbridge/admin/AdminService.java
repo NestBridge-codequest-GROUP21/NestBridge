@@ -9,6 +9,7 @@ import com.nestbridge.guide.GuideProfile;
 import com.nestbridge.guide.GuideProfileRepository;
 import com.nestbridge.host.HostProfile;
 import com.nestbridge.host.HostProfileRepository;
+import com.nestbridge.kyc.KycVerificationJobRepository;
 import com.nestbridge.user.ProviderSetup;
 import com.nestbridge.user.ProviderSetupRepository;
 import com.nestbridge.user.SeekerProfile;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -50,6 +52,7 @@ public class AdminService {
     private final BookingRepository bookingRepository;
     private final SosEventRepository sosEventRepository;
     private final StaffAuditRepository staffAuditRepository;
+    private final KycVerificationJobRepository kycVerificationJobRepository;
 
     @Transactional(readOnly = true)
     public AdminOverviewDto getOverview(UUID actorId) {
@@ -158,6 +161,15 @@ public class AdminService {
         User user = requireUser(userId);
         user.setIdentityVerified(identityVerified);
         userRepository.save(user);
+        if (identityVerified) {
+            kycVerificationJobRepository.findTopByUserIdOrderByCreatedAtDesc(userId).ifPresent(job -> {
+                if ("PENDING".equals(job.getStatus())) {
+                    job.setStatus("APPROVED");
+                    job.setCompletedAt(OffsetDateTime.now());
+                    kycVerificationJobRepository.save(job);
+                }
+            });
+        }
         writeAudit(actorId, identityVerified ? "KYC_VERIFY" : "KYC_CLEAR", userId.toString());
         return toDetail(user);
     }

@@ -39,6 +39,8 @@ export interface AdminHomeRouteProps {
   onOpenModeration: () => void;
   onOpenPreview: () => void;
   onOpenProfile: () => void;
+  notificationCount?: number;
+  onNotificationPress?: () => void;
   onSosPress?: () => void;
 }
 
@@ -50,6 +52,8 @@ export function AdminHomeRoute({
   onOpenModeration,
   onOpenPreview,
   onOpenProfile,
+  notificationCount = 0,
+  onNotificationPress,
   onSosPress,
 }: AdminHomeRouteProps) {
   const [overview, setOverview] = useState<AdminOverview | null>(null);
@@ -88,6 +92,8 @@ export function AdminHomeRoute({
       onOpenModeration={onOpenModeration}
       onOpenPreview={onOpenPreview}
       onOpenProfile={onOpenProfile}
+      notificationCount={notificationCount}
+      onNotificationPress={onNotificationPress}
       onSosPress={onSosPress}
     />
   );

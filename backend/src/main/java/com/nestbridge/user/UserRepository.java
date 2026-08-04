@@ -20,6 +20,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     long countByStaffTrue();
 
+    List<User> findByStaffTrue();
+
     long countBySuspendedTrue();
 
     long countByIdentityVerifiedFalse();

@@ -1038,7 +1038,7 @@ export async function fetchNotifications(): Promise<import('../types/booking').A
         body: string;
         read: boolean;
         createdAt: string;
-        data?: { bookingId?: string };
+        data?: { bookingId?: string; userId?: string };
       }>
     >
   >('/api/notifications');
@@ -1050,6 +1050,8 @@ export async function fetchNotifications(): Promise<import('../types/booking').A
     createdAt: item.createdAt,
     relatedBookingId:
       typeof item.data?.bookingId === 'string' ? item.data.bookingId : undefined,
+    relatedUserId:
+      typeof item.data?.userId === 'string' ? item.data.userId : undefined,
   }));
 }
 

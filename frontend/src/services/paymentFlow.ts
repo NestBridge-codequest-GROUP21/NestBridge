@@ -164,29 +164,15 @@ export async function completeBookingPayment(
   onProgress?.('opening_checkout', 'Opening Paystack...');
   const openResult = await openPaystackCheckout(init.authorizationUrl);
 
-  if (openResult === 'cancelled') {
-    onProgress?.('verifying', 'Checking payment status...');
-    try {
-      const verified = await verifyBookingPayment(bookingId);
-      if (verified.paid) {
-        const booking = await getBookingById(bookingId);
-        onProgress?.('success', 'Payment Successful');
-        return {
-          booking,
-          usedCheckout: true,
-          mockPayment: false,
-          reference: init.reference ?? verified.reference,
-          amount: init.amount,
-          currency: init.currency,
-        };
-      }
-    } catch {
-      // Treat as cancel if verify fails.
-    }
-    throw new PaymentCancelledError();
-  }
-
-  onProgress?.('awaiting_confirmation', 'Confirming payment with Paystack...');
+  // Closing the in-app browser usually reports cancel/dismiss even after a
+  // successful charge (user finishes on the callback page, then taps Close).
+  // Always poll/verify — never treat browser dismiss as an unpaid cancel.
+  onProgress?.(
+    'awaiting_confirmation',
+    openResult === 'cancelled'
+      ? 'Checking payment status...'
+      : 'Confirming payment with Paystack...',
+  );
   const booking = await waitUntilBookingConfirmed(bookingId);
   if (booking.status === 'CONFIRMED' || booking.paymentStatus === 'PAID') {
     onProgress?.('success', 'Payment Successful');
@@ -200,6 +186,9 @@ export async function completeBookingPayment(
     };
   }
 
+  if (openResult === 'cancelled') {
+    throw new PaymentCancelledError();
+  }
   throw new PaymentPendingError();
 }
 

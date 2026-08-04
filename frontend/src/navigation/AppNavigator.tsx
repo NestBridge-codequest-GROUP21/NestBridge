@@ -3173,6 +3173,8 @@ export default function AppNavigator() {
               onOpenModeration={() => navigation.navigate('AdminModeration')}
               onOpenPreview={() => navigation.navigate('AdminPreview')}
               onOpenProfile={() => navigation.navigate('Profile')}
+              notificationCount={visibleUnreadNotifications}
+              onNotificationPress={() => openNotifications(navigation)}
               onSosPress={() => navigation.navigate('SOS')}
             />
           ) : (
@@ -3481,10 +3483,22 @@ export default function AppNavigator() {
                     await markNotificationRead(notification.id);
                     await refreshNotificationState();
                   }
+                  if (notification.relatedUserId && isStaff) {
+                    navigation.navigate('StaffUserDetail', {
+                      userId: notification.relatedUserId,
+                    });
+                    return;
+                  }
                   if (notification.relatedBookingId) {
                     openRelatedBooking(notification.relatedBookingId);
                   }
                 } catch {
+                  if (notification.relatedUserId && isStaff) {
+                    navigation.navigate('StaffUserDetail', {
+                      userId: notification.relatedUserId,
+                    });
+                    return;
+                  }
                   if (notification.relatedBookingId) {
                     openRelatedBooking(notification.relatedBookingId);
                   }
@@ -3683,6 +3697,8 @@ export default function AppNavigator() {
             onOpenModeration={() => navigation.navigate('AdminModeration')}
             onOpenPreview={() => navigation.navigate('AdminPreview')}
             onOpenProfile={() => navigation.navigate('Profile')}
+            notificationCount={visibleUnreadNotifications}
+            onNotificationPress={() => openNotifications(navigation)}
             onSosPress={() => navigation.navigate('SOS')}
           />
         )}
@@ -4045,8 +4061,12 @@ export default function AppNavigator() {
                     const session = await createKycSession();
                     if (session.verificationUrl) {
                       await Linking.openURL(session.verificationUrl);
-                    } else if (session.message) {
-                      Alert.alert('Verification', session.message);
+                    } else {
+                      Alert.alert(
+                        session.enabled ? 'Verification' : 'Verification pending',
+                        session.message
+                          ?? 'Your verification is pending manual review',
+                      );
                     }
                   } catch (error) {
                     Alert.alert(

@@ -2,6 +2,7 @@ package com.nestbridge.kyc;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nestbridge.notification.StaffNotificationService;
 import com.nestbridge.user.User;
 import com.nestbridge.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class SmileIdentityService {
 
     private final UserRepository userRepository;
     private final KycVerificationJobRepository jobRepository;
+    private final StaffNotificationService staffNotificationService;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
@@ -54,12 +56,26 @@ public class SmileIdentityService {
 
         if (!smileEnabled || partnerId == null || partnerId.isBlank()
                 || apiKey == null || apiKey.isBlank()) {
-            log.warn("Smile Identity not configured — mock KYC for user {}", userId);
-            user.setIdentityVerified(true);
-            userRepository.save(user);
+            log.warn("Smile Identity not configured — queueing manual KYC review for user {}", userId);
+            // Do not mark verified: no real ID check ran. Staff can force-verify later.
+            var existingPending = jobRepository.findTopByUserIdOrderByCreatedAtDesc(userId)
+                    .filter(job -> "PENDING".equals(job.getStatus())
+                            && "MANUAL".equals(job.getProvider()));
+            KycVerificationJob job;
+            if (existingPending.isPresent()) {
+                job = existingPending.get();
+            } else {
+                job = jobRepository.save(KycVerificationJob.builder()
+                        .userId(userId)
+                        .provider("MANUAL")
+                        .status("PENDING")
+                        .build());
+                staffNotificationService.onManualKycPending(user);
+            }
             return KycSessionResponse.builder()
                     .enabled(false)
-                    .message("Identity marked verified (Smile not configured).")
+                    .jobId(job.getJobId().toString())
+                    .message("Your verification is pending manual review")
                     .build();
         }
 

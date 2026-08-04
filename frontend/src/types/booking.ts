@@ -70,6 +70,7 @@ export interface AppNotification {
   read: boolean;
   createdAt: string;
   relatedBookingId?: string;
+  relatedUserId?: string;
 }
 
 export interface HostProfileSummary {
