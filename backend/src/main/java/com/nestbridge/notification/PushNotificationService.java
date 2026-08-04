@@ -24,23 +24,30 @@ public class PushNotificationService {
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    public void sendToUser(java.util.UUID userId, String title, String body, Map<String, Object> data) {
+    /**
+     * @return true if at least one push was accepted, false if skipped or all failed
+     */
+    public boolean sendToUser(java.util.UUID userId, String title, String body, Map<String, Object> data) {
         boolean enabled = userRepository.findById(userId)
                 .map(user -> user.isNotificationsEnabled())
                 .orElse(true);
         if (!enabled) {
-            return;
+            return false;
         }
         List<DeviceToken> tokens = deviceTokenRepository.findByUserId(userId);
         if (tokens.isEmpty()) {
-            return;
+            return false;
         }
+        boolean anyOk = false;
         for (DeviceToken token : tokens) {
-            sendExpoPush(token.getExpoPushToken(), title, body, data);
+            if (sendExpoPush(token.getExpoPushToken(), title, body, data)) {
+                anyOk = true;
+            }
         }
+        return anyOk;
     }
 
-    private void sendExpoPush(String expoPushToken, String title, String body, Map<String, Object> data) {
+    private boolean sendExpoPush(String expoPushToken, String title, String body, Map<String, Object> data) {
         try {
             String json = objectMapper.writeValueAsString(Map.of(
                     "to", expoPushToken,
@@ -58,11 +65,15 @@ public class PushNotificationService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 400) {
                 log.warn("Expo push failed ({}): {}", response.statusCode(), response.body());
+                return false;
             }
+            return true;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            return false;
         } catch (Exception e) {
             log.warn("Expo push error for token {}", expoPushToken, e);
+            return false;
         }
     }
 }

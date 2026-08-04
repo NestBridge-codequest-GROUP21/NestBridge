@@ -30,6 +30,8 @@ export interface PrimaryButtonProps {
   iconName?: IoniconName;
   /** default = teal CTA; danger = red (suspend); success = green (restore / unsuspend). */
   tone?: PrimaryButtonTone;
+  /** Stable a11y name; defaults to `label` (useful when label shows a busy state). */
+  accessibilityLabel?: string;
   style?: ViewStyle;
 }
 
@@ -40,6 +42,7 @@ export default function PrimaryButton({
   loading = false,
   iconName,
   tone = 'default',
+  accessibilityLabel,
   style,
 }: PrimaryButtonProps) {
   const styles = useThemedStyles(createStyles);
@@ -61,7 +64,7 @@ export default function PrimaryButton({
       onPress={onPress}
       disabled={isDisabled}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {loading ? (

@@ -31,7 +31,6 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
-    private final AdminEmailAllowlist adminEmailAllowlist;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.public-url:http://localhost:8080}")
@@ -93,10 +92,7 @@ public class PasswordResetService {
             user.setEmailVerified(true);
             user.setEmailVerifiedAt(OffsetDateTime.now());
         }
-        if (!user.isStaff() && adminEmailAllowlist.contains(user.getEmail())) {
-            user.setStaff(true);
-            log.info("Granted staff access to {} via allowlist on password reset", user.getEmail());
-        }
+        // Staff is granted only at registration — never healed on password reset.
         userRepository.save(user);
 
         token.setUsedAt(OffsetDateTime.now());

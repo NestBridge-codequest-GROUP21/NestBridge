@@ -11,4 +11,5 @@ public class PhotoUploadUrlResponse {
     private String uploadUrl;
     private String publicUrl;
     private String contentType;
+    private Long maxBytes;
 }

@@ -42,6 +42,13 @@ public class KycVerificationJob {
     @Column(name = "result_payload", columnDefinition = "jsonb")
     private Map<String, Object> resultPayload;
 
+    @Column(name = "rejection_reason")
+    private String rejectionReason;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -58,6 +65,9 @@ public class KycVerificationJob {
         }
         if (status == null) {
             status = "PENDING";
+        }
+        if (version == null) {
+            version = 0L;
         }
     }
 }

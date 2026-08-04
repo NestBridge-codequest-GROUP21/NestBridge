@@ -43,6 +43,7 @@ export interface ProfileScreenProps {
   onSettingsPress?: () => void;
   onHelpPress?: () => void;
   onRatingsPress?: () => void;
+  onVerificationStatusPress?: () => void;
   onSignOut?: () => void;
   onResetDemo?: () => void;
   onDevTestingPress?: () => void;
@@ -74,6 +75,7 @@ export default function ProfileScreen({
   onSettingsPress,
   onHelpPress,
   onRatingsPress,
+  onVerificationStatusPress,
   onSignOut,
   onResetDemo,
   onDevTestingPress,
@@ -120,7 +122,13 @@ export default function ProfileScreen({
               iconName="person-circle-outline"
               onPress={onAccountSetupPress}
               style={styles.listRowPad}
-              bordered={showTravelBooking}
+              bordered={
+                showTravelBooking ||
+                Boolean(onVerificationStatusPress) ||
+                Boolean(onRatingsPress) ||
+                Boolean(onSettingsPress) ||
+                Boolean(onHelpPress)
+              }
             />
           ) : (
             <ListRow
@@ -128,7 +136,13 @@ export default function ProfileScreen({
               subtitle="Ops access — consumer onboarding is not shown here"
               iconName="shield-checkmark-outline"
               style={styles.listRowPad}
-              bordered={showTravelBooking}
+              bordered={
+                showTravelBooking ||
+                Boolean(onVerificationStatusPress) ||
+                Boolean(onRatingsPress) ||
+                Boolean(onSettingsPress) ||
+                Boolean(onHelpPress)
+              }
             />
           )}
           {showTravelBooking ? (
@@ -139,8 +153,23 @@ export default function ProfileScreen({
               onPress={onTravelBookingPress}
               style={styles.listRowPad}
               bordered={
+                Boolean(onVerificationStatusPress) ||
                 Boolean(onSettingsPress) ||
                 Boolean(onRatingsPress) ||
+                Boolean(onHelpPress)
+              }
+            />
+          ) : null}
+          {onVerificationStatusPress ? (
+            <ListRow
+              title="Verification status"
+              subtitle="Check identity review, rejection reasons, or verify again"
+              iconName="shield-checkmark-outline"
+              onPress={onVerificationStatusPress}
+              style={styles.listRowPad}
+              bordered={
+                Boolean(onRatingsPress) ||
+                Boolean(onSettingsPress) ||
                 Boolean(onHelpPress)
               }
             />

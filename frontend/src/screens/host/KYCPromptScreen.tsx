@@ -22,6 +22,7 @@ import {
 
 export interface KYCPromptScreenProps {
   data: KYCPromptData;
+  submitting?: boolean;
   onVerifyNow?: () => void;
   onVerifyLater?: () => void;
   onSosPress?: () => void;
@@ -29,6 +30,7 @@ export interface KYCPromptScreenProps {
 
 export default function KYCPromptScreen({
   data,
+  submitting = false,
   onVerifyNow,
   onVerifyLater,
 }: KYCPromptScreenProps) {
@@ -65,8 +67,18 @@ export default function KYCPromptScreen({
           { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.xxl },
         ]}
       >
-        <PrimaryButton label="Verify now" onPress={onVerifyNow} />
-        <SecondaryButton label="Keep browsing" onPress={onVerifyLater} />
+        <PrimaryButton
+          label="Verify now"
+          accessibilityLabel="Verify now"
+          onPress={onVerifyNow}
+          loading={submitting}
+          disabled={submitting}
+        />
+        <SecondaryButton
+          label="Keep browsing"
+          onPress={onVerifyLater}
+          disabled={submitting}
+        />
         <Text style={styles.note}>{data.note}</Text>
       </View>
     </View>

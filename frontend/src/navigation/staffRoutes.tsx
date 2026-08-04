@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import StaffUserSearchScreen from '../screens/shared/StaffUserSearchScreen';
 import StaffUserDetailScreen from '../screens/shared/StaffUserDetailScreen';
 import StaffUserActivityScreen from '../screens/shared/StaffUserActivityScreen';
+import StaffPendingKycScreen from '../screens/shared/StaffPendingKycScreen';
 import AdminHomeScreen from '../screens/shared/AdminHomeScreen';
 import AdminModerationScreen, {
   type ModerationFilter,
@@ -18,14 +19,17 @@ import {
   getApiErrorMessage,
   listAdminListings,
   listAdminUsers,
+  listPendingKyc,
   setAdminListingVisibility,
   setAdminUserKycStatus,
   setAdminUserStaffStatus,
   setAdminUserSuspended,
   setAdminUserEmailVerified,
+  unlockAdminUserIdentity,
   type AdminBookingActivity,
   type AdminListingModeration,
   type AdminOverview,
+  type AdminPendingKyc,
   type AdminSosActivity,
   type AdminUserDetail,
   type AdminUserSummary,
@@ -57,6 +61,7 @@ export interface AdminHomeRouteProps {
   onTabPress: (tabId: string) => void;
   onOpenUsers: () => void;
   onOpenUsersByCategory?: (category: StaffUserCategory) => void;
+  onOpenPendingKyc?: () => void;
   onOpenModeration: () => void;
   onOpenPreview: () => void;
   onOpenProfile: () => void;
@@ -71,6 +76,7 @@ export function AdminHomeRoute({
   onTabPress,
   onOpenUsers,
   onOpenUsersByCategory,
+  onOpenPendingKyc,
   onOpenModeration,
   onOpenPreview,
   onOpenProfile,
@@ -112,6 +118,7 @@ export function AdminHomeRoute({
       }}
       onOpenUsers={onOpenUsers}
       onOpenUsersByCategory={onOpenUsersByCategory}
+      onOpenPendingKyc={onOpenPendingKyc}
       onOpenModeration={onOpenModeration}
       onOpenPreview={onOpenPreview}
       onOpenProfile={onOpenProfile}
@@ -152,7 +159,8 @@ export function AdminModerationRoute({
           : filter === 'HOST' || filter === 'GUIDE'
             ? { type: filter }
             : undefined;
-      setListings(await listAdminListings(params));
+      const page = await listAdminListings(params);
+      setListings(page.items);
     } catch (error) {
       setListings([]);
       setErrorMessage(getApiErrorMessage(error));
@@ -265,8 +273,8 @@ export function StaffUserSearchRoute({
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const users = await listAdminUsers(listParamsForCategory(nextCategory, nextQuery));
-      setResults(users);
+      const page = await listAdminUsers(listParamsForCategory(nextCategory, nextQuery));
+      setResults(page.items);
       setHasLoaded(true);
     } catch (error) {
       setResults([]);
@@ -400,10 +408,16 @@ export function StaffUserDetailRoute({
           'KYC marked verified.',
         );
       }}
-      onClearKyc={() => {
+      onRejectKyc={(reason) => {
         void runAction(
-          () => setAdminUserKycStatus(userId, false),
-          'KYC verification cleared.',
+          () => setAdminUserKycStatus(userId, false, reason),
+          'KYC rejected.',
+        );
+      }}
+      onUnlockIdentity={() => {
+        void runAction(
+          () => unlockAdminUserIdentity(userId),
+          'Identity fields unlocked.',
         );
       }}
       onMarkEmailVerified={() => {
@@ -442,6 +456,59 @@ export function StaffUserDetailRoute({
         }
       }}
       onBack={onBack}
+    />
+  );
+}
+
+export interface StaffPendingKycRouteProps {
+  onSelectUser: (userId: string) => void;
+  onBack: () => void;
+  tabBarItems?: TabBarItem[];
+  onTabPress?: (tabId: string) => void;
+  onSosPress?: () => void;
+}
+
+export function StaffPendingKycRoute({
+  onSelectUser,
+  onBack,
+  tabBarItems,
+  onTabPress,
+  onSosPress,
+}: StaffPendingKycRouteProps) {
+  const [items, setItems] = useState<AdminPendingKyc[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const loadPending = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      setItems(await listPendingKyc());
+    } catch (error) {
+      setItems([]);
+      setErrorMessage(getApiErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPending();
+  }, [loadPending]);
+
+  return (
+    <StaffPendingKycScreen
+      items={items}
+      isLoading={isLoading}
+      errorMessage={errorMessage}
+      tabBarItems={tabBarItems}
+      onSelectUser={onSelectUser}
+      onRefresh={() => {
+        void loadPending();
+      }}
+      onTabPress={onTabPress}
+      onBack={onBack}
+      onSosPress={onSosPress}
     />
   );
 }

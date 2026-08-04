@@ -9,6 +9,7 @@ import com.nestbridge.guide.GuideProfile;
 import com.nestbridge.guide.GuideProfileRepository;
 import com.nestbridge.host.HostProfile;
 import com.nestbridge.host.HostProfileRepository;
+import com.nestbridge.kyc.KycVerificationJob;
 import com.nestbridge.kyc.KycVerificationJobRepository;
 import com.nestbridge.notification.StaffNotificationService;
 import com.nestbridge.user.ProviderSetup;
@@ -30,8 +31,11 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -40,11 +44,14 @@ import java.util.stream.Collectors;
 public class AdminService {
 
     private static final int SEARCH_LIMIT = 50;
-    private static final int LIST_DEFAULT_LIMIT = 100;
-    private static final int LIST_MAX_LIMIT = 200;
+    private static final int LIST_DEFAULT_LIMIT = 50;
+    private static final int LIST_MAX_LIMIT = 100;
     private static final int ACTIVITY_LIMIT = 25;
     private static final int OVERVIEW_FEED_LIMIT = 12;
-    private static final int LISTINGS_LIMIT = 100;
+    private static final int LISTINGS_DEFAULT_LIMIT = 50;
+    private static final Set<String> CLIENT_AUDIT_ACTIONS = Set.of(
+            "PREVIEW_ENTER",
+            "PREVIEW_EXIT");
 
     private final StaffGuard staffGuard;
     private final UserRepository userRepository;
@@ -83,6 +90,7 @@ public class AdminService {
                 .staffCount(userRepository.countByStaffTrue())
                 .suspendedCount(userRepository.countBySuspendedTrue())
                 .unverifiedIdentityCount(userRepository.countByIdentityVerifiedFalse())
+                .pendingKycCount(kycVerificationJobRepository.countByStatus("PENDING"))
                 .unverifiedEmailCount(userRepository.countByEmailVerifiedFalse())
                 .activeHostListings(hostProfileRepository.countByActiveTrue())
                 .activeGuideListings(guideProfileRepository.countByActiveTrue())
@@ -101,50 +109,117 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
-    public List<AdminListingModerationDto> listListings(UUID actorId, String typeFilter, Boolean hiddenFilter) {
+    public AdminPageDto<AdminListingModerationDto> listListings(
+            UUID actorId,
+            String typeFilter,
+            Boolean hiddenFilter,
+            Integer page,
+            Integer limit) {
         staffGuard.requireStaff(actorId);
         String type = typeFilter == null ? "" : typeFilter.trim().toUpperCase(Locale.ROOT);
+        int pageIndex = page == null ? 0 : Math.max(page, 0);
+        int pageSize = limit == null
+                ? LISTINGS_DEFAULT_LIMIT
+                : Math.min(Math.max(limit, 1), LIST_MAX_LIMIT);
+
+        List<HostProfile> hosts = (type.isEmpty() || "HOST".equals(type))
+                ? hostProfileRepository.findAll()
+                : List.of();
+        List<GuideProfile> guides = (type.isEmpty() || "GUIDE".equals(type))
+                ? guideProfileRepository.findAll()
+                : List.of();
+
+        Set<UUID> ownerIds = new java.util.HashSet<>();
+        hosts.forEach(h -> ownerIds.add(h.getUserId()));
+        guides.forEach(g -> ownerIds.add(g.getUserId()));
+        Map<UUID, User> owners = ownerIds.isEmpty()
+                ? Map.of()
+                : userRepository.findAllById(ownerIds).stream()
+                        .collect(Collectors.toMap(User::getUserId, u -> u, (a, b) -> a, HashMap::new));
 
         List<AdminListingModerationDto> listings = new ArrayList<>();
-        if (type.isEmpty() || "HOST".equals(type)) {
-            for (HostProfile host : hostProfileRepository.findAll()) {
-                listings.add(toListingModeration(host));
-            }
+        for (HostProfile host : hosts) {
+            listings.add(toListingModeration(host, owners.get(host.getUserId())));
         }
-        if (type.isEmpty() || "GUIDE".equals(type)) {
-            for (GuideProfile guide : guideProfileRepository.findAll()) {
-                listings.add(toListingModeration(guide));
-            }
+        for (GuideProfile guide : guides) {
+            listings.add(toListingModeration(guide, owners.get(guide.getUserId())));
         }
 
-        return listings.stream()
+        List<AdminListingModerationDto> filtered = listings.stream()
                 .filter(item -> hiddenFilter == null || item.isHidden() == hiddenFilter)
                 .sorted(Comparator
                         .comparing(AdminListingModerationDto::isHidden).reversed()
                         .thenComparing(item -> item.getOwnerName() == null ? "" : item.getOwnerName(),
                                 String.CASE_INSENSITIVE_ORDER))
-                .limit(LISTINGS_LIMIT)
                 .collect(Collectors.toList());
+
+        int from = Math.min(pageIndex * pageSize, filtered.size());
+        int to = Math.min(from + pageSize, filtered.size());
+        return AdminPageDto.<AdminListingModerationDto>builder()
+                .items(filtered.subList(from, to))
+                .page(pageIndex)
+                .limit(pageSize)
+                .total((long) filtered.size())
+                .hasMore(to < filtered.size())
+                .build();
     }
 
     @Transactional(readOnly = true)
-    public List<AdminUserSummaryDto> listUsers(
+    public AdminPageDto<AdminUserSummaryDto> listUsers(
             UUID actorId,
             PrimaryIntent intent,
             Boolean staff,
             String query,
+            Integer page,
             Integer limit) {
         staffGuard.requireStaff(actorId);
         String trimmed = query == null ? "" : query.trim();
         boolean staffOnly = Boolean.TRUE.equals(staff);
+        int pageIndex = page == null ? 0 : Math.max(page, 0);
         int pageSize = limit == null
                 ? LIST_DEFAULT_LIMIT
                 : Math.min(Math.max(limit, 1), LIST_MAX_LIMIT);
-        return userRepository
-                .listForAdmin(intent, staffOnly, trimmed, PageRequest.of(0, pageSize))
-                .stream()
+        var pageResult = userRepository.listForAdmin(
+                intent, staffOnly, trimmed, PageRequest.of(pageIndex, pageSize));
+        // listForAdmin currently returns List — re-query with page slice via PageRequest
+        List<AdminUserSummaryDto> items = pageResult.stream()
                 .map(this::toSummary)
                 .collect(Collectors.toList());
+        boolean hasMore = items.size() == pageSize;
+        return AdminPageDto.<AdminUserSummaryDto>builder()
+                .items(items)
+                .page(pageIndex)
+                .limit(pageSize)
+                .total(null)
+                .hasMore(hasMore)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminPendingKycDto> listPendingKyc(UUID actorId, Integer limit) {
+        staffGuard.requireStaff(actorId);
+        int pageSize = limit == null
+                ? LIST_DEFAULT_LIMIT
+                : Math.min(Math.max(limit, 1), LIST_MAX_LIMIT);
+        List<KycVerificationJob> jobs = kycVerificationJobRepository
+                .findByStatusOrderByCreatedAtAsc("PENDING", PageRequest.of(0, pageSize));
+        Set<UUID> userIds = jobs.stream().map(KycVerificationJob::getUserId).collect(Collectors.toSet());
+        Map<UUID, User> users = userIds.isEmpty()
+                ? Map.of()
+                : userRepository.findAllById(userIds).stream()
+                        .collect(Collectors.toMap(User::getUserId, u -> u, (a, b) -> a, HashMap::new));
+        return jobs.stream().map(job -> {
+            User user = users.get(job.getUserId());
+            return AdminPendingKycDto.builder()
+                    .jobId(job.getJobId())
+                    .userId(job.getUserId())
+                    .fullName(user != null ? user.getFullName() : "Unknown")
+                    .email(user != null ? user.getEmail() : null)
+                    .primaryIntent(user != null ? user.getPrimaryIntent() : null)
+                    .provider(job.getProvider())
+                    .createdAt(job.getCreatedAt())
+                    .build();
+        }).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -153,7 +228,7 @@ public class AdminService {
         if (trimmed.isEmpty()) {
             throw new IllegalArgumentException("query is required.");
         }
-        return listUsers(actorId, null, null, trimmed, SEARCH_LIMIT);
+        return listUsers(actorId, null, null, trimmed, 0, SEARCH_LIMIT).getItems();
     }
 
     @Transactional(readOnly = true)
@@ -177,22 +252,75 @@ public class AdminService {
     }
 
     @Transactional
-    public AdminUserDetailDto setKycStatus(UUID actorId, UUID userId, boolean identityVerified) {
+    public AdminUserDetailDto setKycStatus(
+            UUID actorId,
+            UUID userId,
+            boolean identityVerified,
+            String reason) {
         staffGuard.requireStaff(actorId);
         User user = requireUser(userId);
-        user.setIdentityVerified(identityVerified);
-        userRepository.save(user);
+        OffsetDateTime now = OffsetDateTime.now();
+
         if (identityVerified) {
-            kycVerificationJobRepository.findTopByUserIdOrderByCreatedAtDesc(userId).ifPresent(job -> {
-                if ("PENDING".equals(job.getStatus())) {
-                    job.setStatus("APPROVED");
-                    job.setCompletedAt(OffsetDateTime.now());
-                    kycVerificationJobRepository.save(job);
+            var pending = kycVerificationJobRepository
+                    .findTopByUserIdAndStatusOrderByCreatedAtDesc(userId, "PENDING");
+            if (pending.isPresent()) {
+                int updated = kycVerificationJobRepository.approveIfPending(pending.get().getJobId(), now);
+                if (updated == 0) {
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT,
+                            "This verification was already processed by another staff member.");
                 }
-            });
+            } else if (user.isIdentityVerified()) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "This user is already verified.");
+            }
+            user.setIdentityVerified(true);
+            userRepository.save(user);
             staffNotificationService.onKycApproved(user);
+            writeAudit(actorId, "KYC_VERIFY", userId.toString());
+            return toDetail(user);
         }
-        writeAudit(actorId, identityVerified ? "KYC_VERIFY" : "KYC_CLEAR", userId.toString());
+
+        String trimmedReason = reason == null ? "" : reason.trim();
+        if (trimmedReason.isEmpty()) {
+            throw new IllegalArgumentException("A rejection reason is required.");
+        }
+        var pending = kycVerificationJobRepository
+                .findTopByUserIdAndStatusOrderByCreatedAtDesc(userId, "PENDING");
+        if (pending.isPresent()) {
+            int updated = kycVerificationJobRepository.rejectIfPending(
+                    pending.get().getJobId(), trimmedReason, now);
+            if (updated == 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "This verification was already processed by another staff member.");
+            }
+        } else {
+            // No pending job — still clear verification and record a rejected job for history.
+            kycVerificationJobRepository.save(KycVerificationJob.builder()
+                    .userId(userId)
+                    .provider("MANUAL")
+                    .status("REJECTED")
+                    .rejectionReason(trimmedReason)
+                    .completedAt(now)
+                    .build());
+        }
+        user.setIdentityVerified(false);
+        userRepository.save(user);
+        staffNotificationService.onKycRejected(user, trimmedReason);
+        writeAudit(actorId, "KYC_REJECT", userId + ":" + trimmedReason);
+        return toDetail(user);
+    }
+
+    @Transactional
+    public AdminUserDetailDto unlockIdentity(UUID actorId, UUID userId) {
+        staffGuard.requireStaff(actorId);
+        User user = requireUser(userId);
+        user.setIdentityLocked(false);
+        userRepository.save(user);
+        writeAudit(actorId, "IDENTITY_UNLOCK", userId.toString());
         return toDetail(user);
     }
 
@@ -304,6 +432,10 @@ public class AdminService {
         if (normalizedAction.isEmpty()) {
             throw new IllegalArgumentException("action is required.");
         }
+        if (!CLIENT_AUDIT_ACTIONS.contains(normalizedAction)) {
+            throw new IllegalArgumentException(
+                    "Unsupported audit action. Allowed: " + CLIENT_AUDIT_ACTIONS);
+        }
         StaffAuditEvent saved = writeAudit(actorId, normalizedAction, detail);
         return StaffAuditResultDto.builder()
                 .auditId(saved.getAuditId())
@@ -373,16 +505,29 @@ public class AdminService {
                     .build());
         });
 
+        var latestJob = kycVerificationJobRepository.findTopByUserIdOrderByCreatedAtDesc(user.getUserId());
+        String kycStatus = user.isIdentityVerified()
+                ? "approved"
+                : latestJob.map(j -> j.getStatus() == null ? "none" : j.getStatus().toLowerCase(Locale.ROOT))
+                        .orElse("none");
+        String rejectionReason = latestJob
+                .filter(j -> "REJECTED".equalsIgnoreCase(j.getStatus()))
+                .map(KycVerificationJob::getRejectionReason)
+                .orElse(null);
+
         return AdminUserDetailDto.builder()
                 .userId(user.getUserId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
                 .primaryIntent(user.getPrimaryIntent())
                 .identityVerified(user.isIdentityVerified())
+                .identityLocked(user.isIdentityLocked())
                 .emailVerified(user.isEmailVerified())
                 .staff(user.isStaff())
                 .suspended(user.isSuspended())
                 .nationality(user.getNationality())
+                .kycStatus(kycStatus)
+                .kycRejectionReason(rejectionReason)
                 .seekerSetupStatus(seekerStatus)
                 .listings(listings)
                 .createdAt(user.getCreatedAt())
@@ -390,8 +535,7 @@ public class AdminService {
                 .build();
     }
 
-    private AdminListingModerationDto toListingModeration(HostProfile host) {
-        User owner = userRepository.findById(host.getUserId()).orElse(null);
+    private AdminListingModerationDto toListingModeration(HostProfile host, User owner) {
         return AdminListingModerationDto.builder()
                 .listingId(host.getHostId())
                 .type("HOST")
@@ -404,8 +548,7 @@ public class AdminService {
                 .build();
     }
 
-    private AdminListingModerationDto toListingModeration(GuideProfile guide) {
-        User owner = userRepository.findById(guide.getUserId()).orElse(null);
+    private AdminListingModerationDto toListingModeration(GuideProfile guide, User owner) {
         return AdminListingModerationDto.builder()
                 .listingId(guide.getGuideId())
                 .type("GUIDE")

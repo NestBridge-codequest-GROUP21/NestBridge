@@ -27,27 +27,40 @@ public class AdminController {
     }
 
     @GetMapping("/listings")
-    public ResponseEntity<ApiResponse<List<AdminListingModerationDto>>> listListings(
+    public ResponseEntity<ApiResponse<AdminPageDto<AdminListingModerationDto>>> listListings(
             Authentication authentication,
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) Boolean hidden) {
+            @RequestParam(required = false) Boolean hidden,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer limit) {
         UUID actorId = (UUID) authentication.getPrincipal();
         return ResponseEntity.ok(ApiResponse.success(
                 "Listings retrieved",
-                adminService.listListings(actorId, type, hidden)));
+                adminService.listListings(actorId, type, hidden, page, limit)));
     }
 
     @GetMapping("/users")
-    public ResponseEntity<ApiResponse<List<AdminUserSummaryDto>>> listUsers(
+    public ResponseEntity<ApiResponse<AdminPageDto<AdminUserSummaryDto>>> listUsers(
             Authentication authentication,
             @RequestParam(required = false) PrimaryIntent intent,
             @RequestParam(required = false) Boolean staff,
             @RequestParam(required = false) String query,
+            @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer limit) {
         UUID actorId = (UUID) authentication.getPrincipal();
         return ResponseEntity.ok(ApiResponse.success(
                 "Users retrieved",
-                adminService.listUsers(actorId, intent, staff, query, limit)));
+                adminService.listUsers(actorId, intent, staff, query, page, limit)));
+    }
+
+    @GetMapping("/kyc/pending")
+    public ResponseEntity<ApiResponse<List<AdminPendingKycDto>>> listPendingKyc(
+            Authentication authentication,
+            @RequestParam(required = false) Integer limit) {
+        UUID actorId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(ApiResponse.success(
+                "Pending KYC retrieved",
+                adminService.listPendingKyc(actorId, limit)));
     }
 
     @GetMapping("/users/search")
@@ -90,10 +103,24 @@ public class AdminController {
         UUID actorId = (UUID) authentication.getPrincipal();
         String message = Boolean.TRUE.equals(request.getIdentityVerified())
                 ? "KYC marked verified"
-                : "KYC verification cleared";
+                : "KYC rejected";
         return ResponseEntity.ok(ApiResponse.success(
                 message,
-                adminService.setKycStatus(actorId, id, request.getIdentityVerified())));
+                adminService.setKycStatus(
+                        actorId,
+                        id,
+                        Boolean.TRUE.equals(request.getIdentityVerified()),
+                        request.getReason())));
+    }
+
+    @PostMapping("/users/{id}/unlock-identity")
+    public ResponseEntity<ApiResponse<AdminUserDetailDto>> unlockIdentity(
+            Authentication authentication,
+            @PathVariable UUID id) {
+        UUID actorId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(ApiResponse.success(
+                "Identity fields unlocked",
+                adminService.unlockIdentity(actorId, id)));
     }
 
     @PatchMapping("/users/{id}/email-verified")

@@ -30,6 +30,8 @@ export type AppStackParamList = {
     | undefined;
   StaffUserDetail: { userId: string };
   StaffUserActivity: { userId: string; userName: string };
+  StaffPendingKyc: undefined;
+  VerificationStatus: undefined;
   AccountSetup: undefined;
   UnifiedSearch: undefined;
   Destination: { track: 'SEEKER' };
@@ -38,7 +40,11 @@ export type AppStackParamList = {
   TouristQuiz: { track: 'SEEKER' };
   GuideQuiz: { track: 'GUIDE' };
   ProfileSetup: { track: SetupTrack };
-  KYCPrompt: { track: 'SEEKER' | 'HOST' | 'GUIDE' };
+  KYCPrompt: {
+    track: 'SEEKER' | 'HOST' | 'GUIDE';
+    /** Defaults to OnboardingReady (signup path). */
+    afterVerify?: 'OnboardingReady' | 'VerificationStatus';
+  };
   OnboardingReady: { track: SetupTrack };
   StudentBookings: undefined;
   MatchSearch: undefined;

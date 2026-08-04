@@ -232,12 +232,8 @@ async function main() {
          price_per_session = EXCLUDED.price_per_session`,
     );
 
-    // Shared demo staff login is retired — Group 21 personal Gmails only for ops.
-    await client.query(
-      `UPDATE users
-       SET is_staff = FALSE, is_suspended = TRUE, email_verified = FALSE
-       WHERE email = 'admin@nestbridge.app'`,
-    );
+    // Shared demo staff login is removed — Group 21 personal Gmails only for ops.
+    await client.query(`DELETE FROM users WHERE email = 'admin@nestbridge.app'`);
 
     // Live Paystack path: short ACCEPTED stay Akosua → Abena (UUID booking id).
     await client.query(

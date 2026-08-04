@@ -42,9 +42,8 @@ import { BookingHostRoute, SessionBookingGuideRoute } from './bookingRoutes';
 import SponsorListScreen from '../screens/Sponsor/SponsorListScreen';
 import SponsorDetailScreen from '../screens/Sponsor/SponsorDetailScreen';
 import SponsorApplicationScreen from '../screens/Sponsor/SponsorApplicationScreen';
-import KYCPromptScreen from '../screens/host/KYCPromptScreen';
 import { SPONSORS_MOCK, getSponsorById } from '../data/sponsorsMock';
-import { kycPromptForTrack } from '../data/kycPromptMock';
+import { KycPromptRoute, VerificationStatusRoute } from './kycRoutes';
 import HostRequestsTabScreen from '../screens/host/HostRequestsTabScreen';
 import HostBookingsTabScreen from '../screens/host/HostBookingsTabScreen';
 import HostEarningsTabScreen from '../screens/host/HostEarningsTabScreen';
@@ -57,14 +56,8 @@ import HelpDeskScreen from '../screens/shared/HelpDeskScreen';
 import { HELP_TOPICS, nestBridgeSupportContacts } from '../data/helpDesk';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
 import DevTestingScreen from '../screens/shared/DevTestingScreen';
-import {
-  AdminHomeRoute,
-  AdminModerationRoute,
-  AdminPreviewRoute,
-  StaffUserActivityRoute,
-  StaffUserDetailRoute,
-  StaffUserSearchRoute,
-} from './staffRoutes';
+import { AdminHomeRoute } from './staffRoutes';
+import { StaffStackScreens } from './staffStackScreens';
 import StaffPreviewBanner from '../components/StaffPreviewBanner';
 import { useStaffSession } from '../context/StaffSessionContext';
 import UnifiedSearchScreen from '../screens/shared/UnifiedSearchScreen';
@@ -115,7 +108,7 @@ import HostListingEditScreen from '../screens/host/HostListingEditScreen';
 import TourTypesSetupScreen from '../screens/guide/TourTypesSetupScreen';
 import GuideAvailabilityScreen from '../screens/guide/GuideAvailabilityScreen';
 import SOSScreen from '../screens/shared/SOSScreen';
-import NotificationsScreen from '../screens/shared/NotificationsScreen';
+import { NotificationsRoute } from './notificationRoutes';
 import { HostProfileRoute, GuideProfileRoute } from './profileRoutes';
 import type {
   BookingContext,
@@ -181,9 +174,6 @@ import {
   declineBooking,
   fetchUnreadNotificationCount,
   fetchNotifications,
-  markNotificationRead,
-  markAllNotificationsRead,
-  createKycSession,
   findMatches,
   getHomeRecommendations,
   getGuideProfile,
@@ -3219,6 +3209,7 @@ export default function AppNavigator() {
               onOpenUsersByCategory={(category) =>
                 navigation.navigate('StaffUserSearch', { category })
               }
+              onOpenPendingKyc={() => navigation.navigate('StaffPendingKyc')}
               onOpenModeration={() => navigation.navigate('AdminModeration')}
               onOpenPreview={() => navigation.navigate('AdminPreview')}
               onOpenProfile={() => navigation.navigate('Profile')}
@@ -3469,109 +3460,18 @@ export default function AppNavigator() {
 
       <Stack.Screen name="Notifications">
         {({ navigation }) => (
-          <NotificationsScreen
+          <NotificationsRoute
+            navigation={navigation}
             userName={firstName}
             userInitials={resolvedInitials}
             notifications={notificationsList}
             isLoading={notificationsLoading}
-            onBack={() => navigation.goBack()}
-            onEmptyPrimaryAction={() => {
-              if (primaryIntent === 'HOST') {
-                navigation.reset({ index: 0, routes: [{ name: 'HostHome' }] });
-                return;
-              }
-              if (primaryIntent === 'GUIDE') {
-                navigation.reset({ index: 0, routes: [{ name: 'GuideHome' }] });
-                return;
-              }
-              if (primaryIntent === 'TOURIST') {
-                navigation.reset({ index: 0, routes: [{ name: 'ExploreHome' }] });
-                return;
-              }
-              navigation.reset({ index: 0, routes: [{ name: 'StudentHome' }] });
-            }}
-            onMarkAllRead={() => {
-              void (async () => {
-                try {
-                  await markAllNotificationsRead();
-                  await refreshNotificationState();
-                } catch {
-                  Alert.alert('Notifications', 'Could not mark all as read.');
-                }
-              })();
-            }}
-            onNotificationPress={(notification) => {
-              const openRelatedBooking = (relatedBookingId: string) => {
-                if (primaryIntent === 'HOST') {
-                  const incoming = hostIncoming.find((r) => r.id === relatedBookingId);
-                  if (incoming) {
-                    navigation.navigate('MatchRequestReview', {
-                      requestId: relatedBookingId,
-                    });
-                    return;
-                  }
-                  navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'HostBookingsTab' }],
-                  });
-                  return;
-                }
-                if (primaryIntent === 'GUIDE') {
-                  const incoming = guideIncoming.find((r) => r.id === relatedBookingId);
-                  if (incoming) {
-                    navigation.navigate('SessionReview', {
-                      requestId: relatedBookingId,
-                    });
-                    return;
-                  }
-                  navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'GuideBookingsTab' }],
-                  });
-                  return;
-                }
-                navigation.navigate('StudentBookings');
-              };
-              void (async () => {
-                try {
-                  if (!notification.read) {
-                    await markNotificationRead(notification.id);
-                    await refreshNotificationState();
-                  }
-                  if (notification.type === 'KYC_APPROVED') {
-                    await refreshSession();
-                    Alert.alert(
-                      "You're verified",
-                      'NestBridge staff approved your identity. You can now host, guide, and accept bookings.',
-                    );
-                    return;
-                  }
-                  if (notification.relatedUserId && isStaff) {
-                    navigation.navigate('StaffUserDetail', {
-                      userId: notification.relatedUserId,
-                    });
-                    return;
-                  }
-                  if (notification.relatedBookingId) {
-                    openRelatedBooking(notification.relatedBookingId);
-                  }
-                } catch {
-                  if (notification.type === 'KYC_APPROVED') {
-                    await refreshSession();
-                    return;
-                  }
-                  if (notification.relatedUserId && isStaff) {
-                    navigation.navigate('StaffUserDetail', {
-                      userId: notification.relatedUserId,
-                    });
-                    return;
-                  }
-                  if (notification.relatedBookingId) {
-                    openRelatedBooking(notification.relatedBookingId);
-                  }
-                }
-              })();
-            }}
+            primaryIntent={primaryIntent}
+            isStaff={isStaff}
+            hostIncomingIds={hostIncoming.map((r) => r.id)}
+            guideIncomingIds={guideIncoming.map((r) => r.id)}
+            refreshNotificationState={refreshNotificationState}
+            refreshSession={refreshSession}
           />
         )}
       </Stack.Screen>
@@ -3625,6 +3525,9 @@ export default function AppNavigator() {
             onSettingsPress={() => navigation.navigate('Settings')}
             onHelpPress={() => navigation.navigate('HelpDesk')}
             onRatingsPress={() => navigation.navigate('Ratings')}
+            onVerificationStatusPress={
+              isStaff ? undefined : () => navigation.navigate('VerificationStatus')
+            }
             onStaffToolsPress={() => navigation.navigate('StaffUserSearch')}
             onReturnToOpsPress={() => navigateToHome(navigation, 'AdminHome')}
             onAppPreviewPress={() => navigation.navigate('AdminPreview')}
@@ -3768,95 +3671,15 @@ export default function AppNavigator() {
         }}
       </Stack.Screen>
 
-      <Stack.Screen name="AdminHome">
-        {({ navigation }) => (
-          <AdminHomeRoute
-            staffName={resolvedName}
-            tabBarItems={staffTabBarItems}
-            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'AdminHome')}
-            onOpenUsers={() => navigation.navigate('StaffUserSearch')}
-            onOpenUsersByCategory={(category) =>
-              navigation.navigate('StaffUserSearch', { category })
-            }
-            onOpenModeration={() => navigation.navigate('AdminModeration')}
-            onOpenPreview={() => navigation.navigate('AdminPreview')}
-            onOpenProfile={() => navigation.navigate('Profile')}
-            notificationCount={visibleUnreadNotifications}
-            onNotificationPress={() => openNotifications(navigation)}
-            onSosPress={() => navigation.navigate('SOS')}
-          />
-        )}
-      </Stack.Screen>
-
-      <Stack.Screen name="AdminModeration">
-        {({ navigation }) => (
-          <AdminModerationRoute
-            tabBarItems={staffTabBarItems}
-            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'AdminHome')}
-            onBack={() => navigateToHome(navigation, 'AdminHome')}
-            onSosPress={() => navigation.navigate('SOS')}
-          />
-        )}
-      </Stack.Screen>
-
-      <Stack.Screen name="AdminPreview">
-        {({ navigation }) => (
-          <AdminPreviewRoute
-            tabBarItems={staffTabBarItems}
-            onTabPress={(tabId) => routeTabPress(navigation, tabId, 'AdminHome')}
-            onSelectRole={(role) => {
-              void enterAppPreview(role);
-            }}
-            onBack={() => navigateToHome(navigation, 'AdminHome')}
-            onSosPress={() => navigation.navigate('SOS')}
-          />
-        )}
-      </Stack.Screen>
-
-      <Stack.Screen name="StaffUserSearch">
-        {({ navigation, route }) => (
-          <StaffUserSearchRoute
-            initialCategory={route.params?.category ?? 'ALL'}
-            tabBarItems={isStaffShell ? staffTabBarItems : undefined}
-            onTabPress={
-              isStaffShell
-                ? (tabId) => routeTabPress(navigation, tabId, 'AdminHome')
-                : undefined
-            }
-            onSosPress={() => navigation.navigate('SOS')}
-            onSelectUser={(userId) =>
-              navigation.navigate('StaffUserDetail', { userId })
-            }
-            onBack={() =>
-              isStaffShell
-                ? navigateToHome(navigation, 'AdminHome')
-                : navigation.goBack()
-            }
-          />
-        )}
-      </Stack.Screen>
-
-      <Stack.Screen name="StaffUserDetail">
-        {({ navigation, route }) => (
-          <StaffUserDetailRoute
-            userId={route.params.userId}
-            onViewActivity={(userId, userName) =>
-              navigation.navigate('StaffUserActivity', { userId, userName })
-            }
-            onBack={() => navigation.goBack()}
-          />
-        )}
-      </Stack.Screen>
-
-      <Stack.Screen name="StaffUserActivity">
-        {({ navigation, route }) => (
-          <StaffUserActivityRoute
-            userId={route.params.userId}
-            userName={route.params.userName}
-            onBack={() => navigation.goBack()}
-          />
-        )}
-      </Stack.Screen>
+      <StaffStackScreens
+        staffName={resolvedName}
+        staffTabBarItems={staffTabBarItems}
+        isStaffShell={isStaffShell}
+        notificationCount={visibleUnreadNotifications}
+        onTabPress={routeTabPress}
+        openNotifications={openNotifications}
+        enterAppPreview={enterAppPreview}
+      />
 
       {__DEV__ ? (
         <Stack.Screen name="DevTesting">
@@ -4129,40 +3952,35 @@ export default function AppNavigator() {
 
       <Stack.Screen name="KYCPrompt">
         {({ navigation, route }) => {
-          const { track } = route.params;
+          const { track, afterVerify = 'OnboardingReady' } = route.params;
           return (
-            <KYCPromptScreen
-              data={kycPromptForTrack(track)}
-              onVerifyNow={() => {
-                void (async () => {
-                  try {
-                    const session = await createKycSession();
-                    if (session.verificationUrl) {
-                      await Linking.openURL(session.verificationUrl);
-                    } else {
-                      Alert.alert(
-                        session.enabled ? 'Verification' : 'Verification pending',
-                        session.message
-                          ?? 'Submitted for NestBridge staff review. You can browse now — book, pay, and chat unlock after approval.',
-                      );
-                    }
-                  } catch (error) {
-                    Alert.alert(
-                      'Verification',
-                      getApiErrorMessage(error),
-                    );
-                  }
-                  // Signup path always finishes onboarding; mid-app KYC also lands here safely.
-                  navigation.navigate('OnboardingReady', { track });
-                })();
-              }}
-              onVerifyLater={() => {
-                Alert.alert(
-                  'Browse for now',
-                  'You can explore NestBridge, but booking, paying, messaging, and accepting requests stay locked until staff verifies you.',
-                );
+            <KycPromptRoute
+              track={track}
+              onFinished={() => {
+                if (afterVerify === 'VerificationStatus') {
+                  navigation.navigate('VerificationStatus');
+                  return;
+                }
                 navigation.navigate('OnboardingReady', { track });
               }}
+            />
+          );
+        }}
+      </Stack.Screen>
+
+      <Stack.Screen name="VerificationStatus">
+        {({ navigation }) => {
+          const track =
+            homeRole === 'HOST' ? 'HOST' : homeRole === 'GUIDE' ? 'GUIDE' : 'SEEKER';
+          return (
+            <VerificationStatusRoute
+              onBack={() => navigation.goBack()}
+              onVerifyNow={() =>
+                navigation.navigate('KYCPrompt', {
+                  track,
+                  afterVerify: 'VerificationStatus',
+                })
+              }
             />
           );
         }}

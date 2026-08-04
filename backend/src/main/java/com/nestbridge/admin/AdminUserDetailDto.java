@@ -17,10 +17,13 @@ public class AdminUserDetailDto {
     private String email;
     private PrimaryIntent primaryIntent;
     private boolean identityVerified;
+    private boolean identityLocked;
     private boolean emailVerified;
     private boolean staff;
     private boolean suspended;
     private String nationality;
+    private String kycStatus;
+    private String kycRejectionReason;
     private ProfileStatus seekerSetupStatus;
     private List<AdminListingStatusDto> listings;
     private LocalDateTime createdAt;

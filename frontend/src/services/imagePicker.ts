@@ -1,7 +1,12 @@
 import { Alert } from 'react-native';
 
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const ALLOWED_CONTENT_TYPES = new Set(['image/jpeg', 'image/png']);
+
 export type PickedImage = {
   uri: string;
+  mimeType?: string;
+  fileSize?: number;
 };
 
 /**
@@ -12,6 +17,20 @@ type PickImageOptions = {
   aspect?: [number, number];
   permissionMessage?: string;
 };
+
+function resolveMimeType(uri: string, mimeType?: string | null): string | undefined {
+  const normalized = (mimeType ?? '').toLowerCase().trim();
+  if (normalized) {
+    return normalized;
+  }
+  if (uri.toLowerCase().includes('.png')) {
+    return 'image/png';
+  }
+  if (uri.toLowerCase().includes('.jpg') || uri.toLowerCase().includes('.jpeg')) {
+    return 'image/jpeg';
+  }
+  return undefined;
+}
 
 async function pickImage(options: PickImageOptions = {}): Promise<PickedImage | null> {
   const {
@@ -51,8 +70,29 @@ async function pickImage(options: PickImageOptions = {}): Promise<PickedImage | 
       return null;
     }
 
-    const uri = result.assets[0]?.uri;
-    return uri ? { uri } : null;
+    const asset = result.assets[0];
+    const uri = asset?.uri;
+    if (!uri) {
+      return null;
+    }
+
+    const mimeType = resolveMimeType(uri, asset.mimeType);
+    if (mimeType && !ALLOWED_CONTENT_TYPES.has(mimeType)) {
+      Alert.alert('Unsupported photo', 'Please choose a JPEG or PNG image.');
+      return null;
+    }
+
+    const fileSize = typeof asset.fileSize === 'number' ? asset.fileSize : undefined;
+    if (fileSize != null && fileSize > MAX_PHOTO_BYTES) {
+      Alert.alert('Photo too large', 'Please choose a photo under 5 MB.');
+      return null;
+    }
+
+    return {
+      uri,
+      mimeType,
+      fileSize,
+    };
   } catch (error) {
     console.warn('[imagePicker] pick failed', error);
     Alert.alert(

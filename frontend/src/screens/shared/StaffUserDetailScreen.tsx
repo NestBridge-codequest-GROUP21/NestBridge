@@ -1,6 +1,16 @@
 import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TextInput,
+  Pressable,
+  Platform,
+  Alert,
+  KeyboardAvoidingView,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -19,6 +29,10 @@ import {
   fontWeights,
   spacing,
   borderWidths,
+  borderRadius,
+  touchTarget,
+  controlHeights,
+  lineHeights,
 } from '../../constants/theme';
 
 export interface StaffUserDetailScreenProps {
@@ -30,7 +44,9 @@ export interface StaffUserDetailScreenProps {
   onSuspend?: () => void;
   onUnsuspend?: () => void;
   onForceVerify?: () => void;
-  onClearKyc?: () => void;
+  /** Reject KYC with a non-empty staff reason. */
+  onRejectKyc?: (reason: string) => void;
+  onUnlockIdentity?: () => void;
   onMarkEmailVerified?: () => void;
   onClearEmailVerified?: () => void;
   onGrantStaff?: () => void;
@@ -61,7 +77,8 @@ export default function StaffUserDetailScreen({
   onSuspend,
   onUnsuspend,
   onForceVerify,
-  onClearKyc,
+  onRejectKyc,
+  onUnlockIdentity,
   onMarkEmailVerified,
   onClearEmailVerified,
   onGrantStaff,
@@ -72,6 +89,43 @@ export default function StaffUserDetailScreen({
   onBack,
 }: StaffUserDetailScreenProps) {
   const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+
+  const submitRejectReason = (raw: string) => {
+    const reason = raw.trim();
+    if (!reason) {
+      Alert.alert('Reason required', 'Please provide a non-empty rejection reason.');
+      return;
+    }
+    setRejectModalVisible(false);
+    setRejectReason('');
+    onRejectKyc?.(reason);
+  };
+
+  const handleRejectKycPress = () => {
+    if (Platform.OS === 'ios' && typeof Alert.prompt === 'function') {
+      Alert.prompt(
+        'Reject KYC',
+        'Enter a reason the user will see.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Reject',
+            style: 'destructive',
+            onPress: (value?: string) => {
+              submitRejectReason(value ?? '');
+            },
+          },
+        ],
+        'plain-text',
+      );
+      return;
+    }
+    setRejectReason('');
+    setRejectModalVisible(true);
+  };
 
   return (
     <View style={styles.root}>
@@ -107,6 +161,9 @@ export default function StaffUserDetailScreen({
                 label={user.identityVerified ? 'Verified' : 'Unverified'}
                 tone={user.identityVerified ? 'success' : 'warning'}
               />
+              {user.identityLocked ? (
+                <StatusBadge label="Identity locked" tone="info" />
+              ) : null}
               {user.staff ? <StatusBadge label="Staff" tone="info" /> : null}
             </View>
 
@@ -116,6 +173,10 @@ export default function StaffUserDetailScreen({
               <FactRow
                 label="Identity"
                 value={user.identityVerified ? 'Verified' : 'Not verified'}
+              />
+              <FactRow
+                label="Identity lock"
+                value={user.identityLocked ? 'Locked' : 'Unlocked'}
               />
               <FactRow
                 label="Email"
@@ -128,6 +189,9 @@ export default function StaffUserDetailScreen({
                 label="Seeker setup"
                 value={user.seekerSetupStatus ?? 'NOT_STARTED'}
               />
+              {user.kycRejectionReason ? (
+                <FactRow label="KYC reason" value={user.kycRejectionReason} />
+              ) : null}
             </Card>
 
             <SectionHeader title="Listings" />
@@ -197,19 +261,44 @@ export default function StaffUserDetailScreen({
               <View style={styles.spacer} />
               {user.identityVerified ? (
                 <SecondaryButton
-                  label={actionBusy ? 'Working…' : 'Clear KYC flag'}
+                  label={actionBusy ? 'Working…' : 'Reject KYC'}
+                  accessibilityLabel="Reject KYC"
                   tone="danger"
-                  onPress={onClearKyc}
+                  onPress={handleRejectKycPress}
                   disabled={actionBusy}
                 />
               ) : (
                 <SecondaryButton
                   label={actionBusy ? 'Working…' : 'Force-verify KYC'}
+                  accessibilityLabel="Force-verify KYC"
                   tone="success"
                   onPress={onForceVerify}
                   disabled={actionBusy}
                 />
               )}
+              {!user.identityVerified ? (
+                <>
+                  <View style={styles.spacer} />
+                  <SecondaryButton
+                    label={actionBusy ? 'Working…' : 'Reject KYC'}
+                    accessibilityLabel="Reject KYC"
+                    tone="danger"
+                    onPress={handleRejectKycPress}
+                    disabled={actionBusy}
+                  />
+                </>
+              ) : null}
+              {user.identityLocked ? (
+                <>
+                  <View style={styles.spacer} />
+                  <SecondaryButton
+                    label={actionBusy ? 'Working…' : 'Unlock identity'}
+                    accessibilityLabel="Unlock identity"
+                    onPress={onUnlockIdentity}
+                    disabled={actionBusy}
+                  />
+                </>
+              ) : null}
               <View style={styles.spacer} />
               {user.emailVerified ? (
                 <SecondaryButton
@@ -248,11 +337,62 @@ export default function StaffUserDetailScreen({
           </>
         ) : null}
       </ScreenScroll>
+
+      <Modal
+        visible={rejectModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRejectModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <Pressable
+            style={styles.modalBackdrop}
+            onPress={() => setRejectModalVisible(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss reject KYC dialog"
+          />
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Reject KYC</Text>
+            <Text style={styles.modalBody}>Enter a reason the user will see.</Text>
+            <TextInput
+              value={rejectReason}
+              onChangeText={setRejectReason}
+              placeholder="Rejection reason"
+              placeholderTextColor={colors.textTertiary}
+              style={styles.modalInput}
+              multiline
+              accessibilityLabel="KYC rejection reason"
+              autoFocus
+            />
+            <View style={styles.modalActions}>
+              <SecondaryButton
+                label="Cancel"
+                onPress={() => {
+                  setRejectModalVisible(false);
+                  setRejectReason('');
+                }}
+                style={styles.modalButton}
+              />
+              <PrimaryButton
+                label="Reject KYC"
+                accessibilityLabel="Reject KYC"
+                tone="danger"
+                onPress={() => submitRejectReason(rejectReason)}
+                disabled={actionBusy}
+                style={styles.modalButton}
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
 
-function createStyles({ colors }: AppTheme) {
+function createStyles({ colors, overlays }: AppTheme) {
   return StyleSheet.create({
   root: {
     flex: 1,
@@ -321,6 +461,52 @@ function createStyles({ colors }: AppTheme) {
   spacer: {
     height: spacing.sm,
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: overlays.scrim,
+  },
+  modalCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    gap: spacing.sm,
+    zIndex: 1,
+  },
+  modalTitle: {
+    fontFamily: fontFamilies.semibold,
+    fontSize: fontSizes.subheading,
+    fontWeight: fontWeights.semibold,
+    color: colors.textPrimary,
+  },
+  modalBody: {
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textSecondary,
+    lineHeight: lineHeights.body,
+  },
+  modalInput: {
+    minHeight: controlHeights.lg,
+    borderWidth: borderWidths.hairline,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontFamily: fontFamilies.regular,
+    fontSize: fontSizes.body,
+    color: colors.textPrimary,
+    textAlignVertical: 'top',
+  },
+  modalActions: {
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  modalButton: {
+    minHeight: touchTarget,
+  },
 });
 }
-

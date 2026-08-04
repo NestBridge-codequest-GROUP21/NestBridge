@@ -36,6 +36,7 @@ export interface AdminHomeScreenProps {
   onRefresh?: () => void;
   onOpenUsers?: () => void;
   onOpenUsersByCategory?: (category: StaffUserCategory) => void;
+  onOpenPendingKyc?: () => void;
   onOpenModeration?: () => void;
   onOpenPreview?: () => void;
   onOpenProfile?: () => void;
@@ -103,6 +104,7 @@ export default function AdminHomeScreen({
   onRefresh,
   onOpenUsers,
   onOpenUsersByCategory,
+  onOpenPendingKyc,
   onOpenModeration,
   onOpenPreview,
   onOpenProfile,
@@ -218,10 +220,27 @@ export default function AdminHomeScreen({
               <StatTile label="SOS (7d)" value={overview.sosLast7Days} />
               <StatTile label="Unverified ID" value={overview.unverifiedIdentityCount} />
               <StatTile label="Unverified email" value={overview.unverifiedEmailCount} />
+              <StatTile
+                label="Pending KYC"
+                value={overview.pendingKycCount ?? 0}
+                tone={(overview.pendingKycCount ?? 0) > 0 ? 'warning' : 'default'}
+                onPress={onOpenPendingKyc}
+              />
             </View>
 
             <SectionHeader title="Ops tools" />
             <Card padding="none" style={styles.toolsCard}>
+              <ToolRow
+                title="Pending KYC"
+                subtitle={
+                  (overview.pendingKycCount ?? 0) > 0
+                    ? `${overview.pendingKycCount} identity review${
+                        overview.pendingKycCount === 1 ? '' : 's'
+                      } waiting`
+                    : 'Review identity submissions in the queue'
+                }
+                onPress={onOpenPendingKyc}
+              />
               <ToolRow
                 title="Manage users"
                 subtitle="Browse by role, search, suspend, KYC, staff grant"

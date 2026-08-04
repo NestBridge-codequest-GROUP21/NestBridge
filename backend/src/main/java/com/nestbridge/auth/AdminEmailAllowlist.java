@@ -11,38 +11,24 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Pre-approved emails that receive {@code is_staff=true} at registration.
- * Configure via {@code ADMIN_EMAIL_ALLOWLIST} (comma-separated), e.g. on Railway.
- * When unset/blank, falls back to the built-in group allowlist.
+ * Pre-approved emails that receive {@code is_staff=true} at registration only.
+ * Configure via {@code ADMIN_EMAIL_ALLOWLIST} (comma-separated). No built-in default.
  */
 @Component
 @Slf4j
 public class AdminEmailAllowlist {
 
-    /**
-     * Used when {@code ADMIN_EMAIL_ALLOWLIST} is missing or empty
-     * (e.g. Railway not configured yet).
-     */
-    /** Group 21 staff — personal Gmails get is_staff on register/login. */
-    static final String DEFAULT_ALLOWLIST =
-            "bsbhackman@gmail.com,"
-                    + "abigailadusei17@gmail.com,"
-                    + "angelonwe54@gmail.com,"
-                    + "sirinaabbas2@gmail.com,"
-                    + "abdulsamedtaslima@gmail.com";
-
     private final Set<String> emails;
 
     public AdminEmailAllowlist(@Value("${admin.email-allowlist:}") String rawAllowlist) {
-        Set<String> parsed = parse(rawAllowlist);
-        boolean usedDefault = parsed.isEmpty();
-        this.emails = usedDefault ? parse(DEFAULT_ALLOWLIST) : parsed;
-        if (usedDefault) {
-            log.info(
-                    "Admin email allowlist using built-in default ({} addresses) — set ADMIN_EMAIL_ALLOWLIST to override",
-                    emails.size());
+        this.emails = parse(rawAllowlist);
+        if (emails.isEmpty()) {
+            log.warn(
+                    "ADMIN_EMAIL_ALLOWLIST is empty — no emails will receive staff on registration. "
+                            + "Set ADMIN_EMAIL_ALLOWLIST on the host environment.");
         } else {
-            log.info("Admin email allowlist loaded from ADMIN_EMAIL_ALLOWLIST ({} address{})",
+            log.info(
+                    "Admin email allowlist loaded from ADMIN_EMAIL_ALLOWLIST ({} address{})",
                     emails.size(),
                     emails.size() == 1 ? "" : "es");
         }

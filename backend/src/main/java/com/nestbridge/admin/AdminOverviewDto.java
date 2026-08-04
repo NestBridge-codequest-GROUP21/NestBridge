@@ -16,6 +16,7 @@ public class AdminOverviewDto {
     private long staffCount;
     private long suspendedCount;
     private long unverifiedIdentityCount;
+    private long pendingKycCount;
     private long unverifiedEmailCount;
     private long activeHostListings;
     private long activeGuideListings;

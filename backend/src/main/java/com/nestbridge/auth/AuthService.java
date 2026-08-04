@@ -46,12 +46,8 @@ public class AuthService {
         String email = request.getEmail().trim().toLowerCase();
         var existing = userRepository.findByEmailIgnoreCase(email);
         if (existing.isPresent()) {
-            User user = existing.get();
-            // Incomplete signup: let Create account finish the account instead of
-            // trapping judges/testers on a verify screen with no working inbox.
-            if (!user.isEmailVerified()) {
-                return reclaimUnverifiedSignup(user, request);
-            }
+            // Do not allow reclaiming an unverified signup — that would let a
+            // stranger take over an email they do not own.
             throw new IllegalArgumentException("An account with this email already exists. Try signing in.");
         }
 
@@ -98,26 +94,6 @@ public class AuthService {
                     .emailDeliveryFailed(false)
                     .build();
         }
-    }
-
-    /** Finish an abandoned signup so Create account works on a fresh-start wipe. */
-    private RegisterResponse reclaimUnverifiedSignup(User user, RegisterRequest request) {
-        user.setFullName(request.getFullName().trim());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setSuspended(false);
-        if (adminEmailAllowlist.contains(user.getEmail())) {
-            user.setStaff(true);
-        }
-        user.setEmailVerified(true);
-        user.setEmailVerifiedAt(java.time.OffsetDateTime.now());
-        userRepository.save(user);
-        log.info("Reclaimed unverified signup for {} (auto-verified for usable signup)", user.getEmail());
-        return RegisterResponse.builder()
-                .email(user.getEmail())
-                .displayName(user.getFullName())
-                .requiresEmailVerification(false)
-                .emailDeliveryFailed(false)
-                .build();
     }
 
     private User persistNewUser(RegisterRequest request, String email, boolean emailVerified) {
@@ -167,12 +143,7 @@ public class AuthService {
                         email);
             }
         }
-        // Heal staff flag for allowlisted emails (accounts created before staff ops, etc.).
-        if (!user.isStaff() && adminEmailAllowlist.contains(email)) {
-            user.setStaff(true);
-            user = userRepository.save(user);
-            log.info("Granted staff access to {} via allowlist on login", email);
-        }
+        // Staff is granted only at registration — never healed on login.
         return issueTokens(user);
     }
 

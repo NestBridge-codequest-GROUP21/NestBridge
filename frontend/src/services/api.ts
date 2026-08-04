@@ -65,14 +65,46 @@ export interface AdminUserDetail {
   email: string;
   primaryIntent?: string | null;
   identityVerified: boolean;
+  identityLocked?: boolean;
   emailVerified: boolean;
   staff: boolean;
   suspended: boolean;
   nationality?: string | null;
+  kycStatus?: string | null;
+  kycRejectionReason?: string | null;
   seekerSetupStatus?: string | null;
   listings: AdminListingStatus[];
   createdAt?: string | null;
   updatedAt?: string | null;
+}
+
+export interface AdminPage<T> {
+  items: T[];
+  page: number;
+  limit: number;
+  total: number | null;
+  hasMore: boolean;
+}
+
+export type KycStatusValue = 'pending' | 'approved' | 'rejected' | 'none';
+
+export interface KycStatus {
+  status: KycStatusValue | string;
+  rejectionReason?: string | null;
+  jobId?: string | null;
+  provider?: string | null;
+  updatedAt?: string | null;
+  identityVerified: boolean;
+}
+
+export interface AdminPendingKyc {
+  jobId: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  primaryIntent?: string | null;
+  provider?: string | null;
+  createdAt?: string | null;
 }
 
 export interface AdminBookingActivity {
@@ -114,6 +146,7 @@ export interface AdminOverview {
   suspendedCount: number;
   unverifiedIdentityCount: number;
   unverifiedEmailCount: number;
+  pendingKycCount?: number;
   activeHostListings: number;
   activeGuideListings: number;
   hiddenHostListings: number;
@@ -699,21 +732,46 @@ export async function login(
   };
 }
 
+function normalizeAdminPage<T>(payload: AdminPage<T> | T[] | null | undefined): AdminPage<T> {
+  if (Array.isArray(payload)) {
+    return {
+      items: payload,
+      page: 0,
+      limit: payload.length,
+      total: payload.length,
+      hasMore: false,
+    };
+  }
+  const items = payload?.items ?? [];
+  return {
+    items,
+    page: payload?.page ?? 0,
+    limit: payload?.limit ?? items.length,
+    total: payload?.total ?? null,
+    hasMore: Boolean(payload?.hasMore),
+  };
+}
+
 export async function listAdminUsers(params?: {
   intent?: 'STUDENT' | 'TOURIST' | 'HOST' | 'GUIDE';
   staff?: boolean;
   query?: string;
+  page?: number;
   limit?: number;
-}): Promise<AdminUserSummary[]> {
-  const { data } = await api.get<ApiResponse<AdminUserSummary[]>>('/api/admin/users', {
-    params: {
-      intent: params?.intent,
-      staff: params?.staff,
-      query: params?.query,
-      limit: params?.limit,
+}): Promise<AdminPage<AdminUserSummary>> {
+  const { data } = await api.get<ApiResponse<AdminPage<AdminUserSummary> | AdminUserSummary[]>>(
+    '/api/admin/users',
+    {
+      params: {
+        intent: params?.intent,
+        staff: params?.staff,
+        query: params?.query,
+        page: params?.page,
+        limit: params?.limit,
+      },
     },
-  });
-  return unwrap({ data });
+  );
+  return normalizeAdminPage(unwrap({ data }));
 }
 
 export async function searchAdminUsers(query: string): Promise<AdminUserSummary[]> {
@@ -742,11 +800,35 @@ export async function setAdminUserSuspended(
 export async function setAdminUserKycStatus(
   userId: string,
   identityVerified: boolean,
+  reason?: string,
 ): Promise<AdminUserDetail> {
+  const body: { identityVerified: boolean; reason?: string } = { identityVerified };
+  if (!identityVerified && reason != null) {
+    body.reason = reason;
+  }
   const { data } = await api.patch<ApiResponse<AdminUserDetail>>(
     `/api/admin/users/${userId}/kyc-status`,
-    { identityVerified },
+    body,
   );
+  return unwrap({ data });
+}
+
+export async function unlockAdminUserIdentity(userId: string): Promise<AdminUserDetail> {
+  const { data } = await api.post<ApiResponse<AdminUserDetail>>(
+    `/api/admin/users/${userId}/unlock-identity`,
+  );
+  return unwrap({ data });
+}
+
+export async function listPendingKyc(limit?: number): Promise<AdminPendingKyc[]> {
+  const { data } = await api.get<ApiResponse<AdminPendingKyc[]>>('/api/admin/kyc/pending', {
+    params: limit != null ? { limit } : undefined,
+  });
+  return unwrap({ data }) ?? [];
+}
+
+export async function getKycStatus(): Promise<KycStatus> {
+  const { data } = await api.get<ApiResponse<KycStatus>>('/api/kyc/status');
   return unwrap({ data });
 }
 
@@ -787,11 +869,15 @@ export async function getAdminOverview(): Promise<AdminOverview> {
 export async function listAdminListings(params?: {
   type?: string;
   hidden?: boolean;
-}): Promise<AdminListingModeration[]> {
-  const { data } = await api.get<ApiResponse<AdminListingModeration[]>>('/api/admin/listings', {
+  page?: number;
+  limit?: number;
+}): Promise<AdminPage<AdminListingModeration>> {
+  const { data } = await api.get<
+    ApiResponse<AdminPage<AdminListingModeration> | AdminListingModeration[]>
+  >('/api/admin/listings', {
     params,
   });
-  return unwrap({ data });
+  return normalizeAdminPage(unwrap({ data }));
 }
 
 export async function setAdminListingVisibility(

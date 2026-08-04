@@ -2,6 +2,7 @@ package com.nestbridge.user;
 
 import com.nestbridge.common.PrimaryIntent;
 import com.nestbridge.common.ProfileStatus;
+import com.nestbridge.media.MediaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class UserProfileService {
     private final UserRepository userRepository;
     private final SeekerProfileRepository seekerProfileRepository;
     private final ProviderSetupRepository providerSetupRepository;
+    private final MediaService mediaService;
 
     @Transactional(readOnly = true)
     public AccountProfileDto getMyProfile(UUID userId) {
@@ -135,7 +137,13 @@ public class UserProfileService {
         }
 
         if (incomingPhoto != null && !incomingPhoto.isBlank()) {
-            user.setProfilePhotoUrl(incomingPhoto);
+            if (mediaService.isUploadConfigured()
+                    && !mediaService.isTrustedProfilePhotoUrl(incomingPhoto)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Profile photo must be uploaded through NestBridge.");
+            }
+            user.setProfilePhotoUrl(incomingPhoto.trim());
         }
     }
 

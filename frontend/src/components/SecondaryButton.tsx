@@ -31,6 +31,8 @@ export interface SecondaryButtonProps {
   iconName?: IoniconName;
   /** default = teal; danger = red (sign out / decline / no); success = green (yes / confirm). */
   tone?: SecondaryButtonTone;
+  /** Stable a11y name; defaults to `label` (useful when label shows a busy state). */
+  accessibilityLabel?: string;
   style?: ViewStyle;
 }
 
@@ -41,6 +43,7 @@ export default function SecondaryButton({
   loading = false,
   iconName,
   tone = 'default',
+  accessibilityLabel,
   style,
 }: SecondaryButtonProps) {
   const styles = useThemedStyles(createStyles);
@@ -68,7 +71,7 @@ export default function SecondaryButton({
       onPress={onPress}
       disabled={isDisabled}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {loading ? (

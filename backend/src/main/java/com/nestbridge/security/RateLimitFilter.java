@@ -79,12 +79,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Use the remote address resolved by the servlet container / trusted proxy
+     * ({@code server.forward-headers-strategy=framework} on Railway). Do not trust
+     * a raw client-supplied {@code X-Forwarded-For} header.
+     */
     private String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
+        String remote = request.getRemoteAddr();
+        return remote == null || remote.isBlank() ? "unknown" : remote;
     }
 
     private static final class Window {
