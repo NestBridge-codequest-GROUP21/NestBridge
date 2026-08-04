@@ -1,9 +1,9 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { TabBarItem } from '../components/AppTabBar';
 import type { PrimaryIntent } from '../types/accountProfile';
 import type { HomeRoute } from '../utils/accountProfile';
+import { AppStack } from './appStack';
 import {
   AdminHomeRoute,
   AdminModerationRoute,
@@ -16,7 +16,7 @@ import {
 import type { AppStackParamList } from './types';
 import { navigateToHome } from './tabRouting';
 
-const Stack = createNativeStackNavigator<AppStackParamList>();
+const Stack = AppStack;
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -34,8 +34,12 @@ export interface StaffStackScreensProps {
   enterAppPreview: (role: PrimaryIntent) => void | Promise<void>;
 }
 
-/** Admin/staff Stack.Screen registrations that wrap *Route components. */
-export function StaffStackScreens({
+/**
+ * Admin/staff Stack.Screen registrations.
+ * Call as a function inside Stack.Navigator (not as JSX) so React Navigation
+ * sees Screen children instead of a custom component wrapper.
+ */
+export function renderStaffStackScreens({
   staffName,
   staffTabBarItems,
   isStaffShell,
@@ -45,7 +49,7 @@ export function StaffStackScreens({
   enterAppPreview,
 }: StaffStackScreensProps) {
   return (
-    <>
+    <Stack.Group>
       <Stack.Screen name="AdminHome">
         {({ navigation }) => (
           <AdminHomeRoute
@@ -158,6 +162,6 @@ export function StaffStackScreens({
           />
         )}
       </Stack.Screen>
-    </>
+    </Stack.Group>
   );
 }

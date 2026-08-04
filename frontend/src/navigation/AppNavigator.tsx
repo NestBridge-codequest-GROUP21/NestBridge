@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking, View } from 'react-native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { AppStack } from './appStack';
 import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
@@ -57,7 +57,7 @@ import { HELP_TOPICS, nestBridgeSupportContacts } from '../data/helpDesk';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
 import DevTestingScreen from '../screens/shared/DevTestingScreen';
 import { AdminHomeRoute } from './staffRoutes';
-import { StaffStackScreens } from './staffStackScreens';
+import { renderStaffStackScreens } from './staffStackScreens';
 import StaffPreviewBanner from '../components/StaffPreviewBanner';
 import { useStaffSession } from '../context/StaffSessionContext';
 import UnifiedSearchScreen from '../screens/shared/UnifiedSearchScreen';
@@ -353,7 +353,7 @@ import {
 } from '../data/appCopy';
 import { DEMO_PASSWORD, DEMO_ACTOR_ACCOUNTS, ALL_DEMO_ACCOUNTS, demoPresetForAccount, type DemoAccount } from '../data/demoAccounts';
 
-const Stack = createNativeStackNavigator<AppStackParamList>();
+const Stack = AppStack;
 
 type ProviderScreenHeaderProps = {
   greeting: string;
@@ -3671,15 +3671,15 @@ export default function AppNavigator() {
         }}
       </Stack.Screen>
 
-      <StaffStackScreens
-        staffName={resolvedName}
-        staffTabBarItems={staffTabBarItems}
-        isStaffShell={isStaffShell}
-        notificationCount={visibleUnreadNotifications}
-        onTabPress={routeTabPress}
-        openNotifications={openNotifications}
-        enterAppPreview={enterAppPreview}
-      />
+      {renderStaffStackScreens({
+        staffName: resolvedName,
+        staffTabBarItems,
+        isStaffShell,
+        notificationCount: visibleUnreadNotifications,
+        onTabPress: routeTabPress,
+        openNotifications,
+        enterAppPreview,
+      })}
 
       {__DEV__ ? (
         <Stack.Screen name="DevTesting">
