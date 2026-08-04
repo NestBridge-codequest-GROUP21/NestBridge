@@ -38,7 +38,7 @@ public class ProfileGateService {
         if (!user.isIdentityVerified()) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "Complete identity verification before accepting bookings.");
+                    "Staff must verify your identity before you can host, guide, or accept bookings.");
         }
     }
 
@@ -57,6 +57,7 @@ public class ProfileGateService {
     }
 
     public void requireHostProviderComplete(UUID userId) {
+        // Browse is open; hosting (accept / earn) needs locked bio+about AND staff KYC.
         requireIdentityVerified(userId);
         ProviderSetup host = providerSetupRepository.findByUserIdAndTrack(userId, "HOST")
                 .orElseThrow(() -> new ResponseStatusException(
@@ -77,6 +78,7 @@ public class ProfileGateService {
     }
 
     public void requireGuideProviderComplete(UUID userId) {
+        // Browse is open; guiding (accept / earn) needs locked bio+about AND staff KYC.
         requireIdentityVerified(userId);
         ProviderSetup guide = providerSetupRepository.findByUserIdAndTrack(userId, "GUIDE")
                 .orElseThrow(() -> new ResponseStatusException(
@@ -98,15 +100,23 @@ public class ProfileGateService {
 
     /**
      * Messaging is a core activity — require locked bio + about so the other
-     * person knows who they are talking to.
+     * person knows who they are talking to (seeker or provider track).
      */
     public void requireSeekerIdentityForMessaging(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
-        SeekerProfile seeker = seekerProfileRepository.findById(userId).orElse(null);
-        Map<String, Object> data = seeker != null ? seeker.getProfileData() : Map.of();
-        if (UserProfileService.hasIdentity(user) || UserProfileService.hasIdentityInData(data)) {
+        if (UserProfileService.hasIdentity(user)) {
             return;
+        }
+        SeekerProfile seeker = seekerProfileRepository.findById(userId).orElse(null);
+        if (seeker != null && UserProfileService.hasIdentityInData(seeker.getProfileData())) {
+            return;
+        }
+        for (String track : new String[] { "HOST", "GUIDE" }) {
+            ProviderSetup setup = providerSetupRepository.findByUserIdAndTrack(userId, track).orElse(null);
+            if (setup != null && UserProfileService.hasIdentityInData(setup.getProfileData())) {
+                return;
+            }
         }
         throw new ResponseStatusException(
                 HttpStatus.FORBIDDEN,

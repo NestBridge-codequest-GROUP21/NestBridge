@@ -38,6 +38,8 @@ interface AuthContextValue {
     keepSignedIn: boolean,
   ) => Promise<AuthUser>;
   signOut: () => Promise<void>;
+  /** Re-fetch token payload so flags like identityVerified update after staff KYC. */
+  refreshSession: () => Promise<AuthUser | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -208,6 +210,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthError(null);
   }, []);
 
+  const refreshSession = useCallback(async () => {
+    try {
+      const refreshed = await api.refreshSession();
+      if (refreshed?.user) {
+        setUser(refreshed.user);
+        return refreshed.user;
+      }
+      return null;
+    } catch (error) {
+      console.warn('[auth] refreshSession failed', error);
+      return null;
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -216,8 +232,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register,
       signIn,
       signOut,
+      refreshSession,
     }),
-    [user, isLoading, authError, register, signIn, signOut],
+    [user, isLoading, authError, register, signIn, signOut, refreshSession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

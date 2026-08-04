@@ -42,6 +42,19 @@ public class StaffNotificationService {
         }
     }
 
+    /** Tell the member their staff KYC review finished — unlocks host/guide marketplace actions. */
+    @Async
+    public void onKycApproved(User subject) {
+        if (subject == null) {
+            return;
+        }
+        String title = "You're verified";
+        String body =
+                "NestBridge staff approved your identity. You can now host, guide, and accept bookings.";
+        Map<String, Object> data = Map.of("userId", subject.getUserId().toString());
+        notifyUser(subject.getUserId(), "KYC_APPROVED", title, body, data);
+    }
+
     @Transactional
     protected void notifyUser(UUID userId, String type, String title, String body, Map<String, Object> data) {
         notificationRepository.save(InAppNotification.builder()

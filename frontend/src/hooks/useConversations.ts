@@ -28,7 +28,11 @@ export interface ConversationsState {
   upsertConversation: (item: ConversationListItem) => void;
 }
 
-export function useConversations(userId: string | undefined): ConversationsState {
+export function useConversations(
+  userId: string | undefined,
+  options?: { enabled?: boolean },
+): ConversationsState {
+  const enabled = options?.enabled !== false;
   const [conversations, setConversations] = useState<ConversationListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,9 +48,11 @@ export function useConversations(userId: string | undefined): ConversationsState
   }, []);
 
   useEffect(() => {
-    if (!userId) {
-      setConversations([]);
-      setError(null);
+    if (!userId || !enabled) {
+      if (!userId) {
+        setConversations([]);
+        setError(null);
+      }
       return;
     }
 
@@ -74,7 +80,7 @@ export function useConversations(userId: string | undefined): ConversationsState
     return () => {
       cancelled = true;
     };
-  }, [userId, tick]);
+  }, [userId, tick, enabled]);
 
   return { conversations, isLoading, error, refresh, upsertConversation };
 }

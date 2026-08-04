@@ -1,14 +1,19 @@
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AppStackParamList } from './types';
 
-/** Actor home dashboards — the only screens that show the raised SOS tab-bar button. */
+/**
+ * Actor home dashboards only — SOS must not appear on every tab/stack screen.
+ * Use `homeTabSosProps` exclusively on these homes (plus BrowseHome for incomplete seekers).
+ */
 export const HOME_SOS_ROUTES = new Set<keyof AppStackParamList>([
   'StudentHome',
   'ExploreHome',
   'HostHome',
   'GuideHome',
+  'BrowseHome',
 ]);
 
+/** Pass only into actor home screens — not Messages, Profile, MatchSearch, etc. */
 export function homeTabSosProps(
   navigation: NativeStackNavigationProp<AppStackParamList>,
 ) {

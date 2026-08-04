@@ -55,9 +55,9 @@ public class ConversationService {
                     ? conversation.getParticipantB()
                     : conversation.getParticipantA();
             ParticipantInfo info = resolveParticipant(otherId);
-            List<ChatMessage> messages = chatMessageRepository
-                    .findByConversationIdOrderBySentAtAsc(conversation.getConversationId());
-            ChatMessage last = messages.isEmpty() ? null : messages.get(messages.size() - 1);
+            ChatMessage last = chatMessageRepository
+                    .findTopByConversationIdOrderBySentAtDesc(conversation.getConversationId())
+                    .orElse(null);
             result.add(ConversationListDto.builder()
                     .conversationId(conversation.getConversationId().toString())
                     .participantId(otherId.toString())
@@ -83,9 +83,9 @@ public class ConversationService {
                 ? conversation.getParticipantB()
                 : conversation.getParticipantA();
         ParticipantInfo info = resolveParticipant(otherId);
-        List<ChatMessage> messages = chatMessageRepository
-                .findByConversationIdOrderBySentAtAsc(conversationId);
-        ChatMessage last = messages.isEmpty() ? null : messages.get(messages.size() - 1);
+        ChatMessage last = chatMessageRepository
+                .findTopByConversationIdOrderBySentAtDesc(conversationId)
+                .orElse(null);
         return ConversationListDto.builder()
                 .conversationId(conversation.getConversationId().toString())
                 .participantId(otherId.toString())

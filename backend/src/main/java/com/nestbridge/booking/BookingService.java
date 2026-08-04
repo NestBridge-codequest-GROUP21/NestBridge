@@ -123,6 +123,17 @@ public class BookingService {
         return bookings.stream().map(b -> toIncomingDto(b, providerProfileId, type)).collect(Collectors.toList());
     }
 
+    /** Single round-trip for provider Bookings tab (accepted / confirmed / checked-in). */
+    @Transactional(readOnly = true)
+    public List<IncomingBookingDto> getActiveIncomingBookings(UUID providerUserId, BookingType type) {
+        UUID providerProfileId = resolveProviderProfileId(providerUserId, type);
+        List<BookingStatus> statuses = List.of(
+                BookingStatus.ACCEPTED, BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN);
+        List<Booking> bookings = bookingRepository.findByHostOrGuideIdAndBookingTypeAndStatusIn(
+                providerProfileId, type, statuses);
+        return bookings.stream().map(b -> toIncomingDto(b, providerProfileId, type)).collect(Collectors.toList());
+    }
+
     @Transactional
     public BookingDto acceptBooking(UUID bookingId, UUID providerUserId) {
         Booking booking = bookingRepository.findById(bookingId)

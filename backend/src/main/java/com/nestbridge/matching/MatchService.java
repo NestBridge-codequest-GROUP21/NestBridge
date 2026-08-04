@@ -73,7 +73,14 @@ public class MatchService {
                 ? hostProfileRepository.findByCityIgnoreCaseAndActiveTrue(city)
                 : hostProfileRepository.findByActiveTrue();
         Map<UUID, User> users = loadUsers(hosts.stream().map(HostProfile::getUserId).collect(Collectors.toSet()));
-        List<MatchingAlgorithm.ScoredHost> scored = algorithm.scoreHosts(hosts, users, request, seeker);
+        // Marketplace integrity: only staff-verified hosts are bookable / shown in matches.
+        List<HostProfile> verifiedHosts = hosts.stream()
+                .filter(h -> {
+                    User u = users.get(h.getUserId());
+                    return u != null && u.isIdentityVerified();
+                })
+                .collect(Collectors.toList());
+        List<MatchingAlgorithm.ScoredHost> scored = algorithm.scoreHosts(verifiedHosts, users, request, seeker);
 
         return scored.stream().limit(10).map(s -> {
             HostProfile h = s.host();
@@ -111,7 +118,14 @@ public class MatchService {
                 ? guideProfileRepository.findByCityIgnoreCaseAndActiveTrue(city)
                 : guideProfileRepository.findByActiveTrue();
         Map<UUID, User> users = loadUsers(guides.stream().map(GuideProfile::getUserId).collect(Collectors.toSet()));
-        List<MatchingAlgorithm.ScoredGuide> scored = algorithm.scoreGuides(guides, users, request, seeker);
+        // Marketplace integrity: only staff-verified guides are bookable / shown in matches.
+        List<GuideProfile> verifiedGuides = guides.stream()
+                .filter(g -> {
+                    User u = users.get(g.getUserId());
+                    return u != null && u.isIdentityVerified();
+                })
+                .collect(Collectors.toList());
+        List<MatchingAlgorithm.ScoredGuide> scored = algorithm.scoreGuides(verifiedGuides, users, request, seeker);
 
         return scored.stream().limit(10).map(s -> {
             GuideProfile g = s.guide();

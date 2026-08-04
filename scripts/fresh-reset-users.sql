@@ -31,6 +31,20 @@ WHERE lower(email) IN (
   'abdulsamedtaslima@gmail.com'
 );
 
+-- Keep seeded demo marketplace actors verified + identity-ready for judge demos.
+UPDATE users
+SET
+  is_verified = TRUE,
+  email_verified = TRUE,
+  email_verified_at = COALESCE(email_verified_at, NOW()),
+  bio = COALESCE(NULLIF(TRIM(bio), ''), 'NestBridge demo account for CodeQuest.'),
+  about = COALESCE(
+    NULLIF(TRIM(about), ''),
+    'Seeded NestBridge demo profile. Identity is locked for realistic host/guide/student flows.'
+  ),
+  identity_locked = TRUE
+WHERE email ILIKE '%@nestbridge.app';
+
 SELECT count(*) AS users_after FROM users;
 SELECT email, is_staff, email_verified
 FROM users

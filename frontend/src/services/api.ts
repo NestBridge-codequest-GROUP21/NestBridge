@@ -34,6 +34,7 @@ export interface AuthTokenPayload {
   email: string;
   displayName: string;
   emailVerified?: boolean;
+  identityVerified?: boolean;
   staff?: boolean;
   notificationsEnabled?: boolean;
 }
@@ -155,6 +156,7 @@ function authUserFromPayload(payload: AuthTokenPayload): AuthUser {
     userId: payload.userId,
     email: payload.email,
     displayName: payload.displayName,
+    identityVerified: Boolean(payload.identityVerified),
     isStaff: Boolean(payload.staff),
     notificationsEnabled: payload.notificationsEnabled !== false,
   };
@@ -928,31 +930,13 @@ export async function getIncomingBookings(
   return unwrap({ data }).map(mapIncomingBooking);
 }
 
-const PROVIDER_ACTIVE_STATUSES: BookingStatus[] = [
-  'ACCEPTED',
-  'CONFIRMED',
-  'CHECKED_IN',
-];
-
 export async function getProviderActiveBookings(
   bookingType: BookingType,
 ): Promise<IncomingBookingRequest[]> {
-  const batches = await Promise.all(
-    PROVIDER_ACTIVE_STATUSES.map((status) =>
-      getIncomingBookings(bookingType, status).catch(() => [] as IncomingBookingRequest[]),
-    ),
-  );
-  const seen = new Set<string>();
-  const merged: IncomingBookingRequest[] = [];
-  for (const batch of batches) {
-    for (const item of batch) {
-      if (!seen.has(item.id)) {
-        seen.add(item.id);
-        merged.push(item);
-      }
-    }
-  }
-  return merged;
+  const { data } = await api.get<ApiResponse<IncomingBookingApi[]>>('/api/bookings/incoming', {
+    params: { bookingType, active: true },
+  });
+  return unwrap({ data }).map(mapIncomingBooking);
 }
 
 export async function getUserBookings(userId: string): Promise<BookingListItem[]> {
@@ -1048,6 +1032,7 @@ export async function fetchNotifications(): Promise<import('../types/booking').A
     body: item.body,
     read: item.read,
     createdAt: item.createdAt,
+    type: item.type,
     relatedBookingId:
       typeof item.data?.bookingId === 'string' ? item.data.bookingId : undefined,
     relatedUserId:

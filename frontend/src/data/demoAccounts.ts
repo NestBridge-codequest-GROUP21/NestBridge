@@ -43,9 +43,30 @@ export const DEMO_STAFF_ACCOUNT: DemoAccount = {
   description: 'Ops dashboard — Staff sign-in with email/password only',
 };
 
-/** Complete seeker profile preset for a seeded demo actor (Accra / UG context). */
+/** Complete profile preset for a seeded demo actor (Accra / UG context). */
 export function demoPresetForAccount(account: DemoAccount): AccountProfileState {
   const base = presetHomeDashboard(account.intent);
+  const identity = {
+    displayName: account.name,
+    bio: 'Exchange student exploring homestays and cultural experiences in Ghana.',
+    about:
+      'I am here for a semester exchange and want a respectful homestay where I can share meals, practice local customs, and feel part of family life in Ghana.',
+    identityLocked: true as const,
+  };
+  const hostIdentity = {
+    displayName: account.name,
+    bio: 'NestBridge demo host sharing a welcoming home in Ghana.',
+    about:
+      'Seeded NestBridge demo host account for CodeQuest. Bio and about stay locked so students know who they are booking with.',
+    identityLocked: true as const,
+  };
+  const guideIdentity = {
+    displayName: account.name,
+    bio: 'NestBridge demo guide offering cultural tours in Ghana.',
+    about:
+      'Seeded NestBridge demo guide account for CodeQuest. Bio and about stay locked so travelers know who they are meeting.',
+    identityLocked: true as const,
+  };
   return {
     ...base,
     seekerSetup: {
@@ -55,13 +76,17 @@ export function demoPresetForAccount(account: DemoAccount): AccountProfileState 
         university: 'University of Ghana',
         arrivalDate: '2026-09-01',
         departureDate: '2026-12-15',
-        displayName: account.name,
-        bio: 'Exchange student exploring homestays and cultural experiences in Ghana.',
-        about:
-          'I am here for a semester exchange and want a respectful homestay where I can share meals, practice local customs, and feel part of family life in Ghana.',
-        identityLocked: true,
+        ...identity,
       },
     },
+    hostProvider:
+      account.intent === 'HOST'
+        ? { ...base.hostProvider, data: { ...base.hostProvider.data, ...hostIdentity } }
+        : base.hostProvider,
+    guideProvider:
+      account.intent === 'GUIDE'
+        ? { ...base.guideProvider, data: { ...base.guideProvider.data, ...guideIdentity } }
+        : base.guideProvider,
   };
 }
 

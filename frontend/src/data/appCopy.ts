@@ -47,9 +47,9 @@ export const bookingGateCopy = {
   identity:
     'Your short bio and about section are required and locked once saved. Other users rely on them to know who they are going in for.',
   acceptHost:
-    'Finish your host listing with a locked bio and about before accepting requests.',
+    'Finish your host listing (locked bio + about) and wait for NestBridge staff to verify your identity before accepting requests. You can still browse.',
   acceptGuide:
-    'Finish your guide listing with a locked bio and about before accepting sessions.',
+    'Finish your guide listing (locked bio + about) and wait for NestBridge staff to verify your identity before accepting sessions. You can still browse.',
   pay: 'Complete your travel profile (bio + about) before paying for a booking.',
 };
 

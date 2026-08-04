@@ -20,7 +20,11 @@ export interface StudentEventsState {
   createEvent: (draft: StudentEventDraft) => Promise<void>;
 }
 
-export function useStudentEvents(userId: string | undefined): StudentEventsState {
+export function useStudentEvents(
+  userId: string | undefined,
+  options?: { enabled?: boolean },
+): StudentEventsState {
+  const enabled = options?.enabled !== false;
   const [events, setEvents] = useState<StudentEvent[]>([]);
   const [joinedIds, setJoinedIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,10 +58,12 @@ export function useStudentEvents(userId: string | undefined): StudentEventsState
   }, []);
 
   useEffect(() => {
-    if (!userId) {
-      setEvents([]);
-      setJoinedIds([]);
-      setError(null);
+    if (!userId || !enabled) {
+      if (!userId) {
+        setEvents([]);
+        setJoinedIds([]);
+        setError(null);
+      }
       return;
     }
 
@@ -82,7 +88,7 @@ export function useStudentEvents(userId: string | undefined): StudentEventsState
     return () => {
       cancelled = true;
     };
-  }, [userId, tick, applyList]);
+  }, [userId, tick, applyList, enabled]);
 
   const toggleJoin = useCallback(
     async (eventId: string) => {

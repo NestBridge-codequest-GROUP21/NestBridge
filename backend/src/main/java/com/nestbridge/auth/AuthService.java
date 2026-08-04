@@ -174,12 +174,15 @@ public class AuthService {
         tokenBlacklistService.removeRefreshToken(userId.toString());
     }
 
+    /**
+     * Self-serve KYC is not allowed — staff force-verify (or Smile when configured).
+     * Kept as a hard forbid so old clients cannot mark themselves verified.
+     */
     @Transactional
     public void verifyIdentity(java.util.UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found."));
-        user.setIdentityVerified(true);
-        userRepository.save(user);
+        throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.FORBIDDEN,
+                "Identity verification requires NestBridge staff review. Use Verify now in the app.");
     }
 
     private AuthTokenResponse issueTokens(User user) {
@@ -193,6 +196,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .displayName(user.getFullName())
                 .emailVerified(user.isEmailVerified())
+                .identityVerified(user.isIdentityVerified())
                 .staff(user.isStaff())
                 .notificationsEnabled(user.isNotificationsEnabled())
                 .build();

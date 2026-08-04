@@ -26,7 +26,16 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // Public auth only — logout / verify-identity require a JWT.
+                        .requestMatchers(
+                                "/api/auth/register",
+                                "/api/auth/login",
+                                "/api/auth/refresh-token",
+                                "/api/auth/resend-verification",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password",
+                                "/api/auth/verify-email")
+                        .permitAll()
                         .requestMatchers("/api/webhooks/**").permitAll()
                         .requestMatchers("GET", "/api/payments/callback").permitAll()
                         .requestMatchers("/actuator/health").permitAll()

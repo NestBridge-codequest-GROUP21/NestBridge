@@ -2,6 +2,8 @@ export interface AuthUser {
   userId: string;
   email: string;
   displayName: string;
+  /** True only after NestBridge staff force-verify (or Smile when enabled). */
+  identityVerified?: boolean;
   /** Server-gated ops access; only true for NestBridge staff accounts. */
   isStaff?: boolean;
   /** When false, push and in-app badges are suppressed. Default true. */

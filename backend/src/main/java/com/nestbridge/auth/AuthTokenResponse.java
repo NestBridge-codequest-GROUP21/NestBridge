@@ -13,6 +13,8 @@ public class AuthTokenResponse {
     private String email;
     private String displayName;
     private Boolean emailVerified;
+    /** True only after staff force-verify (or Smile when enabled). */
+    private Boolean identityVerified;
     private Boolean staff;
     private Boolean notificationsEnabled;
 }

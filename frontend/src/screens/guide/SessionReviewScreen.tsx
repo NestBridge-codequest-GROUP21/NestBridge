@@ -9,7 +9,6 @@ import Avatar from '../../components/Avatar';
 import Card from '../../components/Card';
 import PrimaryButton from '../../components/PrimaryButton';
 import ProfileIncompleteBanner from '../../components/ProfileIncompleteBanner';
-import SecondaryButton from '../../components/SecondaryButton';
 import SectionHeader from '../../components/SectionHeader';
 import StatusBadge from '../../components/StatusBadge';
 import {
@@ -173,11 +172,12 @@ export default function SessionReviewScreen({
         ) : null}
         <PrimaryButton
           label="Accept session"
+          tone="success"
           onPress={onAccept}
           disabled={!capacity.canAccept || acceptBlocked}
         />
         <View style={styles.declineWrap}>
-          <SecondaryButton label="Decline" tone="danger" onPress={onDecline} />
+          <PrimaryButton label="Decline" tone="danger" onPress={onDecline} />
         </View>
       </View>
     </View>

@@ -30,9 +30,17 @@ public class BookingController {
     public ResponseEntity<ApiResponse<List<IncomingBookingDto>>> incoming(
             Authentication authentication,
             @RequestParam(required = false) BookingStatus status,
+            @RequestParam(required = false) Boolean active,
             @RequestParam(required = false, defaultValue = "HOST") BookingType bookingType) {
         UUID userId = (UUID) authentication.getPrincipal();
-        return ResponseEntity.ok(ApiResponse.success("Incoming bookings", bookingService.getIncomingBookings(userId, status, bookingType)));
+        if (Boolean.TRUE.equals(active)) {
+            return ResponseEntity.ok(ApiResponse.success(
+                    "Incoming bookings",
+                    bookingService.getActiveIncomingBookings(userId, bookingType)));
+        }
+        return ResponseEntity.ok(ApiResponse.success(
+                "Incoming bookings",
+                bookingService.getIncomingBookings(userId, status, bookingType)));
     }
 
     @GetMapping("/{id}")

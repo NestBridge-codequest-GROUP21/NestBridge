@@ -69,6 +69,7 @@ export interface AppNotification {
   body: string;
   read: boolean;
   createdAt: string;
+  type?: string;
   relatedBookingId?: string;
   relatedUserId?: string;
 }

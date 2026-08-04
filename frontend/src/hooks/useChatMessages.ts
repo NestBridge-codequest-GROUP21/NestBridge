@@ -14,8 +14,10 @@ import type { ChatMessage } from '../types/messaging';
 import { shouldUseDemoFallbackForAccount } from '../config/demoMode';
 import { useAuth } from '../context/AuthContext';
 
-/** REST poll interval when Firebase client config is unavailable. */
+/** REST poll when Firebase is unavailable (source of truth fallback). */
 const REST_POLL_MS = 1500;
+/** Slow REST safety net while Firebase is live — avoids 1.5s network churn. */
+const REST_POLL_WITH_FIREBASE_MS = 12000;
 
 function mapApiMessages(
   items: Array<{ messageId: string; senderId: string; text: string; sentAt: string }>,
@@ -105,6 +107,25 @@ export function useChatMessages(
 
     let cancelled = false;
     let unsubscribeFirebase: (() => void) | undefined;
+    const firebaseLive = isFirebaseConfigured() && Boolean(firebasePath);
+
+    const clearPoll = () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+
+    const startPoll = () => {
+      clearPoll();
+      if (AppState.currentState !== 'active') {
+        return;
+      }
+      const intervalMs = firebaseLive ? REST_POLL_WITH_FIREBASE_MS : REST_POLL_MS;
+      pollRef.current = setInterval(() => {
+        void loadRestMessages().catch(() => undefined);
+      }, intervalMs);
+    };
 
     (async () => {
       setIsLoading(true);
@@ -113,14 +134,12 @@ export function useChatMessages(
         await loadRestMessages();
         if (cancelled) return;
 
-        // Always poll Postgres — source of truth even when Firebase is enabled.
-        pollRef.current = setInterval(() => {
-          void loadRestMessages().catch(() => undefined);
-        }, REST_POLL_MS);
+        // Firebase carries live updates; REST poll is a slow backup (or fast if offline).
+        startPoll();
 
         // Optional realtime boost: merge Firebase pushes without wiping REST history.
         // Backend already writes to Firebase; client must NOT double-write.
-        if (isFirebaseConfigured() && firebasePath) {
+        if (firebaseLive && firebasePath) {
           unsubscribeFirebase = subscribeToMessages(
             firebasePath,
             currentUserId,
@@ -146,6 +165,9 @@ export function useChatMessages(
     const appStateSub = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
         void loadRestMessages().catch(() => undefined);
+        startPoll();
+      } else {
+        clearPoll();
       }
     });
 
@@ -155,10 +177,7 @@ export function useChatMessages(
       if (unsubscribeFirebase) {
         unsubscribeFirebase();
       }
-      if (pollRef.current) {
-        clearInterval(pollRef.current);
-        pollRef.current = null;
-      }
+      clearPoll();
     };
   }, [conversationId, firebasePath, currentUserId, loadRestMessages]);
 

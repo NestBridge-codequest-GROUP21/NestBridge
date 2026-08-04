@@ -10,6 +10,7 @@ import com.nestbridge.guide.GuideProfileRepository;
 import com.nestbridge.host.HostProfile;
 import com.nestbridge.host.HostProfileRepository;
 import com.nestbridge.kyc.KycVerificationJobRepository;
+import com.nestbridge.notification.StaffNotificationService;
 import com.nestbridge.user.ProviderSetup;
 import com.nestbridge.user.ProviderSetupRepository;
 import com.nestbridge.user.SeekerProfile;
@@ -53,6 +54,7 @@ public class AdminService {
     private final SosEventRepository sosEventRepository;
     private final StaffAuditRepository staffAuditRepository;
     private final KycVerificationJobRepository kycVerificationJobRepository;
+    private final StaffNotificationService staffNotificationService;
 
     @Transactional(readOnly = true)
     public AdminOverviewDto getOverview(UUID actorId) {
@@ -169,6 +171,7 @@ public class AdminService {
                     kycVerificationJobRepository.save(job);
                 }
             });
+            staffNotificationService.onKycApproved(user);
         }
         writeAudit(actorId, identityVerified ? "KYC_VERIFY" : "KYC_CLEAR", userId.toString());
         return toDetail(user);

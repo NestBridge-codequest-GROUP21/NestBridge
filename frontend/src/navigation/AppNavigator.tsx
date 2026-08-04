@@ -1388,7 +1388,7 @@ const SEARCH_CATEGORIES = [
 ];
 
 export default function AppNavigator() {
-  const { user, signOut, signIn } = useAuth();
+  const { user, signOut, signIn, refreshSession } = useAuth();
   const demoFallbackEnabled = shouldUseDemoFallbackForAccount(user?.email);
 
   useEffect(() => {
@@ -1415,8 +1415,8 @@ export default function AppNavigator() {
     startSetup,
     canBookHomestay,
     canBookGuideSession,
-    canAcceptHostBookings,
-    canAcceptGuideSessions,
+    canAcceptHostBookings: hostSetupComplete,
+    canAcceptGuideSessions: guideSetupComplete,
     canEnableHostProvider,
     canEnableGuideProvider,
     providerBlockedReason,
@@ -1425,6 +1425,12 @@ export default function AppNavigator() {
     resetAccountProfile,
     applyDevPreset,
   } = useAccountProfile();
+
+  // Host/guide core actions require listing+bio AND staff KYC — browse stays open before that.
+  const canAcceptHostBookings =
+    hostSetupComplete && Boolean(user?.identityVerified);
+  const canAcceptGuideSessions =
+    guideSetupComplete && Boolean(user?.identityVerified);
 
   const [city, setCity] = useState('');
   const [university, setUniversity] = useState('');
@@ -1554,7 +1560,8 @@ export default function AppNavigator() {
       setGuideProfileCache({});
     }
   }, [demoFallbackEnabled, user?.userId]);
-  const conversationsApi = useConversations(user?.userId);
+  // Conversations load for everyone (Messages tab). Student events only for students.
+  const conversationsApi = useConversations(user?.userId, { enabled: !!user });
   const conversationsRaw = useMemo(
     () =>
       withDemoFallback(conversationsApi.conversations, conversationsMock, {
@@ -1563,7 +1570,9 @@ export default function AppNavigator() {
       }),
     [conversationsApi.conversations, conversationsApi.isLoading, conversationsApi.error],
   );
-  const studentEventsApi = useStudentEvents(user?.userId);
+  const studentEventsApi = useStudentEvents(user?.userId, {
+    enabled: !!user && primaryIntent === 'STUDENT',
+  });
 
   // Personalized home matches need a destination from onboarding — never default
   // every new student to Accra seed hosts with fake “match” framing.
@@ -1574,19 +1583,20 @@ export default function AppNavigator() {
     !!seekerDestinationCity &&
     (primaryIntent === 'STUDENT' || primaryIntent === 'TOURIST');
 
+  // Provider pending inbox is owned by useProviderTabData — do not also fetch via homeApi.
   const homeApi = useHomeApiData(user?.userId, profileState, {
     fetchMatches: canFetchPersonalizedMatches,
     fetchGuideMatches: canFetchPersonalizedMatches,
-    fetchHostIncoming: canAcceptHostBookings && !!user,
-    fetchGuideIncoming: canAcceptGuideSessions && !!user,
+    fetchHostIncoming: false,
+    fetchGuideIncoming: false,
     fetchBookings: !!user,
   });
 
   const providerTab = useProviderTabData(user?.userId, {
-    fetchHostPending: primaryIntent === 'HOST' && !!user,
-    fetchHostActive: primaryIntent === 'HOST' && !!user,
-    fetchGuidePending: primaryIntent === 'GUIDE' && !!user,
-    fetchGuideActive: primaryIntent === 'GUIDE' && !!user,
+    fetchHostPending: (primaryIntent === 'HOST' || canAcceptHostBookings) && !!user,
+    fetchHostActive: (primaryIntent === 'HOST' || canAcceptHostBookings) && !!user,
+    fetchGuidePending: (primaryIntent === 'GUIDE' || canAcceptGuideSessions) && !!user,
+    fetchGuideActive: (primaryIntent === 'GUIDE' || canAcceptGuideSessions) && !!user,
   });
 
   useEffect(() => {
@@ -1664,23 +1674,9 @@ export default function AppNavigator() {
 
   const seekerSetupIncomplete = !!user && !isSeekerComplete(profileState);
 
-  const hostIncoming = useMemo(
-    () =>
-      withDemoFallback(homeApi.hostIncoming, incomingBookingRequestsMock, {
-        isLoading: homeApi.isLoading,
-        error: homeApi.error,
-      }),
-    [homeApi.hostIncoming, homeApi.isLoading, homeApi.error],
-  );
-  const guideIncoming = useMemo(
-    () =>
-      withDemoFallback(
-        homeApi.guideIncoming,
-        incomingBookingRequestsMock.filter((r) => r.bookingType === 'GUIDE'),
-        { isLoading: homeApi.isLoading, error: homeApi.error },
-      ),
-    [homeApi.guideIncoming, homeApi.isLoading, homeApi.error],
-  );
+  // Single source: provider tab pending (avoids duplicate /incoming calls on mount).
+  const hostIncoming = hostPendingDisplay;
+  const guideIncoming = guidePendingDisplay;
 
   const displayBookings = useMemo(
     () =>
@@ -2357,8 +2353,9 @@ export default function AppNavigator() {
       setUnreadNotifications(0);
       return;
     }
+    // Count/list once per session user — openNotifications refreshes on demand.
     void refreshNotificationState();
-  }, [user?.userId, bookings.length, hostIncoming.length, guideIncoming.length, refreshNotificationState]);
+  }, [user?.userId, notificationsEnabled, refreshNotificationState]);
 
   const openNotifications = useCallback(
     (navigation: NativeStackNavigationProp<AppStackParamList>) => {
@@ -2399,11 +2396,14 @@ export default function AppNavigator() {
     [notificationsEnabled, refreshNotificationState],
   );
 
+  // Show badge whenever we fetch that inbox (intent or accept-ready), not only when accept is unlocked.
   const incomingBadgeCount =
-    (canAcceptGuideSessions && guideIncoming.length > 0
+    ((primaryIntent === 'GUIDE' || canAcceptGuideSessions) && guideIncoming.length > 0
       ? guideIncoming.length
       : 0) +
-    (canAcceptHostBookings && hostIncoming.length > 0 ? hostIncoming.length : 0);
+    ((primaryIntent === 'HOST' || canAcceptHostBookings) && hostIncoming.length > 0
+      ? hostIncoming.length
+      : 0);
   const homeRole = homeRoleForSession(isStaffShell, preview?.role, primaryIntent);
   const effectiveIntent = preview?.role ?? primaryIntent;
   const demoRecommendations = useMemo(
@@ -2493,6 +2493,11 @@ export default function AppNavigator() {
     if (!canEnableHostProvider) {
       return;
     }
+    // Listing ready but staff KYC still pending — send them to verify, not listing edit.
+    if (hostSetupComplete && !user?.identityVerified) {
+      navigation.navigate('KYCPrompt', { track: 'HOST' });
+      return;
+    }
     navigateContinueSetup(
       navigation,
       'HOST',
@@ -2504,6 +2509,10 @@ export default function AppNavigator() {
 
   const continueGuideSetup = (navigation: NativeStackNavigationProp<AppStackParamList>) => {
     if (!canEnableGuideProvider) {
+      return;
+    }
+    if (guideSetupComplete && !user?.identityVerified) {
+      navigation.navigate('KYCPrompt', { track: 'GUIDE' });
       return;
     }
     navigateContinueSetup(
@@ -3260,7 +3269,13 @@ export default function AppNavigator() {
             userName={firstName}
             userInitials={resolvedInitials}
             conversations={conversations}
-            tabBarItems={tabBarItems}
+            tabBarItems={
+              primaryIntent === 'HOST'
+                ? hostTabBarItems
+                : primaryIntent === 'GUIDE'
+                  ? guideTabBarItems
+                  : tabBarItems
+            }
             activeTabId="messages"
             emptyState={emptyStates.messages}
             onEmptyPrimaryAction={() => {
@@ -3303,23 +3318,23 @@ export default function AppNavigator() {
             );
           }
           return (
-            <ChatRoute
-              conversation={conversation}
-              currentUserId={user.userId}
-              onBack={() => navigation.goBack()}
-              onMessageSent={() => conversationsApi.refresh()}
-              onParticipantPress={() => {
-                const targetId =
-                  conversation.profileTargetId ?? conversation.participantId;
-                if (conversation.participantRole === 'host') {
-                  navigation.navigate('HostProfile', { hostId: targetId });
-                  return;
-                }
-                if (conversation.participantRole === 'guide') {
-                  navigation.navigate('GuideProfile', { guideId: targetId });
-                }
-              }}
-            />
+              <ChatRoute
+                conversation={conversation}
+                currentUserId={user.userId}
+                onBack={() => navigation.goBack()}
+                onMessageSent={() => conversationsApi.refresh()}
+                onParticipantPress={() => {
+                  const targetId =
+                    conversation.profileTargetId ?? conversation.participantId;
+                  if (conversation.participantRole === 'host') {
+                    navigation.navigate('HostProfile', { hostId: targetId });
+                    return;
+                  }
+                  if (conversation.participantRole === 'guide') {
+                    navigation.navigate('GuideProfile', { guideId: targetId });
+                  }
+                }}
+              />
           );
         }}
       </Stack.Screen>
@@ -3508,6 +3523,14 @@ export default function AppNavigator() {
                     await markNotificationRead(notification.id);
                     await refreshNotificationState();
                   }
+                  if (notification.type === 'KYC_APPROVED') {
+                    await refreshSession();
+                    Alert.alert(
+                      "You're verified",
+                      'NestBridge staff approved your identity. You can now host, guide, and accept bookings.',
+                    );
+                    return;
+                  }
                   if (notification.relatedUserId && isStaff) {
                     navigation.navigate('StaffUserDetail', {
                       userId: notification.relatedUserId,
@@ -3518,6 +3541,10 @@ export default function AppNavigator() {
                     openRelatedBooking(notification.relatedBookingId);
                   }
                 } catch {
+                  if (notification.type === 'KYC_APPROVED') {
+                    await refreshSession();
+                    return;
+                  }
                   if (notification.relatedUserId && isStaff) {
                     navigation.navigate('StaffUserDetail', {
                       userId: notification.relatedUserId,
@@ -3557,7 +3584,6 @@ export default function AppNavigator() {
             showExitPreview={Boolean(preview)}
             tabBarItems={profileTabItems}
             activeTabId=""
-            {...(isStaffShell ? {} : homeTabSosProps(navigation))}
             onTabPress={(tabId) =>
               routeTabPress(
                 navigation,
@@ -3698,7 +3724,6 @@ export default function AppNavigator() {
               hubItems={profileCulturalItems}
               tabBarItems={getTabBarForRole(homeRole)}
               activeTabId={isProvider ? 'home' : 'explore'}
-              {...homeTabSosProps(navigation)}
               onPrimaryActionPress={() => {
                 if (homeRole === 'STUDENT') {
                   navigation.navigate('MatchSearch');
@@ -4430,7 +4455,6 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentBookingsScreen
             {...bookingsTabProps}
-            {...homeTabSosProps(navigation)}
             onFilterChange={setBookingFilter}
             onBookingPress={(bookingId) => {
               const booking = bookings.find((entry) => entry.id === bookingId);
@@ -4459,13 +4483,13 @@ export default function AppNavigator() {
               }
               navigation.navigate('HostProfile', { hostId: booking.hostId });
             }}
-            payBlocked={!canBookHomestay && !canBookGuideSession}
+            payBlocked={false}
             payBlockedMessage={bookingGateCopy.pay}
             onContinueSetupPay={() => continueSeekerSetup(navigation)}
             payLoading={payLoading}
             payStatusLabel={payStatusLabel}
             onPayPress={(bookingId) => {
-              if ((!canBookHomestay && !canBookGuideSession) || payLoading) {
+              if (payLoading) {
                 return;
               }
               navigation.navigate('PaymentCheckout', { bookingId });
@@ -5207,12 +5231,28 @@ export default function AppNavigator() {
               onContinueSetup={() => continueHostSetup(navigation)}
               onBack={() => navigation.goBack()}
               onAccept={() => {
-                void acceptBooking(request.id).then(() => homeApi.refresh());
-                navigation.navigate('IncomingRequests');
+                void (async () => {
+                  try {
+                    await acceptBooking(request.id);
+                    homeApi.refresh();
+                    providerTab.refresh();
+                    navigation.navigate('IncomingRequests');
+                  } catch (error) {
+                    Alert.alert('Could not accept request', getApiErrorMessage(error));
+                  }
+                })();
               }}
               onDecline={() => {
-                void declineBooking(request.id).then(() => homeApi.refresh());
-                navigation.navigate('IncomingRequests');
+                void (async () => {
+                  try {
+                    await declineBooking(request.id);
+                    homeApi.refresh();
+                    providerTab.refresh();
+                    navigation.navigate('IncomingRequests');
+                  } catch (error) {
+                    Alert.alert('Could not decline request', getApiErrorMessage(error));
+                  }
+                })();
               }}
             />
           );
@@ -5239,12 +5279,28 @@ export default function AppNavigator() {
               onContinueSetup={() => continueGuideSetup(navigation)}
               onBack={() => navigation.goBack()}
               onAccept={() => {
-                void acceptBooking(request.id).then(() => homeApi.refresh());
-                navigation.navigate('IncomingSessionRequests');
+                void (async () => {
+                  try {
+                    await acceptBooking(request.id);
+                    homeApi.refresh();
+                    providerTab.refresh();
+                    navigation.navigate('IncomingSessionRequests');
+                  } catch (error) {
+                    Alert.alert('Could not accept session', getApiErrorMessage(error));
+                  }
+                })();
               }}
               onDecline={() => {
-                void declineBooking(request.id).then(() => homeApi.refresh());
-                navigation.navigate('IncomingSessionRequests');
+                void (async () => {
+                  try {
+                    await declineBooking(request.id);
+                    homeApi.refresh();
+                    providerTab.refresh();
+                    navigation.navigate('IncomingSessionRequests');
+                  } catch (error) {
+                    Alert.alert('Could not decline session', getApiErrorMessage(error));
+                  }
+                })();
               }}
             />
           );

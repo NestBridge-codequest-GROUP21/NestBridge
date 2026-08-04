@@ -59,6 +59,17 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
             @Param("bookingType") BookingType bookingType);
 
     @Query("""
+            SELECT b FROM Booking b WHERE b.hostOrGuideId = :hostOrGuideId
+            AND b.bookingType = :bookingType
+            AND b.status IN :statuses
+            ORDER BY b.createdAt DESC
+            """)
+    List<Booking> findByHostOrGuideIdAndBookingTypeAndStatusIn(
+            @Param("hostOrGuideId") UUID hostOrGuideId,
+            @Param("bookingType") BookingType bookingType,
+            @Param("statuses") List<BookingStatus> statuses);
+
+    @Query("""
             SELECT b FROM Booking b WHERE b.hostOrGuideId = :providerId
             AND b.bookingType = com.nestbridge.common.BookingType.HOST
             AND b.status IN (com.nestbridge.common.BookingStatus.ACCEPTED, com.nestbridge.common.BookingStatus.CONFIRMED, com.nestbridge.common.BookingStatus.CHECKED_IN)
