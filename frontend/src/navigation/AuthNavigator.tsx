@@ -5,7 +5,6 @@ import Constants from 'expo-constants';
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
-import StaffSignInScreen from '../screens/auth/StaffSignInScreen';
 import VerifyEmailScreen, {
   openNestBridgeSupportEmail,
 } from '../screens/auth/VerifyEmailScreen';
@@ -48,7 +47,7 @@ export default function AuthNavigator({
   initialResetToken,
   onResetTokenConsumed,
 }: AuthNavigatorProps) {
-  const { register, signIn, signOut } = useAuth();
+  const { register, signIn } = useAuth();
   const { applyDevPreset, setPrimaryIntent } = useAccountProfile();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -57,8 +56,6 @@ export default function AuthNavigator({
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [loginError, setLoginError] = useState('');
-  const [staffLoginError, setStaffLoginError] = useState('');
-  const [staffLoginBusy, setStaffLoginBusy] = useState(false);
   const [registerError, setRegisterError] = useState('');
   const [demoLoginBusy, setDemoLoginBusy] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState('');
@@ -125,77 +122,6 @@ export default function AuthNavigator({
             }}
             onCreateAccount={() => navigation.navigate('Register')}
             onSignIn={() => navigation.navigate('Login')}
-            onStaffSignIn={() => {
-              setStaffLoginError('');
-              navigation.navigate('StaffSignIn');
-            }}
-          />
-        )}
-      </Stack.Screen>
-
-      <Stack.Screen name="StaffSignIn">
-        {({ navigation }) => (
-          <StaffSignInScreen
-            email={email}
-            password={password}
-            keepSignedIn={keepSignedIn}
-            errorMessage={staffLoginError}
-            submitting={staffLoginBusy}
-            onEmailChange={(value) => {
-              setEmail(value);
-              setStaffLoginError('');
-            }}
-            onPasswordChange={setPassword}
-            onToggleKeepSignedIn={() => setKeepSignedIn((value) => !value)}
-            onForgotPasswordPress={() => {
-              setStaffLoginError('');
-              setForgotError('');
-              setForgotStatus('');
-              navigation.navigate('ForgotPassword');
-            }}
-            onSubmit={async () => {
-              setStaffLoginError('');
-              const normalizedEmail = normalizeLoginEmail(email);
-              if (!normalizedEmail) {
-                setStaffLoginError('Enter your staff email address.');
-                return;
-              }
-              if (!isCompleteEmail(normalizedEmail)) {
-                setStaffLoginError(
-                  'Enter your full email (e.g. bsbhackman@gmail.com).',
-                );
-                return;
-              }
-              if (!password) {
-                setStaffLoginError('Enter your password.');
-                return;
-              }
-              setEmail(normalizedEmail);
-              setStaffLoginBusy(true);
-              try {
-                const signedIn = await signIn(normalizedEmail, password, keepSignedIn);
-                if (!signedIn.isStaff) {
-                  await signOut();
-                  setStaffLoginError(
-                    'This portal is for NestBridge staff only. Use the regular Sign in for student, host, guide, or tourist accounts.',
-                  );
-                }
-              } catch (error) {
-                const message =
-                  error instanceof Error ? error.message : 'Email or password is incorrect.';
-                setStaffLoginError(
-                  message.includes('Invalid email or password')
-                    ? 'Incorrect email or password. Use your full personal Gmail. If you have never registered on NestBridge, Register once with that Gmail (staff access is automatic for Group 21), or try password “password” if your account was just seeded. Forgot password needs SendGrid email delivery.'
-                    : message,
-                );
-              } finally {
-                setStaffLoginBusy(false);
-              }
-            }}
-            onBack={() => {
-              setStaffLoginError('');
-              navigation.goBack();
-            }}
           />
         )}
       </Stack.Screen>
@@ -409,10 +335,6 @@ export default function AuthNavigator({
                     'Password updated',
                     'Sign in with your new password.',
                     [
-                      {
-                        text: 'Staff sign-in',
-                        onPress: () => navigation.navigate('StaffSignIn'),
-                      },
                       {
                         text: 'Sign in',
                         onPress: () => navigation.navigate('Login'),
