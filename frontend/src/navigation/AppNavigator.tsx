@@ -3540,13 +3540,6 @@ export default function AppNavigator() {
             onSignOut={() => {
               void signOut();
             }}
-            onDevTestingPress={() => navigation.navigate('DevTesting')}
-            onResetDemo={() => {
-              void (async () => {
-                await resetAccountProfile();
-                await signOut();
-              })();
-            }}
           />
           );
         }}

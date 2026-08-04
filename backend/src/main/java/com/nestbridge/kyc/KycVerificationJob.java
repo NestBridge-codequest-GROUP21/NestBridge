@@ -45,6 +45,23 @@ public class KycVerificationJob {
     @Column(name = "rejection_reason")
     private String rejectionReason;
 
+    /** Public URL when uploaded to object storage. */
+    @Column(name = "document_photo_url")
+    private String documentPhotoUrl;
+
+    @Column(name = "document_photo_content_type", length = 64)
+    private String documentPhotoContentType;
+
+    /** Inline bytes when S3 is not configured (Railway default). */
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "document_photo_bytes")
+    private byte[] documentPhotoBytes;
+
+    /** True when a review photo is stored (avoids loading BYTEA in list queries). */
+    @Column(name = "has_document_photo", nullable = false)
+    @Builder.Default
+    private boolean hasDocumentPhoto = false;
+
     @Version
     @Column(name = "version", nullable = false)
     private Long version;

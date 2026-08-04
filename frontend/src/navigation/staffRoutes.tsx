@@ -16,6 +16,7 @@ import {
   getAdminOverview,
   getAdminUser,
   getAdminUserActivity,
+  getAdminKycDocumentDataUri,
   getApiErrorMessage,
   listAdminListings,
   listAdminUsers,
@@ -326,25 +327,59 @@ export function StaffUserDetailRoute({
 }: StaffUserDetailRouteProps) {
   const [user, setUser] = useState<AdminUserDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [kycDocumentUri, setKycDocumentUri] = useState<string | null>(null);
+  const [kycDocumentLoading, setKycDocumentLoading] = useState(false);
+  const [kycDocumentError, setKycDocumentError] = useState<string | null>(null);
 
-  const loadUser = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      setUser(await getAdminUser(userId));
-    } catch (error) {
-      setUser(null);
-      setErrorMessage(getApiErrorMessage(error));
-    } finally {
-      setIsLoading(false);
+  const loadKycDocument = useCallback(async (detail: AdminUserDetail | null) => {
+    if (!detail?.hasKycDocument) {
+      setKycDocumentUri(null);
+      setKycDocumentError(null);
+      setKycDocumentLoading(false);
+      return;
     }
-  }, [userId]);
+    setKycDocumentLoading(true);
+    setKycDocumentError(null);
+    try {
+      setKycDocumentUri(await getAdminKycDocumentDataUri(detail.userId));
+    } catch (error) {
+      setKycDocumentUri(null);
+      setKycDocumentError(getApiErrorMessage(error));
+    } finally {
+      setKycDocumentLoading(false);
+    }
+  }, []);
+
+  const loadUser = useCallback(
+    async (mode: 'initial' | 'refresh' = 'initial') => {
+      if (mode === 'refresh') {
+        setRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+      setErrorMessage(null);
+      try {
+        const detail = await getAdminUser(userId);
+        setUser(detail);
+        await loadKycDocument(detail);
+      } catch (error) {
+        setUser(null);
+        setKycDocumentUri(null);
+        setErrorMessage(getApiErrorMessage(error));
+      } finally {
+        setIsLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [loadKycDocument, userId],
+  );
 
   useEffect(() => {
-    void loadUser();
+    void loadUser('initial');
   }, [loadUser]);
 
   const runAction = useCallback(
@@ -355,6 +390,7 @@ export function StaffUserDetailRoute({
       try {
         const updated = await action();
         setUser(updated);
+        await loadKycDocument(updated);
         setActionMessage(successMessage);
       } catch (error) {
         setErrorMessage(getApiErrorMessage(error));
@@ -362,7 +398,7 @@ export function StaffUserDetailRoute({
         setActionBusy(false);
       }
     },
-    [],
+    [loadKycDocument],
   );
 
   const runListingAction = useCallback(
@@ -387,9 +423,13 @@ export function StaffUserDetailRoute({
     <StaffUserDetailScreen
       user={user}
       isLoading={isLoading}
+      refreshing={refreshing}
       errorMessage={errorMessage}
       actionBusy={actionBusy}
       actionMessage={actionMessage}
+      kycDocumentUri={kycDocumentUri}
+      kycDocumentLoading={kycDocumentLoading}
+      kycDocumentError={kycDocumentError}
       onSuspend={() => {
         void runAction(
           () => setAdminUserSuspended(userId, true),
@@ -455,6 +495,9 @@ export function StaffUserDetailRoute({
           onViewActivity(user.userId, user.fullName);
         }
       }}
+      onRefresh={() => {
+        void loadUser('refresh');
+      }}
       onBack={onBack}
     />
   );
@@ -477,10 +520,15 @@ export function StaffPendingKycRoute({
 }: StaffPendingKycRouteProps) {
   const [items, setItems] = useState<AdminPendingKyc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const loadPending = useCallback(async () => {
-    setIsLoading(true);
+  const loadPending = useCallback(async (mode: 'initial' | 'refresh' = 'initial') => {
+    if (mode === 'refresh') {
+      setRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     setErrorMessage(null);
     try {
       setItems(await listPendingKyc());
@@ -489,22 +537,24 @@ export function StaffPendingKycRoute({
       setErrorMessage(getApiErrorMessage(error));
     } finally {
       setIsLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadPending();
+    void loadPending('initial');
   }, [loadPending]);
 
   return (
     <StaffPendingKycScreen
       items={items}
       isLoading={isLoading}
+      refreshing={refreshing}
       errorMessage={errorMessage}
       tabBarItems={tabBarItems}
       onSelectUser={onSelectUser}
       onRefresh={() => {
-        void loadPending();
+        void loadPending('refresh');
       }}
       onTabPress={onTabPress}
       onBack={onBack}

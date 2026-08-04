@@ -12,10 +12,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -25,8 +27,10 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -55,8 +59,14 @@ public class SmileIdentityService {
     @Value("${smile.environment:sandbox}")
     private String environment;
 
+    private static final long MAX_DOCUMENT_BYTES = 5L * 1024 * 1024;
+    private static final Set<String> ALLOWED_DOCUMENT_TYPES = Set.of(
+            "image/jpeg",
+            "image/jpg",
+            "image/png");
+
     @Transactional
-    public KycSessionResponse createSession(UUID userId) {
+    public KycSessionResponse createSession(UUID userId, MultipartFile document) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
 
@@ -67,21 +77,32 @@ public class SmileIdentityService {
         if (!smileEnabled || partnerId == null || partnerId.isBlank()
                 || apiKey == null || apiKey.isBlank()) {
             log.warn("Smile Identity not configured — queueing manual KYC review for user {}", userId);
+            if (document == null || document.isEmpty()) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Please upload a clear photo of your face or ID for NestBridge staff to review.");
+            }
             KycVerificationJob job;
+            boolean created = false;
             if (existingPending.isPresent()) {
                 job = existingPending.get();
             } else {
-                job = jobRepository.save(KycVerificationJob.builder()
+                job = KycVerificationJob.builder()
                         .userId(userId)
                         .provider("MANUAL")
                         .status("PENDING")
-                        .build());
+                        .build();
+                created = true;
+            }
+            storeDocumentOnJob(job, document);
+            job = jobRepository.save(job);
+            if (created) {
                 staffNotificationService.onManualKycPending(user);
             }
             return KycSessionResponse.builder()
                     .enabled(false)
                     .jobId(job.getJobId().toString())
-                    .message("Your verification is pending manual review")
+                    .message("Photo received — NestBridge staff will review your verification.")
                     .build();
         }
 
@@ -310,5 +331,54 @@ public class SmileIdentityService {
         String message = timestamp + partnerId + "sid_request";
         byte[] hash = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
         return Base64.getEncoder().encodeToString(hash);
+    }
+
+    private void storeDocumentOnJob(KycVerificationJob job, MultipartFile document) {
+        String contentType = document.getContentType();
+        if (contentType == null || contentType.isBlank()) {
+            String name = document.getOriginalFilename() == null
+                    ? ""
+                    : document.getOriginalFilename().toLowerCase(Locale.ROOT);
+            if (name.endsWith(".png")) {
+                contentType = "image/png";
+            } else if (name.endsWith(".jpg") || name.endsWith(".jpeg")) {
+                contentType = "image/jpeg";
+            }
+        }
+        String normalized = contentType == null ? "" : contentType.toLowerCase(Locale.ROOT).trim();
+        if ("image/jpg".equals(normalized)) {
+            normalized = "image/jpeg";
+        }
+        if (!ALLOWED_DOCUMENT_TYPES.contains(normalized)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Please upload a JPEG or PNG photo.");
+        }
+        if (document.getSize() > MAX_DOCUMENT_BYTES) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Photo must be under 5 MB.");
+        }
+        try {
+            byte[] bytes = document.getBytes();
+            if (bytes.length == 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Please upload a clear photo of your face or ID for NestBridge staff to review.");
+            }
+            if (bytes.length > MAX_DOCUMENT_BYTES) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Photo must be under 5 MB.");
+            }
+            job.setDocumentPhotoContentType(normalized);
+            job.setDocumentPhotoBytes(bytes);
+            job.setDocumentPhotoUrl(null);
+            job.setHasDocumentPhoto(true);
+        } catch (IOException e) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Could not read the uploaded photo. Please try again.");
+        }
     }
 }

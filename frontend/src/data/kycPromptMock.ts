@@ -11,27 +11,27 @@ export const HOST_KYC_PROMPT: KYCPromptData = {
   roleLabel: 'Host Family',
   message: 'Identity check required before you go live.',
   explanation:
-    'NestBridge staff must verify your identity before you can accept stays or earn. Browse and finish your listing anytime.',
+    'Upload a clear photo of your face or government ID. NestBridge staff use it with your profile (name, bio, and about) to verify you.',
   note:
-    'Tap Verify now to submit for staff review. You can keep browsing until you are approved.',
+    'After staff approves you, pull down on Verification status (or reopen the app) if booking still looks locked. You can keep browsing meanwhile.',
 };
 
 export const GUIDE_KYC_PROMPT: KYCPromptData = {
   roleLabel: 'Local Guide',
   message: 'Identity check required before you go live.',
   explanation:
-    'NestBridge staff must verify your identity before you can accept sessions or earn. Browse and finish your listing anytime.',
+    'Upload a clear photo of your face or government ID. NestBridge staff use it with your profile (name, bio, and about) to verify you.',
   note:
-    'Tap Verify now to submit for staff review. You can keep browsing until you are approved.',
+    'After staff approves you, pull down on Verification status (or reopen the app) if sessions still look locked. You can keep browsing meanwhile.',
 };
 
 export const SEEKER_KYC_PROMPT: KYCPromptData = {
   roleLabel: 'NestBridge member',
   message: 'Verify now, or skip and browse.',
   explanation:
-    'Everyone goes through identity verification. NestBridge staff approve accounts before you can book, pay, or chat. You can submit now or keep browsing and verify later.',
+    'Upload a clear photo of your face or ID so NestBridge staff can approve your identity before you book, pay, or chat.',
   note:
-    'Until staff approves you, explore stays open — booking, paying, and messaging stay locked.',
+    'Until staff approves you, explore stays open. After approval, pull down on Verification status if core actions still look locked.',
 };
 
 export function kycPromptForTrack(track: KycPromptTrack): KYCPromptData {

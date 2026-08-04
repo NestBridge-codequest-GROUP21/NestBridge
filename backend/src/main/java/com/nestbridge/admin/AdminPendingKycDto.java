@@ -16,5 +16,6 @@ public class AdminPendingKycDto {
     private String email;
     private PrimaryIntent primaryIntent;
     private String provider;
+    private boolean hasKycDocument;
     private OffsetDateTime createdAt;
 }

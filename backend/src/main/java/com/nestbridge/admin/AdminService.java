@@ -11,6 +11,7 @@ import com.nestbridge.host.HostProfile;
 import com.nestbridge.host.HostProfileRepository;
 import com.nestbridge.kyc.KycVerificationJob;
 import com.nestbridge.kyc.KycVerificationJobRepository;
+import com.nestbridge.kyc.PendingKycJobSummary;
 import com.nestbridge.notification.StaffNotificationService;
 import com.nestbridge.user.ProviderSetup;
 import com.nestbridge.user.ProviderSetupRepository;
@@ -201,15 +202,17 @@ public class AdminService {
         int pageSize = limit == null
                 ? LIST_DEFAULT_LIMIT
                 : Math.min(Math.max(limit, 1), LIST_MAX_LIMIT);
-        List<KycVerificationJob> jobs = kycVerificationJobRepository
-                .findByStatusOrderByCreatedAtAsc("PENDING", PageRequest.of(0, pageSize));
-        Set<UUID> userIds = jobs.stream().map(KycVerificationJob::getUserId).collect(Collectors.toSet());
+        List<PendingKycJobSummary> jobs = kycVerificationJobRepository
+                .findPendingSummaries("PENDING", PageRequest.of(0, pageSize));
+        Set<UUID> userIds = jobs.stream().map(PendingKycJobSummary::getUserId).collect(Collectors.toSet());
         Map<UUID, User> users = userIds.isEmpty()
                 ? Map.of()
                 : userRepository.findAllById(userIds).stream()
                         .collect(Collectors.toMap(User::getUserId, u -> u, (a, b) -> a, HashMap::new));
         return jobs.stream().map(job -> {
             User user = users.get(job.getUserId());
+            boolean hasDoc = Boolean.TRUE.equals(job.getHasDocumentPhoto())
+                    || (job.getDocumentPhotoUrl() != null && !job.getDocumentPhotoUrl().isBlank());
             return AdminPendingKycDto.builder()
                     .jobId(job.getJobId())
                     .userId(job.getUserId())
@@ -217,9 +220,32 @@ public class AdminService {
                     .email(user != null ? user.getEmail() : null)
                     .primaryIntent(user != null ? user.getPrimaryIntent() : null)
                     .provider(job.getProvider())
+                    .hasKycDocument(hasDoc)
                     .createdAt(job.getCreatedAt())
                     .build();
         }).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public AdminKycDocument getKycDocument(UUID actorId, UUID userId) {
+        staffGuard.requireStaff(actorId);
+        requireUser(userId);
+        KycVerificationJob job = kycVerificationJobRepository
+                .findTopByUserIdOrderByCreatedAtDesc(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No KYC submission found for this user."));
+        byte[] bytes = job.getDocumentPhotoBytes();
+        if (bytes == null || bytes.length == 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No KYC photo uploaded for this user.");
+        }
+        String contentType = job.getDocumentPhotoContentType();
+        if (contentType == null || contentType.isBlank()) {
+            contentType = "image/jpeg";
+        }
+        return new AdminKycDocument(bytes, contentType);
     }
 
     @Transactional(readOnly = true)
@@ -508,6 +534,10 @@ public class AdminService {
                 .filter(j -> "REJECTED".equalsIgnoreCase(j.getStatus()))
                 .map(KycVerificationJob::getRejectionReason)
                 .orElse(null);
+        boolean hasDocument = latestJob
+                .map(job -> job.isHasDocumentPhoto()
+                        || (job.getDocumentPhotoUrl() != null && !job.getDocumentPhotoUrl().isBlank()))
+                .orElse(false);
 
         return AdminUserDetailDto.builder()
                 .userId(user.getUserId())
@@ -522,6 +552,7 @@ public class AdminService {
                 .nationality(user.getNationality())
                 .kycStatus(kycStatus)
                 .kycRejectionReason(rejectionReason)
+                .hasKycDocument(hasDocument)
                 .seekerSetupStatus(seekerStatus)
                 .listings(listings)
                 .createdAt(user.getCreatedAt())

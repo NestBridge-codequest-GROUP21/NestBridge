@@ -4,6 +4,8 @@ import com.nestbridge.common.ApiResponse;
 import com.nestbridge.common.PrimaryIntent;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -81,6 +83,24 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(
                 "User retrieved",
                 adminService.getUser(actorId, id)));
+    }
+
+    @GetMapping("/users/{id}/kyc-document")
+    public ResponseEntity<byte[]> getKycDocument(
+            Authentication authentication,
+            @PathVariable UUID id) {
+        UUID actorId = (UUID) authentication.getPrincipal();
+        AdminKycDocument document = adminService.getKycDocument(actorId, id);
+        MediaType mediaType;
+        try {
+            mediaType = MediaType.parseMediaType(document.contentType());
+        } catch (Exception e) {
+            mediaType = MediaType.IMAGE_JPEG;
+        }
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .body(document.bytes());
     }
 
     @PatchMapping("/users/{id}/suspend")

@@ -45,8 +45,6 @@ export interface ProfileScreenProps {
   onRatingsPress?: () => void;
   onVerificationStatusPress?: () => void;
   onSignOut?: () => void;
-  onResetDemo?: () => void;
-  onDevTestingPress?: () => void;
   showStaffTools?: boolean;
   onStaffToolsPress?: () => void;
   showReturnToOps?: boolean;
@@ -77,8 +75,6 @@ export default function ProfileScreen({
   onRatingsPress,
   onVerificationStatusPress,
   onSignOut,
-  onResetDemo,
-  onDevTestingPress,
   showStaffTools = false,
   onStaffToolsPress,
   showReturnToOps = false,
@@ -269,29 +265,6 @@ export default function ProfileScreen({
           <Text style={styles.aboutBody}>{profileCopy.aboutAccount}</Text>
           <Text style={styles.aboutCopyright}>{profileCopy.copyright}</Text>
         </Card>
-
-        {__DEV__ ? (
-          <>
-            <SectionHeader title="Developer" />
-            <Card padding="none" style={styles.groupCard}>
-              <ListRow
-                title="Developer testing"
-                subtitle="Open app flows without finishing onboarding"
-                iconName="construct-outline"
-                onPress={onDevTestingPress}
-                style={styles.listRowPad}
-              />
-              <ListRow
-                title="Reset demo profile"
-                subtitle="Clear onboarding progress on this device"
-                iconName="refresh-outline"
-                onPress={onResetDemo}
-                style={styles.listRowPad}
-                bordered={false}
-              />
-            </Card>
-          </>
-        ) : null}
 
         <View style={styles.signOutWrap}>
           <SecondaryButton label="Sign out" tone="danger" onPress={onSignOut} />

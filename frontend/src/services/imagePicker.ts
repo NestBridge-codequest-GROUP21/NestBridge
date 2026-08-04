@@ -119,3 +119,12 @@ export async function pickListingImage(): Promise<PickedImage | null> {
       'Allow photo library access to add listing photos, or skip for now.',
   });
 }
+
+/** Face or ID photo for manual NestBridge staff KYC review. */
+export async function pickKycDocumentImage(): Promise<PickedImage | null> {
+  return pickImage({
+    aspect: [3, 4],
+    permissionMessage:
+      'Allow photo library access so NestBridge staff can review your identity photo.',
+  });
+}

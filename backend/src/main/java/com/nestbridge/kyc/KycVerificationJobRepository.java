@@ -21,6 +21,21 @@ public interface KycVerificationJobRepository extends JpaRepository<KycVerificat
 
     List<KycVerificationJob> findByStatusOrderByCreatedAtAsc(String status, Pageable pageable);
 
+    @Query("""
+            SELECT j.jobId AS jobId,
+                   j.userId AS userId,
+                   j.provider AS provider,
+                   j.createdAt AS createdAt,
+                   j.hasDocumentPhoto AS hasDocumentPhoto,
+                   j.documentPhotoUrl AS documentPhotoUrl
+            FROM KycVerificationJob j
+            WHERE j.status = :status
+            ORDER BY j.createdAt ASC
+            """)
+    List<PendingKycJobSummary> findPendingSummaries(
+            @Param("status") String status,
+            Pageable pageable);
+
     long countByStatus(String status);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)

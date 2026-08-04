@@ -1,6 +1,12 @@
 import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -26,9 +32,11 @@ export interface VerificationStatusScreenProps {
   status: VerificationUiStatus;
   rejectionReason?: string | null;
   loading?: boolean;
+  refreshing?: boolean;
   error?: string | null;
   onBack?: () => void;
   onVerifyNow?: () => void;
+  onRefresh?: () => void;
   onRetry?: () => void;
 }
 
@@ -42,13 +50,13 @@ type StatusCopy = {
 const STATUS_COPY: Record<VerificationUiStatus, StatusCopy> = {
   none: {
     title: 'Not started',
-    body: 'You have not submitted identity verification yet. Verify to unlock booking, messaging, and hosting.',
+    body: 'Upload a face or ID photo for NestBridge staff to review. Verification unlocks booking, messaging, and hosting.',
     iconName: 'shield-outline',
     tone: 'info',
   },
   pending: {
     title: 'Under review',
-    body: 'Your verification is with NestBridge staff. You can keep browsing — booking and messaging unlock after approval.',
+    body: 'Your photo and profile are with NestBridge staff. Pull down to refresh after they approve you — booking and messaging unlock then.',
     iconName: 'time-outline',
     tone: 'warning',
   },
@@ -70,9 +78,11 @@ export default function VerificationStatusScreen({
   status,
   rejectionReason,
   loading = false,
+  refreshing = false,
   error,
   onBack,
   onVerifyNow,
+  onRefresh,
   onRetry,
 }: VerificationStatusScreenProps) {
   const styles = useThemedStyles(createStyles);
@@ -108,10 +118,21 @@ export default function VerificationStatusScreen({
         compact
         onBack={onBack}
       />
-      <ScreenScroll>
+      <ScreenScroll
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.teal}
+              colors={[colors.teal]}
+            />
+          ) : undefined
+        }
+      >
         {error ? <InlineBanner tone="error" message={error} /> : null}
 
-        {loading ? (
+        {loading && !refreshing ? (
           <View style={styles.loadingWrap} accessibilityRole="progressbar" accessibilityLabel="Loading verification status">
             <ActivityIndicator color={colors.teal} />
             <Text style={styles.muted}>Checking your verification…</Text>
@@ -131,6 +152,9 @@ export default function VerificationStatusScreen({
                 <Text style={styles.reasonLabel}>Reason from staff</Text>
                 <Text style={styles.reasonText}>{rejectionReason}</Text>
               </View>
+            ) : null}
+            {onRefresh ? (
+              <Text style={styles.hint}>Swipe down anytime to refresh status.</Text>
             ) : null}
           </Card>
         )}
@@ -217,6 +241,14 @@ function createStyles({ colors }: AppTheme) {
       fontSize: fontSizes.body,
       color: colors.textPrimary,
       lineHeight: lineHeights.body,
+    },
+    hint: {
+      marginTop: spacing.md,
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.textTertiary,
+      textAlign: 'center',
+      lineHeight: lineHeights.caption,
     },
     action: {
       marginBottom: spacing.sm,

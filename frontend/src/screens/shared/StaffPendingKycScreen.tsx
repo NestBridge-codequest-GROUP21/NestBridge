@@ -1,6 +1,13 @@
 import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -31,6 +38,7 @@ function initialsFromName(fullName: string): string {
 export interface StaffPendingKycScreenProps {
   items: AdminPendingKyc[];
   isLoading?: boolean;
+  refreshing?: boolean;
   errorMessage?: string | null;
   tabBarItems?: TabBarItem[];
   onSelectUser?: (userId: string) => void;
@@ -43,6 +51,7 @@ export interface StaffPendingKycScreenProps {
 export default function StaffPendingKycScreen({
   items,
   isLoading = false,
+  refreshing = false,
   errorMessage,
   tabBarItems,
   onSelectUser,
@@ -63,7 +72,18 @@ export default function StaffPendingKycScreen({
         compact
         onBack={onBack}
       />
-      <ScreenScroll>
+      <ScreenScroll
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.teal}
+              colors={[colors.teal]}
+            />
+          ) : undefined
+        }
+      >
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
 
         {isLoading && items.length === 0 ? (
@@ -112,7 +132,14 @@ export default function StaffPendingKycScreen({
                         'Pending review'}
                     </Text>
                   </View>
-                  <StatusBadge label="Pending" tone="warning" />
+                  <View style={styles.badges}>
+                    {item.hasKycDocument ? (
+                      <StatusBadge label="Photo" tone="info" />
+                    ) : (
+                      <StatusBadge label="No photo" tone="neutral" />
+                    )}
+                    <StatusBadge label="Pending" tone="warning" />
+                  </View>
                 </Pressable>
               );
             })}
@@ -178,6 +205,10 @@ function createStyles({ colors }: AppTheme) {
     },
     rowText: {
       flex: 1,
+      gap: spacing.xs,
+    },
+    badges: {
+      alignItems: 'flex-end',
       gap: spacing.xs,
     },
     name: {

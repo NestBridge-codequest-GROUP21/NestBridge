@@ -10,6 +10,9 @@ import {
   Platform,
   Alert,
   KeyboardAvoidingView,
+  Image,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -33,14 +36,19 @@ import {
   touchTarget,
   controlHeights,
   lineHeights,
+  avatarSizes,
 } from '../../constants/theme';
 
 export interface StaffUserDetailScreenProps {
   user: AdminUserDetail | null;
   isLoading?: boolean;
+  refreshing?: boolean;
   errorMessage?: string | null;
   actionBusy?: boolean;
   actionMessage?: string | null;
+  kycDocumentUri?: string | null;
+  kycDocumentLoading?: boolean;
+  kycDocumentError?: string | null;
   onSuspend?: () => void;
   onUnsuspend?: () => void;
   onForceVerify?: () => void;
@@ -54,6 +62,7 @@ export interface StaffUserDetailScreenProps {
   onHideListing?: (listingId: string) => void;
   onRestoreListing?: (listingId: string) => void;
   onViewActivity?: () => void;
+  onRefresh?: () => void;
   onBack?: () => void;
 }
 
@@ -71,9 +80,13 @@ function FactRow({ label, value }: { label: string; value: string }) {
 export default function StaffUserDetailScreen({
   user,
   isLoading = false,
+  refreshing = false,
   errorMessage,
   actionBusy = false,
   actionMessage,
+  kycDocumentUri,
+  kycDocumentLoading = false,
+  kycDocumentError,
   onSuspend,
   onUnsuspend,
   onForceVerify,
@@ -86,6 +99,7 @@ export default function StaffUserDetailScreen({
   onHideListing,
   onRestoreListing,
   onViewActivity,
+  onRefresh,
   onBack,
 }: StaffUserDetailScreenProps) {
   const styles = useThemedStyles(createStyles);
@@ -136,8 +150,19 @@ export default function StaffUserDetailScreen({
         compact
         onBack={onBack}
       />
-      <ScreenScroll>
-        {isLoading ? <SkeletonLoader style={styles.loader} lines={4} /> : null}
+      <ScreenScroll
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.teal}
+              colors={[colors.teal]}
+            />
+          ) : undefined
+        }
+      >
+        {isLoading && !refreshing ? <SkeletonLoader style={styles.loader} lines={4} /> : null}
 
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
         {actionMessage ? <InlineBanner tone="info" message={actionMessage} /> : null}
@@ -150,7 +175,7 @@ export default function StaffUserDetailScreen({
           />
         ) : null}
 
-        {user && !isLoading ? (
+        {user && !(isLoading && !refreshing) ? (
           <>
             <View style={styles.badgeRow}>
               <StatusBadge
@@ -165,7 +190,38 @@ export default function StaffUserDetailScreen({
                 <StatusBadge label="Identity locked" tone="info" />
               ) : null}
               {user.staff ? <StatusBadge label="Staff" tone="info" /> : null}
+              {user.hasKycDocument ? (
+                <StatusBadge label="KYC photo" tone="info" />
+              ) : null}
             </View>
+
+            <SectionHeader title="KYC photo" />
+            <Card style={styles.card} padding="lg">
+              {kycDocumentLoading ? (
+                <View style={styles.kycLoading}>
+                  <ActivityIndicator color={colors.teal} />
+                  <Text style={styles.emptyText}>Loading identity photo…</Text>
+                </View>
+              ) : null}
+              {kycDocumentError ? (
+                <InlineBanner tone="error" message={kycDocumentError} />
+              ) : null}
+              {!kycDocumentLoading && kycDocumentUri ? (
+                <Image
+                  source={{ uri: kycDocumentUri }}
+                  style={styles.kycPhoto}
+                  resizeMode="contain"
+                  accessibilityLabel="Submitted KYC identity photo"
+                />
+              ) : null}
+              {!kycDocumentLoading && !kycDocumentUri && !kycDocumentError ? (
+                <Text style={styles.emptyText}>
+                  {user.hasKycDocument
+                    ? 'Photo flagged on file, but it could not be displayed.'
+                    : 'No identity photo uploaded yet.'}
+                </Text>
+              ) : null}
+            </Card>
 
             <SectionHeader title="Account basics" />
             <Card style={styles.card} padding="lg">
@@ -174,6 +230,7 @@ export default function StaffUserDetailScreen({
                 label="Identity"
                 value={user.identityVerified ? 'Verified' : 'Not verified'}
               />
+              <FactRow label="KYC status" value={user.kycStatus ?? 'none'} />
               <FactRow
                 label="Identity lock"
                 value={user.identityLocked ? 'Locked' : 'Unlocked'}
@@ -409,6 +466,17 @@ function createStyles({ colors, overlays }: AppTheme) {
   },
   card: {
     marginBottom: spacing.lg,
+  },
+  kycLoading: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+  },
+  kycPhoto: {
+    width: '100%',
+    height: avatarSizes.xl * 4,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.warmCream,
   },
   factRow: {
     flexDirection: 'row',

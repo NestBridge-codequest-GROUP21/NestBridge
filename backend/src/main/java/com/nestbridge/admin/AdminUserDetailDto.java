@@ -24,6 +24,7 @@ public class AdminUserDetailDto {
     private String nationality;
     private String kycStatus;
     private String kycRejectionReason;
+    private boolean hasKycDocument;
     private ProfileStatus seekerSetupStatus;
     private List<AdminListingStatusDto> listings;
     private LocalDateTime createdAt;

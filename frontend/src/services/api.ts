@@ -72,6 +72,7 @@ export interface AdminUserDetail {
   nationality?: string | null;
   kycStatus?: string | null;
   kycRejectionReason?: string | null;
+  hasKycDocument?: boolean;
   seekerSetupStatus?: string | null;
   listings: AdminListingStatus[];
   createdAt?: string | null;
@@ -104,6 +105,7 @@ export interface AdminPendingKyc {
   email: string;
   primaryIntent?: string | null;
   provider?: string | null;
+  hasKycDocument?: boolean;
   createdAt?: string | null;
 }
 
@@ -484,6 +486,14 @@ api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   const session = await loadSession();
   if (session?.token && config.headers) {
     config.headers.Authorization = `Bearer ${session.token}`;
+  }
+  // Let the runtime set multipart boundaries when uploading FormData.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData && config.headers) {
+    if (typeof config.headers.delete === 'function') {
+      config.headers.delete('Content-Type');
+    } else {
+      delete (config.headers as { 'Content-Type'?: string })['Content-Type'];
+    }
   }
   return config;
 });
@@ -1238,9 +1248,69 @@ export interface KycSessionResult {
   message?: string;
 }
 
-export async function createKycSession(): Promise<KycSessionResult> {
-  const { data } = await api.post<ApiResponse<KycSessionResult>>('/api/kyc/session');
+export type KycDocumentUpload = {
+  uri: string;
+  mimeType?: string;
+  fileName?: string;
+};
+
+export async function createKycSession(
+  document?: KycDocumentUpload | null,
+): Promise<KycSessionResult> {
+  if (document?.uri) {
+    const mimeType = document.mimeType?.trim() || 'image/jpeg';
+    const lower = mimeType.toLowerCase();
+    const extension = lower.includes('png') ? 'png' : 'jpg';
+    const form = new FormData();
+    form.append('document', {
+      uri: document.uri,
+      name: document.fileName ?? `kyc-document.${extension}`,
+      type: mimeType,
+    } as unknown as Blob);
+    const { data } = await api.post<ApiResponse<KycSessionResult>>(
+      '/api/kyc/session',
+      form,
+      { timeout: 45000 },
+    );
+    return unwrap({ data });
+  }
+  const { data } = await api.post<ApiResponse<KycSessionResult>>(
+    '/api/kyc/session',
+    {},
+    { headers: { 'Content-Type': 'application/json' } },
+  );
   return unwrap({ data });
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let output = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i] ?? 0;
+    const b = bytes[i + 1] ?? 0;
+    const c = bytes[i + 2] ?? 0;
+    const triplet = (a << 16) | (b << 8) | c;
+    output += alphabet[(triplet >> 18) & 63];
+    output += alphabet[(triplet >> 12) & 63];
+    output += i + 1 < bytes.length ? alphabet[(triplet >> 6) & 63] : '=';
+    output += i + 2 < bytes.length ? alphabet[triplet & 63] : '=';
+  }
+  return output;
+}
+
+/** Staff-only: load KYC review photo as a data URI for Image display. */
+export async function getAdminKycDocumentDataUri(userId: string): Promise<string> {
+  const response = await api.get<ArrayBuffer>(`/api/admin/users/${userId}/kyc-document`, {
+    responseType: 'arraybuffer',
+    timeout: 45000,
+  });
+  const contentTypeHeader = response.headers?.['content-type'] ?? response.headers?.['Content-Type'];
+  const contentType =
+    typeof contentTypeHeader === 'string' && contentTypeHeader.trim()
+      ? contentTypeHeader.split(';')[0].trim()
+      : 'image/jpeg';
+  const bytes = new Uint8Array(response.data);
+  return `data:${contentType};base64,${bytesToBase64(bytes)}`;
 }
 
 export async function registerDeviceToken(
@@ -1523,26 +1593,52 @@ export async function leaveStudentEvent(eventId: string): Promise<StudentEventAp
 export function getApiErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
-    const msg = (error.response?.data as ApiResponse<unknown> | undefined)?.message;
+    const rawData = error.response?.data as
+      | ApiResponse<unknown>
+      | string
+      | ArrayBuffer
+      | undefined;
+    let msg: string | undefined;
+    if (typeof rawData === 'string' && rawData.trim()) {
+      try {
+        const parsed = JSON.parse(rawData) as ApiResponse<unknown>;
+        msg = typeof parsed.message === 'string' ? parsed.message : rawData;
+      } catch {
+        msg = rawData;
+      }
+    } else if (rawData && typeof rawData === 'object' && !(rawData instanceof ArrayBuffer)) {
+      const maybe = (rawData as ApiResponse<unknown>).message;
+      if (typeof maybe === 'string' && maybe.trim()) {
+        msg = maybe;
+      }
+    }
 
-    if (msg && typeof msg === 'string' && msg.trim()) {
-      return msg;
+    if (msg && msg.trim()) {
+      return msg.trim();
     }
 
     if (error.code === 'ECONNABORTED') {
-      return 'Server is waking up — wait a few seconds and try again.';
+      return 'Request timed out — the server may be waking up. Pull down to refresh and try again.';
+    }
+
+    if (
+      error.code === 'ERR_NETWORK' ||
+      error.message === 'Network Error' ||
+      /network/i.test(error.message ?? '')
+    ) {
+      return 'No connection to NestBridge — check Wi‑Fi or mobile data, then pull down to refresh.';
     }
 
     // No HTTP response → DNS / TLS / offline / server unreachable (phone can still show 4G).
     if (!error.response) {
-      return 'Connection issue — wait a few seconds and try again.';
+      return 'Connection issue — wait a few seconds, then pull down to refresh.';
     }
 
     if (status === 429) {
       return 'Too many attempts. Please wait a minute and try again.';
     }
     if (status === 503 || status === 502) {
-      return 'Email delivery is temporarily unavailable. Please try again shortly.';
+      return 'NestBridge is temporarily unavailable. Pull down to refresh in a moment.';
     }
     if (status === 401) {
       return 'Your session has expired. Please sign in again.';
@@ -1550,8 +1646,14 @@ export function getApiErrorMessage(error: unknown): string {
     if (status === 403) {
       return 'You do not have permission to do that.';
     }
+    if (status === 413) {
+      return 'That photo is too large. Please choose one under 5 MB.';
+    }
+    if (status === 400) {
+      return 'Something in that request was invalid. Check your photo and try again.';
+    }
     if (status != null && status >= 500) {
-      return 'The server ran into a problem. Please try again.';
+      return 'The server ran into a problem. Pull down to refresh and try again.';
     }
 
     return error.message || 'Something went wrong.';

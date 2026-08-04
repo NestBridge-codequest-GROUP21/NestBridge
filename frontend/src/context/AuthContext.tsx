@@ -4,8 +4,10 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import type { AuthSession, AuthUser, RegisterResult } from '../types/auth';
 import {
   clearSession,
@@ -223,6 +225,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return null;
     }
   }, []);
+
+  // Pick up staff KYC / suspension changes without forcing a full re-login.
+  const appState = useRef(AppState.currentState);
+  useEffect(() => {
+    const onChange = (next: AppStateStatus) => {
+      const wasBackground = appState.current.match(/inactive|background/);
+      appState.current = next;
+      if (wasBackground && next === 'active' && user) {
+        void refreshSession();
+      }
+    };
+    const sub = AppState.addEventListener('change', onChange);
+    return () => sub.remove();
+  }, [user, refreshSession]);
 
   const value = useMemo(
     () => ({
