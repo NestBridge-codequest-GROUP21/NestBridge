@@ -1,7 +1,7 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
-watchPatterns = ["src/**", "pom.xml", "Dockerfile"]
+watchPatterns = ["src/**", "pom.xml", "Dockerfile", "railway.toml"]
 
 [deploy]
 healthcheckPath = "/actuator/health"
