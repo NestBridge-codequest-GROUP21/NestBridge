@@ -40,6 +40,8 @@ import java.util.stream.Collectors;
 public class AdminService {
 
     private static final int SEARCH_LIMIT = 50;
+    private static final int LIST_DEFAULT_LIMIT = 100;
+    private static final int LIST_MAX_LIMIT = 200;
     private static final int ACTIVITY_LIMIT = 25;
     private static final int OVERVIEW_FEED_LIMIT = 12;
     private static final int LISTINGS_LIMIT = 100;
@@ -126,15 +128,32 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
-    public List<AdminUserSummaryDto> searchUsers(UUID actorId, String query) {
+    public List<AdminUserSummaryDto> listUsers(
+            UUID actorId,
+            PrimaryIntent intent,
+            Boolean staff,
+            String query,
+            Integer limit) {
         staffGuard.requireStaff(actorId);
+        String trimmed = query == null ? "" : query.trim();
+        boolean staffOnly = Boolean.TRUE.equals(staff);
+        int pageSize = limit == null
+                ? LIST_DEFAULT_LIMIT
+                : Math.min(Math.max(limit, 1), LIST_MAX_LIMIT);
+        return userRepository
+                .listForAdmin(intent, staffOnly, trimmed, PageRequest.of(0, pageSize))
+                .stream()
+                .map(this::toSummary)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<AdminUserSummaryDto> searchUsers(UUID actorId, String query) {
         String trimmed = query == null ? "" : query.trim();
         if (trimmed.isEmpty()) {
             throw new IllegalArgumentException("query is required.");
         }
-        return userRepository.searchByEmailOrName(trimmed, PageRequest.of(0, SEARCH_LIMIT)).stream()
-                .map(this::toSummary)
-                .collect(Collectors.toList());
+        return listUsers(actorId, null, null, trimmed, SEARCH_LIMIT);
     }
 
     @Transactional(readOnly = true)

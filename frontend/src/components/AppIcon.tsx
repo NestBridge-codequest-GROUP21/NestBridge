@@ -50,6 +50,7 @@ const GLYPH_TO_ICON: Record<string, IoniconName> = {
   '🏛️': 'library-outline',
   // People / social
   '🤝': 'people-outline',
+  '👥': 'people-outline',
   '👋': 'hand-left-outline',
   '😊': 'happy-outline',
   '😌': 'happy-outline',

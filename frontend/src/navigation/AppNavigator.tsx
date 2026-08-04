@@ -73,6 +73,8 @@ import LodgingDirectoryScreen from '../screens/tourist/LodgingDirectoryScreen';
 import LodgingDetailScreen from '../screens/tourist/LodgingDetailScreen';
 import PrepChecklistScreen from '../screens/student/PrepChecklistScreen';
 import StudentEventsScreen from '../screens/student/StudentEventsScreen';
+import StudentPublicProfileScreen from '../screens/student/StudentPublicProfileScreen';
+import NearbyCommunityRoute from './NearbyCommunityRoute';
 import CreateEventScreen from '../screens/student/CreateEventScreen';
 import { useStudentEvents } from '../hooks/useStudentEvents';
 import { studentEventsMock, type StudentEventDraft } from '../data/studentEventsMock';
@@ -3214,6 +3216,9 @@ export default function AppNavigator() {
               tabBarItems={staffTabBarItems}
               onTabPress={(tabId) => routeTabPress(navigation, tabId, 'AdminHome')}
               onOpenUsers={() => navigation.navigate('StaffUserSearch')}
+              onOpenUsersByCategory={(category) =>
+                navigation.navigate('StaffUserSearch', { category })
+              }
               onOpenModeration={() => navigation.navigate('AdminModeration')}
               onOpenPreview={() => navigation.navigate('AdminPreview')}
               onOpenProfile={() => navigation.navigate('Profile')}
@@ -3770,6 +3775,9 @@ export default function AppNavigator() {
             tabBarItems={staffTabBarItems}
             onTabPress={(tabId) => routeTabPress(navigation, tabId, 'AdminHome')}
             onOpenUsers={() => navigation.navigate('StaffUserSearch')}
+            onOpenUsersByCategory={(category) =>
+              navigation.navigate('StaffUserSearch', { category })
+            }
             onOpenModeration={() => navigation.navigate('AdminModeration')}
             onOpenPreview={() => navigation.navigate('AdminPreview')}
             onOpenProfile={() => navigation.navigate('Profile')}
@@ -3806,8 +3814,9 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="StaffUserSearch">
-        {({ navigation }) => (
+        {({ navigation, route }) => (
           <StaffUserSearchRoute
+            initialCategory={route.params?.category ?? 'ALL'}
             tabBarItems={isStaffShell ? staffTabBarItems : undefined}
             onTabPress={
               isStaffShell
@@ -5378,6 +5387,36 @@ export default function AppNavigator() {
             }}
           />
         )}
+      </Stack.Screen>
+
+      <Stack.Screen name="NearbyCommunity">
+        {(props) => (
+          <NearbyCommunityRoute {...props} fallbackCityLabel={cityLabel} />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="StudentPublicProfile">
+        {({ navigation, route }) => {
+          const member = route.params.member;
+          return (
+            <StudentPublicProfileScreen
+              student={member}
+              messageBlocked={!marketplaceUnlocked}
+              messageBlockedHint="NestBridge staff must verify your identity before messaging."
+              onBack={() => navigation.goBack()}
+              onMessagePress={() => {
+                void openMessageWithParticipant(navigation, {
+                  userId: member.userId,
+                  name: member.fullName,
+                  initials: member.initials,
+                  role: 'guest',
+                }).catch((err) => {
+                  Alert.alert('Could not open chat', getApiErrorMessage(err));
+                });
+              }}
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="CreateEvent">

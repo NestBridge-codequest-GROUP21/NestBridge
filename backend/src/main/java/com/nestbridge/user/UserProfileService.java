@@ -139,12 +139,12 @@ public class UserProfileService {
         }
     }
 
-    static boolean hasIdentity(User user) {
+    public static boolean hasIdentity(User user) {
         return user.getBio() != null && user.getBio().trim().length() >= MIN_BIO_LENGTH
                 && user.getAbout() != null && user.getAbout().trim().length() >= MIN_ABOUT_LENGTH;
     }
 
-    static boolean hasIdentityInData(Map<String, Object> data) {
+    public static boolean hasIdentityInData(Map<String, Object> data) {
         if (data == null) {
             return false;
         }

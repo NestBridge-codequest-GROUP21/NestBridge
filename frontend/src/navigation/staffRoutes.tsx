@@ -17,7 +17,7 @@ import {
   getAdminUserActivity,
   getApiErrorMessage,
   listAdminListings,
-  searchAdminUsers,
+  listAdminUsers,
   setAdminListingVisibility,
   setAdminUserKycStatus,
   setAdminUserStaffStatus,
@@ -30,12 +30,33 @@ import {
   type AdminUserDetail,
   type AdminUserSummary,
 } from '../services/api';
+import type { StaffUserCategory } from '../screens/shared/StaffUserSearchScreen';
+
+function listParamsForCategory(
+  category: StaffUserCategory,
+  query: string,
+): {
+  intent?: 'STUDENT' | 'TOURIST' | 'HOST' | 'GUIDE';
+  staff?: boolean;
+  query?: string;
+} {
+  const trimmed = query.trim();
+  const q = trimmed.length > 0 ? trimmed : undefined;
+  if (category === 'STAFF') {
+    return { staff: true, query: q };
+  }
+  if (category === 'ALL') {
+    return { query: q };
+  }
+  return { intent: category, query: q };
+}
 
 export interface AdminHomeRouteProps {
   staffName: string;
   tabBarItems: TabBarItem[];
   onTabPress: (tabId: string) => void;
   onOpenUsers: () => void;
+  onOpenUsersByCategory?: (category: StaffUserCategory) => void;
   onOpenModeration: () => void;
   onOpenPreview: () => void;
   onOpenProfile: () => void;
@@ -49,6 +70,7 @@ export function AdminHomeRoute({
   tabBarItems,
   onTabPress,
   onOpenUsers,
+  onOpenUsersByCategory,
   onOpenModeration,
   onOpenPreview,
   onOpenProfile,
@@ -89,6 +111,7 @@ export function AdminHomeRoute({
         void loadOverview();
       }}
       onOpenUsers={onOpenUsers}
+      onOpenUsersByCategory={onOpenUsersByCategory}
       onOpenModeration={onOpenModeration}
       onOpenPreview={onOpenPreview}
       onOpenProfile={onOpenProfile}
@@ -211,6 +234,7 @@ export function AdminPreviewRoute({
 }
 
 export interface StaffUserSearchRouteProps {
+  initialCategory?: StaffUserCategory;
   onSelectUser: (userId: string) => void;
   onBack: () => void;
   tabBarItems?: TabBarItem[];
@@ -219,6 +243,7 @@ export interface StaffUserSearchRouteProps {
 }
 
 export function StaffUserSearchRoute({
+  initialCategory = 'ALL',
   onSelectUser,
   onBack,
   tabBarItems,
@@ -226,39 +251,51 @@ export function StaffUserSearchRoute({
   onSosPress,
 }: StaffUserSearchRouteProps) {
   const [query, setQuery] = useState('');
+  const [category, setCategory] = useState<StaffUserCategory>(initialCategory);
   const [results, setResults] = useState<AdminUserSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
-  const onSearch = useCallback(async () => {
-    const trimmed = query.trim();
-    if (!trimmed) return;
+  useEffect(() => {
+    setCategory(initialCategory);
+  }, [initialCategory]);
+
+  const loadUsers = useCallback(async (nextCategory: StaffUserCategory, nextQuery: string) => {
     setIsLoading(true);
     setErrorMessage(null);
-    setHasSearched(true);
     try {
-      const users = await searchAdminUsers(trimmed);
+      const users = await listAdminUsers(listParamsForCategory(nextCategory, nextQuery));
       setResults(users);
+      setHasLoaded(true);
     } catch (error) {
       setResults([]);
+      setHasLoaded(true);
       setErrorMessage(getApiErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
-  }, [query]);
+  }, []);
+
+  useEffect(() => {
+    void loadUsers(category, query);
+    // Load when category changes; query applies on Search / Refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: category-driven reload
+  }, [category, loadUsers]);
 
   return (
     <StaffUserSearchScreen
       query={query}
+      category={category}
       results={results}
       isLoading={isLoading}
       errorMessage={errorMessage}
-      hasSearched={hasSearched}
+      hasLoaded={hasLoaded}
       tabBarItems={tabBarItems}
       onQueryChange={setQuery}
+      onCategoryChange={setCategory}
       onSearch={() => {
-        void onSearch();
+        void loadUsers(category, query);
       }}
       onSelectUser={onSelectUser}
       onTabPress={onTabPress}

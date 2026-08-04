@@ -35,4 +35,21 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             ORDER BY u.fullName ASC
             """)
     List<User> searchByEmailOrName(@Param("query") String query, Pageable pageable);
+
+    @Query("""
+            SELECT u FROM User u
+            WHERE (:intent IS NULL OR u.primaryIntent = :intent)
+              AND (:staffOnly = false OR u.staff = true)
+              AND (
+                    :query = ''
+                    OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))
+                    OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :query, '%'))
+                  )
+            ORDER BY u.fullName ASC
+            """)
+    List<User> listForAdmin(
+            @Param("intent") PrimaryIntent intent,
+            @Param("staffOnly") boolean staffOnly,
+            @Param("query") String query,
+            Pageable pageable);
 }

@@ -45,6 +45,10 @@ export function handleProfileCulturalItem(
     navigation.navigate('PrepChecklist');
     return;
   }
+  if (itemId === 'nearby-community') {
+    navigation.navigate('NearbyCommunity');
+    return;
+  }
   if (itemId === 'student-events') {
     navigation.navigate('StudentEvents');
     return;

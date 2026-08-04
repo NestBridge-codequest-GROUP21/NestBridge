@@ -32,6 +32,12 @@ const STUDENT_CULTURAL_ITEMS: ProfileHubItem[] = [
     icon: '✅',
   },
   {
+    id: 'nearby-community',
+    label: 'People nearby',
+    description: 'Students and host families in your city',
+    icon: '👥',
+  },
+  {
     id: 'student-events',
     label: 'Student events',
     description: 'Meetups, orientation, and campus gatherings',

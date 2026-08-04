@@ -1,10 +1,11 @@
-import { useThemedStyles, type AppTheme } from '../../theme';
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
+  ScrollView,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -25,7 +26,29 @@ import {
   fontWeights,
   spacing,
   touchTarget,
+  borderRadius,
+  borderWidths,
 } from '../../constants/theme';
+
+export type StaffUserCategory =
+  | 'ALL'
+  | 'STUDENT'
+  | 'TOURIST'
+  | 'HOST'
+  | 'GUIDE'
+  | 'STAFF';
+
+export const STAFF_USER_CATEGORIES: {
+  id: StaffUserCategory;
+  label: string;
+}[] = [
+  { id: 'ALL', label: 'All' },
+  { id: 'STUDENT', label: 'Students' },
+  { id: 'TOURIST', label: 'Tourists' },
+  { id: 'HOST', label: 'Hosts' },
+  { id: 'GUIDE', label: 'Guides' },
+  { id: 'STAFF', label: 'Staff' },
+];
 
 function initialsFromName(fullName: string): string {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -36,12 +59,14 @@ function initialsFromName(fullName: string): string {
 
 export interface StaffUserSearchScreenProps {
   query: string;
+  category: StaffUserCategory;
   results: AdminUserSummary[];
   isLoading?: boolean;
   errorMessage?: string | null;
-  hasSearched?: boolean;
+  hasLoaded?: boolean;
   tabBarItems?: TabBarItem[];
   onQueryChange: (query: string) => void;
+  onCategoryChange: (category: StaffUserCategory) => void;
   onSearch: () => void;
   onSelectUser: (userId: string) => void;
   onTabPress?: (tabId: string) => void;
@@ -51,12 +76,14 @@ export interface StaffUserSearchScreenProps {
 
 export default function StaffUserSearchScreen({
   query,
+  category,
   results,
   isLoading = false,
   errorMessage,
-  hasSearched = false,
+  hasLoaded = false,
   tabBarItems,
   onQueryChange,
+  onCategoryChange,
   onSearch,
   onSelectUser,
   onTabPress,
@@ -64,29 +91,56 @@ export default function StaffUserSearchScreen({
   onSosPress,
 }: StaffUserSearchScreenProps) {
   const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
       <ScreenHeader
         title="Users"
-        subtitle="Search accounts across every role"
+        subtitle="Browse or search accounts by role"
         compact
         onBack={onBack}
       />
       <ScreenScroll>
         <Card style={styles.searchCard} padding="lg">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipRow}
+          >
+            {STAFF_USER_CATEGORIES.map((option) => {
+              const active = category === option.id;
+              return (
+                <Pressable
+                  key={option.id}
+                  style={[styles.chip, active && styles.chipActive]}
+                  onPress={() => onCategoryChange(option.id)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`Filter ${option.label}`}
+                >
+                  <Text
+                    style={[styles.chipText, active && styles.chipTextActive]}
+                    numberOfLines={1}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
           <SearchField
             value={query}
-            placeholder="Name or email"
+            placeholder="Name or email (optional)"
             onChangeText={onQueryChange}
             onClear={() => onQueryChange('')}
             onSubmitEditing={onSearch}
           />
           <PrimaryButton
-            label={isLoading ? 'Searching…' : 'Search'}
+            label={isLoading ? 'Loading…' : query.trim() ? 'Search' : 'Refresh list'}
             onPress={onSearch}
-            disabled={isLoading || query.trim().length === 0}
+            disabled={isLoading}
             style={styles.searchButton}
           />
         </Card>
@@ -95,11 +149,12 @@ export default function StaffUserSearchScreen({
 
         {isLoading ? <SkeletonLoader style={styles.loader} /> : null}
 
-        {!isLoading && hasSearched && results.length === 0 && !errorMessage ? (
+        {!isLoading && hasLoaded && results.length === 0 && !errorMessage ? (
           <EmptyState
-            title="No users matched"
-            body="Try another name or email. Staff search looks across NestBridge accounts."
-            iconName="search-outline"
+            title="No users in this category"
+            body="Try another role chip, or search by name or email."
+            tip="New accounts appear here after they finish Create account."
+            iconName="people-outline"
           />
         ) : null}
 
@@ -134,7 +189,7 @@ export default function StaffUserSearchScreen({
                       ) : null}
                     </View>
                   </View>
-                  <Text style={styles.resultAction}>View</Text>
+                  <Text style={[styles.resultAction, { color: colors.teal }]}>View</Text>
                 </Card>
               </Pressable>
             ))
@@ -155,61 +210,87 @@ export default function StaffUserSearchScreen({
 
 function createStyles({ colors }: AppTheme) {
   return StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  searchCard: {
-    marginBottom: spacing.lg,
-    gap: spacing.md,
-  },
-  searchButton: {
-    marginTop: spacing.xs,
-  },
-  loader: {
-    marginVertical: spacing.lg,
-  },
-  resultPress: {
-    marginBottom: spacing.sm,
-  },
-  resultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: touchTarget,
-    gap: spacing.md,
-  },
-  pressed: {
-    opacity: 0.92,
-  },
-  resultText: {
-    flex: 1,
-  },
-  resultName: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  resultMeta: {
-    fontFamily: fontFamilies.regular,
-    fontSize: fontSizes.caption,
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-  },
-  resultAction: {
-    fontFamily: fontFamilies.semibold,
-    fontSize: fontSizes.body,
-    fontWeight: fontWeights.semibold,
-    color: colors.teal,
-    minWidth: touchTarget,
-    textAlign: 'right',
-  },
-});
+    root: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    searchCard: {
+      marginBottom: spacing.lg,
+      gap: spacing.md,
+    },
+    chipRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingBottom: spacing.xs,
+    },
+    chip: {
+      minHeight: touchTarget,
+      paddingHorizontal: spacing.md,
+      borderRadius: borderRadius.pill,
+      borderWidth: borderWidths.hairline,
+      borderColor: colors.border,
+      backgroundColor: colors.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    chipActive: {
+      backgroundColor: colors.teal,
+      borderColor: colors.teal,
+    },
+    chipText: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.caption,
+      fontWeight: fontWeights.semibold,
+      color: colors.textSecondary,
+    },
+    chipTextActive: {
+      color: colors.onAccent,
+    },
+    searchButton: {
+      marginTop: spacing.xs,
+    },
+    loader: {
+      marginVertical: spacing.lg,
+    },
+    resultPress: {
+      marginBottom: spacing.sm,
+    },
+    resultRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      minHeight: touchTarget,
+      gap: spacing.md,
+    },
+    pressed: {
+      opacity: 0.92,
+    },
+    resultText: {
+      flex: 1,
+    },
+    resultName: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.body,
+      fontWeight: fontWeights.semibold,
+      color: colors.textPrimary,
+      marginBottom: spacing.xs,
+    },
+    resultMeta: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.textSecondary,
+      marginBottom: spacing.sm,
+    },
+    badgeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+    },
+    resultAction: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.body,
+      fontWeight: fontWeights.semibold,
+      minWidth: touchTarget,
+      textAlign: 'right',
+    },
+  });
 }
-

@@ -15,6 +15,7 @@ import type {
   AdminOverview,
   AdminSosActivity,
 } from '../../services/api';
+import type { StaffUserCategory } from './StaffUserSearchScreen';
 import {
   fontFamilies,
   fontSizes,
@@ -34,6 +35,7 @@ export interface AdminHomeScreenProps {
   onTabPress?: (tabId: string) => void;
   onRefresh?: () => void;
   onOpenUsers?: () => void;
+  onOpenUsersByCategory?: (category: StaffUserCategory) => void;
   onOpenModeration?: () => void;
   onOpenPreview?: () => void;
   onOpenProfile?: () => void;
@@ -46,18 +48,40 @@ function StatTile({
   label,
   value,
   tone,
+  onPress,
 }: {
   label: string;
   value: number | string;
   tone?: 'default' | 'warning' | 'danger' | 'success';
+  onPress?: () => void;
 }) {
   const styles = useThemedStyles(createStyles);
-  return (
-    <View style={[styles.statTile, tone === 'danger' && styles.statDanger, tone === 'warning' && styles.statWarning]}>
+  const content = (
+    <>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    </>
   );
+  const tileStyle = [
+    styles.statTile,
+    tone === 'danger' && styles.statDanger,
+    tone === 'warning' && styles.statWarning,
+  ];
+
+  if (onPress) {
+    return (
+      <Pressable
+        style={({ pressed }) => [...tileStyle, pressed && styles.pressed]}
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`Browse ${label}`}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
+  return <View style={tileStyle}>{content}</View>;
 }
 
 function formatBookingLine(item: AdminBookingActivity): string {
@@ -78,6 +102,7 @@ export default function AdminHomeScreen({
   onTabPress,
   onRefresh,
   onOpenUsers,
+  onOpenUsersByCategory,
   onOpenModeration,
   onOpenPreview,
   onOpenProfile,
@@ -136,12 +161,47 @@ export default function AdminHomeScreen({
               />
             </View>
 
-            <SectionHeader title="Users by role" />
+            <SectionHeader
+              title="Users by role"
+              subtitle="Tap a role to browse every account in that category"
+            />
             <View style={styles.statGrid}>
-              <StatTile label="Students" value={overview.studentCount} />
-              <StatTile label="Tourists" value={overview.touristCount} />
-              <StatTile label="Hosts" value={overview.hostCount} />
-              <StatTile label="Guides" value={overview.guideCount} />
+              <StatTile
+                label="Students"
+                value={overview.studentCount}
+                onPress={
+                  onOpenUsersByCategory
+                    ? () => onOpenUsersByCategory('STUDENT')
+                    : onOpenUsers
+                }
+              />
+              <StatTile
+                label="Tourists"
+                value={overview.touristCount}
+                onPress={
+                  onOpenUsersByCategory
+                    ? () => onOpenUsersByCategory('TOURIST')
+                    : onOpenUsers
+                }
+              />
+              <StatTile
+                label="Hosts"
+                value={overview.hostCount}
+                onPress={
+                  onOpenUsersByCategory
+                    ? () => onOpenUsersByCategory('HOST')
+                    : onOpenUsers
+                }
+              />
+              <StatTile
+                label="Guides"
+                value={overview.guideCount}
+                onPress={
+                  onOpenUsersByCategory
+                    ? () => onOpenUsersByCategory('GUIDE')
+                    : onOpenUsers
+                }
+              />
             </View>
 
             <SectionHeader title="Marketplace & bookings" />
@@ -164,7 +224,7 @@ export default function AdminHomeScreen({
             <Card padding="none" style={styles.toolsCard}>
               <ToolRow
                 title="Manage users"
-                subtitle="Search, suspend, KYC, staff grant, activity"
+                subtitle="Browse by role, search, suspend, KYC, staff grant"
                 onPress={onOpenUsers}
               />
               <ToolRow

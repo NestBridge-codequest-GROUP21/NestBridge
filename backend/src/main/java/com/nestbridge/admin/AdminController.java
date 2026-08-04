@@ -1,6 +1,7 @@
 package com.nestbridge.admin;
 
 import com.nestbridge.common.ApiResponse;
+import com.nestbridge.common.PrimaryIntent;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,19 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Listings retrieved",
                 adminService.listListings(actorId, type, hidden)));
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<ApiResponse<List<AdminUserSummaryDto>>> listUsers(
+            Authentication authentication,
+            @RequestParam(required = false) PrimaryIntent intent,
+            @RequestParam(required = false) Boolean staff,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) Integer limit) {
+        UUID actorId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(ApiResponse.success(
+                "Users retrieved",
+                adminService.listUsers(actorId, intent, staff, query, limit)));
     }
 
     @GetMapping("/users/search")

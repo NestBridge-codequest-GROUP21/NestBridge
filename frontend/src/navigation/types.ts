@@ -23,7 +23,11 @@ export type AppStackParamList = {
   Settings: undefined;
   ExploreHub: undefined;
   DevTesting: undefined;
-  StaffUserSearch: undefined;
+  StaffUserSearch:
+    | {
+        category?: 'ALL' | 'STUDENT' | 'TOURIST' | 'HOST' | 'GUIDE' | 'STAFF';
+      }
+    | undefined;
   StaffUserDetail: { userId: string };
   StaffUserActivity: { userId: string; userName: string };
   AccountSetup: undefined;
@@ -80,6 +84,8 @@ export type AppStackParamList = {
   SitesDirectory: undefined;
   UniversitiesDirectory: undefined;
   StudentEvents: undefined;
+  NearbyCommunity: undefined;
+  StudentPublicProfile: { member: import('../services/api').CommunityMemberApi };
   CreateEvent: undefined;
   VideoLibrary: undefined;
   VideoDetail: { videoKey: string };

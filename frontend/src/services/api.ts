@@ -699,6 +699,23 @@ export async function login(
   };
 }
 
+export async function listAdminUsers(params?: {
+  intent?: 'STUDENT' | 'TOURIST' | 'HOST' | 'GUIDE';
+  staff?: boolean;
+  query?: string;
+  limit?: number;
+}): Promise<AdminUserSummary[]> {
+  const { data } = await api.get<ApiResponse<AdminUserSummary[]>>('/api/admin/users', {
+    params: {
+      intent: params?.intent,
+      staff: params?.staff,
+      query: params?.query,
+      limit: params?.limit,
+    },
+  });
+  return unwrap({ data });
+}
+
 export async function searchAdminUsers(query: string): Promise<AdminUserSummary[]> {
   const { data } = await api.get<ApiResponse<AdminUserSummary[]>>('/api/admin/users/search', {
     params: { query },
@@ -921,6 +938,68 @@ export async function getMyGuideCalendar(
 
 export async function findMatches(params: MatchFindParams): Promise<MatchResult[]> {
   const { data } = await api.post<ApiResponse<MatchResult[]>>('/api/matches/find', params);
+  return unwrap({ data });
+}
+
+export interface CommunityMemberApi {
+  userId: string;
+  fullName: string;
+  initials: string;
+  bio?: string;
+  about?: string;
+  profilePhotoUrl?: string;
+  city?: string;
+  university?: string;
+  nationality?: string;
+  identityVerified?: boolean;
+}
+
+export interface CommunityHostApi {
+  hostId: string;
+  userId: string;
+  fullName: string;
+  initials: string;
+  bio?: string;
+  city?: string;
+  address?: string;
+  roomType?: string;
+  pricePerNight?: number;
+  averageRating?: number;
+  reviewCount?: number;
+  identityVerified?: boolean;
+}
+
+export interface NearbyCommunityApi {
+  city: string;
+  students: CommunityMemberApi[];
+  hosts: CommunityHostApi[];
+}
+
+export async function getNearbyCommunity(city?: string): Promise<NearbyCommunityApi> {
+  const { data } = await api.get<ApiResponse<NearbyCommunityApi>>('/api/community/nearby', {
+    params: city ? { city } : undefined,
+  });
+  return unwrap({ data });
+}
+
+export async function getPublicUser(userId: string): Promise<{
+  userId: string;
+  fullName: string;
+  bio?: string;
+  about?: string;
+  profilePhotoUrl?: string;
+  primaryIntent?: string;
+}> {
+  const { data } = await api.get<
+    ApiResponse<{
+      userId: string;
+      fullName: string;
+      bio?: string;
+      about?: string;
+      profilePhotoUrl?: string;
+      primaryIntent?: string;
+    }>
+  >(`/api/users/${userId}`);
   return unwrap({ data });
 }
 
