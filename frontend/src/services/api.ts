@@ -592,16 +592,34 @@ export function mapIncomingBooking(item: IncomingBookingApi): IncomingBookingReq
 }
 
 export function mapBookingListItem(item: BookingApi): BookingListItem {
+  const providerName =
+    item.providerName?.trim() ||
+    // Never fall back to guestName — that makes seekers appear as their own host.
+    'Host';
+  const providerInitials = providerName
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'HO';
   return {
     id: item.bookingId,
     bookingType: item.bookingType,
     hostId: item.hostOrGuideId,
-    hostName: item.providerName ?? item.guestName ?? 'Provider',
-    hostInitials: item.guestInitials ?? '??',
+    hostName: providerName,
+    hostInitials: providerInitials,
     hostLocation: '',
     checkIn: item.checkIn ?? '',
-    checkOut: item.checkOut ?? '',
+    checkOut: item.checkOut ?? item.sessionDate ?? '',
     status: item.status,
+    session:
+      item.bookingType === 'GUIDE' && item.sessionDate
+        ? {
+            sessionDate: item.sessionDate,
+            sessionStartTime: item.sessionStartTime ?? '',
+            durationHours: item.sessionDurationHours ?? 0,
+          }
+        : undefined,
     priceBreakdown: {
       nightlyRate: 0,
       currency: 'GHS',

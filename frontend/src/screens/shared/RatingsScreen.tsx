@@ -8,12 +8,16 @@ import Card from '../../components/Card';
 import EmptyState from '../../components/EmptyState';
 import StatusBadge from '../../components/StatusBadge';
 import SectionHeader from '../../components/SectionHeader';
+import AppIcon from '../../components/AppIcon';
 import type { BookingListItem } from '../../types/booking';
 import {
   fontFamilies,
   fontSizes,
   fontWeights,
   spacing,
+  borderRadius,
+  borderWidths,
+  iconSizes,
   lineHeights,
   touchTarget,
 } from '../../constants/theme';
@@ -66,9 +70,26 @@ export default function RatingsScreen({
         </View>
       ) : (
         <ScreenScroll contentContainerStyle={styles.scrollContent}>
+          <Card padding="md" elevation="card" style={styles.heroCard}>
+            <View style={styles.heroIcon}>
+              <AppIcon name="star" size={iconSizes.lg} color={colors.gold} />
+            </View>
+            <View style={styles.heroText}>
+              <Text style={styles.heroTitle}>Your review helps the next guest</Text>
+              <Text style={styles.heroBody}>
+                Reviews stay sealed until both sides submit. NestBridge moderates
+                before anything appears publicly.
+              </Text>
+            </View>
+          </Card>
+
           <SectionHeader
             title="Ready to rate"
-            subtitle="Reviews stay sealed until both sides submit — NestBridge moderates before they appear"
+            subtitle={
+              pendingReviews.length > 0
+                ? `${pendingReviews.length} completed ${pendingReviews.length === 1 ? 'booking' : 'bookings'} waiting for your stars`
+                : 'Completed stays and guide sessions show up here'
+            }
           />
 
           {pendingReviews.length === 0 ? (
@@ -88,17 +109,44 @@ export default function RatingsScreen({
                 accessibilityLabel={`Rate ${booking.hostName}`}
               >
                 <Card style={styles.rowCard}>
-                  <View style={styles.rowTop}>
-                    <Text style={styles.hostName} numberOfLines={2}>
-                      {booking.hostName}
-                    </Text>
-                    <StatusBadge
-                      label={booking.bookingType === 'GUIDE' ? 'Guide' : 'Homestay'}
-                      tone="info"
-                    />
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{booking.hostInitials}</Text>
                   </View>
-                  <Text style={styles.meta}>{bookingLine(booking)}</Text>
-                  <Text style={styles.cta}>Tap to rate · 1–5 stars</Text>
+                  <View style={styles.rowBody}>
+                    <View style={styles.rowTop}>
+                      <Text style={styles.hostName} numberOfLines={2}>
+                        {booking.hostName}
+                      </Text>
+                      <StatusBadge
+                        label={booking.bookingType === 'GUIDE' ? 'Guide' : 'Homestay'}
+                        tone="info"
+                      />
+                    </View>
+                    <Text style={styles.meta}>{bookingLine(booking)}</Text>
+                    {booking.hostLocation ? (
+                      <Text style={styles.location} numberOfLines={1}>
+                        {booking.hostLocation}
+                      </Text>
+                    ) : null}
+                    <View style={styles.ctaRow}>
+                      <View style={styles.starsPreview}>
+                        {[1, 2, 3, 4, 5].map((value) => (
+                          <AppIcon
+                            key={value}
+                            name="star-outline"
+                            size={iconSizes.sm}
+                            color={colors.gold}
+                          />
+                        ))}
+                      </View>
+                      <Text style={styles.cta}>Tap to rate</Text>
+                      <AppIcon
+                        name="chevron-forward"
+                        size={iconSizes.md}
+                        color={colors.teal}
+                      />
+                    </View>
+                  </View>
                 </Card>
               </Pressable>
             ))
@@ -132,11 +180,65 @@ function createStyles({ colors }: AppTheme) {
       lineHeight: lineHeights.body,
       color: colors.textSecondary,
     },
+    heroCard: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.md,
+      backgroundColor: colors.warmCream,
+      borderWidth: borderWidths.hairline,
+      borderColor: colors.border,
+    },
+    heroIcon: {
+      width: touchTarget,
+      height: touchTarget,
+      borderRadius: borderRadius.md,
+      backgroundColor: colors.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    heroText: {
+      flex: 1,
+      gap: spacing.xs,
+    },
+    heroTitle: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.subheading,
+      lineHeight: lineHeights.subheading,
+      fontWeight: fontWeights.semibold,
+      color: colors.textPrimary,
+    },
+    heroBody: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      lineHeight: lineHeights.caption,
+      color: colors.textSecondary,
+    },
     rowPress: {
       minHeight: touchTarget,
     },
     rowCard: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: spacing.md,
+    },
+    avatar: {
+      width: touchTarget + spacing.sm,
+      height: touchTarget + spacing.sm,
+      borderRadius: borderRadius.pill,
+      backgroundColor: colors.navy,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.caption,
+      fontWeight: fontWeights.semibold,
+      color: colors.gold,
+    },
+    rowBody: {
+      flex: 1,
       gap: spacing.xs,
+      minWidth: 0,
     },
     rowTop: {
       flexDirection: 'row',
@@ -158,13 +260,31 @@ function createStyles({ colors }: AppTheme) {
       lineHeight: lineHeights.caption,
       color: colors.textSecondary,
     },
+    location: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      lineHeight: lineHeights.caption,
+      color: colors.textTertiary,
+    },
+    ctaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.xs,
+      minHeight: touchTarget - spacing.md,
+    },
+    starsPreview: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+    },
     cta: {
+      flex: 1,
       fontFamily: fontFamilies.semibold,
       fontSize: fontSizes.caption,
       lineHeight: lineHeights.caption,
       fontWeight: fontWeights.semibold,
       color: colors.teal,
-      marginTop: spacing.xs,
     },
     pressed: {
       opacity: 0.88,

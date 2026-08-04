@@ -4,12 +4,8 @@ import {
   View,
   Text,
   StyleSheet,
-  Linking,
   Pressable,
-  Alert,
-  Share,
 } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PrimaryButton from '../../components/PrimaryButton';
@@ -30,6 +26,10 @@ import {
   iconSizes,
   touchTarget,
 } from '../../constants/theme';
+import { NESTBRIDGE_SUPPORT_EMAIL } from '../../constants/support';
+import { openNestBridgeSupportEmail as openSupportEmail } from '../../utils/supportEmail';
+
+export { NESTBRIDGE_SUPPORT_EMAIL };
 
 export interface VerifyEmailScreenProps {
   email: string;
@@ -122,56 +122,11 @@ export default function VerifyEmailScreen({
   );
 }
 
-export const NESTBRIDGE_SUPPORT_EMAIL = 'support@nestbridge.app';
-
-/** Opens the device mail app, then Gmail-in-browser, then a share/copy fallback. */
 export async function openNestBridgeSupportEmail(accountEmail?: string): Promise<void> {
-  const subject = 'NestBridge verification help';
-  const body = accountEmail?.trim()
-    ? `Hi NestBridge team,\n\nI need help verifying my account.\n\nAccount email: ${accountEmail.trim()}\n`
-    : 'Hi NestBridge team,\n\nI need help verifying my account.\n';
-  const mailto = `mailto:${NESTBRIDGE_SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-  try {
-    const canOpen = await Linking.canOpenURL(mailto);
-    if (canOpen) {
-      await Linking.openURL(mailto);
-      return;
-    }
-  } catch {
-    // Android 11+ may reject canOpenURL without mailto queries; still try openURL.
-    try {
-      await Linking.openURL(mailto);
-      return;
-    } catch {
-      // Fall through to browser / share.
-    }
-  }
-
-  try {
-    await WebBrowser.openBrowserAsync(
-      `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(NESTBRIDGE_SUPPORT_EMAIL)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
-    );
-    return;
-  } catch {
-    // Fall through to alert.
-  }
-
-  Alert.alert(
-    'Contact NestBridge support',
-    `Email us at ${NESTBRIDGE_SUPPORT_EMAIL} and include a screenshot of this screen.`,
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Share address',
-        onPress: () => {
-          void Share.share({
-            message: NESTBRIDGE_SUPPORT_EMAIL,
-            title: 'NestBridge support',
-          });
-        },
-      },
-    ],
+  return openSupportEmail(
+    accountEmail,
+    'NestBridge verification help',
+    'I need help verifying my account.',
   );
 }
 

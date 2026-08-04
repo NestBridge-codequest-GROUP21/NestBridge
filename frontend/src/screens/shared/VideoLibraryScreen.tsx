@@ -177,10 +177,35 @@ export default function VideoLibraryScreen({
 
   const visibleSections = useMemo(() => {
     if (filter === 'all') {
-      return sections;
+      // Category hubs only — do not repeat the personalized "For you" strip.
+      return sections.filter((section) => section.id !== 'for-you');
+    }
+    if (filter === 'for-you') {
+      const personalized = sections.filter((section) => section.id === 'for-you');
+      if (personalized.length > 0) {
+        return personalized;
+      }
+      // Fallback when topic scoring finds nothing: first unwatched per hub.
+      return [
+        {
+          id: 'for-you' as const,
+          title:
+            viewerIntent === 'TOURIST' || viewerIntent === 'BROWSE'
+              ? 'Recommended for your trip'
+              : 'Recommended for your studies',
+          subtitle: 'Start with these before browsing every topic',
+          videos: sections
+            .flatMap((section) => section.videos)
+            .filter((video, index, all) => {
+              const first = all.findIndex((row) => row.videoKey === video.videoKey);
+              return first === index && video.watchStatus !== 'watched';
+            })
+            .slice(0, 4),
+        },
+      ].filter((section) => section.videos.length > 0);
     }
     return sections.filter((section) => section.id === filter);
-  }, [sections, filter]);
+  }, [sections, filter, viewerIntent]);
 
   return (
     <View style={styles.root}>

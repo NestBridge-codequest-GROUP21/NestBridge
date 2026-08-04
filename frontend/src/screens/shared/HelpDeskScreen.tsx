@@ -1,6 +1,6 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Linking } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -12,6 +12,8 @@ import InlineBanner from '../../components/InlineBanner';
 import AppIcon from '../../components/AppIcon';
 import type { EmergencyContact } from './SOSScreen';
 import type { HelpTopic } from '../../data/helpDesk';
+import { NESTBRIDGE_SUPPORT_EMAIL } from '../../constants/support';
+import { openNestBridgeSupportEmail } from '../../utils/supportEmail';
 import {
   fontFamilies,
   fontSizes,
@@ -106,12 +108,17 @@ export default function HelpDeskScreen({
 
         <View style={styles.actions}>
           <PrimaryButton label="Open SOS for emergencies" onPress={onOpenSos} />
+          <Card padding="md" style={styles.emailCard}>
+            <Text style={styles.emailLabel}>Email NestBridge support</Text>
+            <Text style={styles.emailAddress}>{NESTBRIDGE_SUPPORT_EMAIL}</Text>
+            <Text style={styles.emailHint}>
+              Opens your mail app with this address filled in.
+            </Text>
+          </Card>
           <SecondaryButton
-            label="Email support (opens mail)"
+            label={`Email ${NESTBRIDGE_SUPPORT_EMAIL}`}
             onPress={() => {
-              void Linking.openURL(
-                'mailto:bsbhackman@gmail.com?subject=NestBridge%20help',
-              );
+              void openNestBridgeSupportEmail();
             }}
           />
         </View>
@@ -197,6 +204,27 @@ function createStyles({ colors }: AppTheme) {
     actions: {
       gap: spacing.sm,
       marginBottom: spacing.xxl,
+    },
+    emailCard: {
+      gap: spacing.xs,
+    },
+    emailLabel: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.body,
+      fontWeight: fontWeights.semibold,
+      color: colors.textPrimary,
+    },
+    emailAddress: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.subheading,
+      fontWeight: fontWeights.semibold,
+      color: colors.teal,
+    },
+    emailHint: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      lineHeight: lineHeights.caption,
+      color: colors.textSecondary,
     },
   });
 }

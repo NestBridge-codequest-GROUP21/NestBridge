@@ -379,6 +379,7 @@ public class BookingService {
     private BookingDto toDto(Booking b) {
         User guest = userRepository.findById(b.getGuestId()).orElse(null);
         String guestName = guest != null ? guest.getFullName() : "Guest";
+        String providerName = resolveProviderName(b);
         return BookingDto.builder()
                 .bookingId(b.getBookingId())
                 .matchId(b.getMatchId())
@@ -398,7 +399,28 @@ public class BookingService {
                 .status(b.getStatus())
                 .guestName(guestName)
                 .guestInitials(initials(guestName))
+                .providerName(providerName)
                 .build();
+    }
+
+    private String resolveProviderName(Booking booking) {
+        UUID providerUserId = null;
+        if (booking.getBookingType() == BookingType.HOST) {
+            providerUserId = hostProfileRepository.findById(booking.getHostOrGuideId())
+                    .map(HostProfile::getUserId)
+                    .orElse(null);
+        } else if (booking.getBookingType() == BookingType.GUIDE) {
+            providerUserId = guideProfileRepository.findById(booking.getHostOrGuideId())
+                    .map(GuideProfile::getUserId)
+                    .orElse(null);
+        }
+        if (providerUserId == null) {
+            return "Host";
+        }
+        return userRepository.findById(providerUserId)
+                .map(User::getFullName)
+                .filter(name -> name != null && !name.isBlank())
+                .orElse("Host");
     }
 
     private String initials(String name) {

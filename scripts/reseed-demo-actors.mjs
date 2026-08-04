@@ -239,6 +239,62 @@ async function main() {
        WHERE email = 'admin@nestbridge.app'`,
     );
 
+    // Live Paystack path: short ACCEPTED stay Akosua → Abena (UUID booking id).
+    await client.query(
+      `INSERT INTO bookings (
+         booking_id, guest_id, host_or_guide_id, booking_type,
+         check_in, check_out, guest_message,
+         total_price, platform_fee, host_payout, status, payment_status
+       ) VALUES (
+         '44444444-4444-4444-4444-444444444401',
+         '11111111-1111-1111-1111-111111111101',
+         '33333333-3333-3333-3333-333333333301',
+         'HOST',
+         CURRENT_DATE + INTERVAL '14 days',
+         CURRENT_DATE + INTERVAL '17 days',
+         'Demo stay ready for Paystack checkout.',
+         567.00, 27.00, 540.00, 'ACCEPTED', 'PENDING'
+       )
+       ON CONFLICT (booking_id) DO UPDATE SET
+         guest_id = EXCLUDED.guest_id,
+         host_or_guide_id = EXCLUDED.host_or_guide_id,
+         check_in = EXCLUDED.check_in,
+         check_out = EXCLUDED.check_out,
+         total_price = EXCLUDED.total_price,
+         platform_fee = EXCLUDED.platform_fee,
+         host_payout = EXCLUDED.host_payout,
+         status = 'ACCEPTED',
+         payment_status = CASE
+           WHEN bookings.status = 'CONFIRMED' THEN bookings.payment_status
+           ELSE 'PENDING'
+         END,
+         guest_message = EXCLUDED.guest_message,
+         updated_at = NOW()
+       WHERE bookings.status IS DISTINCT FROM 'CONFIRMED'`,
+    );
+
+    // Past confirmed stay for Ratings (same host family — profile exists after reseed).
+    await client.query(
+      `INSERT INTO bookings (
+         booking_id, guest_id, host_or_guide_id, booking_type,
+         check_in, check_out, guest_message,
+         total_price, platform_fee, host_payout, status, payment_status
+       ) VALUES (
+         '44444444-4444-4444-4444-444444444403',
+         '11111111-1111-1111-1111-111111111101',
+         '33333333-3333-3333-3333-333333333301',
+         'HOST',
+         '2025-09-01', '2025-12-01',
+         'Short orientation stay before semester housing opened.',
+         15766.00, 751.00, 15015.00, 'CONFIRMED', 'PAID'
+       )
+       ON CONFLICT (booking_id) DO UPDATE SET
+         host_or_guide_id = EXCLUDED.host_or_guide_id,
+         status = 'CONFIRMED',
+         payment_status = 'PAID',
+         updated_at = NOW()`,
+    );
+
     await client.query('COMMIT');
 
     const rows = await client.query(

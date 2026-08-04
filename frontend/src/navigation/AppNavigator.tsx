@@ -1678,14 +1678,17 @@ export default function AppNavigator() {
   const hostIncoming = hostPendingDisplay;
   const guideIncoming = guidePendingDisplay;
 
-  const displayBookings = useMemo(
-    () =>
-      withDemoFallback(homeApi.bookings, studentBookingsMock, {
-        isLoading: homeApi.isLoading,
-        error: homeApi.error,
-      }),
-    [homeApi.bookings, homeApi.isLoading, homeApi.error],
-  );
+  // Prefer live bookings only. Mock catalog fills the list when empty so Paystack /
+  // ratings are not polluted with duplicate preview rows (different ids, same stay).
+  const displayBookings = useMemo(() => {
+    if (homeApi.bookings.length > 0) {
+      return homeApi.bookings;
+    }
+    return withDemoFallback(homeApi.bookings, studentBookingsMock, {
+      isLoading: homeApi.isLoading,
+      error: homeApi.error,
+    });
+  }, [homeApi.bookings, homeApi.isLoading, homeApi.error]);
 
   const mergedBookings = useMemo(
     () => mergeBookingsWithLocalOverrides(displayBookings, localBookings),
@@ -4492,6 +4495,13 @@ export default function AppNavigator() {
               if (payLoading) {
                 return;
               }
+              if (!isApiBookingId(bookingId)) {
+                Alert.alert(
+                  'Live booking required',
+                  'This preview stay cannot open Paystack. Open an accepted booking from the server (or request a stay and have the host accept it), then pay from Bookings.',
+                );
+                return;
+              }
               navigation.navigate('PaymentCheckout', { bookingId });
             }}
             onTabPress={(tabId) => routeTabPress(navigation, tabId)}
@@ -4811,6 +4821,15 @@ export default function AppNavigator() {
               booking.status !== 'CONFIRMED' &&
               booking.status !== 'CHECKED_IN'
             ) {
+              return false;
+            }
+            // Never ask a seeker to rate themselves (bad providerName fallback).
+            const host = booking.hostName.trim().toLowerCase();
+            const self = resolvedName.trim().toLowerCase();
+            if (host && self && host === self) {
+              return false;
+            }
+            if (host === 'host' || host === 'provider') {
               return false;
             }
             const endIso = booking.checkOut || booking.session?.sessionDate;

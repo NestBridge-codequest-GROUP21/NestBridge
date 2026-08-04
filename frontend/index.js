@@ -1,3 +1,4 @@
+import { LogBox } from 'react-native';
 import { registerRootComponent } from 'expo'; //to import
 
 import App from './App';
@@ -5,6 +6,13 @@ import {
   recordBootError,
   setBootStage,
 } from './src/services/bootDiagnostics';
+
+// Expo Go shows a red Android push warning that judges mistake for an app error.
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  'Android Push notifications (remote notifications)',
+  'functionality is not fully supported in Expo Go',
+]);
 
 setBootStage('js_entry');
 

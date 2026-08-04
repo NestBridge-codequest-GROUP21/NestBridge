@@ -170,9 +170,10 @@ export default function StudentBookingsScreen({
       : activeFilter === 'past'
         ? emptyStates.studentBookings.past
         : emptyStates.studentBookings.active;
-  const payNowBooking =
-    bookings.find((b) => b.status === 'ACCEPTED' && isApiBookingId(b.id)) ??
-    bookings.find((b) => b.status === 'ACCEPTED');
+  // Only live API bookings can open Paystack — mock/preview rows have no server payment.
+  const payNowBooking = bookings.find(
+    (b) => b.status === 'ACCEPTED' && isApiBookingId(b.id),
+  );
 
   return (
     <View style={styles.root}>
@@ -355,7 +356,7 @@ export default function StudentBookingsScreen({
 
                     <Text style={styles.total}>{bookingTotalLine(booking)}</Text>
 
-                    {booking.status === 'ACCEPTED' ? (
+                    {booking.status === 'ACCEPTED' && isApiBookingId(booking.id) ? (
                       <Pressable
                         style={({ pressed }) => [
                           styles.rowPayButton,

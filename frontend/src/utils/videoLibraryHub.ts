@@ -175,33 +175,46 @@ export function buildPersonalizedRecommendations(
     .map((video) => ({
       video,
       score: topicScore(video, topics),
+      hub: hubCategoryIdFor(video),
     }))
-    .filter((entry) => entry.score > 0)
     .sort((a, b) => {
       const aDone = progress.completedKeys.includes(a.video.videoKey) ? 1 : 0;
       const bDone = progress.completedKeys.includes(b.video.videoKey) ? 1 : 0;
       if (aDone !== bDone) {
         return aDone - bDone;
       }
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
       const aStarted = progress.startedKeys.includes(a.video.videoKey) ? 0 : 1;
       const bStarted = progress.startedKeys.includes(b.video.videoKey) ? 0 : 1;
       if (aStarted !== bStarted) {
         return aStarted - bStarted;
       }
-      return b.score - a.score;
+      return a.hub.localeCompare(b.hub);
     });
 
   const seen = new Set<string>();
   const picks: VideoLibraryCardModel[] = [];
-  for (const entry of ranked) {
-    const key = entry.video.videoKey;
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    picks.push(toVideoLibraryCard(entry.video, progress));
-    if (picks.length >= limit) {
-      break;
+  // Prefer scored matches first, then fill from remaining unwatched so For you
+  // is never identical to the full All topics library.
+  for (const preferScored of [true, false]) {
+    for (const entry of ranked) {
+      if (preferScored && entry.score <= 0) {
+        continue;
+      }
+      if (!preferScored && entry.score > 0) {
+        continue;
+      }
+      const key = entry.video.videoKey;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      picks.push(toVideoLibraryCard(entry.video, progress));
+      if (picks.length >= limit) {
+        return picks;
+      }
     }
   }
   return picks;

@@ -1,14 +1,31 @@
-import { Platform } from 'react-native';
+import { LogBox, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { registerDeviceToken } from './api';
 import { devicePlatformLabel } from './paymentFlow';
 
+/** Suppress Expo Go Android push warning — it is not useful to end users/judges. */
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  'Android Push notifications (remote notifications)',
+  'functionality is not fully supported in Expo Go',
+]);
+
+function isExpoGo(): boolean {
+  // appOwnership is "expo" in Expo Go; null/undefined in standalone / dev clients.
+  return Constants.appOwnership === 'expo';
+}
+
 /**
  * Registers for push silently after sign-in.
  * Fully defensive: missing Expo projectId, permissions, or native modules must never crash startup.
+ * Skips remote push registration in Expo Go on Android (SDK 53+) to avoid the red warning toast.
  */
 export async function registerPushTokenIfAvailable(): Promise<void> {
   try {
+    if (isExpoGo() && Platform.OS === 'android') {
+      return;
+    }
+
     const Device = await import('expo-device');
     if (!Device.isDevice) {
       return;
