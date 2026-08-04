@@ -1,6 +1,13 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -19,7 +26,10 @@ import {
   layout,
 } from '../../constants/theme';
 import type { VideoResourceApi } from '../../services/api';
-import { isPlayableYoutubeId } from '../../utils/videoPlayback';
+import {
+  isPlayableYoutubeId,
+  youtubeThumbnailUrl,
+} from '../../utils/videoPlayback';
 import type { VideoWatchStatus } from '../../types/videoLibrary';
 import { watchStatusLabel } from '../../utils/videoLibraryHub';
 
@@ -49,7 +59,12 @@ export default function VideoDetailScreen({
   onStarted,
 }: VideoDetailScreenProps) {
   const styles = useThemedStyles(createStyles);
-  const { colors } = useTheme();
+  const { colors, overlays } = useTheme();
+  const [playerReady, setPlayerReady] = useState(false);
+
+  useEffect(() => {
+    setPlayerReady(false);
+  }, [video?.videoKey, video?.youtubeId]);
 
   useEffect(() => {
     if (video && isPlayableYoutubeId(video.youtubeId)) {
@@ -62,6 +77,7 @@ export default function VideoDetailScreen({
   if (isLoading) {
     return (
       <View style={styles.loader}>
+        <StatusBar style="dark" />
         <Text style={styles.loadingLabel}>Loading lesson…</Text>
         <SkeletonLoader style={styles.skeleton} lines={4} />
       </View>
@@ -93,6 +109,8 @@ export default function VideoDetailScreen({
   const canPlay = isPlayableYoutubeId(video.youtubeId);
   const playerBackground = colors.navy;
   const categoryLabel = hubCategoryLabel ?? video.category;
+  const posterUri =
+    video.thumbnailUrl?.trim() || youtubeThumbnailUrl(video.youtubeId) || null;
   const statusTone =
     watchStatus === 'watched'
       ? 'success'
@@ -130,18 +148,50 @@ export default function VideoDetailScreen({
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.playerWrap}>
           {canPlay ? (
-            <WebView
-              source={{
-                html: embedHtml,
-                baseUrl: 'https://nestbridge.app',
-              }}
-              style={styles.player}
-              allowsFullscreenVideo
-              allowsInlineMediaPlayback
-              mediaPlaybackRequiresUserAction={false}
-              javaScriptEnabled
-              domStorageEnabled
-            />
+            <>
+              <WebView
+                source={{
+                  html: embedHtml,
+                  baseUrl: 'https://nestbridge.app',
+                }}
+                style={styles.player}
+                allowsFullscreenVideo
+                allowsInlineMediaPlayback
+                mediaPlaybackRequiresUserAction={false}
+                javaScriptEnabled
+                domStorageEnabled
+                startInLoadingState={false}
+                onLoadEnd={() => setPlayerReady(true)}
+                onError={() => setPlayerReady(true)}
+              />
+              {!playerReady ? (
+                <View
+                  style={styles.playerLoading}
+                  accessibilityRole="progressbar"
+                  accessibilityLabel="Loading video"
+                >
+                  {posterUri ? (
+                    <Image
+                      source={{ uri: posterUri }}
+                      style={styles.playerPoster}
+                      resizeMode="cover"
+                    />
+                  ) : null}
+                  <View
+                    style={[
+                      styles.playerLoadingScrim,
+                      { backgroundColor: overlays.scrimStrong },
+                    ]}
+                  >
+                    <ActivityIndicator size="large" color={colors.onPrimary} />
+                    <Text style={styles.playerLoadingLabel}>Loading video…</Text>
+                    <Text style={styles.playerLoadingHint}>
+                      This can take a moment on slower connections
+                    </Text>
+                  </View>
+                </View>
+              ) : null}
+            </>
           ) : (
             <View style={styles.comingSoon}>
               <Text style={styles.comingSoonTitle}>Video unavailable</Text>
@@ -207,11 +257,41 @@ function createStyles({ colors, shadows }: AppTheme) {
       width: '100%',
       aspectRatio: 16 / 9,
       backgroundColor: colors.navy,
+      overflow: 'hidden',
       ...shadows.card,
     },
     player: {
       flex: 1,
       backgroundColor: colors.navy,
+    },
+    playerLoading: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.navy,
+    },
+    playerPoster: {
+      ...StyleSheet.absoluteFillObject,
+      opacity: 0.55,
+    },
+    playerLoadingScrim: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: spacing.lg,
+      gap: spacing.sm,
+    },
+    playerLoadingLabel: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.body,
+      fontWeight: fontWeights.semibold,
+      color: colors.onPrimary,
+      textAlign: 'center',
+    },
+    playerLoadingHint: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.caption,
+      color: colors.border,
+      textAlign: 'center',
+      lineHeight: lineHeights.caption,
     },
     comingSoon: {
       flex: 1,

@@ -166,7 +166,28 @@ export function presentableLoading(
   return isLoading && !isPresentingDemoData(live, display);
 }
 
-/** Hide API error banners when demo content is covering the gap. */
+/** Transient connectivity copy — noisy on home tabs when empty states already explain. */
+export function isSoftConnectivityError(message: string | null | undefined): boolean {
+  if (!message) {
+    return false;
+  }
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('cannot reach') ||
+    normalized.includes('taking too long') ||
+    normalized.includes('check your connection') ||
+    normalized.includes('waking up') ||
+    normalized.includes('network error') ||
+    normalized.includes('timeout') ||
+    normalized.includes('failed to fetch')
+  );
+}
+
+/**
+ * Hide API error banners when demo content is covering the gap.
+ * Soft connectivity failures with nothing to show are suppressed so homes
+ * stay calm — empty states + Retry on real failures remain.
+ */
 export function presentableError(
   error: string | null | undefined,
   live: unknown[],
@@ -175,7 +196,13 @@ export function presentableError(
   if (!error) {
     return null;
   }
-  return isPresentingDemoData(live, display) ? null : error;
+  if (isPresentingDemoData(live, display)) {
+    return null;
+  }
+  if (isSoftConnectivityError(error) && display.length === 0) {
+    return null;
+  }
+  return error;
 }
 
 /** Normalize phone/SMS dial strings for uniqueness checks. */

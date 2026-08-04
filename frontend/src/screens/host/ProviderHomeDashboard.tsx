@@ -112,7 +112,11 @@ export default function ProviderHomeDashboard({
 }: ProviderHomeDashboardProps) {
   const styles = useThemedStyles(createStyles);
 
-  const secondaryRequests = featuredCard ? requests.slice(1) : requests;
+  // Featured already shows the first request — preview at most two more, then View all.
+  const secondaryRequests = (featuredCard ? requests.slice(1) : requests).slice(0, 2);
+  const hasRecommendationItems = recommendationSections.some(
+    (section) => section.items.length > 0,
+  );
 
   return (
     <View style={styles.root}>
@@ -144,35 +148,6 @@ export default function ProviderHomeDashboard({
           />
         ) : null}
 
-        <QuickActionsGrid
-          actions={quickActions}
-          onActionPress={onQuickActionPress}
-        />
-
-        <RecommendedForYou
-          headline={recommendationHeadline}
-          city={recommendationCity}
-          sections={recommendationSections}
-          emptyState={emptyStates.recommendations}
-          onEmptyPrimaryAction={onRecommendationsEmptyPress}
-          onItemPress={onRecommendationItemPress}
-        />
-
-        {performanceStats.length > 0 ? (
-          <HomeStatsCarousel title={performanceTitle} items={performanceStats} />
-        ) : null}
-
-        {providerRole === 'guide' && tourSuggestions.length > 0 ? (
-          <View style={styles.sectionWrap}>
-            <SectionHeader title={tourSuggestionsTitle} />
-            <ExploreSectionList
-              sections={tourSuggestions}
-              variant="grid"
-              onSectionPress={onTourSuggestionPress}
-            />
-          </View>
-        ) : null}
-
         {secondaryRequests.length > 0 ? (
           <View style={styles.requestsSection}>
             <SectionHeader
@@ -191,7 +166,38 @@ export default function ProviderHomeDashboard({
           </View>
         ) : null}
 
+        <QuickActionsGrid
+          actions={quickActions}
+          onActionPress={onQuickActionPress}
+        />
+
         <RecentActivityList items={recentActivity} />
+
+        {performanceStats.length > 0 ? (
+          <HomeStatsCarousel title={performanceTitle} items={performanceStats} />
+        ) : null}
+
+        {providerRole === 'guide' && tourSuggestions.length > 0 ? (
+          <View style={styles.sectionWrap}>
+            <SectionHeader title={tourSuggestionsTitle} />
+            <ExploreSectionList
+              sections={tourSuggestions}
+              variant="grid"
+              onSectionPress={onTourSuggestionPress}
+            />
+          </View>
+        ) : null}
+
+        {hasRecommendationItems ? (
+          <RecommendedForYou
+            headline={recommendationHeadline}
+            city={recommendationCity}
+            sections={recommendationSections}
+            emptyState={emptyStates.recommendations}
+            onEmptyPrimaryAction={onRecommendationsEmptyPress}
+            onItemPress={onRecommendationItemPress}
+          />
+        ) : null}
 
         {reminder ? (
           <ReminderBanner message={reminder} onPress={onReminderPress} />

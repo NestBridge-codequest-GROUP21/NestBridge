@@ -153,9 +153,7 @@ export default function ExploreHomeScreen({
             continueLabel="Complete Profile"
             onContinueSetup={onSetupPress}
           />
-        ) : null}
-
-        {homeDataError ? (
+        ) : homeDataError ? (
           <SectionRetryBanner
             message={homeDataError}
             onRetry={onRetryHome}
@@ -175,11 +173,11 @@ export default function ExploreHomeScreen({
           onActionPress={onQuickActionPress}
         />
 
-        {journeyProgress ? (
+        {journeyProgress && !showSetupBanner ? (
           <JourneyProgressCard journey={journeyProgress} />
         ) : null}
 
-        {guidesLoadError ? (
+        {!homeDataError && guidesLoadError && suggestedGuides.length === 0 ? (
           <SectionRetryBanner
             message={guidesLoadError}
             onRetry={onRetryGuides}
@@ -198,7 +196,7 @@ export default function ExploreHomeScreen({
           />
         )}
 
-        {recommendationSections.length > 0 ? (
+        {recommendationSections.some((section) => section.items.length > 0) ? (
           <RecommendedForYou
             headline={recommendationHeadline}
             city={cityLabel}
@@ -209,7 +207,7 @@ export default function ExploreHomeScreen({
           />
         ) : null}
 
-        {activityLoadError ? (
+        {!homeDataError && activityLoadError && recentActivity.length === 0 ? (
           <SectionRetryBanner
             message={activityLoadError}
             onRetry={onRetryActivity}
@@ -219,7 +217,7 @@ export default function ExploreHomeScreen({
           <RecentActivityList items={recentActivity} />
         )}
 
-        {!homeDataError && reminder ? (
+        {!homeDataError && !showSetupBanner && reminder ? (
           <ReminderBanner message={reminder} onPress={onReminderPress} />
         ) : null}
       </ScreenScroll>

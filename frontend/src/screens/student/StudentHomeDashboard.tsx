@@ -140,15 +140,14 @@ export default function StudentHomeDashboard({
       />
 
       <ScreenScroll withTabBar withSosDock={showSosDock}>
+        {/* One status strip: setup first, else a single fatal retry — not a stack of banners. */}
         {showSetupBanner ? (
           <ProfileIncompleteBanner
             message="Complete your travel profile to unlock messaging, bookings, and personalized matches."
             continueLabel="Complete Profile"
             onContinueSetup={onSetupPress}
           />
-        ) : null}
-
-        {homeDataError ? (
+        ) : homeDataError ? (
           <SectionRetryBanner
             message={homeDataError}
             onRetry={onRetryHome}
@@ -174,11 +173,12 @@ export default function StudentHomeDashboard({
           />
         ) : null}
 
-        {journeyProgress ? (
+        {journeyProgress && !showSetupBanner ? (
           <JourneyProgressCard journey={journeyProgress} />
         ) : null}
 
-        {hostsLoadError ? (
+        {/* Keep host cards visible; soft section errors use empty state, not a second red banner. */}
+        {!homeDataError && hostsLoadError && suggestedHosts.length === 0 ? (
           <SectionRetryBanner
             message={hostsLoadError}
             onRetry={onRetryHosts}
@@ -209,7 +209,7 @@ export default function StudentHomeDashboard({
           />
         )}
 
-        {recommendationSections.length > 0 ? (
+        {recommendationSections.some((section) => section.items.length > 0) ? (
           <RecommendedForYou
             headline={recommendationHeadline}
             city={recommendationCity}
@@ -220,7 +220,7 @@ export default function StudentHomeDashboard({
           />
         ) : null}
 
-        {activityLoadError ? (
+        {!homeDataError && activityLoadError && recentActivity.length === 0 ? (
           <SectionRetryBanner
             message={activityLoadError}
             onRetry={onRetryActivity}
@@ -230,7 +230,7 @@ export default function StudentHomeDashboard({
           <RecentActivityList items={recentActivity} />
         )}
 
-        {!homeDataError && reminder ? (
+        {!homeDataError && !showSetupBanner && reminder ? (
           <ReminderBanner message={reminder} onPress={onReminderPress} />
         ) : null}
       </ScreenScroll>

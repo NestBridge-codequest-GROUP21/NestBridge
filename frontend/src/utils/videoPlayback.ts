@@ -33,6 +33,14 @@ export function isPlayableYoutubeId(youtubeId: string | null | undefined): boole
   return /^[\w-]{11}$/.test(youtubeId);
 }
 
+/** Poster image while the YouTube embed boots (avoids a blank navy frame). */
+export function youtubeThumbnailUrl(youtubeId: string | null | undefined): string | null {
+  if (!isPlayableYoutubeId(youtubeId) || !youtubeId) {
+    return null;
+  }
+  return `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
+}
+
 /**
  * Prefer curated Ghana video metadata by videoKey whenever the API returns
  * blocked, missing, or mismatched playback IDs (common on stale DBs).

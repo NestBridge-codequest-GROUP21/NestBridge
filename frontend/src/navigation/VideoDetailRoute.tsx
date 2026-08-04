@@ -67,15 +67,19 @@ export default function VideoDetailRoute({
     };
   }, [userId, videoKey]);
 
+  // Known Ghana lessons open from curated metadata immediately — no blank wait on API.
   const video = useMemo(() => {
+    const curated = videosApiMock.find((item) => item.videoKey === videoKey);
+    if (curated) {
+      return sanitizeVideoResource(videoApi.data ?? curated);
+    }
     if (videoApi.data) {
       return sanitizeVideoResource(videoApi.data);
     }
     if (!demoFallbackEnabled) {
       return null;
     }
-    const fallback = videosApiMock.find((item) => item.videoKey === videoKey);
-    return fallback ? sanitizeVideoResource(fallback) : null;
+    return null;
   }, [videoApi.data, videoKey, demoFallbackEnabled]);
 
   const card = useMemo(
