@@ -5,13 +5,13 @@ import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import { pickProfileImage, pickListingImage } from '../services/imagePicker';
+import { pickListingImage } from '../services/imagePicker';
 
 import IntentSelectScreen, {
   intentOptionsFromPrimary,
 } from '../screens/auth/IntentSelectScreen';
 import DestinationSetupScreen from '../screens/onboarding/DestinationSetupScreen';
-import ProfileSetupScreen from '../screens/onboarding/ProfileSetupScreen';
+import { ProfileSetupRoute } from './profileSetupRoute';
 import OnboardingReadyScreen from '../screens/onboarding/OnboardingReadyScreen';
 import StudentQuizScreen from '../screens/onboarding/StudentQuizScreen';
 import HostQuizScreen from '../screens/onboarding/HostQuizScreen';
@@ -128,10 +128,7 @@ import {
   getProgressForTrack,
   getProgressPercent,
   getStepsForTrack,
-  isIdentityLocked,
   isSeekerComplete,
-  MIN_ABOUT_LENGTH,
-  MIN_BIO_LENGTH,
 } from '../utils/accountProfile';
 import type { HomeRoute } from '../utils/accountProfile';
 import {
@@ -236,7 +233,6 @@ import {
 } from '../data/homeContentMock';
 import {
   destinationMock,
-  profileSetupMock,
   intentSelectMock,
   ONBOARDING_TOTAL_STEPS,
 } from '../data/studentOnboardingMock';
@@ -1341,8 +1337,6 @@ function syncFieldsFromProfileState(
     setArrivalDate: (v: string) => void;
     setDepartureDate: (v: string) => void;
     setDisplayName: (v: string) => void;
-    setBio: (v: string) => void;
-    setAbout: (v: string) => void;
   },
 ) {
   const data = state.seekerSetup.data;
@@ -1351,8 +1345,6 @@ function syncFieldsFromProfileState(
   setters.setArrivalDate(data.arrivalDate ?? '');
   setters.setDepartureDate(data.departureDate ?? '');
   setters.setDisplayName(data.displayName ?? fallbackName);
-  setters.setBio(data.bio ?? '');
-  setters.setAbout(data.about ?? '');
 }
 
 const DEFAULT_SESSION_DATE = isoDatePlusDays(7);
@@ -1432,82 +1424,6 @@ export default function AppNavigator() {
   const [arrivalDate, setArrivalDate] = useState('');
   const [departureDate, setDepartureDate] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [bio, setBio] = useState('');
-  const [about, setAbout] = useState('');
-  const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
-  const handleAddProfilePhoto = useCallback(async () => {
-    const picked = await pickProfileImage();
-    if (picked?.uri) {
-      setProfilePhotoUri(picked.uri);
-    }
-  }, []);
-
-  const saveProfileSetupStep = useCallback(
-    async (track: SetupTrack, options?: { skipIdentity?: boolean }) => {
-      const progress = getProgressForTrack(profileState, track);
-      const locked = Boolean(progress.data.identityLocked) &&
-        Boolean(progress.data.bio?.trim()) &&
-        Boolean(progress.data.about?.trim());
-
-      if (locked) {
-        await completeStep(track, 'profile', {
-          displayName: progress.data.displayName,
-          bio: progress.data.bio,
-          about: progress.data.about,
-          identityLocked: true,
-        });
-        return;
-      }
-
-      const profileName = displayName.trim() || user?.displayName?.trim() || '';
-      const nextBio = bio.trim();
-      const nextAbout = about.trim();
-
-      // Soft skip — mark the step done so they can browse; booking stays gated.
-      if (options?.skipIdentity) {
-        const stepData: Record<string, string | boolean> = {
-          identityLocked: false,
-        };
-        if (profileName.length >= 2) {
-          stepData.displayName = profileName;
-        }
-        if (nextBio) {
-          stepData.bio = nextBio;
-        }
-        if (nextAbout) {
-          stepData.about = nextAbout;
-        }
-        await completeStep(track, 'profile', stepData);
-        return;
-      }
-
-      if (profileName.length < 2 || nextBio.length < MIN_BIO_LENGTH || nextAbout.length < MIN_ABOUT_LENGTH) {
-        return;
-      }
-
-      let profilePhotoUrl: string | undefined;
-      try {
-        profilePhotoUrl = await uploadProfilePhotoIfConfigured(profilePhotoUri);
-      } catch {
-        // Photo is optional — never block continue if upload/S3 fails.
-        profilePhotoUrl = undefined;
-      }
-      const stepData: Record<string, string | boolean> = {
-        displayName: profileName,
-        bio: nextBio,
-        about: nextAbout,
-        identityLocked: true,
-      };
-      if (profilePhotoUrl) {
-        stepData.profilePhotoUrl = profilePhotoUrl;
-      }
-      await completeStep(track, 'profile', stepData);
-      if (profileName && profileName !== displayName) {
-        setDisplayName(profileName);
-      }
-    },
-    [about, bio, completeStep, displayName, profilePhotoUri, profileState, user?.displayName],
-  );
 
   const [pendingIntent, setPendingIntent] = useState<PrimaryIntent | null>(null);
   const [demoLoginBusy, setDemoLoginBusy] = useState(false);
@@ -2558,8 +2474,6 @@ export default function AppNavigator() {
         setArrivalDate,
         setDepartureDate,
         setDisplayName,
-        setBio,
-        setAbout,
       });
       if (options.resumeTrack) {
         navigateContinueSetup(
@@ -2608,8 +2522,6 @@ export default function AppNavigator() {
     setArrivalDate(progress.data.arrivalDate ?? '');
     setDepartureDate(progress.data.departureDate ?? '');
     setDisplayName(progress.data.displayName ?? user?.displayName ?? '');
-    setBio(progress.data.bio ?? '');
-    setAbout(progress.data.about ?? '');
   };
 
   const setupTracks = useMemo(() => {
@@ -3905,42 +3817,16 @@ export default function AppNavigator() {
       </Stack.Screen>
 
       <Stack.Screen name="ProfileSetup">
-        {({ navigation, route }) => {
-          const track = route.params.track;
-          const progress = getProgressForTrack(profileState, track);
-          const locked = isIdentityLocked(progress);
-          return (
-            <ProfileSetupScreen
-              currentStep={3}
-              totalSteps={ONBOARDING_TOTAL_STEPS}
-              {...profileSetupMock}
-              displayName={displayName}
-              bio={bio}
-              about={about}
-              initials={resolvedInitials}
-              photoUri={profilePhotoUri}
-              identityLocked={locked}
-              onAddPhoto={handleAddProfilePhoto}
-              onDisplayNameChange={setDisplayName}
-              onBioChange={setBio}
-              onAboutChange={setAbout}
-              onContinue={() => {
-                void (async () => {
-                  await saveProfileSetupStep(track);
-                  // Everyone hits KYC (verify now or later). Marketplace stays locked until staff approves.
-                  navigation.navigate('KYCPrompt', { track });
-                })();
-              }}
-              onSkipForNow={() => {
-                void (async () => {
-                  await saveProfileSetupStep(track, { skipIdentity: true });
-                  navigation.navigate('KYCPrompt', { track });
-                })();
-              }}
-              onBack={() => navigation.goBack()}
-            />
-          );
-        }}
+        {({ navigation, route }) => (
+          <ProfileSetupRoute
+            track={route.params.track}
+            onFinished={() => {
+              // Everyone hits KYC (verify now or later). Marketplace stays locked until staff approves.
+              navigation.navigate('KYCPrompt', { track: route.params.track });
+            }}
+            onBack={() => navigation.goBack()}
+          />
+        )}
       </Stack.Screen>
 
       <Stack.Screen name="KYCPrompt">

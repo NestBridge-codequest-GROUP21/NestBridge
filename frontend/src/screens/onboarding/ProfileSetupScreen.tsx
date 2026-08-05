@@ -18,7 +18,6 @@ import {
   borderRadius,
   borderWidths,
   lineHeights,
-  layout,
   touchTarget,
   avatarSizes,
 } from '../../constants/theme';
@@ -46,6 +45,7 @@ export interface ProfileSetupScreenProps {
   onContinue?: () => void;
   /** Soft skip — browse the app; booking will ask to finish bio later. */
   onSkipForNow?: () => void;
+  submitting?: boolean;
   onBack?: () => void;
 }
 
@@ -66,6 +66,7 @@ export default function ProfileSetupScreen({
   onAddPhoto,
   onContinue,
   onSkipForNow,
+  submitting = false,
   onBack,
 }: ProfileSetupScreenProps) {
   const styles = useThemedStyles(createStyles);
@@ -74,6 +75,9 @@ export default function ProfileSetupScreen({
   const insets = useSafeAreaInsets();
 
   const canContinue = useMemo(() => {
+    if (submitting) {
+      return false;
+    }
     if (identityLocked) {
       return true;
     }
@@ -81,7 +85,7 @@ export default function ProfileSetupScreen({
     const bioOk = bio.trim().length >= MIN_BIO_LENGTH;
     const aboutOk = about.trim().length >= MIN_ABOUT_LENGTH;
     return nameOk && bioOk && aboutOk;
-  }, [about, bio, displayName, identityLocked]);
+  }, [about, bio, displayName, identityLocked, submitting]);
 
   const bioHelper = identityLocked
     ? 'Locked in — this is how others recognize you.'
@@ -95,10 +99,7 @@ export default function ProfileSetupScreen({
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
 
       <ScreenScroll
-        contentContainerStyle={[
-          styles.content,
-          { paddingTop: insets.top + spacing.lg },
-        ]}
+        contentContainerStyle={{ paddingTop: insets.top + spacing.lg }}
       >
         {onBack ? <BackButton onPress={onBack} style={styles.back} /> : null}
 
@@ -118,6 +119,7 @@ export default function ProfileSetupScreen({
         <Pressable
           style={styles.avatarSection}
           onPress={onAddPhoto}
+          disabled={submitting || identityLocked}
           accessibilityRole="button"
           accessibilityLabel={photoUri ? 'Change photo' : 'Add photo'}
         >
@@ -139,8 +141,8 @@ export default function ProfileSetupScreen({
             label="Display name"
             value={displayName}
             placeholder="How hosts will see you"
-            onChangeText={identityLocked ? undefined : onDisplayNameChange}
-            editable={!identityLocked}
+            onChangeText={identityLocked || submitting ? undefined : onDisplayNameChange}
+            editable={!identityLocked && !submitting}
             autoCapitalize="words"
             helperText={
               identityLocked
@@ -152,16 +154,16 @@ export default function ProfileSetupScreen({
             label="Short bio"
             value={bio}
             placeholder="Exchange student in Accra — love cooking and history"
-            onChangeText={identityLocked ? undefined : onBioChange}
-            editable={!identityLocked}
+            onChangeText={identityLocked || submitting ? undefined : onBioChange}
+            editable={!identityLocked && !submitting}
             helperText={bioHelper}
           />
           <FormTextField
             label="About you"
             value={about}
             placeholder="Share who you are, what brings you here, and what others should know before meeting you."
-            onChangeText={identityLocked ? undefined : onAboutChange}
-            editable={!identityLocked}
+            onChangeText={identityLocked || submitting ? undefined : onAboutChange}
+            editable={!identityLocked && !submitting}
             multiline
             numberOfLines={5}
             helperText={aboutHelper}
@@ -171,12 +173,14 @@ export default function ProfileSetupScreen({
         <PrimaryButton
           label={identityLocked ? 'Continue' : 'Save and lock profile'}
           onPress={onContinue}
+          loading={submitting}
           disabled={!canContinue}
         />
         {!identityLocked && onSkipForNow ? (
           <SecondaryButton
             label="Skip for now — browse first"
             onPress={onSkipForNow}
+            disabled={submitting}
             style={styles.skipButton}
           />
         ) : null}
@@ -197,9 +201,6 @@ function createStyles({ colors, shadows }: AppTheme) {
     root: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    content: {
-      paddingHorizontal: layout.screenPaddingHorizontal,
     },
     back: {
       marginBottom: spacing.sm,

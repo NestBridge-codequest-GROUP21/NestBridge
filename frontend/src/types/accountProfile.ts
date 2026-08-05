@@ -12,6 +12,8 @@ export interface ProfileData {
   arrivalDate?: string;
   departureDate?: string;
   displayName?: string;
+  /** Optional profile photo URL after upload (or local URI before sync). */
+  profilePhotoUrl?: string;
   /** Short one-line intro shown on cards and search results. */
   bio?: string;
   /** Longer “about you” — locked once saved; how others decide who they’re meeting. */
