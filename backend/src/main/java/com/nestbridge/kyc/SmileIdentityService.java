@@ -70,9 +70,28 @@ public class SmileIdentityService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));
 
+        if (user.isIdentityVerified()) {
+            return KycSessionResponse.builder()
+                    .enabled(false)
+                    .message("You're already verified — NestBridge staff approved your identity.")
+                    .build();
+        }
+
         Optional<KycVerificationJob> existingPending = jobRepository
                 .findTopByUserIdOrderByCreatedAtDesc(userId)
                 .filter(job -> "PENDING".equals(job.getStatus()));
+
+        // One open review at a time — do not accept a second submission.
+        if (existingPending.isPresent()) {
+            KycVerificationJob job = existingPending.get();
+            return KycSessionResponse.builder()
+                    .enabled(Boolean.TRUE.equals(smileEnabled) && job.getVerificationUrl() != null)
+                    .verificationUrl(job.getVerificationUrl())
+                    .jobId(job.getJobId().toString())
+                    .message(
+                            "Your verification is already under review. NestBridge staff will accept or decline it — check Verification status in Profile.")
+                    .build();
+        }
 
         if (!smileEnabled || partnerId == null || partnerId.isBlank()
                 || apiKey == null || apiKey.isBlank()) {
@@ -82,37 +101,18 @@ public class SmileIdentityService {
                         HttpStatus.BAD_REQUEST,
                         "Please upload a clear photo of your face or ID for NestBridge staff to review.");
             }
-            KycVerificationJob job;
-            boolean created = false;
-            if (existingPending.isPresent()) {
-                job = existingPending.get();
-            } else {
-                job = KycVerificationJob.builder()
-                        .userId(userId)
-                        .provider("MANUAL")
-                        .status("PENDING")
-                        .build();
-                created = true;
-            }
+            KycVerificationJob job = KycVerificationJob.builder()
+                    .userId(userId)
+                    .provider("MANUAL")
+                    .status("PENDING")
+                    .build();
             storeDocumentOnJob(job, document);
             job = jobRepository.save(job);
-            if (created) {
-                staffNotificationService.onManualKycPending(user);
-            }
+            staffNotificationService.onManualKycPending(user);
             return KycSessionResponse.builder()
                     .enabled(false)
                     .jobId(job.getJobId().toString())
                     .message("Photo received — NestBridge staff will review your verification.")
-                    .build();
-        }
-
-        if (existingPending.isPresent()) {
-            KycVerificationJob job = existingPending.get();
-            return KycSessionResponse.builder()
-                    .enabled(true)
-                    .verificationUrl(job.getVerificationUrl())
-                    .jobId(job.getJobId().toString())
-                    .message("Open the verification link to complete ID check.")
                     .build();
         }
 

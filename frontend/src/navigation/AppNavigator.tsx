@@ -4115,12 +4115,17 @@ export default function AppNavigator() {
       <Stack.Screen name="KYCPrompt">
         {({ navigation, route }) => {
           const { track, afterVerify = 'OnboardingReady' } = route.params;
+          const openStatus = () => {
+            navigation.navigate('VerificationStatus');
+          };
           return (
             <KycPromptRoute
               track={track}
+              onShowStatus={openStatus}
               onFinished={() => {
+                // Soft-skip / done without a new status screen destination.
                 if (afterVerify === 'VerificationStatus') {
-                  navigation.navigate('VerificationStatus');
+                  openStatus();
                   return;
                 }
                 navigation.navigate('OnboardingReady', { track });

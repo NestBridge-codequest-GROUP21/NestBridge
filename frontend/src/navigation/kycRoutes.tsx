@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Linking } from 'react-native';
+import { ActivityIndicator, Linking, View, StyleSheet } from 'react-native';
 import KYCPromptScreen from '../screens/host/KYCPromptScreen';
 import VerificationStatusScreen, {
   type VerificationUiStatus,
 } from '../screens/shared/VerificationStatusScreen';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../theme';
 import { kycPromptForTrack } from '../data/kycPromptMock';
 import { pickKycDocumentImage, type PickedImage } from '../services/imagePicker';
 import {
@@ -13,6 +14,7 @@ import {
   getKycStatus,
 } from '../services/api';
 import { appAlert } from '../utils/appAlert';
+import { spacing } from '../constants/theme';
 
 function normalizeVerificationStatus(raw: string | undefined | null): VerificationUiStatus {
   const value = (raw ?? 'none').toLowerCase();
@@ -25,11 +27,15 @@ function normalizeVerificationStatus(raw: string | undefined | null): Verificati
 export interface KycPromptRouteProps {
   track: 'SEEKER' | 'HOST' | 'GUIDE';
   onFinished: () => void;
+  /** When the member already has a review in flight or is verified — open status instead of a new submit. */
+  onShowStatus?: () => void;
 }
 
-export function KycPromptRoute({ track, onFinished }: KycPromptRouteProps) {
+export function KycPromptRoute({ track, onFinished, onShowStatus }: KycPromptRouteProps) {
   const { refreshSession } = useAuth();
+  const { colors } = useTheme();
   const [submitting, setSubmitting] = useState(false);
+  const [gateLoading, setGateLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<PickedImage | null>(null);
   const checkedRef = useRef(false);
 
@@ -44,13 +50,55 @@ export function KycPromptRoute({ track, onFinished }: KycPromptRouteProps) {
             "You're verified",
             'NestBridge staff already approved your identity. Core actions are unlocked.',
           );
-          onFinished();
+          if (onShowStatus) {
+            onShowStatus();
+          } else {
+            onFinished();
+          }
+          return;
         }
+        const result = await getKycStatus();
+        const status = normalizeVerificationStatus(result.status);
+        if (status === 'pending') {
+          appAlert(
+            'Verification under review',
+            'You already submitted for staff review. NestBridge will notify you when they accept or decline — check status anytime from Profile.',
+          );
+          if (onShowStatus) {
+            onShowStatus();
+          } else {
+            onFinished();
+          }
+          return;
+        }
+        if (status === 'approved') {
+          appAlert(
+            "You're verified",
+            'NestBridge staff already approved your identity. Core actions are unlocked.',
+          );
+          if (onShowStatus) {
+            onShowStatus();
+          } else {
+            onFinished();
+          }
+          return;
+        }
+        // rejected or none → stay on prompt so they can (re)submit once.
       } catch (error) {
         appAlert('Connection issue', getApiErrorMessage(error));
+      } finally {
+        setGateLoading(false);
       }
     })();
-  }, [onFinished, refreshSession]);
+  }, [onFinished, onShowStatus, refreshSession]);
+
+  if (gateLoading) {
+    return (
+      <View style={[styles.gate, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.teal} />
+      </View>
+    );
+  }
 
   return (
     <KYCPromptScreen
@@ -88,6 +136,23 @@ export function KycPromptRoute({ track, onFinished }: KycPromptRouteProps) {
           }
           setSubmitting(true);
           try {
+            // Re-check so a second tap cannot create another review.
+            const latest = await getKycStatus();
+            const status = normalizeVerificationStatus(latest.status);
+            if (status === 'pending' || status === 'approved') {
+              appAlert(
+                status === 'pending' ? 'Verification under review' : "You're verified",
+                status === 'pending'
+                  ? 'You already have a review in progress. Check Verification status in Profile.'
+                  : 'NestBridge staff already approved your identity.',
+              );
+              if (onShowStatus) {
+                onShowStatus();
+              } else {
+                onFinished();
+              }
+              return;
+            }
             const session = await createKycSession({
               uri: selectedPhoto.uri,
               mimeType: selectedPhoto.mimeType,
@@ -101,7 +166,11 @@ export function KycPromptRoute({ track, onFinished }: KycPromptRouteProps) {
                   ?? 'Your photo is with NestBridge staff. You can keep browsing until they approve you.',
               );
             }
-            onFinished();
+            if (onShowStatus) {
+              onShowStatus();
+            } else {
+              onFinished();
+            }
           } catch (error) {
             appAlert('Could not submit verification', getApiErrorMessage(error));
           } finally {
@@ -172,7 +241,11 @@ export function VerificationStatusRoute({
       refreshing={refreshing}
       error={error}
       onBack={onBack}
-      onVerifyNow={onVerifyNow}
+      onVerifyNow={
+        status === 'pending' || status === 'approved'
+          ? undefined
+          : onVerifyNow
+      }
       onRefresh={() => {
         void loadStatus('refresh');
       }}
@@ -182,3 +255,12 @@ export function VerificationStatusRoute({
     />
   );
 }
+
+const styles = StyleSheet.create({
+  gate: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+});
