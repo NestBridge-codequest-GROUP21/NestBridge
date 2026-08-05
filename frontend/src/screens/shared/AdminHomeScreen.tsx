@@ -30,6 +30,7 @@ export interface AdminHomeScreenProps {
   staffName: string;
   overview: AdminOverview | null;
   isLoading?: boolean;
+  refreshing?: boolean;
   errorMessage?: string | null;
   tabBarItems: TabBarItem[];
   onTabPress?: (tabId: string) => void;
@@ -98,6 +99,7 @@ export default function AdminHomeScreen({
   staffName,
   overview,
   isLoading = false,
+  refreshing = false,
   errorMessage,
   tabBarItems,
   onTabPress,
@@ -125,10 +127,16 @@ export default function AdminHomeScreen({
         notificationCount={notificationCount}
         onNotificationPress={onNotificationPress}
       />
-      <ScreenScroll>
+      <ScreenScroll
+        keyboardAware={false}
+        withTabBar
+        withSosDock
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+      >
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
 
-        {isLoading && !overview ? (
+        {isLoading && !overview && !refreshing ? (
           <View style={styles.loadingWrap}>
             <ActivityIndicator />
             <Text style={styles.muted}>Loading platform overview…</Text>

@@ -68,7 +68,9 @@ export default function RootNavigator() {
     }
     const timer = setTimeout(() => {
       console.warn('[boot] forcing splash dismiss after timeout');
-      void recordBootError('splash_force', 'Forced splash dismiss after boot timeout');
+      void recordBootError('splash_force', 'Forced splash dismiss after boot timeout', {
+        persist: false,
+      });
       setForceBoot(true);
       setSplashDismissed(true);
     }, SPLASH_FORCE_MS);

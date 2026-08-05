@@ -3,12 +3,14 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
   ScrollViewProps,
   StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, layout } from '../constants/theme';
+import { useTheme } from '../theme';
 import useKeyboardHeight from '../hooks/useKeyboardHeight';
 import {
   KeyboardScrollProvider,
@@ -28,6 +30,9 @@ export interface ScreenScrollProps extends ScrollViewProps {
   keyboardAware?: boolean;
   /** Offset for sticky headers above this scroll view (iOS KAV). */
   keyboardVerticalOffset?: number;
+  /** Convenience pull-to-refresh — builds RefreshControl with brand colors. */
+  refreshing?: boolean;
+  onRefresh?: () => void;
   children: React.ReactNode;
 }
 
@@ -45,9 +50,13 @@ export default function ScreenScroll({
   style,
   keyboardShouldPersistTaps = 'handled',
   onScroll,
+  refreshing = false,
+  onRefresh,
+  refreshControl,
   ...rest
 }: ScreenScrollProps) {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const keyboardHeight = useKeyboardHeight();
   const scrollRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(0);
@@ -129,6 +138,20 @@ export default function ScreenScroll({
     [requestScrollToFocused],
   );
 
+  const resolvedRefreshControl =
+    refreshControl ??
+    (onRefresh ? (
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        tintColor={colors.teal}
+        colors={[colors.teal]}
+        progressBackgroundColor={colors.surface}
+      />
+    ) : undefined);
+
+  const pullToRefreshEnabled = Boolean(resolvedRefreshControl);
+
   const scroll = (
     <ScrollView
       ref={scrollRef}
@@ -147,6 +170,12 @@ export default function ScreenScroll({
         onScroll?.(event);
       }}
       {...rest}
+      // Short screens (error-only Ops dashboard) need bounce/overscroll or
+      // Android/iOS will never fire RefreshControl.
+      alwaysBounceVertical={pullToRefreshEnabled ? true : rest.alwaysBounceVertical}
+      bounces={pullToRefreshEnabled ? true : rest.bounces}
+      overScrollMode={pullToRefreshEnabled ? 'always' : rest.overScrollMode}
+      refreshControl={resolvedRefreshControl}
     >
       <KeyboardScrollProvider value={contextValue}>
         {children}

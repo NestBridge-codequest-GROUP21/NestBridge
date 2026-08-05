@@ -12,7 +12,6 @@ import {
   KeyboardAvoidingView,
   Image,
   ActivityIndicator,
-  RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
@@ -151,16 +150,9 @@ export default function StaffUserDetailScreen({
         onBack={onBack}
       />
       <ScreenScroll
-        refreshControl={
-          onRefresh ? (
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.teal}
-              colors={[colors.teal]}
-            />
-          ) : undefined
-        }
+        keyboardAware={false}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       >
         {isLoading && !refreshing ? <SkeletonLoader style={styles.loader} lines={4} /> : null}
 

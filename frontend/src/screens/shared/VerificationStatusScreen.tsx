@@ -1,12 +1,6 @@
 import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -119,16 +113,9 @@ export default function VerificationStatusScreen({
         onBack={onBack}
       />
       <ScreenScroll
-        refreshControl={
-          onRefresh ? (
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.teal}
-              colors={[colors.teal]}
-            />
-          ) : undefined
-        }
+        keyboardAware={false}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       >
         {error ? <InlineBanner tone="error" message={error} /> : null}
 

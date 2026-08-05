@@ -22,7 +22,7 @@ import {
 } from '../services/bootDiagnostics';
 
 /** Never leave the branded splash waiting forever on a hung refresh. */
-const AUTH_BOOT_TIMEOUT_MS = 8000;
+const AUTH_BOOT_TIMEOUT_MS = 25000;
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -67,7 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       console.warn('[auth] hydrate timed out — releasing splash wait');
-      void recordBootError('auth_hydrate_timeout', 'Auth hydrate exceeded timeout');
+      void recordBootError('auth_hydrate_timeout', 'Auth hydrate exceeded timeout', {
+        persist: false,
+      });
       finish();
     }, AUTH_BOOT_TIMEOUT_MS);
 

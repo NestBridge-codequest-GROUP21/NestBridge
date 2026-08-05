@@ -1,13 +1,6 @@
 import { useThemedStyles, type AppTheme, useTheme } from '../../theme';
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -73,16 +66,11 @@ export default function StaffPendingKycScreen({
         onBack={onBack}
       />
       <ScreenScroll
-        refreshControl={
-          onRefresh ? (
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.teal}
-              colors={[colors.teal]}
-            />
-          ) : undefined
-        }
+        keyboardAware={false}
+        withTabBar={Boolean(tabBarItems?.length)}
+        withSosDock={Boolean(tabBarItems?.length)}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       >
         {errorMessage ? <InlineBanner tone="error" message={errorMessage} /> : null}
 

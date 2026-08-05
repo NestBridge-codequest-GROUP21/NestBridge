@@ -87,10 +87,15 @@ export function AdminHomeRoute({
 }: AdminHomeRouteProps) {
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const loadOverview = useCallback(async () => {
-    setIsLoading(true);
+  const loadOverview = useCallback(async (mode: 'initial' | 'refresh' = 'initial') => {
+    if (mode === 'refresh') {
+      setRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     setErrorMessage(null);
     try {
       setOverview(await getAdminOverview());
@@ -99,11 +104,12 @@ export function AdminHomeRoute({
       setErrorMessage(getApiErrorMessage(error));
     } finally {
       setIsLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadOverview();
+    void loadOverview('initial');
   }, [loadOverview]);
 
   return (
@@ -111,11 +117,12 @@ export function AdminHomeRoute({
       staffName={staffName}
       overview={overview}
       isLoading={isLoading}
+      refreshing={refreshing}
       errorMessage={errorMessage}
       tabBarItems={tabBarItems}
       onTabPress={onTabPress}
       onRefresh={() => {
-        void loadOverview();
+        void loadOverview('refresh');
       }}
       onOpenUsers={onOpenUsers}
       onOpenUsersByCategory={onOpenUsersByCategory}

@@ -152,13 +152,15 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
 
   useEffect(() => {
     let mounted = true;
-    const PROFILE_BOOT_TIMEOUT_MS = 8000;
+    // Match API timeout; slow mobile data should not look like a broken install.
+    const PROFILE_BOOT_TIMEOUT_MS = 25000;
     const timeout = setTimeout(() => {
       if (mounted) {
-        console.warn('[profile] hydrate timed out');
+        console.warn('[profile] hydrate timed out — continuing with local cache');
         void recordBootError(
           'profile_hydrate_timeout',
           'Account profile hydrate exceeded timeout',
+          { persist: false },
         );
         setIsLoading(false);
       }
@@ -195,7 +197,10 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
               '[profile] remote hydrate unauthorized — using local cache',
             );
           } else {
-            await recordBootError('profile_hydrate_remote', remoteError);
+            // Network blips are expected on mobile — log only, never sticky banner.
+            await recordBootError('profile_hydrate_remote', remoteError, {
+              persist: false,
+            });
           }
         }
 

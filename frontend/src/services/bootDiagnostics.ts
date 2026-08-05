@@ -41,6 +41,31 @@ function safeString(value: unknown): string {
   }
 }
 
+/** Stages that are usually slow network / cold start — do not scare users next launch. */
+const TRANSIENT_BOOT_STAGES = new Set([
+  'auth_hydrate_timeout',
+  'profile_hydrate_timeout',
+  'profile_hydrate_remote',
+  'splash_force',
+  'reset_url',
+  'linking_initial',
+  'linking_subscribe',
+]);
+
+function isTransientBootStage(stage: string): boolean {
+  if (TRANSIENT_BOOT_STAGES.has(stage)) {
+    return true;
+  }
+  return stage.startsWith('error_boundary:auth_refresh')
+    || stage.startsWith('error_boundary:profile_hydrate');
+}
+
+function looksLikeNetworkBlip(message: string): boolean {
+  return /network|timeout|timed out|ECONNABORTED|ERR_NETWORK|connection issue|offline|unreachable/i.test(
+    message,
+  );
+}
+
 /** In-memory breadcrumb for the current cold start (also logged). */
 export function setBootStage(stage: BootStage): void {
   currentStage = stage;
@@ -55,14 +80,29 @@ export function getLastBootErrorMessage(): string | null {
   return lastErrorMessage;
 }
 
+export type RecordBootErrorOptions = {
+  /** When false, log only — do not show on the next launch. Default: persist for real crashes. */
+  persist?: boolean;
+};
+
 /** Persist a boot/startup failure so the next launch can surface it without adb. */
 export async function recordBootError(
   stage: string,
   error: unknown,
+  options?: RecordBootErrorOptions,
 ): Promise<void> {
   const message = safeString(error);
   lastErrorMessage = message;
   console.error(`[boot:error] ${stage}`, message);
+
+  const shouldPersist =
+    options?.persist ??
+    (!isTransientBootStage(stage) && !looksLikeNetworkBlip(message));
+
+  if (!shouldPersist) {
+    return;
+  }
+
   try {
     const payload: BootErrorRecord = {
       stage,
@@ -86,6 +126,11 @@ export async function loadLastBootError(): Promise<BootErrorRecord | null> {
       typeof parsed?.stage === 'string' &&
       typeof parsed?.message === 'string'
     ) {
+      // Drop stale network/timeout banners left by older builds.
+      if (isTransientBootStage(parsed.stage) || looksLikeNetworkBlip(parsed.message)) {
+        await clearLastBootError();
+        return null;
+      }
       return parsed;
     }
     return null;
