@@ -107,8 +107,6 @@ export default function AdminHomeScreen({
   onOpenUsers,
   onOpenUsersByCategory,
   onOpenPendingKyc,
-  onOpenModeration,
-  onOpenPreview,
   onOpenProfile,
   notificationCount = 0,
   onNotificationPress,
@@ -236,7 +234,7 @@ export default function AdminHomeScreen({
               />
             </View>
 
-            <SectionHeader title="Ops tools" />
+            <SectionHeader title="Identity queue" />
             <Card padding="none" style={styles.toolsCard}>
               <ToolRow
                 title="Pending KYC"
@@ -245,24 +243,9 @@ export default function AdminHomeScreen({
                     ? `${overview.pendingKycCount} identity review${
                         overview.pendingKycCount === 1 ? '' : 's'
                       } waiting`
-                    : 'Review identity submissions in the queue'
+                    : 'No identity reviews waiting right now'
                 }
                 onPress={onOpenPendingKyc}
-              />
-              <ToolRow
-                title="Manage users"
-                subtitle="Browse by role, search, suspend, KYC, staff grant"
-                onPress={onOpenUsers}
-              />
-              <ToolRow
-                title="Content moderation"
-                subtitle="Hide or restore host and guide listings"
-                onPress={onOpenModeration}
-              />
-              <ToolRow
-                title="App preview"
-                subtitle="Inspect student, tourist, host, or guide experience"
-                onPress={onOpenPreview}
                 bordered={false}
               />
             </Card>
