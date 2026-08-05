@@ -314,6 +314,13 @@ import {
   demoTopMatchHostIdForCity,
   demoTopGuideId,
 } from '../data/homeFeeds';
+import {
+  BUDGET_OPEN_MAX,
+  matchSearchDefaultsFromBudget,
+  parsePriceAmount,
+  priceInBudgetRange,
+  seekerBudgetRangeFromProfile,
+} from '../data/budgetRanges';
 import { sampleMatchResultsForCity } from '../data/matchResultsMock';
 import {
   suggestedGuidesMock,
@@ -1689,43 +1696,135 @@ export default function AppNavigator() {
     [guideProfileCache],
   );
 
+  const cacheHostMatches = useCallback(
+    (hostMatches: Awaited<ReturnType<typeof findMatches>>) => {
+      const results = hostMatches.map(matchToMatchResultHost);
+      setHostProfileCache((prev) => {
+        const next = { ...prev };
+        for (const match of hostMatches) {
+          next[match.targetId] = matchToHostSummary(match);
+        }
+        return next;
+      });
+      return results;
+    },
+    [],
+  );
+
   const runMatchSearch = useCallback(
     async (params: MatchSearchDefaults) => {
+      const quizRange = seekerBudgetRangeFromProfile(profileState);
+      const preferredMin = params.budgetMin;
+      const preferredMax =
+        params.budgetMax >= BUDGET_OPEN_MAX ? BUDGET_OPEN_MAX : params.budgetMax;
+      const searchRange = {
+        label: quizRange?.label ?? `GHS ${preferredMin}-${preferredMax}`,
+        min: preferredMin,
+        max: preferredMax,
+      };
       const matchParams = buildSearchMatchParams(profileState, {
         destinationCity: params.destinationCity,
         checkIn: params.checkIn,
         checkOut: params.checkOut,
-        budgetMax: params.budgetMax,
+        budgetMin: preferredMin,
+        budgetMax: preferredMax,
+        widenBudget: false,
       });
+      // Open-ended “Above GHS 350” should not send a fake max to the API.
+      if (preferredMax >= BUDGET_OPEN_MAX) {
+        delete matchParams.maxBudget;
+      }
       const cityLabel = matchParams.city ?? params.destinationCity;
+      const budgetLabel = searchRange.label;
 
       try {
         const matches = await findMatches(matchParams);
-        const hostMatches = matches.filter((m) => m.targetType === 'HOST');
+        const hostMatches = matches.filter(
+          (m) =>
+            m.targetType === 'HOST' &&
+            priceInBudgetRange(m.pricePerNight, searchRange),
+        );
         if (hostMatches.length > 0) {
-          const results = hostMatches.map(matchToMatchResultHost);
-          setHostProfileCache((prev) => {
-            const next = { ...prev };
-            for (const match of hostMatches) {
-              next[match.targetId] = matchToHostSummary(match);
-            }
-            return next;
-          });
-          return { results };
+          return { results: cacheHostMatches(hostMatches) };
         }
 
-        return {
-          results: [],
-          error: `No hosts found in ${cityLabel}. Try adjusting your dates or budget.`,
-        };
+        const wideParams = buildSearchMatchParams(profileState, {
+          destinationCity: params.destinationCity,
+          checkIn: params.checkIn,
+          checkOut: params.checkOut,
+          budgetMax: BUDGET_OPEN_MAX,
+          widenBudget: true,
+        });
+        const wider = (await findMatches(wideParams)).filter(
+          (m) => m.targetType === 'HOST',
+        );
+        if (wider.length === 0) {
+          return {
+            results: [],
+            error: `No hosts found in ${cityLabel}. Try adjusting your dates or destination.`,
+          };
+        }
+
+        const explore = await new Promise<boolean>((resolve) => {
+          Alert.alert(
+            'No hosts in your budget',
+            `Nothing matched ${budgetLabel}. ${wider.length} host${
+              wider.length === 1 ? '' : 's'
+            } are available in other price ranges. Explore them?`,
+            [
+              { text: 'Keep my budget', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Explore other prices', onPress: () => resolve(true) },
+            ],
+            { cancelable: true, onDismiss: () => resolve(false) },
+          );
+        });
+
+        if (!explore) {
+          return {
+            results: [],
+            error: `No hosts in ${budgetLabel} for ${cityLabel}. You chose to keep your budget.`,
+          };
+        }
+
+        return { results: cacheHostMatches(wider) };
       } catch (err) {
         const message =
           err instanceof Error ? err.message : 'Could not load matches.';
         return { results: [], error: message };
       }
     },
-    [profileState],
+    [profileState, cacheHostMatches],
   );
+
+  const confirmExploreOutsideHostBudget = useCallback(() => {
+    const label = homeApi.preferredBudgetLabel ?? 'your budget';
+    Alert.alert(
+      'Explore other price ranges?',
+      `No hosts match ${label} right now. Other priced hosts are available nearby.`,
+      [
+        { text: 'Keep my budget', style: 'cancel' },
+        {
+          text: 'Explore other prices',
+          onPress: () => homeApi.exploreOutsideHostBudget(),
+        },
+      ],
+    );
+  }, [homeApi]);
+
+  const confirmExploreOutsideGuideBudget = useCallback(() => {
+    const label = homeApi.preferredBudgetLabel ?? 'your budget';
+    Alert.alert(
+      'Explore other price ranges?',
+      `No guides match ${label} right now. Other priced sessions are available nearby.`,
+      [
+        { text: 'Keep my budget', style: 'cancel' },
+        {
+          text: 'Explore other prices',
+          onPress: () => homeApi.exploreOutsideGuideBudget(),
+        },
+      ],
+    );
+  }, [homeApi]);
 
   const openMessageWithParticipant = useCallback(
     async (
@@ -1852,18 +1951,30 @@ export default function AppNavigator() {
     [homeApi.guideMatches, homeApi.isLoading, homeApi.error],
   );
 
-  const suggestedGuidesDisplay = useMemo(
-    () =>
-      uniqueByKey(
-        withDemoFallback(
-          homeApi.suggestedGuides,
-          guideSummariesToDiscoveryItems(suggestedGuidesMock),
-          { isLoading: homeApi.isLoading, error: homeApi.error },
-        ),
-        (guide) => guide.id,
+  const suggestedGuidesDisplay = useMemo(() => {
+    const range = seekerBudgetRangeFromProfile(profileState);
+    if (homeApi.guideBudgetExploreAvailable && homeApi.suggestedGuides.length === 0) {
+      return [];
+    }
+    const demoGuides = guideSummariesToDiscoveryItems(
+      suggestedGuidesMock.filter((guide) =>
+        priceInBudgetRange(guide.pricePerSession, range),
       ),
-    [homeApi.suggestedGuides, homeApi.isLoading, homeApi.error],
-  );
+    );
+    return uniqueByKey(
+      withDemoFallback(homeApi.suggestedGuides, demoGuides, {
+        isLoading: homeApi.isLoading,
+        error: homeApi.error,
+      }),
+      (guide) => guide.id,
+    );
+  }, [
+    homeApi.suggestedGuides,
+    homeApi.guideBudgetExploreAvailable,
+    homeApi.isLoading,
+    homeApi.error,
+    profileState,
+  ]);
 
   const conversations = useMemo(() => {
     const profiles = [
@@ -1956,17 +2067,29 @@ export default function AppNavigator() {
     [homeApi.hostMatches, homeApi.isLoading, homeApi.error, cityLabel],
   );
 
-  const suggestedHostsDisplay = useMemo(
-    () =>
-      uniqueByKey(
-        withDemoFallback(homeApi.suggestedHosts, suggestedHostsForCity(cityLabel), {
-          isLoading: homeApi.isLoading,
-          error: homeApi.error,
-        }),
-        (host) => host.id,
-      ),
-    [homeApi.suggestedHosts, homeApi.isLoading, homeApi.error, cityLabel],
-  );
+  const suggestedHostsDisplay = useMemo(() => {
+    const range = seekerBudgetRangeFromProfile(profileState);
+    if (homeApi.hostBudgetExploreAvailable && homeApi.suggestedHosts.length === 0) {
+      return [];
+    }
+    const demoHosts = suggestedHostsForCity(cityLabel).filter((host) =>
+      priceInBudgetRange(parsePriceAmount(host.pricePerNight), range),
+    );
+    return uniqueByKey(
+      withDemoFallback(homeApi.suggestedHosts, demoHosts, {
+        isLoading: homeApi.isLoading,
+        error: homeApi.error,
+      }),
+      (host) => host.id,
+    );
+  }, [
+    homeApi.suggestedHosts,
+    homeApi.hostBudgetExploreAvailable,
+    homeApi.isLoading,
+    homeApi.error,
+    cityLabel,
+    profileState,
+  ]);
 
   const displayTopMatchHostId = demoFallbackEnabled
     ? homeApi.topMatchTargetId ?? demoTopMatchHostIdForCity(cityLabel)
@@ -2593,18 +2716,22 @@ export default function AppNavigator() {
     navigation.navigate('MatchSearch');
   };
 
-  const matchSearchProps = useMemo(
-    () => ({
+  const matchSearchProps = useMemo(() => {
+    const budgetDefaults = matchSearchDefaultsFromBudget(
+      seekerBudgetRangeFromProfile(profileState),
+    );
+    return {
       defaults: {
         ...matchSearchDefaults,
         destinationCity: cityLabel.split(',')[0]?.trim() || cityLabel,
         checkIn,
         checkOut,
+        budgetMin: budgetDefaults.budgetMin,
+        budgetMax: budgetDefaults.budgetMax,
       },
       onSearch: runMatchSearch,
-    }),
-    [cityLabel, checkIn, checkOut, runMatchSearch],
-  );
+    };
+  }, [cityLabel, checkIn, checkOut, runMatchSearch, profileState]);
 
   // Fatal banner only when every requested home section failed (hook sets homeApi.error).
   // Demo-covered empty responses still suppress the global banner.
@@ -2684,12 +2811,21 @@ export default function AppNavigator() {
       notificationCount: 0,
       activeTabId: 'home',
       tabBarItems,
-      featuredMatch:
-        withDemoFallbackValue(
-          homeApi.featuredMatch,
-          studentFeaturedMatchForCity(cityLabel),
-          { isLoading: homeApi.isLoading, error: homeApi.error },
-        ) ?? undefined,
+      featuredMatch: (() => {
+        if (homeApi.hostBudgetExploreAvailable) return undefined;
+        const range = seekerBudgetRangeFromProfile(profileState);
+        const demoFeatured = studentFeaturedMatchForCity(cityLabel);
+        const value =
+          withDemoFallbackValue(homeApi.featuredMatch, demoFeatured, {
+            isLoading: homeApi.isLoading,
+            error: homeApi.error,
+          }) ?? undefined;
+        if (!value) return undefined;
+        if (homeApi.featuredMatch) return value;
+        return priceInBudgetRange(parsePriceAmount(value.details), range)
+          ? value
+          : undefined;
+      })(),
       suggestedHosts:
         nearbyHosts.length > 0
           ? nearbyHosts
@@ -2717,6 +2853,7 @@ export default function AppNavigator() {
       tabBarItems,
       personalizedGreeting,
       homeApi.featuredMatch,
+      homeApi.hostBudgetExploreAvailable,
       suggestedHostsDisplay,
       displayTopMatchHostId,
       showMatchScores,
@@ -2732,6 +2869,7 @@ export default function AppNavigator() {
       cityLabel,
       dashboardRecommendations,
       journeyProgress,
+      profileState,
     ],
   );
 
@@ -2765,12 +2903,13 @@ export default function AppNavigator() {
       cityLabel,
       statusIcon: '🌍',
       statusLabel: touristLive.statusLabel,
-      featuredGuide:
-        withDemoFallbackValue(
-          homeApi.featuredGuide,
-          touristFeaturedGuideMock,
-          { isLoading: homeApi.isLoading, error: homeApi.error },
-        ) ?? undefined,
+      featuredGuide: homeApi.guideBudgetExploreAvailable
+        ? undefined
+        : withDemoFallbackValue(
+            homeApi.featuredGuide,
+            touristFeaturedGuideMock,
+            { isLoading: homeApi.isLoading, error: homeApi.error },
+          ) ?? undefined,
       quickActions: getQuickActionsForRole('BROWSE'),
       recentActivity: touristLive.recentActivity,
       reminder: touristLive.reminder,
@@ -2791,7 +2930,7 @@ export default function AppNavigator() {
       journeyProgress,
     };
     },
-    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, dashboardRecommendations, journeyProgress, homeDataError, guidesLoadError, activityLoadError],
+    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeApi.guideBudgetExploreAvailable, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, dashboardRecommendations, journeyProgress, homeDataError, guidesLoadError, activityLoadError],
   );
 
   const exploreHomeProps = useMemo(
@@ -2806,12 +2945,13 @@ export default function AppNavigator() {
       cityLabel,
       statusIcon: '🌍',
       statusLabel: touristLive.statusLabel,
-      featuredGuide:
-        withDemoFallbackValue(
-          homeApi.featuredGuide,
-          touristFeaturedGuideMock,
-          { isLoading: homeApi.isLoading, error: homeApi.error },
-        ) ?? undefined,
+      featuredGuide: homeApi.guideBudgetExploreAvailable
+        ? undefined
+        : withDemoFallbackValue(
+            homeApi.featuredGuide,
+            touristFeaturedGuideMock,
+            { isLoading: homeApi.isLoading, error: homeApi.error },
+          ) ?? undefined,
       suggestedGuides:
         nearbyGuides.length > 0
           ? nearbyGuides
@@ -2838,6 +2978,7 @@ export default function AppNavigator() {
       cityLabel,
       tabBarItems,
       homeApi.featuredGuide,
+      homeApi.guideBudgetExploreAvailable,
       suggestedGuidesDisplay,
       displayTopGuideId,
       showMatchScores,
@@ -3171,7 +3312,11 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <BrowseHomeScreen
             {...browseHomeProps}
-            guidesEmptyState={emptyStates.discoveryGuides(cityLabel)}
+            guidesEmptyState={
+              homeApi.guideBudgetExploreAvailable && homeApi.preferredBudgetLabel
+                ? emptyStates.discoveryGuidesOutsideBudget(homeApi.preferredBudgetLabel)
+                : emptyStates.discoveryGuides(cityLabel)
+            }
             {...homeTabSosProps(navigation)}
             notificationCount={visibleUnreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
@@ -3182,9 +3327,13 @@ export default function AppNavigator() {
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
             }
-            onGuidesEmptyPrimaryAction={() =>
-              navigation.navigate('GuideSearch', { mode: 'nearby' })
-            }
+            onGuidesEmptyPrimaryAction={() => {
+              if (homeApi.guideBudgetExploreAvailable) {
+                confirmExploreOutsideGuideBudget();
+                return;
+              }
+              navigation.navigate('GuideSearch', { mode: 'nearby' });
+            }}
             onRetryGuides={() => homeApi.retrySection('guideMatches')}
             onRetryActivity={() => homeApi.retrySection('bookings')}
             onRetryHome={() => homeApi.refresh()}
@@ -3981,7 +4130,11 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <StudentHomeDashboard
             {...homeProps}
-            hostsEmptyState={emptyStates.discoveryHosts(cityLabel)}
+            hostsEmptyState={
+              homeApi.hostBudgetExploreAvailable && homeApi.preferredBudgetLabel
+                ? emptyStates.discoveryHostsOutsideBudget(homeApi.preferredBudgetLabel)
+                : emptyStates.discoveryHosts(cityLabel)
+            }
             notificationCount={visibleUnreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
@@ -3995,7 +4148,13 @@ export default function AppNavigator() {
             onSuggestedHostPress={(hostId) =>
               navigation.navigate('HostProfile', { hostId })
             }
-            onHostsEmptyPrimaryAction={() => navigation.navigate('ExploreStays')}
+            onHostsEmptyPrimaryAction={() => {
+              if (homeApi.hostBudgetExploreAvailable) {
+                confirmExploreOutsideHostBudget();
+                return;
+              }
+              navigation.navigate('ExploreStays');
+            }}
             onRetryHosts={() => homeApi.retrySection('hostMatches')}
             onRetryActivity={() => homeApi.retrySection('bookings')}
             onRetryHome={() => homeApi.refresh()}
@@ -4012,7 +4171,11 @@ export default function AppNavigator() {
         {({ navigation }) => (
           <ExploreHomeScreen
             {...exploreHomeProps}
-            guidesEmptyState={emptyStates.discoveryGuides(cityLabel)}
+            guidesEmptyState={
+              homeApi.guideBudgetExploreAvailable && homeApi.preferredBudgetLabel
+                ? emptyStates.discoveryGuidesOutsideBudget(homeApi.preferredBudgetLabel)
+                : emptyStates.discoveryGuides(cityLabel)
+            }
             notificationCount={visibleUnreadNotifications}
             onNotificationPress={() => openNotifications(navigation)}
             {...homeTabSosProps(navigation)}
@@ -4024,9 +4187,13 @@ export default function AppNavigator() {
             onSuggestedGuidePress={(guideId) =>
               navigation.navigate('GuideProfile', { guideId })
             }
-            onGuidesEmptyPrimaryAction={() =>
-              navigation.navigate('GuideSearch', { mode: 'nearby' })
-            }
+            onGuidesEmptyPrimaryAction={() => {
+              if (homeApi.guideBudgetExploreAvailable) {
+                confirmExploreOutsideGuideBudget();
+                return;
+              }
+              navigation.navigate('GuideSearch', { mode: 'nearby' });
+            }}
             onRetryGuides={() => homeApi.retrySection('guideMatches')}
             onRetryActivity={() => homeApi.retrySection('bookings')}
             onRetryHome={() => homeApi.refresh()}

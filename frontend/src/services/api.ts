@@ -223,6 +223,7 @@ export interface MatchFindParams {
   city?: string;
   checkIn?: string;
   checkOut?: string;
+  minBudget?: number;
   maxBudget?: number;
   targetType?: 'HOST' | 'GUIDE';
   universityLat?: number;

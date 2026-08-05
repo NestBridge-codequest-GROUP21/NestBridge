@@ -177,12 +177,26 @@ export const emptyStates = {
     iconGlyph: '🏠',
     primaryActionLabel: 'Search all hosts',
   }),
+  discoveryHostsOutsideBudget: (budgetLabel: string): EmptyStateContent => ({
+    title: `No hosts in ${budgetLabel}`,
+    body: 'Nothing matches your quiz budget yet. Other price ranges are available nearby if you are willing to explore them.',
+    tip: 'You can keep your preferred budget and check again later.',
+    iconGlyph: '🏠',
+    primaryActionLabel: 'Explore other prices',
+  }),
   discoveryGuides: (city: string): EmptyStateContent => ({
     title: `No guides in ${city} yet`,
     body: 'New guides join every week. Browse another city or explore cultural sites meanwhile.',
     tip: 'Orientation walks book quickly before the semester starts.',
     iconGlyph: '🗺️',
     primaryActionLabel: 'Explore guides',
+  }),
+  discoveryGuidesOutsideBudget: (budgetLabel: string): EmptyStateContent => ({
+    title: `No guides in ${budgetLabel}`,
+    body: 'No sessions match your quiz budget yet. Other price ranges are available if you want to look beyond it.',
+    tip: 'You can keep your preferred budget and check again later.',
+    iconGlyph: '🗺️',
+    primaryActionLabel: 'Explore other prices',
   }),
   lodgingDirectory: (city: string): EmptyStateContent => ({
     title: `No listings found near ${city} yet`,

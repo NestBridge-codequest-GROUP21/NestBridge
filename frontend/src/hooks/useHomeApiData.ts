@@ -18,6 +18,11 @@ import {
   matchToFeaturedCard,
   matchToSuggestedHost,
 } from '../data/homeFeeds';
+import {
+  filterMatchesByBudget,
+  seekerBudgetRangeFromProfile,
+  type SeekerBudgetRange,
+} from '../data/budgetRanges';
 
 export type HomeApiSection =
   | 'hostMatches'
@@ -62,14 +67,102 @@ export interface HomeApiState {
    * Partial failures leave this null so the dashboard can still render.
    */
   error: string | null;
+  /** Quiz budget label, when set during onboarding. */
+  preferredBudgetLabel: string | null;
+  /**
+   * Preferred quiz band had zero hosts, but other priced hosts exist.
+   * UI should ask before calling exploreOutsideHostBudget.
+   */
+  hostBudgetExploreAvailable: boolean;
+  /** Same for guides / session prices. */
+  guideBudgetExploreAvailable: boolean;
   refresh: () => void;
   retrySection: (section: HomeApiSection) => void;
+  exploreOutsideHostBudget: () => void;
+  exploreOutsideGuideBudget: () => void;
 }
 
 function logHomeSectionFailure(section: HomeApiSection, err: unknown): string {
   const message = getApiErrorMessage(err);
   console.warn(`[homeApi] ${section} failed:`, message, err);
   return message;
+}
+
+function applyHostResults(
+  results: MatchResult[],
+  setters: {
+    setHostMatches: (v: MatchResult[]) => void;
+    setFeaturedMatch: (v: Omit<FeaturedHomeCardProps, 'onPress'> | null) => void;
+    setTopMatchTargetId: (v: string | null) => void;
+    setSuggestedHosts: (v: SuggestedHostItem[]) => void;
+  },
+) {
+  setters.setHostMatches(results);
+  const top = results[0];
+  if (top) {
+    setters.setFeaturedMatch(matchToFeaturedCard(top));
+    setters.setTopMatchTargetId(top.targetId);
+    setters.setSuggestedHosts(results.slice(0, 4).map(matchToSuggestedHost));
+  } else {
+    setters.setFeaturedMatch(null);
+    setters.setTopMatchTargetId(null);
+    setters.setSuggestedHosts([]);
+  }
+}
+
+function applyGuideResults(
+  results: MatchResult[],
+  setters: {
+    setGuideMatches: (v: MatchResult[]) => void;
+    setFeaturedGuide: (v: Omit<FeaturedHomeCardProps, 'onPress'> | null) => void;
+    setTopGuideTargetId: (v: string | null) => void;
+    setSuggestedGuides: (v: DiscoveryListingItem[]) => void;
+  },
+) {
+  setters.setGuideMatches(results);
+  const top = results[0];
+  if (top) {
+    setters.setFeaturedGuide(matchToFeaturedCard(top));
+    setters.setTopGuideTargetId(top.targetId);
+    setters.setSuggestedGuides(results.slice(0, 4).map(matchToDiscoveryItem));
+  } else {
+    setters.setFeaturedGuide(null);
+    setters.setTopGuideTargetId(null);
+    setters.setSuggestedGuides([]);
+  }
+}
+
+async function loadBudgetAwareMatches(
+  preferredParams: Parameters<typeof findMatches>[0],
+  range: SeekerBudgetRange | null,
+  allowOutside: boolean,
+): Promise<{ results: MatchResult[]; exploreAvailable: boolean }> {
+  if (!range || allowOutside) {
+    const openParams = {
+      ...preferredParams,
+      minBudget: undefined,
+      maxBudget: undefined,
+    };
+    const results = await findMatches(openParams);
+    return { results, exploreAvailable: false };
+  }
+
+  const preferred = await findMatches(preferredParams);
+  const inRange = filterMatchesByBudget(preferred, range);
+  if (inRange.length > 0) {
+    return { results: inRange, exploreAvailable: false };
+  }
+
+  const openParams = {
+    ...preferredParams,
+    minBudget: undefined,
+    maxBudget: undefined,
+  };
+  const wider = await findMatches(openParams);
+  return {
+    results: [],
+    exploreAvailable: wider.length > 0,
+  };
 }
 
 export function useHomeApiData(
@@ -97,6 +190,11 @@ export function useHomeApiData(
   const [isLoading, setIsLoading] = useState(false);
   const [sectionErrors, setSectionErrors] = useState<HomeApiSectionErrors>(EMPTY_SECTION_ERRORS);
   const [error, setError] = useState<string | null>(null);
+  const [preferredBudgetLabel, setPreferredBudgetLabel] = useState<string | null>(null);
+  const [hostBudgetExploreAvailable, setHostBudgetExploreAvailable] = useState(false);
+  const [guideBudgetExploreAvailable, setGuideBudgetExploreAvailable] = useState(false);
+  const [allowOutsideHostBudget, setAllowOutsideHostBudget] = useState(false);
+  const [allowOutsideGuideBudget, setAllowOutsideGuideBudget] = useState(false);
   const [tick, setTick] = useState(0);
   const [sectionRetry, setSectionRetry] = useState<{
     section: HomeApiSection;
@@ -107,6 +205,15 @@ export function useHomeApiData(
   profileRef.current = profileState;
   const sectionErrorsRef = useRef(sectionErrors);
   sectionErrorsRef.current = sectionErrors;
+  const allowOutsideHostRef = useRef(allowOutsideHostBudget);
+  allowOutsideHostRef.current = allowOutsideHostBudget;
+  const allowOutsideGuideRef = useRef(allowOutsideGuideBudget);
+  allowOutsideGuideRef.current = allowOutsideGuideBudget;
+
+  const quizBudget =
+    typeof profileState.seekerSetup.data.quizAnswers?.budget === 'string'
+      ? profileState.seekerSetup.data.quizAnswers.budget
+      : null;
 
   const refresh = useCallback(() => {
     setSectionRetry(null);
@@ -121,6 +228,33 @@ export function useHomeApiData(
     }));
   }, []);
 
+  const exploreOutsideHostBudget = useCallback(() => {
+    allowOutsideHostRef.current = true;
+    setAllowOutsideHostBudget(true);
+    setHostBudgetExploreAvailable(false);
+    setSectionRetry({ section: 'hostMatches', token: Date.now() });
+  }, []);
+
+  const exploreOutsideGuideBudget = useCallback(() => {
+    allowOutsideGuideRef.current = true;
+    setAllowOutsideGuideBudget(true);
+    setGuideBudgetExploreAvailable(false);
+    setSectionRetry({ section: 'guideMatches', token: Date.now() });
+  }, []);
+
+  const quizBudgetRef = useRef(quizBudget);
+  useEffect(() => {
+    if (quizBudgetRef.current === quizBudget) return;
+    quizBudgetRef.current = quizBudget;
+    // New quiz answer resets widen consent (refs first so the next fetch is strict).
+    allowOutsideHostRef.current = false;
+    allowOutsideGuideRef.current = false;
+    setAllowOutsideHostBudget(false);
+    setAllowOutsideGuideBudget(false);
+    setHostBudgetExploreAvailable(false);
+    setGuideBudgetExploreAvailable(false);
+  }, [quizBudget]);
+
   useEffect(() => {
     if (!userId) {
       setFeaturedMatch(null);
@@ -134,6 +268,9 @@ export function useHomeApiData(
       setBookings([]);
       setSectionErrors(EMPTY_SECTION_ERRORS);
       setError(null);
+      setPreferredBudgetLabel(null);
+      setHostBudgetExploreAvailable(false);
+      setGuideBudgetExploreAvailable(false);
       return;
     }
 
@@ -167,33 +304,38 @@ export function useHomeApiData(
       try {
         const tasks: Promise<void>[] = [];
         const profile = profileRef.current;
+        const range = seekerBudgetRangeFromProfile(profile);
+        setPreferredBudgetLabel(range?.label ?? null);
 
         if (shouldRun('hostMatches', options.fetchMatches)) {
           attempted.push('hostMatches');
           tasks.push(
-            findMatches(buildHostMatchParams(profile))
-              .then((results) => {
+            loadBudgetAwareMatches(
+              buildHostMatchParams(profile),
+              range,
+              allowOutsideHostRef.current,
+            )
+              .then(({ results, exploreAvailable }) => {
                 if (cancelled) return;
                 markSuccess('hostMatches');
-                setHostMatches(results);
-                const top = results[0];
-                if (top) {
-                  setFeaturedMatch(matchToFeaturedCard(top));
-                  setTopMatchTargetId(top.targetId);
-                  setSuggestedHosts(results.slice(0, 4).map(matchToSuggestedHost));
-                } else {
-                  setFeaturedMatch(null);
-                  setTopMatchTargetId(null);
-                  setSuggestedHosts([]);
-                }
+                setHostBudgetExploreAvailable(exploreAvailable);
+                applyHostResults(results, {
+                  setHostMatches,
+                  setFeaturedMatch,
+                  setTopMatchTargetId,
+                  setSuggestedHosts,
+                });
               })
               .catch((err) => {
                 if (cancelled) return;
                 markFailure('hostMatches', err);
-                setHostMatches([]);
-                setFeaturedMatch(null);
-                setTopMatchTargetId(null);
-                setSuggestedHosts([]);
+                setHostBudgetExploreAvailable(false);
+                applyHostResults([], {
+                  setHostMatches,
+                  setFeaturedMatch,
+                  setTopMatchTargetId,
+                  setSuggestedHosts,
+                });
               }),
           );
         }
@@ -201,29 +343,32 @@ export function useHomeApiData(
         if (shouldRun('guideMatches', options.fetchGuideMatches)) {
           attempted.push('guideMatches');
           tasks.push(
-            findMatches(buildGuideMatchParams(profile))
-              .then((results) => {
+            loadBudgetAwareMatches(
+              buildGuideMatchParams(profile),
+              range,
+              allowOutsideGuideRef.current,
+            )
+              .then(({ results, exploreAvailable }) => {
                 if (cancelled) return;
                 markSuccess('guideMatches');
-                setGuideMatches(results);
-                const top = results[0];
-                if (top) {
-                  setFeaturedGuide(matchToFeaturedCard(top));
-                  setTopGuideTargetId(top.targetId);
-                  setSuggestedGuides(results.slice(0, 4).map(matchToDiscoveryItem));
-                } else {
-                  setFeaturedGuide(null);
-                  setTopGuideTargetId(null);
-                  setSuggestedGuides([]);
-                }
+                setGuideBudgetExploreAvailable(exploreAvailable);
+                applyGuideResults(results, {
+                  setGuideMatches,
+                  setFeaturedGuide,
+                  setTopGuideTargetId,
+                  setSuggestedGuides,
+                });
               })
               .catch((err) => {
                 if (cancelled) return;
                 markFailure('guideMatches', err);
-                setGuideMatches([]);
-                setFeaturedGuide(null);
-                setTopGuideTargetId(null);
-                setSuggestedGuides([]);
+                setGuideBudgetExploreAvailable(false);
+                applyGuideResults([], {
+                  setGuideMatches,
+                  setFeaturedGuide,
+                  setTopGuideTargetId,
+                  setSuggestedGuides,
+                });
               }),
           );
         }
@@ -343,6 +488,7 @@ export function useHomeApiData(
     profileState.seekerSetup.data.city,
     profileState.seekerSetup.data.arrivalDate,
     profileState.seekerSetup.data.departureDate,
+    quizBudget,
   ]);
 
   return {
@@ -360,7 +506,12 @@ export function useHomeApiData(
     isLoading,
     sectionErrors,
     error,
+    preferredBudgetLabel,
+    hostBudgetExploreAvailable,
+    guideBudgetExploreAvailable,
     refresh,
     retrySection,
+    exploreOutsideHostBudget,
+    exploreOutsideGuideBudget,
   };
 }

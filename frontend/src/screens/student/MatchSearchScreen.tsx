@@ -80,6 +80,13 @@ function formatDateRangeShort(checkIn: string, checkOut: string): string {
 }
 
 function formatBudgetRange(currency: string, min: number, max: number): string {
+  // Sentinel used for quiz “Above GHS 350”.
+  if (max >= 99999) {
+    return `${currency} ${min.toLocaleString('en-GH')}+`;
+  }
+  if (min <= 0) {
+    return `Under ${currency} ${max.toLocaleString('en-GH')}`;
+  }
   return `${currency} ${min.toLocaleString('en-GH')}-${max.toLocaleString('en-GH')}`;
 }
 
@@ -125,7 +132,15 @@ export default function MatchSearchScreen({
     setDestinationCity(defaults.destinationCity);
     setCheckIn(defaults.checkIn);
     setCheckOut(defaults.checkOut);
-  }, [defaults.destinationCity, defaults.checkIn, defaults.checkOut]);
+    setBudgetMin(String(defaults.budgetMin));
+    setBudgetMax(String(defaults.budgetMax));
+  }, [
+    defaults.destinationCity,
+    defaults.checkIn,
+    defaults.checkOut,
+    defaults.budgetMin,
+    defaults.budgetMax,
+  ]);
 
   const currentParams = useMemo<MatchSearchDefaults>(
     () => ({

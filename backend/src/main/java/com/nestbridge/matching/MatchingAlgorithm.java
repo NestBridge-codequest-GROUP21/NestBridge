@@ -67,6 +67,10 @@ public class MatchingAlgorithm {
                     && !guide.getCity().equalsIgnoreCase(request.getCity())) {
                 continue;
             }
+            if (request.getMinBudget() != null && guide.getPricePerSession() != null
+                    && guide.getPricePerSession().compareTo(request.getMinBudget()) < 0) {
+                continue;
+            }
             if (request.getMaxBudget() != null && guide.getPricePerSession() != null
                     && guide.getPricePerSession().compareTo(request.getMaxBudget()) > 0) {
                 continue;
@@ -97,6 +101,10 @@ public class MatchingAlgorithm {
         if (!host.isActive()) return false;
         if (request.getCity() != null && host.getCity() != null
                 && !host.getCity().equalsIgnoreCase(request.getCity())) {
+            return false;
+        }
+        if (request.getMinBudget() != null && host.getPricePerNight() != null
+                && host.getPricePerNight().compareTo(request.getMinBudget()) < 0) {
             return false;
         }
         if (request.getMaxBudget() != null && host.getPricePerNight() != null

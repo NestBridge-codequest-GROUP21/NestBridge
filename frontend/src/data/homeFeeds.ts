@@ -15,6 +15,10 @@ import { normalizeCity } from './ghanaReference';
 import { FLEXIBLE_POLICY } from './bookingMock';
 import { suggestedGuidesMock } from './guideSessionMock';
 import { hostVerification, normalizeVerification } from '../types/verification';
+import {
+  budgetApiParamsFromRange,
+  seekerBudgetRangeFromProfile,
+} from './budgetRanges';
 
 const DEFAULT_MATCH_REASONS = [
   'Verified host family',
@@ -245,11 +249,12 @@ export function buildHostMatchParams(
 ): MatchFindParams {
   const data = profileState.seekerSetup.data;
   const city = data.city ? normalizeCity(data.city) : '';
+  const budget = budgetApiParamsFromRange(seekerBudgetRangeFromProfile(profileState));
   return {
     city,
     checkIn: data.arrivalDate || undefined,
     checkOut: data.departureDate || undefined,
-    maxBudget: 300,
+    ...budget,
     targetType: 'HOST',
     universityLat: 5.6504,
     universityLng: -0.187,
@@ -264,9 +269,10 @@ export function buildGuideMatchParams(
 ): MatchFindParams {
   const data = profileState.seekerSetup.data;
   const city = data.city ? normalizeCity(data.city) : '';
+  const budget = budgetApiParamsFromRange(seekerBudgetRangeFromProfile(profileState));
   return {
     city,
-    maxBudget: 300,
+    ...budget,
     targetType: 'GUIDE',
     ...overrides,
   };
@@ -278,7 +284,10 @@ export function buildSearchMatchParams(
     destinationCity: string;
     checkIn: string;
     checkOut: string;
+    budgetMin?: number;
     budgetMax: number;
+    /** When true, ignore min/max so other price bands can be explored. */
+    widenBudget?: boolean;
   },
 ): MatchFindParams {
   const profileCity = profileState.seekerSetup.data.city
@@ -289,11 +298,20 @@ export function buildSearchMatchParams(
     : undefined;
   const city = searchCity || profileCity || '';
 
+  const budget = search.widenBudget
+    ? {}
+    : {
+        ...(search.budgetMin != null && search.budgetMin > 0
+          ? { minBudget: search.budgetMin }
+          : {}),
+        maxBudget: search.budgetMax,
+      };
+
   return {
     city,
     checkIn: search.checkIn,
     checkOut: search.checkOut,
-    maxBudget: search.budgetMax,
+    ...budget,
     targetType: 'HOST',
     universityLat: 5.6504,
     universityLng: -0.187,

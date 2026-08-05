@@ -11,6 +11,7 @@ public class MatchFindRequest {
     private String city;
     private LocalDate checkIn;
     private LocalDate checkOut;
+    private BigDecimal minBudget;
     private BigDecimal maxBudget;
     private String targetType;
     private BigDecimal universityLat;
