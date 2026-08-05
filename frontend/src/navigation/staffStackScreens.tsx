@@ -22,6 +22,8 @@ type Nav = NativeStackNavigationProp<AppStackParamList>;
 
 export interface StaffStackScreensProps {
   staffName: string;
+  staffInitials?: string;
+  staffPhotoUri?: string | null;
   staffTabBarItems: TabBarItem[];
   isStaffShell: boolean;
   notificationCount: number;
@@ -41,6 +43,8 @@ export interface StaffStackScreensProps {
  */
 export function renderStaffStackScreens({
   staffName,
+  staffInitials,
+  staffPhotoUri,
   staffTabBarItems,
   isStaffShell,
   notificationCount,
@@ -54,6 +58,8 @@ export function renderStaffStackScreens({
         {({ navigation }) => (
           <AdminHomeRoute
             staffName={staffName}
+            staffInitials={staffInitials}
+            staffPhotoUri={staffPhotoUri}
             tabBarItems={staffTabBarItems}
             onTabPress={(tabId) => onTabPress(navigation, tabId, 'AdminHome')}
             onOpenUsers={() => navigation.navigate('StaffUserSearch')}

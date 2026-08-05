@@ -16,7 +16,7 @@ import type {
   AdminSosActivity,
 } from '../../services/api';
 import type { StaffUserCategory } from './StaffUserSearchScreen';
-import AppIcon from '../../components/AppIcon';
+import AppIcon, { type IoniconName } from '../../components/AppIcon';
 import {
   fontFamilies,
   fontSizes,
@@ -31,6 +31,8 @@ import {
 
 export interface AdminHomeScreenProps {
   staffName: string;
+  staffInitials?: string;
+  staffPhotoUri?: string | null;
   overview: AdminOverview | null;
   isLoading?: boolean;
   refreshing?: boolean;
@@ -48,78 +50,137 @@ export interface AdminHomeScreenProps {
   onNotificationPress?: () => void;
 }
 
-function StatTile({
+function formatBookingLine(item: AdminBookingActivity): string {
+  return `${item.bookingType} · ${item.status}`;
+}
+
+function formatSosLine(item: AdminSosActivity): string {
+  return item.triggeredAt
+    ? new Date(item.triggeredAt).toLocaleString()
+    : 'Unknown time';
+}
+
+function AttentionItem({
   label,
   value,
-  tone,
+  tone = 'default',
   onPress,
 }: {
   label: string;
-  value: number | string;
-  tone?: 'default' | 'warning' | 'danger' | 'success';
+  value: number;
+  tone?: 'default' | 'warning' | 'danger';
   onPress?: () => void;
 }) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
   const interactive = Boolean(onPress);
-  const content = (
+  const valueColor =
+    tone === 'danger'
+      ? colors.danger
+      : tone === 'warning'
+        ? colors.warning
+        : colors.textPrimary;
+
+  const body = (
     <>
-      <View style={styles.statTopRow}>
-        <Text style={[styles.statValue, !interactive && styles.statValueReadOnly]}>
-          {value}
-        </Text>
-        {interactive ? (
+      <Text style={[styles.attentionValue, { color: valueColor }]}>{value}</Text>
+      <Text style={styles.attentionLabel}>{label}</Text>
+      {interactive ? (
+        <View style={styles.attentionOpenRow}>
+          <Text style={styles.attentionOpen}>Open</Text>
           <AppIcon name="chevron-forward" size={iconSizes.sm} color={colors.teal} />
-        ) : null}
-      </View>
-      <Text style={[styles.statLabel, !interactive && styles.statLabelReadOnly]}>
-        {label}
-      </Text>
-      {interactive ? <Text style={styles.statHint}>Tap to open</Text> : null}
+        </View>
+      ) : (
+        <Text style={styles.attentionMetricHint}>Metric</Text>
+      )}
     </>
   );
-  const tileStyle = [
-    interactive ? styles.statTileInteractive : styles.statTileReadOnly,
-    tone === 'danger' && styles.statDanger,
-    tone === 'warning' && styles.statWarning,
-    tone === 'success' && styles.statSuccess,
-  ];
 
   if (onPress) {
     return (
       <Pressable
-        style={({ pressed }) => [...tileStyle, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.attentionCard,
+          styles.attentionCardInteractive,
+          pressed && styles.pressed,
+        ]}
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={`Open ${label}`}
       >
-        {content}
+        {body}
       </Pressable>
     );
   }
 
   return (
     <View
-      style={tileStyle}
+      style={[styles.attentionCard, styles.attentionCardMetric]}
       accessibilityRole="text"
       accessibilityLabel={`${label}: ${value}`}
     >
-      {content}
+      {body}
     </View>
   );
 }
 
-function formatBookingLine(item: AdminBookingActivity): string {
-  return `${item.bookingType} · ${item.status}`;
+function MetricChip({ label, value }: { label: string; value: number }) {
+  const styles = useThemedStyles(createStyles);
+  return (
+    <View
+      style={styles.metricChip}
+      accessibilityRole="text"
+      accessibilityLabel={`${label}: ${value}`}
+    >
+      <Text style={styles.metricChipValue}>{value}</Text>
+      <Text style={styles.metricChipLabel}>{label}</Text>
+    </View>
+  );
 }
 
-function formatSosLine(item: AdminSosActivity): string {
-  const when = item.triggeredAt ? new Date(item.triggeredAt).toLocaleString() : 'Unknown time';
-  return when;
+function ToolRow({
+  title,
+  subtitle,
+  iconName,
+  onPress,
+  bordered = true,
+}: {
+  title: string;
+  subtitle: string;
+  iconName: IoniconName;
+  onPress?: () => void;
+  bordered?: boolean;
+}) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      style={({ pressed }) => [
+        styles.toolRow,
+        bordered && styles.toolBorder,
+        pressed && styles.pressed,
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+    >
+      <View style={styles.toolIconWell}>
+        <AppIcon name={iconName} size={iconSizes.md} color={colors.teal} />
+      </View>
+      <View style={styles.toolText}>
+        <Text style={styles.toolTitle}>{title}</Text>
+        <Text style={styles.toolSubtitle}>{subtitle}</Text>
+      </View>
+      <AppIcon name="chevron-forward" size={iconSizes.md} color={colors.textTertiary} />
+    </Pressable>
+  );
 }
 
 export default function AdminHomeScreen({
   staffName,
+  staffInitials,
+  staffPhotoUri,
   overview,
   isLoading = false,
   refreshing = false,
@@ -128,7 +189,6 @@ export default function AdminHomeScreen({
   onTabPress,
   onRefresh,
   onOpenUsers,
-  onOpenUsersByCategory,
   onOpenPendingKyc,
   onOpenModeration,
   onOpenPreview,
@@ -138,14 +198,22 @@ export default function AdminHomeScreen({
 }: AdminHomeScreenProps) {
   const styles = useThemedStyles(createStyles);
   const firstName = staffName.trim().split(/\s+/)[0] || 'Staff';
+  const pendingKyc = overview?.pendingKycCount ?? 0;
+  const hiddenListings =
+    (overview?.hiddenHostListings ?? 0) + (overview?.hiddenGuideListings ?? 0);
+  const initials =
+    (staffInitials ?? '').trim() ||
+    firstName.slice(0, 2).toUpperCase();
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
       <ScreenHeader
-        title="Ops dashboard"
-        subtitle={`Signed in as ${firstName}`}
-        compact
+        greeting="Ops"
+        userName={firstName}
+        userInitials={initials}
+        userPhotoUri={staffPhotoUri}
+        subtitle="Platform overview"
         notificationCount={notificationCount}
         onNotificationPress={onNotificationPress}
       />
@@ -177,134 +245,88 @@ export default function AdminHomeScreen({
         {overview ? (
           <>
             <SectionHeader
-              title="Platform pulse"
-              subtitle="Teal tiles open a list — cream tiles are metrics only"
+              title="Needs attention"
+              subtitle="Items that usually need a staff action"
             />
-            <View style={styles.statGrid}>
-              <StatTile
-                label="Users"
-                value={overview.totalUsers}
-                onPress={onOpenUsers}
+            <View style={styles.attentionGrid}>
+              <AttentionItem
+                label="Pending KYC"
+                value={pendingKyc}
+                tone={pendingKyc > 0 ? 'warning' : 'default'}
+                onPress={onOpenPendingKyc}
               />
-              <StatTile
-                label="Staff"
-                value={overview.staffCount}
-                onPress={
-                  onOpenUsersByCategory
-                    ? () => onOpenUsersByCategory('STAFF')
-                    : onOpenUsers
-                }
+              <AttentionItem
+                label="Hidden listings"
+                value={hiddenListings}
+                tone={hiddenListings > 0 ? 'warning' : 'default'}
+                onPress={onOpenModeration}
               />
-              <StatTile
-                label="Suspended"
-                value={overview.suspendedCount}
-                tone={overview.suspendedCount > 0 ? 'danger' : 'default'}
-              />
-              <StatTile
+              <AttentionItem
                 label="SOS (24h)"
                 value={overview.sosLast24Hours}
                 tone={overview.sosLast24Hours > 0 ? 'danger' : 'default'}
               />
-            </View>
-
-            <SectionHeader
-              title="Users by role"
-              subtitle="Teal tiles open that account list"
-            />
-            <View style={styles.statGrid}>
-              <StatTile
-                label="Students"
-                value={overview.studentCount}
-                onPress={
-                  onOpenUsersByCategory
-                    ? () => onOpenUsersByCategory('STUDENT')
-                    : onOpenUsers
-                }
-              />
-              <StatTile
-                label="Tourists"
-                value={overview.touristCount}
-                onPress={
-                  onOpenUsersByCategory
-                    ? () => onOpenUsersByCategory('TOURIST')
-                    : onOpenUsers
-                }
-              />
-              <StatTile
-                label="Hosts"
-                value={overview.hostCount}
-                onPress={
-                  onOpenUsersByCategory
-                    ? () => onOpenUsersByCategory('HOST')
-                    : onOpenUsers
-                }
-              />
-              <StatTile
-                label="Guides"
-                value={overview.guideCount}
-                onPress={
-                  onOpenUsersByCategory
-                    ? () => onOpenUsersByCategory('GUIDE')
-                    : onOpenUsers
-                }
+              <AttentionItem
+                label="Suspended"
+                value={overview.suspendedCount}
+                tone={overview.suspendedCount > 0 ? 'danger' : 'default'}
               />
             </View>
 
-            <SectionHeader
-              title="Marketplace & bookings"
-              subtitle="Cream tiles are metrics only — teal tiles open a tool"
-            />
-            <View style={styles.statGrid}>
-              <StatTile label="Live hosts" value={overview.activeHostListings} tone="success" />
-              <StatTile label="Live guides" value={overview.activeGuideListings} tone="success" />
-              <StatTile
-                label="Hidden listings"
-                value={overview.hiddenHostListings + overview.hiddenGuideListings}
-                tone="warning"
-                onPress={onOpenModeration}
-              />
-              <StatTile label="Pending bookings" value={overview.pendingBookings} tone="warning" />
-              <StatTile label="Active bookings" value={overview.confirmedBookings} />
-              <StatTile label="SOS (7d)" value={overview.sosLast7Days} />
-              <StatTile
-                label="Unverified ID"
-                value={overview.unverifiedIdentityCount}
-                onPress={onOpenPendingKyc}
-              />
-              <StatTile label="Unverified email" value={overview.unverifiedEmailCount} />
-              <StatTile
-                label="Pending KYC"
-                value={overview.pendingKycCount ?? 0}
-                tone={(overview.pendingKycCount ?? 0) > 0 ? 'warning' : 'default'}
-                onPress={onOpenPendingKyc}
-              />
-            </View>
-
-            <SectionHeader title="Ops tools" />
+            <SectionHeader title="Ops tools" subtitle="Open a workflow" />
             <Card padding="none" style={styles.toolsCard}>
+              <ToolRow
+                title="Browse users"
+                subtitle="Search accounts by role or email"
+                iconName="people-outline"
+                onPress={onOpenUsers}
+              />
               <ToolRow
                 title="Pending KYC"
                 subtitle={
-                  (overview.pendingKycCount ?? 0) > 0
-                    ? `${overview.pendingKycCount} identity review${
-                        overview.pendingKycCount === 1 ? '' : 's'
-                      } waiting`
-                    : 'No identity reviews waiting right now'
+                  pendingKyc > 0
+                    ? `${pendingKyc} identity review${pendingKyc === 1 ? '' : 's'} waiting`
+                    : 'No identity reviews waiting'
                 }
+                iconName="shield-checkmark-outline"
                 onPress={onOpenPendingKyc}
               />
               <ToolRow
                 title="Listing moderation"
                 subtitle="Hide or restore host and guide listings"
+                iconName="eye-off-outline"
                 onPress={onOpenModeration}
               />
               <ToolRow
                 title="App preview"
-                subtitle="Inspect what each role sees in the app"
+                subtitle="Inspect what each role sees"
+                iconName="phone-portrait-outline"
                 onPress={onOpenPreview}
                 bordered={false}
               />
             </Card>
+
+            <SectionHeader
+              title="At a glance"
+              subtitle="Read-only snapshot — not tappable"
+            />
+            <View style={styles.metricStrip}>
+              <MetricChip label="Users" value={overview.totalUsers} />
+              <MetricChip label="Students" value={overview.studentCount} />
+              <MetricChip label="Tourists" value={overview.touristCount} />
+              <MetricChip label="Hosts" value={overview.hostCount} />
+              <MetricChip label="Guides" value={overview.guideCount} />
+              <MetricChip label="Staff" value={overview.staffCount} />
+              <MetricChip label="Live hosts" value={overview.activeHostListings} />
+              <MetricChip label="Live guides" value={overview.activeGuideListings} />
+              <MetricChip label="Pending bookings" value={overview.pendingBookings} />
+              <MetricChip label="Active bookings" value={overview.confirmedBookings} />
+              <MetricChip label="SOS (7d)" value={overview.sosLast7Days} />
+              <MetricChip
+                label="Unverified email"
+                value={overview.unverifiedEmailCount}
+              />
+            </View>
 
             <SectionHeader title="Recent bookings" />
             <Card style={styles.feedCard}>
@@ -346,16 +368,6 @@ export default function AdminHomeScreen({
                 <Text style={styles.refreshLabel}>Refresh overview</Text>
               </Pressable>
             ) : null}
-
-            {onOpenProfile ? (
-              <Pressable
-                onPress={onOpenProfile}
-                style={({ pressed }) => [styles.refreshBtn, pressed && styles.pressed]}
-                accessibilityRole="button"
-              >
-                <Text style={styles.refreshLabel}>Staff profile & sign out</Text>
-              </Pressable>
-            ) : null}
           </>
         ) : null}
       </ScreenScroll>
@@ -368,36 +380,7 @@ export default function AdminHomeScreen({
   );
 }
 
-function ToolRow({
-  title,
-  subtitle,
-  onPress,
-  bordered = true,
-}: {
-  title: string;
-  subtitle: string;
-  onPress?: () => void;
-  bordered?: boolean;
-}) {
-  const styles = useThemedStyles(createStyles);
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={!onPress}
-      style={({ pressed }) => [
-        styles.toolRow,
-        bordered && styles.toolBorder,
-        pressed && styles.pressed,
-      ]}
-      accessibilityRole="button"
-    >
-      <Text style={styles.toolTitle}>{title}</Text>
-      <Text style={styles.toolSubtitle}>{subtitle}</Text>
-    </Pressable>
-  );
-}
-
-function createStyles({ colors }: AppTheme) {
+function createStyles({ colors, tints }: AppTheme) {
   return StyleSheet.create({
     root: {
       flex: 1,
@@ -414,86 +397,85 @@ function createStyles({ colors }: AppTheme) {
       color: colors.textSecondary,
       lineHeight: lineHeights.body,
     },
-    statGrid: {
+    attentionGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: spacing.sm,
       marginBottom: spacing.lg,
     },
-    statTileInteractive: {
+    attentionCard: {
       width: '47%',
       flexGrow: 1,
-      backgroundColor: colors.white,
       borderRadius: borderRadius.md,
       padding: spacing.md,
-      minHeight: touchTarget + spacing.md,
+      minHeight: touchTarget + spacing.lg,
+    },
+    attentionCardInteractive: {
+      backgroundColor: colors.white,
       borderWidth: borderWidths.strong,
       borderColor: colors.teal,
     },
-    statTileReadOnly: {
-      width: '47%',
-      flexGrow: 1,
+    attentionCardMetric: {
       backgroundColor: colors.warmCream,
-      borderRadius: borderRadius.md,
-      padding: spacing.md,
-      minHeight: touchTarget + spacing.md,
       borderWidth: borderWidths.hairline,
       borderColor: colors.border,
     },
-    statDanger: {
-      borderColor: colors.danger,
-    },
-    statWarning: {
-      borderColor: colors.warning,
-    },
-    statSuccess: {
-      borderColor: colors.success,
-    },
-    statTopRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.xs,
-    },
-    statValue: {
+    attentionValue: {
       fontFamily: fontFamilies.bold,
       fontSize: fontSizes.heading,
       fontWeight: fontWeights.bold,
-      color: colors.textPrimary,
-      flexShrink: 1,
     },
-    statValueReadOnly: {
-      color: colors.textPrimary,
-    },
-    statLabel: {
+    attentionLabel: {
       fontFamily: fontFamilies.regular,
       fontSize: fontSizes.caption,
       color: colors.textSecondary,
       marginTop: spacing.xs,
     },
-    statLabelReadOnly: {
-      color: colors.textTertiary,
+    attentionOpenRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      marginTop: spacing.sm,
     },
-    statHint: {
+    attentionOpen: {
       fontFamily: fontFamilies.semibold,
       fontSize: fontSizes.micro,
       fontWeight: fontWeights.semibold,
       color: colors.teal,
-      marginTop: spacing.xs,
+    },
+    attentionMetricHint: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.micro,
+      color: colors.textTertiary,
+      marginTop: spacing.sm,
     },
     toolsCard: {
       marginBottom: spacing.lg,
       overflow: 'hidden',
     },
     toolRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.md,
       minHeight: touchTarget,
-      justifyContent: 'center',
     },
     toolBorder: {
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.border,
+    },
+    toolIconWell: {
+      width: touchTarget - spacing.sm,
+      height: touchTarget - spacing.sm,
+      borderRadius: borderRadius.md,
+      backgroundColor: tints.teal,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    toolText: {
+      flex: 1,
+      minWidth: 0,
     },
     toolTitle: {
       fontFamily: fontFamilies.semibold,
@@ -507,6 +489,34 @@ function createStyles({ colors }: AppTheme) {
       color: colors.textSecondary,
       marginTop: spacing.xs,
       lineHeight: lineHeights.caption,
+    },
+    metricStrip: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+      backgroundColor: colors.warmCream,
+      borderRadius: borderRadius.md,
+      borderWidth: borderWidths.hairline,
+      borderColor: colors.border,
+      padding: spacing.md,
+      marginBottom: spacing.lg,
+    },
+    metricChip: {
+      minWidth: '30%',
+      flexGrow: 1,
+      paddingVertical: spacing.xs,
+    },
+    metricChipValue: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.subheading,
+      fontWeight: fontWeights.semibold,
+      color: colors.textPrimary,
+    },
+    metricChipLabel: {
+      fontFamily: fontFamilies.regular,
+      fontSize: fontSizes.micro,
+      color: colors.textTertiary,
+      marginTop: spacing.xs,
     },
     feedCard: {
       marginBottom: spacing.lg,

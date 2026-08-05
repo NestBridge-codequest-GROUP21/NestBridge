@@ -15,7 +15,7 @@ export const STAFF_TAB_ITEMS: TabBarItem[] = [
   { id: 'home', label: 'Ops', icon: 'grid-outline' },
   { id: 'users', label: 'Users', icon: 'people-outline' },
   { id: 'moderation', label: 'Moderation', icon: 'shield-checkmark-outline' },
-  { id: 'preview', label: 'Preview', icon: 'eye-outline' },
+  { id: 'profile', label: 'Profile', icon: 'person-outline' },
 ];
 
 export const HOST_TAB_ITEMS: TabBarItem[] = [

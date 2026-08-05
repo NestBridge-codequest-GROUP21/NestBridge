@@ -1,5 +1,13 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Linking, Text, View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import {
+  InteractionManager,
+  Linking,
+  Text,
+  View,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import SplashScreen from '../screens/auth/SplashScreen';
@@ -8,7 +16,6 @@ import { useAuth } from '../context/AuthContext';
 import { useAccountProfile } from '../context/AccountProfileContext';
 import { parseResetPasswordToken } from '../utils/parseResetPasswordUrl';
 import AuthNavigator from './AuthNavigator';
-import AppNavigator from './AppNavigator';
 import { registerPushTokenIfAvailable } from '../services/pushRegistration';
 import {
   clearLastBootError,
@@ -29,6 +36,23 @@ import {
   spacing,
   borderRadius,
 } from '../constants/theme';
+
+/**
+ * Defer the huge authenticated navigator until after splash/auth paint.
+ * A static import of AppNavigator (~5k lines + all screens) can ANR Android
+ * on cold start; lazy + Suspense keeps the first frame responsive.
+ */
+const AppNavigator = lazy(() =>
+  import('./AppNavigator').then((mod) => {
+    const Comp = mod.default;
+    if (typeof Comp !== 'function') {
+      throw new Error(
+        `AppNavigator failed to load (got ${typeof Comp}). Keys: ${Object.keys(mod).join(',')}`,
+      );
+    }
+    return { default: Comp };
+  }),
+);
 
 /** If auth/profile never settle, leave splash so the app remains usable. */
 const SPLASH_FORCE_MS = 10000;
@@ -122,14 +146,16 @@ export default function RootNavigator() {
   }, [splashDismissed, bootReady]);
 
   useEffect(() => {
-    if (!splashDone) {
-      return;
+    if (!splashDone || !user) {
+      return undefined;
     }
     setBootStage('nav_ready');
-    if (user) {
+    // Push after first interactions so it never blocks the UI thread on cold start.
+    const handle = InteractionManager.runAfterInteractions(() => {
       setBootStage('push_register');
       void registerPushTokenIfAvailable();
-    }
+    });
+    return () => handle.cancel();
   }, [splashDone, user?.userId]);
 
   if (!splashDone) {
@@ -172,7 +198,15 @@ export default function RootNavigator() {
       ) : null}
       <NavigationContainer theme={navTheme}>
         {user ? (
-          <AppNavigator key={user.userId} />
+          <Suspense
+            fallback={
+              <View style={[styles.lazyHold, { backgroundColor: colors.navy }]}>
+                <ActivityIndicator color={colors.tealBright} size="large" />
+              </View>
+            }
+          >
+            <AppNavigator key={user.userId} />
+          </Suspense>
         ) : (
           <AuthNavigator
             key={passwordResetToken ?? 'auth-default'}

@@ -74,7 +74,7 @@ export default function AdminPreviewPickerScreen({
       </ScreenScroll>
       <AppTabBar
         items={tabBarItems}
-        activeTabId="preview"
+        activeTabId="home"
         onTabPress={onTabPress}
       />
     </View>

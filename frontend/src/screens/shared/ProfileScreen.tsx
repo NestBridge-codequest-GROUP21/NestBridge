@@ -102,7 +102,12 @@ export default function ProfileScreen({
         greeting="Profile"
         userName={userName}
         userInitials={userInitials}
-        subtitle="Account setup and settings"
+        userPhotoUri={userPhotoUri}
+        subtitle={
+          showAccountSetup === false
+            ? 'Staff account — settings and sign out'
+            : 'Account setup and settings'
+        }
         onBack={onBack}
       />
 
@@ -139,22 +144,19 @@ export default function ProfileScreen({
                 Boolean(onHelpPress)
               }
             />
-          ) : (
+          ) : null}
+          {!showAccountSetup ? (
             <ListRow
-              title="Staff account"
-              subtitle="Ops access — consumer onboarding is not shown here"
+              title="NestBridge staff"
+              subtitle="You manage users, KYC, and marketplace listings"
               iconName="shield-checkmark-outline"
+              showChevron={false}
               style={styles.listRowPad}
               bordered={
-                showEditTravelPreferences ||
-                showTravelBooking ||
-                Boolean(onVerificationStatusPress) ||
-                Boolean(onRatingsPress) ||
-                Boolean(onSettingsPress) ||
-                Boolean(onHelpPress)
+                Boolean(onSettingsPress) || Boolean(onHelpPress)
               }
             />
-          )}
+          ) : null}
           {showEditTravelPreferences ? (
             <ListRow
               title="Travel & match preferences"

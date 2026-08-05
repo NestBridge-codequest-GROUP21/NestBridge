@@ -3305,6 +3305,8 @@ export default function AppNavigator() {
           isStaffShell ? (
             <AdminHomeRoute
               staffName={resolvedName}
+              staffInitials={resolvedInitials}
+              staffPhotoUri={resolvedProfilePhotoUri}
               tabBarItems={staffTabBarItems}
               onTabPress={(tabId) => routeTabPress(navigation, tabId, 'AdminHome')}
               onOpenUsers={() => navigation.navigate('StaffUserSearch')}
@@ -3600,7 +3602,7 @@ export default function AppNavigator() {
             userInitials={resolvedInitials}
             userPhotoUri={resolvedProfilePhotoUri}
             email={user?.email ?? ''}
-            setupSummary={isStaff ? 'Staff ops access' : setupSummary}
+            setupSummary={isStaff ? 'NestBridge staff · ops access' : setupSummary}
             showTravelBooking={!isStaff && shouldShowTravelBookingEntry(homeRole)}
             showAccountSetup={!isStaff}
             showEditTravelPreferences={!isStaff}
@@ -3609,7 +3611,7 @@ export default function AppNavigator() {
             showAppPreview={isStaffShell}
             showExitPreview={Boolean(preview)}
             tabBarItems={profileTabItems}
-            activeTabId=""
+            activeTabId={isStaffShell ? 'profile' : ''}
             onTabPress={(tabId) =>
               routeTabPress(
                 navigation,
@@ -3781,6 +3783,8 @@ export default function AppNavigator() {
 
       {renderStaffStackScreens({
         staffName: resolvedName,
+        staffInitials: resolvedInitials,
+        staffPhotoUri: resolvedProfilePhotoUri,
         staffTabBarItems,
         isStaffShell,
         notificationCount: visibleUnreadNotifications,

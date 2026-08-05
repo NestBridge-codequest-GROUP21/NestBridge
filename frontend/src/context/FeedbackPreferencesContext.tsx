@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { InteractionManager } from 'react-native';
 import {
   DEFAULT_FEEDBACK_PREFERENCES,
   loadFeedbackPreferences,
@@ -43,7 +44,12 @@ export function FeedbackPreferencesProvider({
       setFeedbackPreferencesCache(loaded);
       setIsReady(true);
       if (loaded.soundsEnabled) {
-        void warmFeedbackAssets();
+        // Defer audio decode so cold start stays responsive on low-end Android.
+        InteractionManager.runAfterInteractions(() => {
+          if (!cancelled) {
+            void warmFeedbackAssets();
+          }
+        });
       }
     });
     return () => {
@@ -69,7 +75,9 @@ export function FeedbackPreferencesProvider({
       const next = { ...preferences, soundsEnabled: enabled };
       persist(next);
       if (enabled) {
-        void warmFeedbackAssets();
+        InteractionManager.runAfterInteractions(() => {
+          void warmFeedbackAssets();
+        });
       }
     },
     [persist, preferences],

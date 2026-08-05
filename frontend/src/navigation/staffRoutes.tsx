@@ -58,6 +58,8 @@ function listParamsForCategory(
 
 export interface AdminHomeRouteProps {
   staffName: string;
+  staffInitials?: string;
+  staffPhotoUri?: string | null;
   tabBarItems: TabBarItem[];
   onTabPress: (tabId: string) => void;
   onOpenUsers: () => void;
@@ -72,6 +74,8 @@ export interface AdminHomeRouteProps {
 
 export function AdminHomeRoute({
   staffName,
+  staffInitials,
+  staffPhotoUri,
   tabBarItems,
   onTabPress,
   onOpenUsers,
@@ -119,6 +123,8 @@ export function AdminHomeRoute({
   return (
     <AdminHomeScreen
       staffName={staffName}
+      staffInitials={staffInitials}
+      staffPhotoUri={staffPhotoUri}
       overview={overview}
       isLoading={isLoading}
       refreshing={refreshing}
