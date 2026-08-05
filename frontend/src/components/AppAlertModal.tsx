@@ -154,6 +154,7 @@ export default function AppAlertModal({
       animationType="fade"
       onRequestClose={handleDismiss}
       statusBarTranslucent
+      presentationStyle="overFullScreen"
     >
       <View style={[styles.backdrop, { backgroundColor: overlays.scrimStrong }]}>
         <Pressable

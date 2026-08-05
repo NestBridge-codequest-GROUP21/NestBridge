@@ -11,6 +11,10 @@ import { registerAppAlertListener } from '../utils/appAlert';
 export function AppAlertProvider({ children }: { children: React.ReactNode }) {
   const [payload, setPayload] = useState<AppAlertPayload | null>(null);
 
+  // Register during render (not useEffect) so child mount effects never hit a
+  // null listener and fall through to a system dialog.
+  registerAppAlertListener(setPayload);
+
   useEffect(() => {
     registerAppAlertListener(setPayload);
     return () => registerAppAlertListener(null);

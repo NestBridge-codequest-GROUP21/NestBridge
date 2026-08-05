@@ -1,4 +1,3 @@
-import { Alert } from 'react-native';
 import type {
   AppAlertButton,
   AppAlertOptions,
@@ -8,15 +7,22 @@ import type {
 type AppAlertListener = (payload: AppAlertPayload | null) => void;
 
 let listener: AppAlertListener | null = null;
+/** Alerts requested before AppAlertProvider has registered. */
+let pending: AppAlertPayload | null = null;
 
 /** Registered by AppAlertProvider — do not call from screens. */
 export function registerAppAlertListener(next: AppAlertListener | null): void {
   listener = next;
+  if (listener && pending) {
+    const queued = pending;
+    pending = null;
+    listener(queued);
+  }
 }
 
 /**
  * NestBridge branded dialog. Drop-in replacement for React Native `Alert.alert`.
- * Falls back to the system alert only if the provider is not mounted yet.
+ * Never uses the system alert — queues until the provider is mounted if needed.
  */
 export function appAlert(
   title: string,
@@ -24,29 +30,23 @@ export function appAlert(
   buttons?: AppAlertButton[],
   options?: AppAlertOptions,
 ): void {
-  if (!listener) {
-    Alert.alert(
-      title,
-      message,
-      buttons?.map((button) => ({
-        text: button.text,
-        style: button.style,
-        onPress: button.onPress,
-      })),
-      options
-        ? {
-            cancelable: options.cancelable,
-            onDismiss: options.onDismiss,
-          }
-        : undefined,
-    );
-    return;
-  }
-
-  listener({
+  const payload: AppAlertPayload = {
     title,
     message,
     buttons,
     options,
-  });
+  };
+
+  if (!listener) {
+    pending = payload;
+    if (__DEV__) {
+      console.warn(
+        '[appAlert] Provider not ready yet — queued branded dialog:',
+        title,
+      );
+    }
+    return;
+  }
+
+  listener(payload);
 }

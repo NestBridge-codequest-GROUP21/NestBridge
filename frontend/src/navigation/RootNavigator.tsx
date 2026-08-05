@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Linking, Text, View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useAccountProfile } from '../context/AccountProfileContext';
 import { parseResetPasswordToken } from '../utils/parseResetPasswordUrl';
 import AuthNavigator from './AuthNavigator';
+import AppNavigator from './AppNavigator';
 import { registerPushTokenIfAvailable } from '../services/pushRegistration';
 import {
   clearLastBootError,
@@ -28,9 +29,6 @@ import {
   spacing,
   borderRadius,
 } from '../constants/theme';
-
-/** Defer the heavy authenticated navigator (and its native imports) until after splash/auth. */
-const AppNavigator = lazy(() => import('./AppNavigator'));
 
 /** If auth/profile never settle, leave splash so the app remains usable. */
 const SPLASH_FORCE_MS = 10000;
@@ -172,15 +170,7 @@ export default function RootNavigator() {
       ) : null}
       <NavigationContainer theme={navTheme}>
         {user ? (
-          <Suspense
-            fallback={
-              <View style={[styles.lazyHold, { backgroundColor: colors.navy }]}>
-                <ActivityIndicator color={colors.tealBright} size="large" />
-              </View>
-            }
-          >
-            <AppNavigator key={user.userId} />
-          </Suspense>
+          <AppNavigator key={user.userId} />
         ) : (
           <AuthNavigator
             key={passwordResetToken ?? 'auth-default'}

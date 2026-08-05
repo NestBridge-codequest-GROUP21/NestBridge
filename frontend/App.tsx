@@ -33,6 +33,7 @@ function AppProviders({ onReady }: { onReady: () => void }) {
 
   return (
     <ThemeProvider>
+      {/* Register before auth/profile so early appAlert() never hits a null host. */}
       <AppAlertProvider>
         <AuthProvider>
           <AccountProfileProvider>
