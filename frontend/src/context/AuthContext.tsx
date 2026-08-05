@@ -114,7 +114,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
               return;
             } catch (error) {
-              // Network / timeout — keep cached session for offline demos.
+              // Dead refresh (400 Invalid refresh token / 401) → sign out.
+              // Only keep a cached session for true offline / network failures.
+              const status =
+                error && typeof error === 'object' && 'response' in error
+                  ? (error as { response?: { status?: number } }).response?.status
+                  : undefined;
+              const message = api.getApiErrorMessage(error);
+              const deadRefresh =
+                status === 401 ||
+                status === 403 ||
+                (status === 400 && /invalid refresh|refresh token/i.test(message));
+              if (deadRefresh) {
+                console.warn('[auth] refresh rejected — clearing session', message);
+                await clearSession();
+                if (mounted) {
+                  setUser(null);
+                }
+                return;
+              }
               console.warn('[auth] refresh failed, using cached session', error);
             }
           } else if (!session.token) {

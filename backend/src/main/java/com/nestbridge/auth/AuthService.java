@@ -150,12 +150,16 @@ public class AuthService {
     public AuthTokenResponse refresh(RefreshTokenRequest request) {
         String token = request.getRefreshToken();
         if (tokenBlacklistService.isBlacklisted(token) || !jwtUtil.isRefreshToken(token)) {
-            throw new IllegalArgumentException("Invalid refresh token.");
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED,
+                    "Invalid refresh token.");
         }
         var userId = jwtUtil.getUserId(token);
         String stored = tokenBlacklistService.getStoredRefreshToken(userId.toString());
         if (stored == null || !stored.equals(token)) {
-            throw new IllegalArgumentException("Invalid refresh token.");
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED,
+                    "Invalid refresh token.");
         }
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found."));

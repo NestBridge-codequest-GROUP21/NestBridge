@@ -101,7 +101,13 @@ export function AdminHomeRoute({
       setOverview(await getAdminOverview());
     } catch (error) {
       setOverview(null);
-      setErrorMessage(getApiErrorMessage(error));
+      const message = getApiErrorMessage(error);
+      // Dead sessions should not leave Ops looking "broken" with a cryptic token error.
+      if (/session has expired|invalid refresh|sign in again/i.test(message)) {
+        setErrorMessage('Your session expired. Sign out from Profile, then sign in again.');
+      } else {
+        setErrorMessage(message);
+      }
     } finally {
       setIsLoading(false);
       setRefreshing(false);

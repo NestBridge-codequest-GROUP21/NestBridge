@@ -192,12 +192,13 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
               ? (remoteError as { response?: { status?: number } }).response
                   ?.status
               : undefined;
-          if (status === 401 || status === 403) {
+          if (status === 401 || status === 403 || status === 400) {
+            // Bad/expired session — local cache is enough; never LogBox this.
             console.warn(
               '[profile] remote hydrate unauthorized — using local cache',
             );
           } else {
-            // Network blips are expected on mobile — log only, never sticky banner.
+            // Network blips are expected on mobile — warn only, never sticky banner.
             await recordBootError('profile_hydrate_remote', remoteError, {
               persist: false,
             });

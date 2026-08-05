@@ -504,20 +504,46 @@ api.interceptors.response.use(
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     if (error.response?.status === 401 && original && !original._retry) {
       original._retry = true;
-      if (!refreshPromise) {
-        refreshPromise = refreshAccessToken();
-      }
-      const session = await refreshPromise;
-      refreshPromise = null;
-      if (session?.token && original.headers) {
-        original.headers.Authorization = `Bearer ${session.token}`;
-        return api(original);
+      try {
+        if (!refreshPromise) {
+          refreshPromise = refreshAccessToken();
+        }
+        const session = await refreshPromise;
+        if (session?.token && original.headers) {
+          original.headers.Authorization = `Bearer ${session.token}`;
+          return api(original);
+        }
+      } catch {
+        // Refresh threw (should be rare after dead-token handling).
+      } finally {
+        refreshPromise = null;
       }
       await clearSession();
     }
     return Promise.reject(error);
   },
 );
+
+function isDeadRefreshResponse(error: unknown): boolean {
+  if (!axios.isAxiosError(error) || !error.response) {
+    return false;
+  }
+  const status = error.response.status;
+  if (status === 401 || status === 403) {
+    return true;
+  }
+  if (status !== 400) {
+    return false;
+  }
+  const raw = error.response.data as ApiResponse<unknown> | string | undefined;
+  const message =
+    typeof raw === 'string'
+      ? raw
+      : typeof raw?.message === 'string'
+        ? raw.message
+        : error.message;
+  return /invalid refresh|refresh token/i.test(message ?? '');
+}
 
 async function refreshAccessToken(): Promise<AuthSession | null> {
   const session = await loadSession();
@@ -538,9 +564,9 @@ async function refreshAccessToken(): Promise<AuthSession | null> {
     await saveSession(next);
     return next;
   } catch (error) {
-    // Expired/revoked refresh → null (caller should sign out).
+    // Expired/revoked/invalid refresh → null (caller should sign out).
     // Network/timeout → rethrow so AuthContext can keep the cached session offline.
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
+    if (isDeadRefreshResponse(error)) {
       return null;
     }
     throw error;
@@ -1613,6 +1639,14 @@ export function getApiErrorMessage(error: unknown): string {
       }
     }
 
+    if (
+      status === 401 ||
+      ((status === 400 || status === 403) &&
+        /invalid refresh|refresh token/i.test(msg ?? error.message ?? ''))
+    ) {
+      return 'Your session has expired. Please sign in again.';
+    }
+
     if (msg && msg.trim()) {
       return msg.trim();
     }
@@ -1639,9 +1673,6 @@ export function getApiErrorMessage(error: unknown): string {
     }
     if (status === 503 || status === 502) {
       return 'NestBridge is temporarily unavailable. Pull down to refresh in a moment.';
-    }
-    if (status === 401) {
-      return 'Your session has expired. Please sign in again.';
     }
     if (status === 403) {
       return 'You do not have permission to do that.';

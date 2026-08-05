@@ -93,11 +93,17 @@ export async function recordBootError(
 ): Promise<void> {
   const message = safeString(error);
   lastErrorMessage = message;
-  console.error(`[boot:error] ${stage}`, message);
 
   const shouldPersist =
     options?.persist ??
     (!isTransientBootStage(stage) && !looksLikeNetworkBlip(message));
+
+  // Never console.error for soft/transient boot noise — LogBox blocks the UI in Expo Go.
+  if (shouldPersist) {
+    console.error(`[boot:error] ${stage}`, message);
+  } else {
+    console.warn(`[boot] ${stage}`, message);
+  }
 
   if (!shouldPersist) {
     return;
