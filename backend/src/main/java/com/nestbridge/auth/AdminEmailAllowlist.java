@@ -11,8 +11,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Pre-approved emails that receive {@code is_staff=true} at registration only.
- * Configure via {@code ADMIN_EMAIL_ALLOWLIST} (comma-separated). No built-in default.
+ * Pre-approved emails that receive {@code is_staff=true} at registration (and on login heal).
+ * Configure via {@code ADMIN_EMAIL_ALLOWLIST}. Prod/dev properties default to Group 21 emails
+ * when the env var is unset.
  */
 @Component
 @Slf4j

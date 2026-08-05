@@ -19,6 +19,19 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Slf4j
 public class AuthService {
 
+    /**
+     * Historical Flyway seed hashes for the shared string {@code password}.
+     * Team ops accounts must not keep signing in with that bootstrap secret.
+     */
+    private static final java.util.Set<String> BOOTSTRAP_PASSWORD_HASHES = java.util.Set.of(
+            // V34 / common test hash for "password"
+            "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+            // V2 / demo *@nestbridge.app hash for "password"
+            "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy");
+
+    private static final String TEAM_PASSWORD_REQUIRED =
+            "This staff account needs your own password. Use Create account with this email to set one, or Forgot password.";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -46,9 +59,16 @@ public class AuthService {
         String email = request.getEmail().trim().toLowerCase();
         var existing = userRepository.findByEmailIgnoreCase(email);
         if (existing.isPresent()) {
-            // Do not allow reclaiming an unverified signup — that would let a
-            // stranger take over an email they do not own.
-            throw new IllegalArgumentException("An account with this email already exists. Try signing in.");
+            User existingUser = existing.get();
+            // Group 21 staff were pre-seeded with password "password". Allow Create
+            // account to set their own NestBridge password and keep ops access.
+            // Ordinary accounts still cannot be reclaimed here.
+            boolean teamOps = isTeamOpsAccount(existingUser, email);
+            if (teamOps) {
+                return claimTeamOpsAccount(existingUser, request);
+            }
+            throw new IllegalArgumentException(
+                    "An account with this email already exists. Try signing in, or use Forgot password.");
         }
 
         // Skip inbox gate when SendGrid is missing — auto-verify so signup is usable.
@@ -61,12 +81,7 @@ public class AuthService {
                         "Registered {} without verification email — SENDGRID_API_KEY is not configured",
                         email);
             }
-            return RegisterResponse.builder()
-                    .email(user.getEmail())
-                    .displayName(user.getFullName())
-                    .requiresEmailVerification(false)
-                    .emailDeliveryFailed(false)
-                    .build();
+            return readyRegisterResponse(user);
         }
 
         String verifyUrl = emailVerificationService.issueVerificationLink(user);
@@ -87,19 +102,66 @@ public class AuthService {
             user.setEmailVerified(true);
             user.setEmailVerifiedAt(java.time.OffsetDateTime.now());
             userRepository.save(user);
-            return RegisterResponse.builder()
-                    .email(user.getEmail())
-                    .displayName(user.getFullName())
-                    .requiresEmailVerification(false)
-                    .emailDeliveryFailed(false)
-                    .build();
+            return readyRegisterResponse(user);
         }
+    }
+
+    /**
+     * Lets allowlisted / already-staff teammates set the password they want via
+     * Create account, then sign straight into Ops (no email gate).
+     */
+    private RegisterResponse claimTeamOpsAccount(User user, RegisterRequest request) {
+        if (user.isSuspended()) {
+            throw new IllegalArgumentException("This account has been suspended.");
+        }
+        rejectSharedDemoPassword(request.getPassword());
+        String name = request.getFullName() == null ? "" : request.getFullName().trim();
+        if (!name.isEmpty()) {
+            user.setFullName(name);
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setStaff(true);
+        user.setSuspended(false);
+        user.setEmailVerified(true);
+        if (user.getEmailVerifiedAt() == null) {
+            user.setEmailVerifiedAt(java.time.OffsetDateTime.now());
+        }
+        userRepository.save(user);
+        log.info("Updated NestBridge password for team ops account {}", user.getEmail());
+        return readyRegisterResponse(user);
+    }
+
+    private void rejectSharedDemoPassword(String rawPassword) {
+        if (rawPassword != null && "password".equalsIgnoreCase(rawPassword.trim())) {
+            throw new IllegalArgumentException(
+                    "Choose your own password — do not use the shared demo password.");
+        }
+    }
+
+    private boolean isTeamOpsAccount(User user, String email) {
+        return user.isStaff() || adminEmailAllowlist.contains(email);
+    }
+
+    private boolean isBootstrapPasswordHash(String passwordHash) {
+        return passwordHash != null && BOOTSTRAP_PASSWORD_HASHES.contains(passwordHash.trim());
+    }
+
+    private static RegisterResponse readyRegisterResponse(User user) {
+        return RegisterResponse.builder()
+                .email(user.getEmail())
+                .displayName(user.getFullName())
+                .requiresEmailVerification(false)
+                .emailDeliveryFailed(false)
+                .build();
     }
 
     private User persistNewUser(RegisterRequest request, String email, boolean emailVerified) {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         return template.execute(status -> {
             boolean grantStaff = adminEmailAllowlist.contains(email);
+            if (grantStaff) {
+                rejectSharedDemoPassword(request.getPassword());
+            }
             User user = User.builder()
                     .fullName(request.getFullName().trim())
                     .email(email)
@@ -127,6 +189,10 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid email or password.");
         }
+        // Team ops must not keep using the shared Flyway bootstrap password.
+        if (isTeamOpsAccount(user, email) && isBootstrapPasswordHash(user.getPasswordHash())) {
+            throw new IllegalArgumentException(TEAM_PASSWORD_REQUIRED);
+        }
         if (user.isSuspended()) {
             throw new IllegalArgumentException("This account has been suspended.");
         }
@@ -143,7 +209,13 @@ public class AuthService {
                         email);
             }
         }
-        // Staff is granted only at registration — never healed on login.
+        // Staff is granted at registration / team claim. Also heal allowlisted
+        // teammates on login so Ops stays reachable if the flag was cleared.
+        if (!user.isStaff() && adminEmailAllowlist.contains(email)) {
+            user.setStaff(true);
+            userRepository.save(user);
+            log.info("Restored staff access for allowlisted login {}", email);
+        }
         return issueTokens(user);
     }
 
