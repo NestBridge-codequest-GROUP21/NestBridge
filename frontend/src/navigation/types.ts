@@ -33,6 +33,7 @@ export type AppStackParamList = {
   StaffPendingKyc: undefined;
   VerificationStatus: undefined;
   AccountSetup: undefined;
+  EditTravelPreferences: undefined;
   UnifiedSearch: undefined;
   Destination: { track: 'SEEKER' };
   StudentQuiz: { track: 'SEEKER' };

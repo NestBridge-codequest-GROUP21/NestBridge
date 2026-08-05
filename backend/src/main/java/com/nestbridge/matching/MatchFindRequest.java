@@ -20,4 +20,5 @@ public class MatchFindRequest {
     private List<String> dietaryRequirements;
     private String lifestylePreference;
     private String culturalBackgroundPreference;
+    private String religionPreference;
 }

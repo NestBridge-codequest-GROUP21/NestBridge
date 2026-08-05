@@ -214,6 +214,10 @@ export function useHomeApiData(
     typeof profileState.seekerSetup.data.quizAnswers?.budget === 'string'
       ? profileState.seekerSetup.data.quizAnswers.budget
       : null;
+  const quizFingerprint = JSON.stringify(
+    profileState.seekerSetup.data.quizAnswers ?? null,
+  );
+  const universityKey = profileState.seekerSetup.data.university ?? '';
 
   const refresh = useCallback(() => {
     setSectionRetry(null);
@@ -242,18 +246,18 @@ export function useHomeApiData(
     setSectionRetry({ section: 'guideMatches', token: Date.now() });
   }, []);
 
-  const quizBudgetRef = useRef(quizBudget);
+  const quizFingerprintRef = useRef(quizFingerprint);
   useEffect(() => {
-    if (quizBudgetRef.current === quizBudget) return;
-    quizBudgetRef.current = quizBudget;
-    // New quiz answer resets widen consent (refs first so the next fetch is strict).
+    if (quizFingerprintRef.current === quizFingerprint) return;
+    quizFingerprintRef.current = quizFingerprint;
+    // Preference edits reset widen consent (refs first so the next fetch is strict).
     allowOutsideHostRef.current = false;
     allowOutsideGuideRef.current = false;
     setAllowOutsideHostBudget(false);
     setAllowOutsideGuideBudget(false);
     setHostBudgetExploreAvailable(false);
     setGuideBudgetExploreAvailable(false);
-  }, [quizBudget]);
+  }, [quizFingerprint]);
 
   useEffect(() => {
     if (!userId) {
@@ -489,6 +493,8 @@ export function useHomeApiData(
     profileState.seekerSetup.data.arrivalDate,
     profileState.seekerSetup.data.departureDate,
     quizBudget,
+    quizFingerprint,
+    universityKey,
   ]);
 
   return {

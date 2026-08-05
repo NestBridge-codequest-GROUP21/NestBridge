@@ -15,10 +15,7 @@ import { normalizeCity } from './ghanaReference';
 import { FLEXIBLE_POLICY } from './bookingMock';
 import { suggestedGuidesMock } from './guideSessionMock';
 import { hostVerification, normalizeVerification } from '../types/verification';
-import {
-  budgetApiParamsFromRange,
-  seekerBudgetRangeFromProfile,
-} from './budgetRanges';
+import { matchPreferenceParamsFromProfile } from './matchPreferences';
 
 const DEFAULT_MATCH_REASONS = [
   'Verified host family',
@@ -249,16 +246,13 @@ export function buildHostMatchParams(
 ): MatchFindParams {
   const data = profileState.seekerSetup.data;
   const city = data.city ? normalizeCity(data.city) : '';
-  const budget = budgetApiParamsFromRange(seekerBudgetRangeFromProfile(profileState));
+  const prefs = matchPreferenceParamsFromProfile(profileState);
   return {
     city,
     checkIn: data.arrivalDate || undefined,
     checkOut: data.departureDate || undefined,
-    ...budget,
+    ...prefs,
     targetType: 'HOST',
-    universityLat: 5.6504,
-    universityLng: -0.187,
-    preferredLanguages: ['English'],
     ...overrides,
   };
 }
@@ -269,10 +263,10 @@ export function buildGuideMatchParams(
 ): MatchFindParams {
   const data = profileState.seekerSetup.data;
   const city = data.city ? normalizeCity(data.city) : '';
-  const budget = budgetApiParamsFromRange(seekerBudgetRangeFromProfile(profileState));
+  const prefs = matchPreferenceParamsFromProfile(profileState);
   return {
     city,
-    ...budget,
+    ...prefs,
     targetType: 'GUIDE',
     ...overrides,
   };
@@ -297,24 +291,23 @@ export function buildSearchMatchParams(
     ? normalizeCity(search.destinationCity)
     : undefined;
   const city = searchCity || profileCity || '';
+  const prefs = matchPreferenceParamsFromProfile(profileState);
 
   const budget = search.widenBudget
-    ? {}
+    ? { minBudget: undefined, maxBudget: undefined }
     : {
         ...(search.budgetMin != null && search.budgetMin > 0
           ? { minBudget: search.budgetMin }
-          : {}),
+          : { minBudget: undefined }),
         maxBudget: search.budgetMax,
       };
 
   return {
+    ...prefs,
     city,
     checkIn: search.checkIn,
     checkOut: search.checkOut,
     ...budget,
     targetType: 'HOST',
-    universityLat: 5.6504,
-    universityLng: -0.187,
-    preferredLanguages: ['English'],
   };
 }

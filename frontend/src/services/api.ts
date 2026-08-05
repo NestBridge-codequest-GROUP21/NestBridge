@@ -231,6 +231,8 @@ export interface MatchFindParams {
   preferredLanguages?: string[];
   dietaryRequirements?: string[];
   lifestylePreference?: string;
+  culturalBackgroundPreference?: string;
+  religionPreference?: string;
 }
 
 export interface IncomingBookingApi {

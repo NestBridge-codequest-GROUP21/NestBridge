@@ -32,6 +32,7 @@ export interface ProfileScreenProps {
   showTravelBooking?: boolean;
   /** When false, hide consumer account-setup entry (staff shell). */
   showAccountSetup?: boolean;
+  showEditTravelPreferences?: boolean;
   tabBarItems?: TabBarItem[];
   activeTabId?: string;
   showSosDock?: boolean;
@@ -39,6 +40,7 @@ export interface ProfileScreenProps {
   onTabPress?: (tabId: string) => void;
   onBack?: () => void;
   onAccountSetupPress?: () => void;
+  onEditTravelPreferencesPress?: () => void;
   onTravelBookingPress?: () => void;
   onSettingsPress?: () => void;
   onHelpPress?: () => void;
@@ -62,6 +64,7 @@ export default function ProfileScreen({
   setupSummary,
   showTravelBooking = false,
   showAccountSetup = true,
+  showEditTravelPreferences = false,
   tabBarItems,
   activeTabId = '',
   showSosDock = false,
@@ -69,6 +72,7 @@ export default function ProfileScreen({
   onTabPress,
   onBack,
   onAccountSetupPress,
+  onEditTravelPreferencesPress,
   onTravelBookingPress,
   onSettingsPress,
   onHelpPress,
@@ -119,6 +123,7 @@ export default function ProfileScreen({
               onPress={onAccountSetupPress}
               style={styles.listRowPad}
               bordered={
+                showEditTravelPreferences ||
                 showTravelBooking ||
                 Boolean(onVerificationStatusPress) ||
                 Boolean(onRatingsPress) ||
@@ -133,6 +138,7 @@ export default function ProfileScreen({
               iconName="shield-checkmark-outline"
               style={styles.listRowPad}
               bordered={
+                showEditTravelPreferences ||
                 showTravelBooking ||
                 Boolean(onVerificationStatusPress) ||
                 Boolean(onRatingsPress) ||
@@ -141,6 +147,22 @@ export default function ProfileScreen({
               }
             />
           )}
+          {showEditTravelPreferences ? (
+            <ListRow
+              title="Travel & match preferences"
+              subtitle="Change destination, dates, budget, diet, and lifestyle"
+              iconName="map-outline"
+              onPress={onEditTravelPreferencesPress}
+              style={styles.listRowPad}
+              bordered={
+                showTravelBooking ||
+                Boolean(onVerificationStatusPress) ||
+                Boolean(onSettingsPress) ||
+                Boolean(onRatingsPress) ||
+                Boolean(onHelpPress)
+              }
+            />
+          ) : null}
           {showTravelBooking ? (
             <ListRow
               title="Book as a traveller"

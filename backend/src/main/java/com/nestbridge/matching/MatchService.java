@@ -82,7 +82,7 @@ public class MatchService {
                 .collect(Collectors.toList());
         List<MatchingAlgorithm.ScoredHost> scored = algorithm.scoreHosts(verifiedHosts, users, request, seeker);
 
-        return scored.stream().limit(10).map(s -> {
+        return scored.stream().limit(20).map(s -> {
             HostProfile h = s.host();
             User u = s.hostUser();
             MatchRecord record = persistMatch(seeker.getUserId(), h.getHostId(), "HOST", s.score(), s.breakdown(), s.reasons());
@@ -127,7 +127,7 @@ public class MatchService {
                 .collect(Collectors.toList());
         List<MatchingAlgorithm.ScoredGuide> scored = algorithm.scoreGuides(verifiedGuides, users, request, seeker);
 
-        return scored.stream().limit(10).map(s -> {
+        return scored.stream().limit(20).map(s -> {
             GuideProfile g = s.guide();
             User u = s.guideUser();
             MatchRecord record = persistMatch(seeker.getUserId(), g.getGuideId(), "GUIDE", s.score(), s.breakdown(), s.reasons());

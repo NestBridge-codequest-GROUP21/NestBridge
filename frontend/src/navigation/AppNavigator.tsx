@@ -55,6 +55,11 @@ import SettingsScreen from '../screens/shared/SettingsScreen';
 import HelpDeskScreen from '../screens/shared/HelpDeskScreen';
 import { HELP_TOPICS, nestBridgeSupportContacts } from '../data/helpDesk';
 import AccountSetupScreen from '../screens/shared/AccountSetupScreen';
+import EditTravelPreferencesScreen, {
+  lifestyleLabelFromQuiz,
+  quizPatchFromEditor,
+} from '../screens/shared/EditTravelPreferencesScreen';
+import { quizAnswersFromProfile } from '../data/matchPreferences';
 import DevTestingScreen from '../screens/shared/DevTestingScreen';
 import { AdminHomeRoute } from './staffRoutes';
 import { renderStaffStackScreens } from './staffStackScreens';
@@ -3573,6 +3578,7 @@ export default function AppNavigator() {
             setupSummary={isStaff ? 'Staff ops access' : setupSummary}
             showTravelBooking={!isStaff && shouldShowTravelBookingEntry(homeRole)}
             showAccountSetup={!isStaff}
+            showEditTravelPreferences={!isStaff}
             showStaffTools={isStaffShell}
             showReturnToOps={isStaffShell}
             showAppPreview={isStaffShell}
@@ -3600,6 +3606,10 @@ export default function AppNavigator() {
             onAccountSetupPress={() => {
               if (isStaff) return;
               navigation.navigate('AccountSetup');
+            }}
+            onEditTravelPreferencesPress={() => {
+              if (isStaff) return;
+              navigation.navigate('EditTravelPreferences');
             }}
             onTravelBookingPress={() => navigation.navigate('UnifiedSearch')}
             onSettingsPress={() => navigation.navigate('Settings')}
@@ -3804,7 +3814,11 @@ export default function AppNavigator() {
             onTrackPress={(track) => {
               syncOnboardingFields(track);
               const progress = getProgressForTrack(profileState, track);
+              // Completed travel profile → edit preferences instead of dead-end.
               if (progress.status === 'COMPLETE') {
+                if (track === 'SEEKER') {
+                  navigation.navigate('EditTravelPreferences');
+                }
                 return;
               }
               if (track === 'HOST' && !canEnableHostProvider) {
@@ -3824,6 +3838,78 @@ export default function AppNavigator() {
           />
           )
         }
+      </Stack.Screen>
+
+      <Stack.Screen name="EditTravelPreferences">
+        {({ navigation }) => {
+          const answers = quizAnswersFromProfile(profileState);
+          const languages = Array.isArray(answers.languages)
+            ? answers.languages.filter((item): item is string => typeof item === 'string')
+            : typeof answers.languages === 'string'
+              ? [answers.languages]
+              : ['English'];
+          const dietary = Array.isArray(answers.dietary)
+            ? answers.dietary.filter((item): item is string => typeof item === 'string')
+            : [];
+          const budgetLabel =
+            seekerBudgetRangeFromProfile(profileState)?.label ??
+            (typeof answers.budget === 'string' ? answers.budget : 'GHS 100-200');
+          const religion =
+            typeof answers.religion === 'string' ? answers.religion : 'Prefer not to say';
+          const cultural =
+            (typeof answers.hostCulturalBackground === 'string'
+              ? answers.hostCulturalBackground
+              : null) ??
+            (typeof answers.culturalPreference === 'string'
+              ? answers.culturalPreference
+              : 'No preference');
+
+          return (
+            <EditTravelPreferencesScreen
+              userName={firstName}
+              userInitials={resolvedInitials}
+              initialValues={{
+                city: profileFields.city || city,
+                university: profileFields.university || university,
+                arrivalDate: profileFields.arrivalDate || arrivalDate,
+                departureDate: profileFields.departureDate || departureDate,
+                budget: budgetLabel,
+                languages,
+                dietary: dietary.filter((item) => item.toLowerCase() !== 'none'),
+                lifestyle: lifestyleLabelFromQuiz(answers),
+                religion,
+                culturalPreference: cultural,
+                foodAllergies:
+                  typeof answers.foodAllergies === 'string' ? answers.foodAllergies : '',
+              }}
+              onBack={() => navigation.goBack()}
+              onSave={async (values) => {
+                await completeStep('SEEKER', 'destination', {
+                  city: values.city,
+                  university: values.university,
+                  arrivalDate: values.arrivalDate,
+                  departureDate: values.departureDate,
+                });
+                await completeStep('SEEKER', 'quiz', {
+                  quizAnswers: {
+                    ...quizPatchFromEditor(values),
+                    destination: values.city,
+                  },
+                });
+                setCity(values.city);
+                setUniversity(values.university);
+                setArrivalDate(values.arrivalDate);
+                setDepartureDate(values.departureDate);
+                homeApi.refresh();
+                Alert.alert(
+                  'Preferences updated',
+                  'Your matches will refresh using your new destination and preferences.',
+                );
+                navigation.goBack();
+              }}
+            />
+          );
+        }}
       </Stack.Screen>
 
       <Stack.Screen name="UnifiedSearch">
