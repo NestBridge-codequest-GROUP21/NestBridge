@@ -4005,7 +4005,7 @@ export default function AppNavigator() {
                 university,
                 arrivalDate,
                 departureDate,
-              });
+              }).catch(() => undefined);
               navigation.navigate(
                 primaryIntent === 'STUDENT' ? 'StudentQuiz' : 'TouristQuiz',
                 { track: 'SEEKER' },
@@ -4022,7 +4022,7 @@ export default function AppNavigator() {
             onFinish={(answers) => {
               void completeStep('SEEKER', 'quiz', {
                 quizAnswers: resolvePlaceOtherAnswers(answers),
-              });
+              }).catch(() => undefined);
               navigation.navigate('ProfileSetup', { track: 'SEEKER' });
             }}
           />
@@ -4039,7 +4039,7 @@ export default function AppNavigator() {
               void completeStep('HOST', 'quiz', {
                 quizAnswers: resolved,
                 ...(hostCity ? { city: hostCity } : {}),
-              });
+              }).catch(() => undefined);
               if (hostCity) {
                 setCity(hostCity);
               }
@@ -4061,7 +4061,7 @@ export default function AppNavigator() {
               void completeStep('SEEKER', 'quiz', {
                 quizAnswers: resolved,
                 ...(visitCity ? { city: visitCity } : {}),
-              });
+              }).catch(() => undefined);
               if (visitCity) {
                 setCity(visitCity);
               }
@@ -4085,7 +4085,7 @@ export default function AppNavigator() {
               void completeStep('GUIDE', 'quiz', {
                 quizAnswers: resolved,
                 ...(primaryArea ? { city: primaryArea } : {}),
-              });
+              }).catch(() => undefined);
               if (primaryArea) {
                 setCity(primaryArea);
               }
@@ -4987,7 +4987,9 @@ export default function AppNavigator() {
                 ? checklistCompleted.filter((id) => id !== taskId)
                 : [...checklistCompleted, taskId];
               setChecklistCompleted(next);
-              void completeStep('SEEKER', 'profile', { checklistCompleted: next });
+              void completeStep('SEEKER', 'profile', { checklistCompleted: next }).catch(
+                () => undefined,
+              );
             }}
             onDeleteTask={(taskId) => {
               const nextRemoved = checklistRemoved.includes(taskId)
@@ -4999,7 +5001,7 @@ export default function AppNavigator() {
               void completeStep('SEEKER', 'profile', {
                 checklistRemoved: nextRemoved,
                 checklistCompleted: nextCompleted,
-              });
+              }).catch(() => undefined);
             }}
             onBack={() => navigation.goBack()}
           />

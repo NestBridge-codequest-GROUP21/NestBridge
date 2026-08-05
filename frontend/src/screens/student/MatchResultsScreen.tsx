@@ -134,7 +134,7 @@ function HostMatchCard({
         </View>
 
         <View style={styles.reasonsBlock}>
-          {host.matchReasons.map((reason) => (
+          {(host.matchReasons ?? []).map((reason) => (
             <View key={reason} style={styles.reasonRow}>
               <View style={styles.reasonDot} />
               <Text style={styles.reasonText}>{reason}</Text>

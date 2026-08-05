@@ -43,14 +43,18 @@ export async function saveCultureGuideProgress(
   userId: string,
   progress: CultureGuideProgress,
 ): Promise<void> {
-  await SecureStore.setItemAsync(
-    progressKey(userId),
-    JSON.stringify({
-      completedPhraseIds: uniqueIds(progress.completedPhraseIds),
-      practicedPhraseIds: uniqueIds(progress.practicedPhraseIds),
-      completedTopicIds: uniqueIds(progress.completedTopicIds),
-    }),
-  );
+  try {
+    await SecureStore.setItemAsync(
+      progressKey(userId),
+      JSON.stringify({
+        completedPhraseIds: uniqueIds(progress.completedPhraseIds),
+        practicedPhraseIds: uniqueIds(progress.practicedPhraseIds),
+        completedTopicIds: uniqueIds(progress.completedTopicIds),
+      }),
+    );
+  } catch {
+    // SecureStore can fail on some devices — progress is best-effort only.
+  }
 }
 
 export async function markCulturePhraseCompleted(

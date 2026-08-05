@@ -2,6 +2,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { PrimaryIntent } from '../types/accountProfile';
 import type { SetupTrack } from '../types/accountProfile';
 import type { AppStackParamList } from './types';
+import { getApiErrorMessage } from '../services/api';
 import {
   getSeekerQuizRoute,
   seekerUsesDestination,
@@ -55,10 +56,15 @@ export function navigateContinueSetup(
   primaryIntent: PrimaryIntent | null,
   getNextStep: (track: SetupTrack) => string | null,
   startSetup: (track: SetupTrack) => Promise<void>,
+  onError?: (message: string) => void,
 ) {
-  void startSetup(track).then(() => {
-    navigateSetupOnboarding(navigation, track, primaryIntent, getNextStep(track));
-  });
+  void startSetup(track)
+    .then(() => {
+      navigateSetupOnboarding(navigation, track, primaryIntent, getNextStep(track));
+    })
+    .catch((error: unknown) => {
+      onError?.(getApiErrorMessage(error));
+    });
 }
 
 export function navigatePrimaryOnboarding(

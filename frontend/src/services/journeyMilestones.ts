@@ -31,10 +31,14 @@ export async function saveJourneyMilestones(
   userId: string,
   milestones: JourneyMilestones,
 ): Promise<void> {
-  await SecureStore.setItemAsync(
-    milestonesKey(userId),
-    JSON.stringify(milestones),
-  );
+  try {
+    await SecureStore.setItemAsync(
+      milestonesKey(userId),
+      JSON.stringify(milestones),
+    );
+  } catch {
+    // Best-effort local milestones only.
+  }
 }
 
 export async function markJourneyMilestone(

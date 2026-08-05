@@ -37,10 +37,14 @@ export async function saveVideoProgress(
   userId: string,
   state: VideoProgressState,
 ): Promise<void> {
-  await SecureStore.setItemAsync(
-    progressKey(userId),
-    JSON.stringify(normalize(state)),
-  );
+  try {
+    await SecureStore.setItemAsync(
+      progressKey(userId),
+      JSON.stringify(normalize(state)),
+    );
+  } catch {
+    // Best-effort local progress only.
+  }
 }
 
 export async function markVideoStarted(

@@ -121,13 +121,13 @@ export default function GuideProfileDetailScreen({
 
         <SectionHeader title="Services offered" />
         <View style={styles.chips}>
-          {guide.serviceTypes.map((service) => (
+          {(guide.serviceTypes ?? []).map((service) => (
             <StatusBadge key={service} label={service} tone="neutral" />
           ))}
         </View>
 
         <SectionHeader title="Languages" />
-        <Text style={styles.bodyText}>{guide.languages.join(' · ')}</Text>
+        <Text style={styles.bodyText}>{(guide.languages ?? []).join(' · ')}</Text>
 
         <SectionHeader title="About" />
         <Text style={styles.bodyText}>

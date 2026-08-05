@@ -154,7 +154,9 @@ export default function ChatScreen({
     };
     setMessages((prev) => [...prev, newMessage]);
     setDraft('');
-    void Promise.resolve(onSendMessage?.(trimmed));
+    void Promise.resolve(onSendMessage?.(trimmed)).catch(() => {
+      // Route/hook surfaces send errors; never leave an unhandled rejection.
+    });
   };
 
   const subtitleParts = [

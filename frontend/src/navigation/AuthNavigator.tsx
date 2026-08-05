@@ -30,6 +30,7 @@ import {
 } from '../utils/normalizeLoginEmail';
 import type { AuthStackParamList } from './types';
 import { appAlert } from '../utils/appAlert';
+import { getApiErrorMessage } from '../services/api';
 
 const APP_VERSION =
   Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '1.0.1';
@@ -92,11 +93,7 @@ export default function AuthNavigator({
       await applyDevPreset(demoPresetForAccount(account));
       await setPrimaryIntent(account.intent);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : `Could not sign in as ${account.name}. Make sure the backend is running.`;
-      appAlert('Quick sign-in failed', message);
+      appAlert('Quick sign-in failed', getApiErrorMessage(error));
     } finally {
       setDemoLoginBusy(false);
     }
@@ -174,8 +171,7 @@ export default function AuthNavigator({
                   await signIn(email, password, keepSignedIn);
                 }
               } catch (error) {
-                const message =
-                  error instanceof Error ? error.message : 'Could not create account.';
+                const message = getApiErrorMessage(error);
                 if (isUnverifiedEmailError(message)) {
                   setRegisterError('');
                   setVerifyStatus('');
@@ -390,8 +386,7 @@ export default function AuthNavigator({
               try {
                 await signIn(normalizedEmail, password, keepSignedIn);
               } catch (error) {
-                const message =
-                  error instanceof Error ? error.message : 'Email or password is incorrect.';
+                const message = getApiErrorMessage(error);
                 if (isUnverifiedEmailError(message)) {
                   setLoginError(UNVERIFIED_LOGIN_COPY);
                   setLoginNeedsVerification(true);

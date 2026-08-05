@@ -588,6 +588,11 @@ function unwrap<T>(response: { data: ApiResponse<T> }): T {
   return response.data.data;
 }
 
+/** Backend list payloads sometimes arrive as null — never crash on `.map`. */
+function asArray<T>(value: T[] | null | undefined): T[] {
+  return Array.isArray(value) ? value : [];
+}
+
 export function mapProfileFromApi(dto: {
   primaryIntent?: PrimaryIntent | null;
   isActiveExchangeStudent?: boolean;
@@ -962,12 +967,13 @@ export async function updateMyProfile(
 }
 
 export function mapHostProfileApi(dto: HostProfileApi): HostProfileSummary {
+  const name = (dto.hostName ?? '').trim() || 'Host';
   const location = [dto.address, dto.city].filter(Boolean).join(', ') || dto.city || 'Ghana';
   return {
     id: dto.hostId,
     userId: dto.userId,
-    name: dto.hostName,
-    initials: dto.initials ?? dto.hostName.slice(0, 2).toUpperCase(),
+    name,
+    initials: dto.initials ?? name.slice(0, 2).toUpperCase(),
     location,
     matchPercentage: dto.matchPercentage ?? 0,
     pricePerNight: Number(dto.pricePerNight ?? 0),
@@ -979,19 +985,26 @@ export function mapHostProfileApi(dto: HostProfileApi): HostProfileSummary {
 }
 
 export function mapGuideProfileApi(dto: GuideProfileApi): GuideProfileSummary {
+  const name = (dto.name ?? '').trim() || 'Guide';
   const location = [dto.city, dto.country].filter(Boolean).join(', ') || 'Ghana';
   return {
     id: dto.guideId,
     userId: dto.userId,
-    name: dto.name,
-    initials: dto.initials ?? dto.name.slice(0, 2).toUpperCase(),
+    name,
+    initials: dto.initials ?? name.slice(0, 2).toUpperCase(),
     location,
     matchPercentage: dto.matchPercentage ?? 0,
     pricePerSession: Number(dto.pricePerSession ?? 0),
     sessionDurationHours: Number(dto.sessionDurationHours ?? 3),
     currency: 'GHS',
-    serviceTypes: dto.serviceTypes ?? ['City tour'],
-    languages: dto.languagesOffered ?? ['English'],
+    serviceTypes: (() => {
+      const types = asArray(dto.serviceTypes);
+      return types.length > 0 ? types : ['City tour'];
+    })(),
+    languages: (() => {
+      const langs = asArray(dto.languagesOffered);
+      return langs.length > 0 ? langs : ['English'];
+    })(),
     cancellationPolicy: 'FLEXIBLE',
     icon: '🗺️',
     verification: normalizeVerification(dto.verification),
@@ -1028,7 +1041,7 @@ export async function getMyHostCalendar(
     '/api/hosts/profile/mine/calendar',
     { params: { year, month } },
   );
-  return unwrap({ data });
+  return asArray(unwrap({ data }));
 }
 
 export async function getMyHostActiveBooking(): Promise<HostActiveBookingApi | null> {
@@ -1058,12 +1071,12 @@ export async function getMyGuideCalendar(
     '/api/guides/profile/mine/calendar',
     { params: { year, month } },
   );
-  return unwrap({ data });
+  return asArray(unwrap({ data }));
 }
 
 export async function findMatches(params: MatchFindParams): Promise<MatchResult[]> {
   const { data } = await api.post<ApiResponse<MatchResult[]>>('/api/matches/find', params);
-  return unwrap({ data });
+  return asArray(unwrap({ data }));
 }
 
 export interface CommunityMemberApi {
@@ -1149,7 +1162,7 @@ export async function getIncomingBookings(
   const { data } = await api.get<ApiResponse<IncomingBookingApi[]>>('/api/bookings/incoming', {
     params,
   });
-  return unwrap({ data }).map(mapIncomingBooking);
+  return asArray(unwrap({ data })).map(mapIncomingBooking);
 }
 
 export async function getProviderActiveBookings(
@@ -1158,12 +1171,12 @@ export async function getProviderActiveBookings(
   const { data } = await api.get<ApiResponse<IncomingBookingApi[]>>('/api/bookings/incoming', {
     params: { bookingType, active: true },
   });
-  return unwrap({ data }).map(mapIncomingBooking);
+  return asArray(unwrap({ data })).map(mapIncomingBooking);
 }
 
 export async function getUserBookings(userId: string): Promise<BookingListItem[]> {
   const { data } = await api.get<ApiResponse<BookingApi[]>>(`/api/users/${userId}/bookings`);
-  return unwrap({ data }).map(mapBookingListItem);
+  return asArray(unwrap({ data })).map(mapBookingListItem);
 }
 
 export async function createBooking(body: Record<string, unknown>): Promise<BookingApi> {
@@ -1248,7 +1261,7 @@ export async function fetchNotifications(): Promise<import('../types/booking').A
       }>
     >
   >('/api/notifications');
-  return unwrap({ data }).map((item) => ({
+  return asArray(unwrap({ data })).map((item) => ({
     id: item.id,
     title: item.title,
     body: item.body,
@@ -1417,14 +1430,14 @@ export async function getLodgingPartners(city?: string): Promise<LodgingListing[
   const { data } = await api.get<ApiResponse<LodgingPartnerApi[]>>('/api/lodging/partners', {
     params: city ? { city: city.split(',')[0]?.trim() || city } : undefined,
   });
-  return unwrap({ data }).map(mapLodgingPartner);
+  return asArray(unwrap({ data })).map(mapLodgingPartner);
 }
 
 export async function getWelfareCheckIns(bookingId: string): Promise<WelfareCheckInApi[]> {
   const { data } = await api.get<ApiResponse<WelfareCheckInApi[]>>(
     `/api/welfare/checkins/${bookingId}`,
   );
-  return unwrap({ data });
+  return asArray(unwrap({ data }));
 }
 
 export async function submitWelfareCheckIn(
@@ -1482,7 +1495,7 @@ export async function createConversation(participantId: string): Promise<Convers
 
 export async function listConversations(): Promise<ConversationListApi[]> {
   const { data } = await api.get<ApiResponse<ConversationListApi[]>>('/api/conversations');
-  return unwrap({ data });
+  return asArray(unwrap({ data }));
 }
 
 export async function getConversation(
@@ -1498,7 +1511,7 @@ export async function getConversationMessages(conversationId: string): Promise<C
   const { data } = await api.get<ApiResponse<ChatMessageApi[]>>(
     `/api/conversations/${conversationId}/messages`,
   );
-  return unwrap({ data });
+  return asArray(unwrap({ data }));
 }
 
 export async function sendConversationMessage(
@@ -1518,19 +1531,19 @@ async function fetchContent<T>(path: string, params?: Record<string, string | un
 }
 
 export async function getPhrases(city?: string): Promise<PhraseApi[]> {
-  return fetchContent('/api/content/phrases', { city });
+  return asArray(await fetchContent('/api/content/phrases', { city }));
 }
 
 export async function getTopics(city?: string): Promise<TopicApi[]> {
-  return fetchContent('/api/content/topics', { city });
+  return asArray(await fetchContent('/api/content/topics', { city }));
 }
 
 export async function getTransport(city?: string): Promise<TransportTabApi[]> {
-  return fetchContent('/api/content/transport', { city });
+  return asArray(await fetchContent('/api/content/transport', { city }));
 }
 
 export async function getSites(city?: string): Promise<TouristSiteApi[]> {
-  return fetchContent('/api/content/sites', { city });
+  return asArray(await fetchContent('/api/content/sites', { city }));
 }
 
 export async function getSite(siteKey: string): Promise<TouristSiteApi> {
@@ -1538,19 +1551,19 @@ export async function getSite(siteKey: string): Promise<TouristSiteApi> {
 }
 
 export async function getChecklist(city?: string): Promise<ChecklistItemApi[]> {
-  return fetchContent('/api/content/checklist', { city });
+  return asArray(await fetchContent('/api/content/checklist', { city }));
 }
 
 export async function getEmergencyContacts(): Promise<EmergencyContactApi[]> {
-  return fetchContent('/api/content/emergency-contacts');
+  return asArray(await fetchContent('/api/content/emergency-contacts'));
 }
 
 export async function getMapLandmarks(city?: string): Promise<MapLandmarkApi[]> {
-  return fetchContent('/api/content/map-landmarks', { city });
+  return asArray(await fetchContent('/api/content/map-landmarks', { city }));
 }
 
 export async function getVideos(city?: string, category?: string): Promise<VideoResourceApi[]> {
-  return fetchContent('/api/content/videos', { city, category });
+  return asArray(await fetchContent('/api/content/videos', { city, category }));
 }
 
 export async function getVideo(videoKey: string): Promise<VideoResourceApi> {
@@ -1595,7 +1608,7 @@ export function mapStudentEvent(dto: StudentEventApi): StudentEvent {
 
 export async function listStudentEvents(): Promise<StudentEventApi[]> {
   const { data } = await api.get<ApiResponse<StudentEventApi[]>>('/api/events');
-  return unwrap({ data });
+  return asArray(unwrap({ data }));
 }
 
 export async function createStudentEvent(

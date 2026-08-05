@@ -53,11 +53,13 @@ export default function RootNavigator() {
 
   useEffect(() => {
     setBootStage('splash_waiting');
-    void loadLastBootError().then((record) => {
-      if (record) {
-        setPriorBootError(`${record.stage}: ${record.message}`);
-      }
-    });
+    void loadLastBootError()
+      .then((record) => {
+        if (record) {
+          setPriorBootError(`${record.stage}: ${record.message}`);
+        }
+      })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
