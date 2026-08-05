@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Linking, View } from 'react-native';
+import { Linking, View } from 'react-native';
 import { AppStack } from './appStack';
 import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { pickListingImage } from '../services/imagePicker';
+import { appAlert } from '../utils/appAlert';
 
 import IntentSelectScreen, {
   intentOptionsFromPrimary,
@@ -685,7 +686,7 @@ function ReviewPromptStackScreen({ navigation, route }: ReviewPromptStackProps) 
           .then(() => navigation.goBack())
           .catch((error) => {
             setSubmitting(false);
-            Alert.alert('Could not submit review', getApiErrorMessage(error));
+            appAlert('Could not submit review', getApiErrorMessage(error));
           });
       }}
     />
@@ -735,7 +736,7 @@ function PaymentCheckoutStackScreen({
           return;
         }
         if (!isApiBookingId(booking.id)) {
-          Alert.alert(
+          appAlert(
             'Live Paystack required',
             'This preview row cannot open Mobile Money or bank checkout. Use an accepted live booking from the server.',
           );
@@ -763,15 +764,15 @@ function PaymentCheckoutStackScreen({
             const message = payment.mockPayment
               ? 'Paystack is not enabled on the server, so this booking was confirmed in demo mode.'
               : 'Your booking is confirmed. Payment was processed securely via Paystack.';
-            Alert.alert('Payment Successful', message);
+            appAlert('Payment Successful', message);
             navigation.navigate('BookingConfirmed', { bookingId: booking.id });
           })
           .catch((error) => {
             if (error instanceof PaymentCancelledError) {
-              Alert.alert('Payment cancelled', error.message);
+              appAlert('Payment cancelled', error.message);
               return;
             }
-            Alert.alert(
+            appAlert(
               'Payment',
               error instanceof Error
                 ? error.message
@@ -825,12 +826,12 @@ function HostListingsStackScreen({
         void updateMyHostProfile({ active: isOnline })
           .then((profile) => setListings([hostProfileToListing(profile)]))
           .catch((error) => {
-            Alert.alert('Could not update listing', getApiErrorMessage(error));
+            appAlert('Could not update listing', getApiErrorMessage(error));
           });
       }}
       onEditPress={() => navigation.navigate('HostListingEdit', { focus: 'photos' })}
       onDeletePress={() => {
-        Alert.alert(
+        appAlert(
           'Hide listing',
           'Turn your listing offline from the Online switch, or edit photos and house rules from Edit.',
         );
@@ -870,7 +871,7 @@ function HostListingEditStackScreen({
           return;
         }
         setLoading(false);
-        Alert.alert('Could not load listing', getApiErrorMessage(error));
+        appAlert('Could not load listing', getApiErrorMessage(error));
       });
     return () => {
       cancelled = true;
@@ -904,7 +905,7 @@ function HostListingEditStackScreen({
             const uploaded = await uploadProfilePhotoIfConfigured(picked.uri);
             const nextUri = uploaded ?? picked.uri;
             if (!uploaded) {
-              Alert.alert(
+              appAlert(
                 'Saved on this device',
                 'Cloud photo storage is not configured yet, so this photo stays on your phone for now. House rules still sync to your listing.',
               );
@@ -912,7 +913,7 @@ function HostListingEditStackScreen({
             setPhotos((prev) => (prev.includes(nextUri) ? prev : [...prev, nextUri]));
           })
           .catch((error) => {
-            Alert.alert('Could not add photo', getApiErrorMessage(error));
+            appAlert('Could not add photo', getApiErrorMessage(error));
           })
           .finally(() => setAddingPhoto(false));
       }}
@@ -930,12 +931,12 @@ function HostListingEditStackScreen({
         })
           .then(() => {
             setSaving(false);
-            Alert.alert('Listing updated', 'Your photos and house rules are saved.');
+            appAlert('Listing updated', 'Your photos and house rules are saved.');
             navigation.goBack();
           })
           .catch((error) => {
             setSaving(false);
-            Alert.alert('Could not save listing', getApiErrorMessage(error));
+            appAlert('Could not save listing', getApiErrorMessage(error));
           });
       }}
       onBack={() => navigation.goBack()}
@@ -1004,7 +1005,7 @@ function HostCalendarStackScreen({
 
   const persistHostCalendar = (nextDays: typeof days) => {
     if (!loadedFromApi) {
-      Alert.alert(
+      appAlert(
         'Calendar not ready',
         loadError ?? 'Load your calendar from the server before editing.',
       );
@@ -1027,7 +1028,7 @@ function HostCalendarStackScreen({
       })
       .catch((error) => {
         setStatusMessage(null);
-        Alert.alert('Could not save calendar', getApiErrorMessage(error));
+        appAlert('Could not save calendar', getApiErrorMessage(error));
         reloadCalendar();
       })
       .finally(() => setSaving(false));
@@ -1166,7 +1167,7 @@ function TourTypesStackScreen({
             navigation.goBack();
           })
           .catch((error) => {
-            Alert.alert('Could not save tour types', getApiErrorMessage(error));
+            appAlert('Could not save tour types', getApiErrorMessage(error));
             setSaving(false);
           });
       }}
@@ -1220,7 +1221,7 @@ function GuideAvailabilityStackScreen({
 
   const persistGuideSchedule = (nextDays: typeof days) => {
     if (!loadedFromApi) {
-      Alert.alert(
+      appAlert(
         'Availability not ready',
         loadError ?? 'Load your availability from the server before editing.',
       );
@@ -1243,7 +1244,7 @@ function GuideAvailabilityStackScreen({
       })
       .catch((error) => {
         setStatusMessage(null);
-        Alert.alert('Could not save availability', getApiErrorMessage(error));
+        appAlert('Could not save availability', getApiErrorMessage(error));
         reloadCalendar();
       })
       .finally(() => setSaving(false));
@@ -1771,7 +1772,7 @@ export default function AppNavigator() {
         }
 
         const explore = await new Promise<boolean>((resolve) => {
-          Alert.alert(
+          appAlert(
             'No hosts in your budget',
             `Nothing matched ${budgetLabel}. ${wider.length} host${
               wider.length === 1 ? '' : 's'
@@ -1803,7 +1804,7 @@ export default function AppNavigator() {
 
   const confirmExploreOutsideHostBudget = useCallback(() => {
     const label = homeApi.preferredBudgetLabel ?? 'your budget';
-    Alert.alert(
+    appAlert(
       'Explore other price ranges?',
       `No hosts match ${label} right now. Other priced hosts are available nearby.`,
       [
@@ -1818,7 +1819,7 @@ export default function AppNavigator() {
 
   const confirmExploreOutsideGuideBudget = useCallback(() => {
     const label = homeApi.preferredBudgetLabel ?? 'your budget';
-    Alert.alert(
+    appAlert(
       'Explore other price ranges?',
       `No guides match ${label} right now. Other priced sessions are available nearby.`,
       [
@@ -1883,7 +1884,7 @@ export default function AppNavigator() {
           setHostProfileCache((prev) => ({ ...prev, [host.id]: profile }));
         }
         if (!profile.userId) {
-          Alert.alert(
+          appAlert(
             'Messaging unavailable',
             'This host account is not ready for chat yet. Try again shortly or request a booking first.',
           );
@@ -1901,7 +1902,7 @@ export default function AppNavigator() {
             : undefined,
         });
       } catch (error) {
-        Alert.alert('Could not open chat', getApiErrorMessage(error));
+        appAlert('Could not open chat', getApiErrorMessage(error));
       }
     },
     [openMessageWithParticipant],
@@ -1919,7 +1920,7 @@ export default function AppNavigator() {
           setGuideProfileCache((prev) => ({ ...prev, [guide.id]: profile }));
         }
         if (!profile.userId) {
-          Alert.alert(
+          appAlert(
             'Messaging unavailable',
             'This guide account is not ready for chat yet. Try again shortly or book a session first.',
           );
@@ -1937,7 +1938,7 @@ export default function AppNavigator() {
             : undefined,
         });
       } catch (error) {
-        Alert.alert('Could not open chat', getApiErrorMessage(error));
+        appAlert('Could not open chat', getApiErrorMessage(error));
       }
     },
     [openMessageWithParticipant],
@@ -2038,7 +2039,8 @@ export default function AppNavigator() {
     preview?.role,
     profileState,
   );
-  const cityLabel = (profileFields.city || city || '').trim();
+  // Local `city` wins right after travel edits (set before profile context re-renders).
+  const cityLabel = (city.trim() || profileFields.city || '').trim();
 
   const universityDirectoryItems = useMemo(() => {
     const capital = normalizeCity(cityLabel);
@@ -2491,15 +2493,16 @@ export default function AppNavigator() {
       setLiveRecommendations(null);
       return;
     }
+    // Drop previous city’s feed immediately so home never shows stale hubs.
+    setLiveRecommendations(null);
     let cancelled = false;
     void getHomeRecommendations({
       city: cityLabel,
       role: primaryIntent ?? undefined,
     })
       .then((data) => {
-        if (!cancelled && data?.sections?.length) {
-          setLiveRecommendations(data);
-        }
+        if (cancelled) return;
+        setLiveRecommendations(data?.sections?.length ? data : null);
       })
       .catch(() => {
         if (!cancelled) {
@@ -3098,7 +3101,7 @@ export default function AppNavigator() {
 
   const guardPreviewMutation = useCallback(() => {
     if (!isPreviewLocked) return false;
-    Alert.alert(
+    appAlert(
       'Preview is read-only',
       'Exit app preview to make booking or account changes. This action was blocked.',
     );
@@ -3132,7 +3135,7 @@ export default function AppNavigator() {
           );
           return;
         }
-        Alert.alert('Could not create booking', getApiErrorMessage(error));
+        appAlert('Could not create booking', getApiErrorMessage(error));
       }
     },
     [
@@ -3174,7 +3177,7 @@ export default function AppNavigator() {
           );
           return;
         }
-        Alert.alert('Could not create booking', getApiErrorMessage(error));
+        appAlert('Could not create booking', getApiErrorMessage(error));
       }
     },
     [
@@ -3884,13 +3887,12 @@ export default function AppNavigator() {
               }}
               onBack={() => navigation.goBack()}
               onSave={async (values) => {
+                // Single write — sequential completeStep used to clobber city with stale state.
                 await completeStep('SEEKER', 'destination', {
                   city: values.city,
                   university: values.university,
                   arrivalDate: values.arrivalDate,
                   departureDate: values.departureDate,
-                });
-                await completeStep('SEEKER', 'quiz', {
                   quizAnswers: {
                     ...quizPatchFromEditor(values),
                     destination: values.city,
@@ -3900,8 +3902,9 @@ export default function AppNavigator() {
                 setUniversity(values.university);
                 setArrivalDate(values.arrivalDate);
                 setDepartureDate(values.departureDate);
+                // Profile city dep + tick both refetch hosts/guides for the new destination.
                 homeApi.refresh();
-                Alert.alert(
+                appAlert(
                   'Preferences updated',
                   'Your matches will refresh using your new destination and preferences.',
                 );
@@ -4483,7 +4486,7 @@ export default function AppNavigator() {
                 return;
               }
               if (!isApiBookingId(bookingId)) {
-                Alert.alert(
+                appAlert(
                   'Live booking required',
                   'This preview stay cannot open Paystack. Open an accepted booking from the server (or request a stay and have the host accept it), then pay from Bookings.',
                 );
@@ -5127,7 +5130,7 @@ export default function AppNavigator() {
                 });
                 return;
               }
-              Alert.alert(
+              appAlert(
                 landmark?.name ?? 'Landmark',
                 'Browse the sites directory for full details and guide options.',
                 [
@@ -5140,7 +5143,7 @@ export default function AppNavigator() {
               );
             }}
             onLocatePress={() => {
-              Alert.alert(
+              appAlert(
                 'Offline map',
                 'This map shows curated landmarks for offline use. Live GPS centering is not available here.',
               );
@@ -5272,7 +5275,7 @@ export default function AppNavigator() {
                     providerTab.refresh();
                     navigation.navigate('IncomingRequests');
                   } catch (error) {
-                    Alert.alert('Could not accept request', getApiErrorMessage(error));
+                    appAlert('Could not accept request', getApiErrorMessage(error));
                   }
                 })();
               }}
@@ -5284,7 +5287,7 @@ export default function AppNavigator() {
                     providerTab.refresh();
                     navigation.navigate('IncomingRequests');
                   } catch (error) {
-                    Alert.alert('Could not decline request', getApiErrorMessage(error));
+                    appAlert('Could not decline request', getApiErrorMessage(error));
                   }
                 })();
               }}
@@ -5320,7 +5323,7 @@ export default function AppNavigator() {
                     providerTab.refresh();
                     navigation.navigate('IncomingSessionRequests');
                   } catch (error) {
-                    Alert.alert('Could not accept session', getApiErrorMessage(error));
+                    appAlert('Could not accept session', getApiErrorMessage(error));
                   }
                 })();
               }}
@@ -5332,7 +5335,7 @@ export default function AppNavigator() {
                     providerTab.refresh();
                     navigation.navigate('IncomingSessionRequests');
                   } catch (error) {
-                    Alert.alert('Could not decline session', getApiErrorMessage(error));
+                    appAlert('Could not decline session', getApiErrorMessage(error));
                   }
                 })();
               }}
@@ -5380,7 +5383,7 @@ export default function AppNavigator() {
                   initials: member.initials,
                   role: 'guest',
                 }).catch((err) => {
-                  Alert.alert('Could not open chat', getApiErrorMessage(err));
+                  appAlert('Could not open chat', getApiErrorMessage(err));
                 });
               }}
             />

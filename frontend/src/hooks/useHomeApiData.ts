@@ -247,17 +247,32 @@ export function useHomeApiData(
   }, []);
 
   const quizFingerprintRef = useRef(quizFingerprint);
+  const cityKey = profileState.seekerSetup.data.city ?? '';
+  const cityKeyRef = useRef(cityKey);
   useEffect(() => {
-    if (quizFingerprintRef.current === quizFingerprint) return;
+    const prefsChanged = quizFingerprintRef.current !== quizFingerprint;
+    const cityChanged = cityKeyRef.current !== cityKey;
+    if (!prefsChanged && !cityChanged) return;
     quizFingerprintRef.current = quizFingerprint;
-    // Preference edits reset widen consent (refs first so the next fetch is strict).
+    cityKeyRef.current = cityKey;
+    // Destination / preference edits reset widen consent and clear stale lists.
     allowOutsideHostRef.current = false;
     allowOutsideGuideRef.current = false;
     setAllowOutsideHostBudget(false);
     setAllowOutsideGuideBudget(false);
     setHostBudgetExploreAvailable(false);
     setGuideBudgetExploreAvailable(false);
-  }, [quizFingerprint]);
+    if (cityChanged) {
+      setHostMatches([]);
+      setGuideMatches([]);
+      setFeaturedMatch(null);
+      setFeaturedGuide(null);
+      setSuggestedHosts([]);
+      setSuggestedGuides([]);
+      setTopMatchTargetId(null);
+      setTopGuideTargetId(null);
+    }
+  }, [quizFingerprint, cityKey]);
 
   useEffect(() => {
     if (!userId) {

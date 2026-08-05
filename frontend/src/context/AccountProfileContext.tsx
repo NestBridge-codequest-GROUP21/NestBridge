@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import type { QuizAnswers } from '../screens/onboarding/QuizPage';
@@ -149,6 +150,9 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
     createDefaultAccountProfileState(),
   );
   const [isLoading, setIsLoading] = useState(true);
+  /** Always-current profile — sequential completeStep calls must not use stale closures. */
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   useEffect(() => {
     let mounted = true;
@@ -169,7 +173,9 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
     (async () => {
       if (!user) {
         if (mounted) {
-          setState(createDefaultAccountProfileState());
+          const empty = createDefaultAccountProfileState();
+          stateRef.current = empty;
+          setState(empty);
           setIsLoading(false);
         }
         clearTimeout(timeout);
@@ -207,6 +213,7 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
 
         const chosen = preferRicherAccountProfile(local, remote);
         if (mounted) {
+          stateRef.current = chosen;
           setState(chosen);
         }
         await saveAccountProfile(user.userId, chosen);
@@ -226,7 +233,9 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
       } catch (error) {
         await recordBootError('profile_hydrate', error);
         if (mounted) {
-          setState(createDefaultAccountProfileState());
+          const empty = createDefaultAccountProfileState();
+          stateRef.current = empty;
+          setState(empty);
         }
       } finally {
         clearTimeout(timeout);
@@ -244,6 +253,7 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
 
   const persist = useCallback(
     async (next: AccountProfileState, syncRemote = true) => {
+      stateRef.current = next;
       setState(next);
       if (user) {
         await saveAccountProfile(user.userId, next);
@@ -261,60 +271,65 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
 
   const setPrimaryIntent = useCallback(
     async (intent: PrimaryIntent) => {
+      const latest = stateRef.current;
       const next: AccountProfileState = {
-        ...state,
+        ...latest,
         primaryIntent: intent,
         isActiveExchangeStudent:
-          intent === 'STUDENT' ? (state.isActiveExchangeStudent ?? true) : state.isActiveExchangeStudent,
+          intent === 'STUDENT'
+            ? (latest.isActiveExchangeStudent ?? true)
+            : latest.isActiveExchangeStudent,
       };
       await persist(next);
     },
-    [persist, state],
+    [persist],
   );
 
   const setIsActiveExchangeStudentFlag = useCallback(
     async (active: boolean) => {
-      await persist({ ...state, isActiveExchangeStudent: active });
+      await persist({ ...stateRef.current, isActiveExchangeStudent: active });
     },
-    [persist, state],
+    [persist],
   );
 
   const startSetup = useCallback(
     async (track: SetupTrack) => {
-      if (!canStartProviderTrack(state, track)) {
+      const latest = stateRef.current;
+      if (!canStartProviderTrack(latest, track)) {
         return;
       }
-      const steps = getStepsForTrack(track, state.primaryIntent);
+      const steps = getStepsForTrack(track, latest.primaryIntent);
       const progress =
         track === 'SEEKER'
-          ? state.seekerSetup
+          ? latest.seekerSetup
           : track === 'HOST'
-            ? state.hostProvider
-            : state.guideProvider;
+            ? latest.hostProvider
+            : latest.guideProvider;
       await persist(
-        updateTrackProgress(state, track, () => ({
+        updateTrackProgress(latest, track, () => ({
           ...progress,
-          status: progress.stepsCompleted.length > 0 ? 'IN_PROGRESS' : 'IN_PROGRESS',
+          status: 'IN_PROGRESS',
           stepsCompleted: progress.stepsCompleted,
         })),
       );
       void steps;
     },
-    [persist, state],
+    [persist],
   );
 
   const completeStep = useCallback(
     async (track: SetupTrack, step: string, data?: Partial<ProfileData>) => {
-      if (!canStartProviderTrack(state, track)) {
+      const latest = stateRef.current;
+      if (!canStartProviderTrack(latest, track)) {
         return;
       }
-      const steps = getStepsForTrack(track, state.primaryIntent);
+      const steps = getStepsForTrack(track, latest.primaryIntent);
       const current =
         track === 'SEEKER'
-          ? state.seekerSetup
+          ? latest.seekerSetup
           : track === 'HOST'
-            ? state.hostProvider
-            : state.guideProvider;
+            ? latest.hostProvider
+            : latest.guideProvider;
 
       // Once identity is locked, refuse changes to bio / about / display name.
       let mergeData = data;
@@ -343,28 +358,29 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
         stepsCompleted,
         data: mergeProfileData(current.data, mergeData),
       };
-      await persist(updateTrackProgress(state, track, () => nextProgress));
+      await persist(updateTrackProgress(latest, track, () => nextProgress));
     },
-    [persist, state],
+    [persist],
   );
 
   const markTrackComplete = useCallback(
     async (track: SetupTrack) => {
-      if (!canStartProviderTrack(state, track)) {
+      const latest = stateRef.current;
+      if (!canStartProviderTrack(latest, track)) {
         return;
       }
-      const steps = getStepsForTrack(track, state.primaryIntent);
+      const steps = getStepsForTrack(track, latest.primaryIntent);
       const current =
         track === 'SEEKER'
-          ? state.seekerSetup
+          ? latest.seekerSetup
           : track === 'HOST'
-            ? state.hostProvider
-            : state.guideProvider;
+            ? latest.hostProvider
+            : latest.guideProvider;
       if (!hasIdentityProfile(current)) {
         // Soft-skipped identity: still finish the track for browsing.
         // Booking/accept stay gated by isSeekerComplete / isHostComplete / isGuideComplete.
         await persist(
-          updateTrackProgress(state, track, () => ({
+          updateTrackProgress(latest, track, () => ({
             ...current,
             status: 'COMPLETE',
             stepsCompleted: [...steps],
@@ -377,7 +393,7 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
         return;
       }
       await persist(
-        updateTrackProgress(state, track, () => ({
+        updateTrackProgress(latest, track, () => ({
           ...current,
           status: 'COMPLETE',
           stepsCompleted: [...steps],
@@ -388,11 +404,12 @@ export function AccountProfileProvider({ children }: { children: React.ReactNode
         })),
       );
     },
-    [persist, state],
+    [persist],
   );
 
   const resetAccountProfile = useCallback(async () => {
     const next = createDefaultAccountProfileState();
+    stateRef.current = next;
     setState(next);
     if (user) {
       await clearAccountProfile(user.userId);
