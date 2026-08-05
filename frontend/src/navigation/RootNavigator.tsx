@@ -2,10 +2,8 @@ import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import {
   InteractionManager,
   Linking,
-  Text,
   View,
   StyleSheet,
-  Pressable,
   ActivityIndicator,
 } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -19,7 +17,6 @@ import AuthNavigator from './AuthNavigator';
 import { registerPushTokenIfAvailable } from '../services/pushRegistration';
 import {
   clearLastBootError,
-  loadLastBootError,
   recordBootError,
   setBootStage,
 } from '../services/bootDiagnostics';
@@ -29,13 +26,6 @@ import {
   navigationThemeFromTokens,
   type AppTheme,
 } from '../theme';
-import {
-  fontFamilies,
-  fontSizes,
-  fontWeights,
-  spacing,
-  borderRadius,
-} from '../constants/theme';
 
 /**
  * Defer the huge authenticated navigator until after splash/auth paint.
@@ -73,17 +63,11 @@ export default function RootNavigator() {
   const [splashDone, setSplashDone] = useState(false);
   const [forceBoot, setForceBoot] = useState(false);
   const [passwordResetToken, setPasswordResetToken] = useState<string | undefined>();
-  const [priorBootError, setPriorBootError] = useState<string | null>(null);
 
   useEffect(() => {
     setBootStage('splash_waiting');
-    void loadLastBootError()
-      .then((record) => {
-        if (record) {
-          setPriorBootError(`${record.stage}: ${record.message}`);
-        }
-      })
-      .catch(() => undefined);
+    // Never surface prior-launch diagnostics in the UI — clear and keep running clean.
+    void clearLastBootError();
   }, []);
 
   useEffect(() => {
@@ -142,6 +126,7 @@ export default function RootNavigator() {
     if (splashDismissed && bootReady) {
       setSplashDone(true);
       setBootStage('splash_dismissed');
+      void clearLastBootError();
     }
   }, [splashDismissed, bootReady]);
 
@@ -177,25 +162,6 @@ export default function RootNavigator() {
 
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
-      {priorBootError ? (
-        <View style={styles.banner} accessibilityRole="alert">
-          <Text style={styles.bannerTitle}>Previous startup issue</Text>
-          <Text style={styles.bannerBody} numberOfLines={4}>
-            {priorBootError}
-          </Text>
-          <Pressable
-            style={({ pressed }) => [styles.bannerButton, pressed && styles.pressed]}
-            onPress={() => {
-              setPriorBootError(null);
-              void clearLastBootError();
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Dismiss previous startup error"
-          >
-            <Text style={styles.bannerButtonLabel}>Dismiss</Text>
-          </Pressable>
-        </View>
-      ) : null}
       <NavigationContainer theme={navTheme}>
         {user ? (
           <Suspense
@@ -228,42 +194,6 @@ function createStyles({ colors }: AppTheme) {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    banner: {
-      backgroundColor: colors.warmCream,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.border,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      gap: spacing.xs,
-    },
-    bannerTitle: {
-      fontFamily: fontFamilies.semibold,
-      fontSize: fontSizes.caption,
-      fontWeight: fontWeights.semibold,
-      color: colors.danger,
-    },
-    bannerBody: {
-      fontFamily: fontFamilies.regular,
-      fontSize: fontSizes.caption,
-      color: colors.textSecondary,
-    },
-    bannerButton: {
-      alignSelf: 'flex-start',
-      minHeight: 44,
-      justifyContent: 'center',
-      paddingHorizontal: spacing.md,
-      borderRadius: borderRadius.md,
-      backgroundColor: colors.tealBright,
-    },
-    bannerButtonLabel: {
-      fontFamily: fontFamilies.semibold,
-      fontSize: fontSizes.caption,
-      fontWeight: fontWeights.semibold,
-      color: colors.onPrimary,
-    },
-    pressed: {
-      opacity: 0.9,
     },
   });
 }

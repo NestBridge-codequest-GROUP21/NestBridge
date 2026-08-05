@@ -46,18 +46,23 @@ const TRANSIENT_BOOT_STAGES = new Set([
   'auth_hydrate_timeout',
   'profile_hydrate_timeout',
   'profile_hydrate_remote',
+  'profile_hydrate',
+  'auth_hydrate',
+  'auth_refresh',
   'splash_force',
   'reset_url',
   'linking_initial',
   'linking_subscribe',
+  'push_register',
+  'nav_ready',
 ]);
 
 function isTransientBootStage(stage: string): boolean {
   if (TRANSIENT_BOOT_STAGES.has(stage)) {
     return true;
   }
-  return stage.startsWith('error_boundary:auth_refresh')
-    || stage.startsWith('error_boundary:profile_hydrate');
+  // Never persist error-boundary recoveries — they spam the next launch.
+  return stage.startsWith('error_boundary:');
 }
 
 function looksLikeNetworkBlip(message: string): boolean {
