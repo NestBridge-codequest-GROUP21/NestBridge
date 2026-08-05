@@ -31,7 +31,6 @@ export interface AdminPreviewPickerScreenProps {
   onSelectRole?: (role: PrimaryIntent) => void;
   onTabPress?: (tabId: string) => void;
   onBack?: () => void;
-  onSosPress?: () => void;
 }
 
 export default function AdminPreviewPickerScreen({
@@ -40,7 +39,6 @@ export default function AdminPreviewPickerScreen({
   onSelectRole,
   onTabPress,
   onBack,
-  onSosPress,
 }: AdminPreviewPickerScreenProps) {
   const styles = useThemedStyles(createStyles);
 
@@ -77,8 +75,6 @@ export default function AdminPreviewPickerScreen({
       <AppTabBar
         items={tabBarItems}
         activeTabId="preview"
-        showSosDock
-        onSosPress={onSosPress}
         onTabPress={onTabPress}
       />
     </View>

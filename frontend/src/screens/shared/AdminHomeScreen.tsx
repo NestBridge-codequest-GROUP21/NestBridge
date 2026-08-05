@@ -1,4 +1,4 @@
-import { useThemedStyles, type AppTheme } from '../../theme';
+import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -16,6 +16,7 @@ import type {
   AdminSosActivity,
 } from '../../services/api';
 import type { StaffUserCategory } from './StaffUserSearchScreen';
+import AppIcon from '../../components/AppIcon';
 import {
   fontFamilies,
   fontSizes,
@@ -24,6 +25,8 @@ import {
   lineHeights,
   borderRadius,
   touchTarget,
+  iconSizes,
+  borderWidths,
 } from '../../constants/theme';
 
 export interface AdminHomeScreenProps {
@@ -43,7 +46,6 @@ export interface AdminHomeScreenProps {
   onOpenProfile?: () => void;
   notificationCount?: number;
   onNotificationPress?: () => void;
-  onSosPress?: () => void;
 }
 
 function StatTile({
@@ -58,16 +60,29 @@ function StatTile({
   onPress?: () => void;
 }) {
   const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+  const interactive = Boolean(onPress);
   const content = (
     <>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+      <View style={styles.statTopRow}>
+        <Text style={[styles.statValue, !interactive && styles.statValueReadOnly]}>
+          {value}
+        </Text>
+        {interactive ? (
+          <AppIcon name="chevron-forward" size={iconSizes.sm} color={colors.teal} />
+        ) : null}
+      </View>
+      <Text style={[styles.statLabel, !interactive && styles.statLabelReadOnly]}>
+        {label}
+      </Text>
+      {interactive ? <Text style={styles.statHint}>Tap to open</Text> : null}
     </>
   );
   const tileStyle = [
-    styles.statTile,
+    interactive ? styles.statTileInteractive : styles.statTileReadOnly,
     tone === 'danger' && styles.statDanger,
     tone === 'warning' && styles.statWarning,
+    tone === 'success' && styles.statSuccess,
   ];
 
   if (onPress) {
@@ -76,14 +91,22 @@ function StatTile({
         style={({ pressed }) => [...tileStyle, pressed && styles.pressed]}
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`Browse ${label}`}
+        accessibilityLabel={`Open ${label}`}
       >
         {content}
       </Pressable>
     );
   }
 
-  return <View style={tileStyle}>{content}</View>;
+  return (
+    <View
+      style={tileStyle}
+      accessibilityRole="text"
+      accessibilityLabel={`${label}: ${value}`}
+    >
+      {content}
+    </View>
+  );
 }
 
 function formatBookingLine(item: AdminBookingActivity): string {
@@ -107,10 +130,11 @@ export default function AdminHomeScreen({
   onOpenUsers,
   onOpenUsersByCategory,
   onOpenPendingKyc,
+  onOpenModeration,
+  onOpenPreview,
   onOpenProfile,
   notificationCount = 0,
   onNotificationPress,
-  onSosPress,
 }: AdminHomeScreenProps) {
   const styles = useThemedStyles(createStyles);
   const firstName = staffName.trim().split(/\s+/)[0] || 'Staff';
@@ -128,7 +152,6 @@ export default function AdminHomeScreen({
       <ScreenScroll
         keyboardAware={false}
         withTabBar
-        withSosDock
         refreshing={refreshing}
         onRefresh={onRefresh}
       >
@@ -153,10 +176,25 @@ export default function AdminHomeScreen({
 
         {overview ? (
           <>
-            <SectionHeader title="Platform pulse" />
+            <SectionHeader
+              title="Platform pulse"
+              subtitle="Teal tiles open a list — cream tiles are metrics only"
+            />
             <View style={styles.statGrid}>
-              <StatTile label="Users" value={overview.totalUsers} />
-              <StatTile label="Staff" value={overview.staffCount} />
+              <StatTile
+                label="Users"
+                value={overview.totalUsers}
+                onPress={onOpenUsers}
+              />
+              <StatTile
+                label="Staff"
+                value={overview.staffCount}
+                onPress={
+                  onOpenUsersByCategory
+                    ? () => onOpenUsersByCategory('STAFF')
+                    : onOpenUsers
+                }
+              />
               <StatTile
                 label="Suspended"
                 value={overview.suspendedCount}
@@ -171,7 +209,7 @@ export default function AdminHomeScreen({
 
             <SectionHeader
               title="Users by role"
-              subtitle="Tap a role to browse every account in that category"
+              subtitle="Teal tiles open that account list"
             />
             <View style={styles.statGrid}>
               <StatTile
@@ -212,7 +250,10 @@ export default function AdminHomeScreen({
               />
             </View>
 
-            <SectionHeader title="Marketplace & bookings" />
+            <SectionHeader
+              title="Marketplace & bookings"
+              subtitle="Cream tiles are metrics only — teal tiles open a tool"
+            />
             <View style={styles.statGrid}>
               <StatTile label="Live hosts" value={overview.activeHostListings} tone="success" />
               <StatTile label="Live guides" value={overview.activeGuideListings} tone="success" />
@@ -220,11 +261,16 @@ export default function AdminHomeScreen({
                 label="Hidden listings"
                 value={overview.hiddenHostListings + overview.hiddenGuideListings}
                 tone="warning"
+                onPress={onOpenModeration}
               />
               <StatTile label="Pending bookings" value={overview.pendingBookings} tone="warning" />
               <StatTile label="Active bookings" value={overview.confirmedBookings} />
               <StatTile label="SOS (7d)" value={overview.sosLast7Days} />
-              <StatTile label="Unverified ID" value={overview.unverifiedIdentityCount} />
+              <StatTile
+                label="Unverified ID"
+                value={overview.unverifiedIdentityCount}
+                onPress={onOpenPendingKyc}
+              />
               <StatTile label="Unverified email" value={overview.unverifiedEmailCount} />
               <StatTile
                 label="Pending KYC"
@@ -234,7 +280,7 @@ export default function AdminHomeScreen({
               />
             </View>
 
-            <SectionHeader title="Identity queue" />
+            <SectionHeader title="Ops tools" />
             <Card padding="none" style={styles.toolsCard}>
               <ToolRow
                 title="Pending KYC"
@@ -246,6 +292,16 @@ export default function AdminHomeScreen({
                     : 'No identity reviews waiting right now'
                 }
                 onPress={onOpenPendingKyc}
+              />
+              <ToolRow
+                title="Listing moderation"
+                subtitle="Hide or restore host and guide listings"
+                onPress={onOpenModeration}
+              />
+              <ToolRow
+                title="App preview"
+                subtitle="Inspect what each role sees in the app"
+                onPress={onOpenPreview}
                 bordered={false}
               />
             </Card>
@@ -306,8 +362,6 @@ export default function AdminHomeScreen({
       <AppTabBar
         items={tabBarItems}
         activeTabId="home"
-        showSosDock
-        onSosPress={onSosPress}
         onTabPress={onTabPress}
       />
     </View>
@@ -366,14 +420,24 @@ function createStyles({ colors }: AppTheme) {
       gap: spacing.sm,
       marginBottom: spacing.lg,
     },
-    statTile: {
+    statTileInteractive: {
       width: '47%',
       flexGrow: 1,
-      backgroundColor: colors.surface,
+      backgroundColor: colors.white,
       borderRadius: borderRadius.md,
       padding: spacing.md,
       minHeight: touchTarget + spacing.md,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: borderWidths.strong,
+      borderColor: colors.teal,
+    },
+    statTileReadOnly: {
+      width: '47%',
+      flexGrow: 1,
+      backgroundColor: colors.warmCream,
+      borderRadius: borderRadius.md,
+      padding: spacing.md,
+      minHeight: touchTarget + spacing.md,
+      borderWidth: borderWidths.hairline,
       borderColor: colors.border,
     },
     statDanger: {
@@ -382,16 +446,39 @@ function createStyles({ colors }: AppTheme) {
     statWarning: {
       borderColor: colors.warning,
     },
+    statSuccess: {
+      borderColor: colors.success,
+    },
+    statTopRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.xs,
+    },
     statValue: {
       fontFamily: fontFamilies.bold,
       fontSize: fontSizes.heading,
       fontWeight: fontWeights.bold,
+      color: colors.textPrimary,
+      flexShrink: 1,
+    },
+    statValueReadOnly: {
       color: colors.textPrimary,
     },
     statLabel: {
       fontFamily: fontFamilies.regular,
       fontSize: fontSizes.caption,
       color: colors.textSecondary,
+      marginTop: spacing.xs,
+    },
+    statLabelReadOnly: {
+      color: colors.textTertiary,
+    },
+    statHint: {
+      fontFamily: fontFamilies.semibold,
+      fontSize: fontSizes.micro,
+      fontWeight: fontWeights.semibold,
+      color: colors.teal,
       marginTop: spacing.xs,
     },
     toolsCard: {

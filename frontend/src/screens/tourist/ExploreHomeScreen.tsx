@@ -41,6 +41,7 @@ export interface ExploreHomeScreenProps {
   greeting: string;
   userName: string;
   userInitials: string;
+  userPhotoUri?: string | null;
   cityLabel: string;
   statusIcon?: string;
   statusLabel?: string;
@@ -89,6 +90,7 @@ export default function ExploreHomeScreen({
   greeting,
   userName,
   userInitials,
+  userPhotoUri,
   cityLabel,
   statusIcon,
   statusLabel,
@@ -140,6 +142,7 @@ export default function ExploreHomeScreen({
         greeting={greeting}
         userName={userName}
         userInitials={userInitials}
+        userPhotoUri={userPhotoUri}
         statusIcon={statusIcon ?? (variant === 'browse' ? 'search-outline' : 'location-outline')}
         statusLabel={resolvedStatus}
         notificationCount={notificationCount}

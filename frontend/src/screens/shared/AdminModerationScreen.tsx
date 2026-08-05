@@ -37,7 +37,6 @@ export interface AdminModerationScreenProps {
   onToggleVisibility?: (listingId: string, hide: boolean) => void;
   onRefresh?: () => void;
   onBack?: () => void;
-  onSosPress?: () => void;
 }
 
 const FILTERS: { id: ModerationFilter; label: string }[] = [
@@ -60,7 +59,6 @@ export default function AdminModerationScreen({
   onToggleVisibility,
   onRefresh,
   onBack,
-  onSosPress,
 }: AdminModerationScreenProps) {
   const styles = useThemedStyles(createStyles);
 
@@ -161,8 +159,6 @@ export default function AdminModerationScreen({
       <AppTabBar
         items={tabBarItems}
         activeTabId="moderation"
-        showSosDock
-        onSosPress={onSosPress}
         onTabPress={onTabPress}
       />
     </View>

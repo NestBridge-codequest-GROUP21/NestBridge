@@ -68,7 +68,6 @@ export interface AdminHomeRouteProps {
   onOpenProfile: () => void;
   notificationCount?: number;
   onNotificationPress?: () => void;
-  onSosPress?: () => void;
 }
 
 export function AdminHomeRoute({
@@ -83,7 +82,6 @@ export function AdminHomeRoute({
   onOpenProfile,
   notificationCount = 0,
   onNotificationPress,
-  onSosPress,
 }: AdminHomeRouteProps) {
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -138,7 +136,6 @@ export function AdminHomeRoute({
       onOpenProfile={onOpenProfile}
       notificationCount={notificationCount}
       onNotificationPress={onNotificationPress}
-      onSosPress={onSosPress}
     />
   );
 }
@@ -147,14 +144,12 @@ export interface AdminModerationRouteProps {
   tabBarItems: TabBarItem[];
   onTabPress: (tabId: string) => void;
   onBack: () => void;
-  onSosPress?: () => void;
 }
 
 export function AdminModerationRoute({
   tabBarItems,
   onTabPress,
   onBack,
-  onSosPress,
 }: AdminModerationRouteProps) {
   const [filter, setFilter] = useState<ModerationFilter>('ALL');
   const [listings, setListings] = useState<AdminListingModeration[]>([]);
@@ -223,7 +218,6 @@ export function AdminModerationRoute({
         void loadListings();
       }}
       onBack={onBack}
-      onSosPress={onSosPress}
     />
   );
 }
@@ -233,7 +227,6 @@ export interface AdminPreviewRouteProps {
   onTabPress: (tabId: string) => void;
   onSelectRole: (role: PrimaryIntent) => void;
   onBack: () => void;
-  onSosPress?: () => void;
 }
 
 export function AdminPreviewRoute({
@@ -241,7 +234,6 @@ export function AdminPreviewRoute({
   onTabPress,
   onSelectRole,
   onBack,
-  onSosPress,
 }: AdminPreviewRouteProps) {
   return (
     <AdminPreviewPickerScreen
@@ -250,7 +242,6 @@ export function AdminPreviewRoute({
       onSelectRole={onSelectRole}
       onTabPress={onTabPress}
       onBack={onBack}
-      onSosPress={onSosPress}
     />
   );
 }
@@ -261,7 +252,6 @@ export interface StaffUserSearchRouteProps {
   onBack: () => void;
   tabBarItems?: TabBarItem[];
   onTabPress?: (tabId: string) => void;
-  onSosPress?: () => void;
 }
 
 export function StaffUserSearchRoute({
@@ -270,7 +260,6 @@ export function StaffUserSearchRoute({
   onBack,
   tabBarItems,
   onTabPress,
-  onSosPress,
 }: StaffUserSearchRouteProps) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<StaffUserCategory>(initialCategory);
@@ -322,7 +311,6 @@ export function StaffUserSearchRoute({
       onSelectUser={onSelectUser}
       onTabPress={onTabPress}
       onBack={onBack}
-      onSosPress={onSosPress}
     />
   );
 }
@@ -521,7 +509,6 @@ export interface StaffPendingKycRouteProps {
   onBack: () => void;
   tabBarItems?: TabBarItem[];
   onTabPress?: (tabId: string) => void;
-  onSosPress?: () => void;
 }
 
 export function StaffPendingKycRoute({
@@ -529,7 +516,6 @@ export function StaffPendingKycRoute({
   onBack,
   tabBarItems,
   onTabPress,
-  onSosPress,
 }: StaffPendingKycRouteProps) {
   const [items, setItems] = useState<AdminPendingKyc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -571,7 +557,6 @@ export function StaffPendingKycRoute({
       }}
       onTabPress={onTabPress}
       onBack={onBack}
-      onSosPress={onSosPress}
     />
   );
 }

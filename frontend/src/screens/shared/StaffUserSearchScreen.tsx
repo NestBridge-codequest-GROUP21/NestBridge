@@ -71,7 +71,6 @@ export interface StaffUserSearchScreenProps {
   onSelectUser: (userId: string) => void;
   onTabPress?: (tabId: string) => void;
   onBack?: () => void;
-  onSosPress?: () => void;
 }
 
 export default function StaffUserSearchScreen({
@@ -88,7 +87,6 @@ export default function StaffUserSearchScreen({
   onSelectUser,
   onTabPress,
   onBack,
-  onSosPress,
 }: StaffUserSearchScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
@@ -199,8 +197,6 @@ export default function StaffUserSearchScreen({
         <AppTabBar
           items={tabBarItems}
           activeTabId="users"
-          showSosDock
-          onSosPress={onSosPress}
           onTabPress={onTabPress}
         />
       ) : null}

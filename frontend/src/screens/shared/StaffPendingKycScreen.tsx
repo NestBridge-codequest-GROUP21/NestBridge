@@ -38,7 +38,6 @@ export interface StaffPendingKycScreenProps {
   onRefresh?: () => void;
   onTabPress?: (tabId: string) => void;
   onBack?: () => void;
-  onSosPress?: () => void;
 }
 
 export default function StaffPendingKycScreen({
@@ -51,7 +50,6 @@ export default function StaffPendingKycScreen({
   onRefresh,
   onTabPress,
   onBack,
-  onSosPress,
 }: StaffPendingKycScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { colors } = useTheme();
@@ -68,7 +66,6 @@ export default function StaffPendingKycScreen({
       <ScreenScroll
         keyboardAware={false}
         withTabBar={Boolean(tabBarItems?.length)}
-        withSosDock={Boolean(tabBarItems?.length)}
         refreshing={refreshing}
         onRefresh={onRefresh}
       >
@@ -149,8 +146,6 @@ export default function StaffPendingKycScreen({
         <AppTabBar
           items={tabBarItems}
           activeTabId="home"
-          showSosDock
-          onSosPress={onSosPress}
           onTabPress={onTabPress}
         />
       ) : null}

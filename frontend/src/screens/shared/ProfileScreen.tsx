@@ -27,6 +27,8 @@ import {
 export interface ProfileScreenProps {
   userName: string;
   userInitials: string;
+  /** Bio/profile photo — initials only when absent. */
+  userPhotoUri?: string | null;
   email: string;
   setupSummary: string;
   showTravelBooking?: boolean;
@@ -60,6 +62,7 @@ export interface ProfileScreenProps {
 export default function ProfileScreen({
   userName,
   userInitials,
+  userPhotoUri,
   email,
   setupSummary,
   showTravelBooking = false,
@@ -105,7 +108,12 @@ export default function ProfileScreen({
 
       <ScreenScroll>
         <Card style={styles.identityCard} padding="lg">
-          <Avatar initials={userInitials} size="lg" highlighted />
+          <Avatar
+            initials={userInitials}
+            photoUri={userPhotoUri}
+            size="lg"
+            highlighted
+          />
           <View style={styles.identityText}>
             <Text style={styles.identityName}>{userName}</Text>
             <Text style={styles.identityEmail}>{email}</Text>

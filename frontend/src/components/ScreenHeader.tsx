@@ -1,6 +1,6 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../theme';
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -26,6 +26,8 @@ export interface ScreenHeaderProps {
   greeting?: string;
   userName?: string;
   userInitials?: string;
+  /** Profile photo from bio setup — initials only when missing. */
+  userPhotoUri?: string | null;
   compact?: boolean;
   statusIcon?: string;
   statusLabel?: string;
@@ -41,6 +43,7 @@ export default function ScreenHeader({
   greeting,
   userName,
   userInitials,
+  userPhotoUri,
   compact = false,
   statusIcon,
   statusLabel,
@@ -51,13 +54,14 @@ export default function ScreenHeader({
 }: ScreenHeaderProps) {
   const styles = useThemedStyles(createStyles);
   const { colors, gradients } = useTheme();
-
+  const [photoFailed, setPhotoFailed] = useState(false);
 
   const insets = useSafeAreaInsets();
   const navigation =
     useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const showUserRow = Boolean(greeting || userName);
   const showTopActions = Boolean(onBack || onHelpPress);
+  const showPhoto = Boolean(userPhotoUri) && !photoFailed;
 
   // Avoid showing the person's name twice (e.g. greeting "Good evening, Blessing"
   // above a large "Blessing"). Strip the name from the greeting line when it's
@@ -154,7 +158,15 @@ export default function ScreenHeader({
                   accessibilityHint="Opens your account and settings"
                   hitSlop={spacing.sm}
                 >
-                  <Text style={styles.avatarText}>{userInitials}</Text>
+                  {showPhoto ? (
+                    <Image
+                      source={{ uri: userPhotoUri! }}
+                      style={styles.avatarImage}
+                      onError={() => setPhotoFailed(true)}
+                    />
+                  ) : (
+                    <Text style={styles.avatarText}>{userInitials}</Text>
+                  )}
                   <View style={styles.avatarBadge}>
                     <AppIcon name="person" size={fontSizes.micro} color={colors.onPrimary} />
                   </View>
@@ -301,6 +313,11 @@ function createStyles({ colors }: AppTheme) {
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: colors.gold,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   avatarPressed: {
     opacity: 0.88,

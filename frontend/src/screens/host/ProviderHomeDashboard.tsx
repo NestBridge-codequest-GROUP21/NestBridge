@@ -40,6 +40,7 @@ export interface ProviderHomeDashboardProps {
   greeting: string;
   userName: string;
   userInitials: string;
+  userPhotoUri?: string | null;
   statusIcon?: string;
   statusLabel?: string;
   notificationCount?: number;
@@ -78,6 +79,7 @@ export default function ProviderHomeDashboard({
   greeting,
   userName,
   userInitials,
+  userPhotoUri,
   statusIcon,
   statusLabel,
   notificationCount = 0,
@@ -126,6 +128,7 @@ export default function ProviderHomeDashboard({
         greeting={greeting}
         userName={userName}
         userInitials={userInitials}
+        userPhotoUri={userPhotoUri}
         statusIcon={statusIcon}
         statusLabel={statusLabel}
         notificationCount={notificationCount}

@@ -1297,6 +1297,19 @@ function getProfileFields(
   };
 }
 
+/** Prefer the active role's uploaded bio photo; fall back across tracks. */
+function resolveProfilePhotoUri(
+  profileState: ReturnType<typeof useAccountProfile>['state'],
+  primaryIntent: PrimaryIntent | null,
+): string | null {
+  const seeker = profileState.seekerSetup.data.profilePhotoUrl?.trim() || null;
+  const host = profileState.hostProvider.data.profilePhotoUrl?.trim() || null;
+  const guide = profileState.guideProvider.data.profilePhotoUrl?.trim() || null;
+  if (primaryIntent === 'HOST') return host || seeker || guide;
+  if (primaryIntent === 'GUIDE') return guide || seeker || host;
+  return seeker || host || guide;
+}
+
 function homeRouteToScreenName(
   route: HomeRoute,
 ):
@@ -2034,6 +2047,10 @@ export default function AppNavigator() {
     profileFields.displayName.trim() ||
     'Guest';
   const resolvedInitials = getInitials(resolvedName);
+  const resolvedProfilePhotoUri = resolveProfilePhotoUri(
+    profileState,
+    primaryIntent,
+  );
   const homeRouteKey = getStaffAwareHomeRoute(
     isStaff,
     preview?.role,
@@ -2815,6 +2832,7 @@ export default function AppNavigator() {
       greeting: personalizedGreeting,
       userName: firstName,
       userInitials: resolvedInitials,
+      userPhotoUri: resolvedProfilePhotoUri,
       statusIcon: '🏠',
       notificationCount: 0,
       activeTabId: 'home',
@@ -2858,6 +2876,7 @@ export default function AppNavigator() {
     [
       firstName,
       resolvedInitials,
+      resolvedProfilePhotoUri,
       tabBarItems,
       personalizedGreeting,
       homeApi.featuredMatch,
@@ -2908,6 +2927,7 @@ export default function AppNavigator() {
       greeting: personalizedGreeting,
       userName: firstName,
       userInitials: resolvedInitials,
+      userPhotoUri: resolvedProfilePhotoUri,
       cityLabel,
       statusIcon: '🌍',
       statusLabel: touristLive.statusLabel,
@@ -2938,7 +2958,7 @@ export default function AppNavigator() {
       journeyProgress,
     };
     },
-    [firstName, resolvedInitials, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeApi.guideBudgetExploreAvailable, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, dashboardRecommendations, journeyProgress, homeDataError, guidesLoadError, activityLoadError],
+    [firstName, resolvedInitials, resolvedProfilePhotoUri, cityLabel, tabBarItems, personalizedGreeting, touristLive, homeApi.featuredGuide, homeApi.guideBudgetExploreAvailable, suggestedGuidesDisplay, displayTopGuideId, showMatchScores, dashboardRecommendations, journeyProgress, homeDataError, guidesLoadError, activityLoadError],
   );
 
   const exploreHomeProps = useMemo(
@@ -2950,6 +2970,7 @@ export default function AppNavigator() {
       greeting: getPersonalizedGreeting(firstName),
       userName: firstName,
       userInitials: resolvedInitials,
+      userPhotoUri: resolvedProfilePhotoUri,
       cityLabel,
       statusIcon: '🌍',
       statusLabel: touristLive.statusLabel,
@@ -2983,6 +3004,7 @@ export default function AppNavigator() {
     [
       firstName,
       resolvedInitials,
+      resolvedProfilePhotoUri,
       cityLabel,
       tabBarItems,
       homeApi.featuredGuide,
@@ -3295,7 +3317,6 @@ export default function AppNavigator() {
               onOpenProfile={() => navigation.navigate('Profile')}
               notificationCount={visibleUnreadNotifications}
               onNotificationPress={() => openNotifications(navigation)}
-              onSosPress={() => navigation.navigate('SOS')}
             />
           ) : (
           <IntentSelectScreen
@@ -3577,6 +3598,7 @@ export default function AppNavigator() {
           <ProfileScreen
             userName={resolvedName}
             userInitials={resolvedInitials}
+            userPhotoUri={resolvedProfilePhotoUri}
             email={user?.email ?? ''}
             setupSummary={isStaff ? 'Staff ops access' : setupSummary}
             showTravelBooking={!isStaff && shouldShowTravelBookingEntry(homeRole)}
@@ -4318,6 +4340,7 @@ export default function AppNavigator() {
               greeting={personalizedGreeting}
               userName={firstName}
               userInitials={resolvedInitials}
+              userPhotoUri={resolvedProfilePhotoUri}
               statusIcon="🏠"
               statusLabel={hostLive.statusLabel}
               featuredCard={featuredCard}
@@ -4397,6 +4420,7 @@ export default function AppNavigator() {
               greeting={personalizedGreeting}
               userName={firstName}
               userInitials={resolvedInitials}
+              userPhotoUri={resolvedProfilePhotoUri}
               statusIcon="🗺️"
               statusLabel={guideLive.statusLabel}
               featuredCard={featuredCard}

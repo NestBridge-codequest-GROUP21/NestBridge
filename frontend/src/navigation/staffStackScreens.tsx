@@ -66,7 +66,6 @@ export function renderStaffStackScreens({
             onOpenProfile={() => navigation.navigate('Profile')}
             notificationCount={notificationCount}
             onNotificationPress={() => openNotifications(navigation)}
-            onSosPress={() => navigation.navigate('SOS')}
           />
         )}
       </Stack.Screen>
@@ -77,7 +76,6 @@ export function renderStaffStackScreens({
             tabBarItems={staffTabBarItems}
             onTabPress={(tabId) => onTabPress(navigation, tabId, 'AdminHome')}
             onBack={() => navigateToHome(navigation, 'AdminHome')}
-            onSosPress={() => navigation.navigate('SOS')}
           />
         )}
       </Stack.Screen>
@@ -91,7 +89,6 @@ export function renderStaffStackScreens({
               void enterAppPreview(role);
             }}
             onBack={() => navigateToHome(navigation, 'AdminHome')}
-            onSosPress={() => navigation.navigate('SOS')}
           />
         )}
       </Stack.Screen>
@@ -106,7 +103,6 @@ export function renderStaffStackScreens({
                 ? (tabId) => onTabPress(navigation, tabId, 'AdminHome')
                 : undefined
             }
-            onSosPress={() => navigation.navigate('SOS')}
             onSelectUser={(userId) =>
               navigation.navigate('StaffUserDetail', { userId })
             }
@@ -150,7 +146,6 @@ export function renderStaffStackScreens({
                 ? (tabId) => onTabPress(navigation, tabId, 'AdminHome')
                 : undefined
             }
-            onSosPress={() => navigation.navigate('SOS')}
             onSelectUser={(userId) =>
               navigation.navigate('StaffUserDetail', { userId })
             }
