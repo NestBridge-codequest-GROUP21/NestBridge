@@ -114,8 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
               return;
             } catch (error) {
-              // Dead refresh (400 Invalid refresh token / 401) → sign out.
-              // Only keep a cached session for true offline / network failures.
+              // Dead refresh (400/401) → sign out. Keep cache only for offline/network.
               const status =
                 error && typeof error === 'object' && 'response' in error
                   ? (error as { response?: { status?: number } }).response?.status
@@ -124,8 +123,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const deadRefresh =
                 status === 401 ||
                 status === 403 ||
-                (status === 400 && /invalid refresh|refresh token/i.test(message));
-              if (deadRefresh) {
+                status === 400 ||
+                /invalid refresh|refresh token|session has expired|sign in again/i.test(
+                  message,
+                );
+              if (deadRefresh && status != null) {
                 console.warn('[auth] refresh rejected — clearing session', message);
                 await clearSession();
                 if (mounted) {

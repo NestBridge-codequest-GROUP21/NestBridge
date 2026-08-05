@@ -1482,6 +1482,15 @@ export async function listConversations(): Promise<ConversationListApi[]> {
   return unwrap({ data });
 }
 
+export async function getConversation(
+  conversationId: string,
+): Promise<ConversationListApi> {
+  const { data } = await api.get<ApiResponse<ConversationListApi>>(
+    `/api/conversations/${conversationId}`,
+  );
+  return unwrap({ data });
+}
+
 export async function getConversationMessages(conversationId: string): Promise<ChatMessageApi[]> {
   const { data } = await api.get<ApiResponse<ChatMessageApi[]>>(
     `/api/conversations/${conversationId}/messages`,

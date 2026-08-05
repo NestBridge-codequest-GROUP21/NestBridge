@@ -68,7 +68,7 @@ export function useConversations(
       } catch (err) {
         if (!cancelled) {
           setError(getApiErrorMessage(err));
-          setConversations([]);
+          // Keep any locally upserted threads so Chat does not flash "not found".
         }
       } finally {
         if (!cancelled) {

@@ -1648,7 +1648,13 @@ export default function AppNavigator() {
       const next = { ...prev };
       for (const match of homeApi.hostMatches) {
         if (match.targetType === 'HOST') {
-          next[match.targetId] = matchToHostSummary(match);
+          const mapped = matchToHostSummary(match);
+          const existing = prev[match.targetId];
+          // Preserve userId fetched from full profile — matches omit it.
+          next[match.targetId] = {
+            ...mapped,
+            userId: existing?.userId ?? mapped.userId,
+          };
         }
       }
       return next;
@@ -1661,7 +1667,12 @@ export default function AppNavigator() {
       const next = { ...prev };
       for (const match of homeApi.guideMatches) {
         if (match.targetType === 'GUIDE') {
-          next[match.targetId] = matchToGuideSummary(match);
+          const mapped = matchToGuideSummary(match);
+          const existing = prev[match.targetId];
+          next[match.targetId] = {
+            ...mapped,
+            userId: existing?.userId ?? mapped.userId,
+          };
         }
       }
       return next;
@@ -1761,29 +1772,33 @@ export default function AppNavigator() {
       navigation: NativeStackNavigationProp<AppStackParamList>,
       host: HostProfileSummary,
     ) => {
-      let profile = host;
-      if (!profile.userId) {
-        profile = await getHostProfile(host.id);
-        setHostProfileCache((prev) => ({ ...prev, [host.id]: profile }));
+      try {
+        let profile = host;
+        if (!profile.userId) {
+          profile = await getHostProfile(host.id);
+          setHostProfileCache((prev) => ({ ...prev, [host.id]: profile }));
+        }
+        if (!profile.userId) {
+          Alert.alert(
+            'Messaging unavailable',
+            'This host account is not ready for chat yet. Try again shortly or request a booking first.',
+          );
+          return;
+        }
+        await openMessageWithParticipant(navigation, {
+          userId: profile.userId,
+          name: profile.name,
+          initials: profile.initials,
+          role: 'host',
+          profileTargetId: profile.id,
+          verification: profile.verification,
+          rating: profile.matchPercentage
+            ? Math.round((profile.matchPercentage / 20) * 10) / 10
+            : undefined,
+        });
+      } catch (error) {
+        Alert.alert('Could not open chat', getApiErrorMessage(error));
       }
-      if (!profile.userId) {
-        Alert.alert(
-          'Messaging unavailable',
-          'This host account is not ready for chat yet. Try again shortly or request a booking first.',
-        );
-        return;
-      }
-      await openMessageWithParticipant(navigation, {
-        userId: profile.userId,
-        name: profile.name,
-        initials: profile.initials,
-        role: 'host',
-        profileTargetId: profile.id,
-        verification: profile.verification,
-        rating: profile.matchPercentage
-          ? Math.round((profile.matchPercentage / 20) * 10) / 10
-          : undefined,
-      });
     },
     [openMessageWithParticipant],
   );
@@ -1793,29 +1808,33 @@ export default function AppNavigator() {
       navigation: NativeStackNavigationProp<AppStackParamList>,
       guide: GuideProfileSummary,
     ) => {
-      let profile = guide;
-      if (!profile.userId) {
-        profile = await getGuideProfile(guide.id);
-        setGuideProfileCache((prev) => ({ ...prev, [guide.id]: profile }));
+      try {
+        let profile = guide;
+        if (!profile.userId) {
+          profile = await getGuideProfile(guide.id);
+          setGuideProfileCache((prev) => ({ ...prev, [guide.id]: profile }));
+        }
+        if (!profile.userId) {
+          Alert.alert(
+            'Messaging unavailable',
+            'This guide account is not ready for chat yet. Try again shortly or book a session first.',
+          );
+          return;
+        }
+        await openMessageWithParticipant(navigation, {
+          userId: profile.userId,
+          name: profile.name,
+          initials: profile.initials,
+          role: 'guide',
+          profileTargetId: profile.id,
+          verification: profile.verification,
+          rating: profile.matchPercentage
+            ? Math.round((profile.matchPercentage / 20) * 10) / 10
+            : undefined,
+        });
+      } catch (error) {
+        Alert.alert('Could not open chat', getApiErrorMessage(error));
       }
-      if (!profile.userId) {
-        Alert.alert(
-          'Messaging unavailable',
-          'This guide account is not ready for chat yet. Try again shortly or book a session first.',
-        );
-        return;
-      }
-      await openMessageWithParticipant(navigation, {
-        userId: profile.userId,
-        name: profile.name,
-        initials: profile.initials,
-        role: 'guide',
-        profileTargetId: profile.id,
-        verification: profile.verification,
-        rating: profile.matchPercentage
-          ? Math.round((profile.matchPercentage / 20) * 10) / 10
-          : undefined,
-      });
     },
     [openMessageWithParticipant],
   );
@@ -3223,36 +3242,36 @@ export default function AppNavigator() {
 
       <Stack.Screen name="Chat">
         {({ navigation, route }) => {
-          const conversation = conversations.find(
-            (item) => item.id === route.params.conversationId,
-          );
-          if (!conversation || !user) {
+          if (!user) {
             return (
               <RouteErrorState
-                title="Conversation not found"
-                message="This chat may have been removed or is no longer available."
+                title="Sign in required"
+                message="Sign in again to open this chat."
                 onBack={() => navigation.goBack()}
               />
             );
           }
+          const conversation = conversations.find(
+            (item) => item.id === route.params.conversationId,
+          );
           return (
-              <ChatRoute
-                conversation={conversation}
-                currentUserId={user.userId}
-                onBack={() => navigation.goBack()}
-                onMessageSent={() => conversationsApi.refresh()}
-                onParticipantPress={() => {
-                  const targetId =
-                    conversation.profileTargetId ?? conversation.participantId;
-                  if (conversation.participantRole === 'host') {
-                    navigation.navigate('HostProfile', { hostId: targetId });
-                    return;
-                  }
-                  if (conversation.participantRole === 'guide') {
-                    navigation.navigate('GuideProfile', { guideId: targetId });
-                  }
-                }}
-              />
+            <ChatRoute
+              conversationId={route.params.conversationId}
+              conversation={conversation ?? null}
+              currentUserId={user.userId}
+              onBack={() => navigation.goBack()}
+              onMessageSent={() => conversationsApi.refresh()}
+              onParticipantPress={(thread) => {
+                const targetId = thread.profileTargetId ?? thread.participantId;
+                if (thread.participantRole === 'host') {
+                  navigation.navigate('HostProfile', { hostId: targetId });
+                  return;
+                }
+                if (thread.participantRole === 'guide') {
+                  navigation.navigate('GuideProfile', { guideId: targetId });
+                }
+              }}
+            />
           );
         }}
       </Stack.Screen>

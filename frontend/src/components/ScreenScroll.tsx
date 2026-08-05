@@ -68,8 +68,6 @@ export default function ScreenScroll({
       (withSosDock ? layout.scrollBottomInsetWithSos : layout.scrollBottomInset)
     : insets.bottom + spacing.lg;
 
-  // Android: window often does not shrink with edge-to-edge — pad content by keyboard height.
-  // iOS: KeyboardAvoidingView handles inset; keep a small buffer only.
   const keyboardPad =
     keyboardAware && Platform.OS === 'android' ? keyboardHeight : 0;
 
@@ -86,7 +84,6 @@ export default function ScreenScroll({
       focusTimerRef.current = setTimeout(() => {
         const windowHeight = Dimensions.get('window').height;
         const kb = keyboardHeight;
-        // If height is still 0, use a conservative estimate until the next keyboard event.
         const effectiveKb = kb > 0 ? kb : Platform.OS === 'android' ? 280 : 0;
         if (effectiveKb <= 0) {
           return;
@@ -117,7 +114,6 @@ export default function ScreenScroll({
     [ensureFocusedVisible],
   );
 
-  // Re-run after the keyboard finishes opening (height updates).
   useEffect(() => {
     if (keyboardHeight > 0 && focusTargetRef.current) {
       ensureFocusedVisible(focusTargetRef.current);
@@ -142,15 +138,22 @@ export default function ScreenScroll({
     refreshControl ??
     (onRefresh ? (
       <RefreshControl
-        refreshing={refreshing}
+        refreshing={Boolean(refreshing)}
         onRefresh={onRefresh}
         tintColor={colors.teal}
         colors={[colors.teal]}
         progressBackgroundColor={colors.surface}
+        enabled
       />
     ) : undefined);
 
   const pullToRefreshEnabled = Boolean(resolvedRefreshControl);
+  // Android only fires RefreshControl when the scroll view can overscroll.
+  // Short error-only screens need a taller content area + always overscroll.
+  const windowHeight = Dimensions.get('window').height;
+  const refreshMinHeight = pullToRefreshEnabled
+    ? windowHeight - insets.top - (withTabBar ? layout.scrollBottomInset : 0) + 1
+    : undefined;
 
   const scroll = (
     <ScrollView
@@ -159,8 +162,12 @@ export default function ScreenScroll({
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps={keyboardShouldPersistTaps}
       keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+      nestedScrollEnabled
+      scrollEnabled
       contentContainerStyle={[
         styles.content,
+        pullToRefreshEnabled ? styles.contentForRefresh : styles.contentGrow,
+        refreshMinHeight != null ? { minHeight: refreshMinHeight } : null,
         { paddingBottom: baseBottomPad + keyboardPad },
         contentContainerStyle,
       ]}
@@ -170,8 +177,6 @@ export default function ScreenScroll({
         onScroll?.(event);
       }}
       {...rest}
-      // Short screens (error-only Ops dashboard) need bounce/overscroll or
-      // Android/iOS will never fire RefreshControl.
       alwaysBounceVertical={pullToRefreshEnabled ? true : rest.alwaysBounceVertical}
       bounces={pullToRefreshEnabled ? true : rest.bounces}
       overScrollMode={pullToRefreshEnabled ? 'always' : rest.overScrollMode}
@@ -183,7 +188,8 @@ export default function ScreenScroll({
     </ScrollView>
   );
 
-  if (!keyboardAware) {
+  // KeyboardAvoidingView can steal the pull gesture on some Android builds.
+  if (!keyboardAware || pullToRefreshEnabled) {
     return scroll;
   }
 
@@ -209,6 +215,12 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: layout.screenPaddingHorizontal,
     paddingTop: spacing.lg,
+  },
+  contentGrow: {
     flexGrow: 1,
+  },
+  contentForRefresh: {
+    // Avoid flexGrow:1 with RefreshControl — it blocks pull on short Android screens.
+    flexGrow: 0,
   },
 });

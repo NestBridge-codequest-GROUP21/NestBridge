@@ -36,24 +36,33 @@ export function HostProfileRoute({
 
   useEffect(() => {
     const cached = resolveHost(hostId);
-    if (cached) {
+    let cancelled = false;
+
+    if (cached?.userId) {
       setHost(cached);
       setIsLoading(false);
       setError(null);
       return;
     }
 
-    let cancelled = false;
     (async () => {
-      setIsLoading(true);
+      if (cached) {
+        setHost(cached);
+      }
+      setIsLoading(!cached);
       setError(null);
       try {
         const profile = await getHostProfile(hostId);
-        if (!cancelled) setHost(profile);
+        if (!cancelled) {
+          setHost(profile);
+          setError(null);
+        }
       } catch (err) {
         if (!cancelled) {
-          setError(getApiErrorMessage(err));
-          setHost(null);
+          if (!cached) {
+            setError(getApiErrorMessage(err));
+            setHost(null);
+          }
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -136,24 +145,35 @@ export function GuideProfileRoute({
 
   useEffect(() => {
     const cached = resolveGuide(guideId);
-    if (cached) {
+    let cancelled = false;
+
+    // Match-cache guides often omit userId — always hydrate from API when missing.
+    if (cached?.userId) {
       setGuide(cached);
       setIsLoading(false);
       setError(null);
       return;
     }
 
-    let cancelled = false;
     (async () => {
-      setIsLoading(true);
+      if (cached) {
+        setGuide(cached);
+      }
+      setIsLoading(!cached);
       setError(null);
       try {
         const profile = await getGuideProfile(guideId);
-        if (!cancelled) setGuide(profile);
+        if (!cancelled) {
+          setGuide(profile);
+          setError(null);
+        }
       } catch (err) {
         if (!cancelled) {
-          setError(getApiErrorMessage(err));
-          setGuide(null);
+          if (!cached) {
+            setError(getApiErrorMessage(err));
+            setGuide(null);
+          }
+          // Keep cached guide for browsing; Message will refetch userId.
         }
       } finally {
         if (!cancelled) setIsLoading(false);
