@@ -5,15 +5,17 @@ import type { AppStackParamList } from './types';
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
-function resetToTab<K extends keyof AppStackParamList>(
+/** Tab switches should navigate (fast), not reset (full remount / lag). */
+function goToTab<K extends keyof AppStackParamList>(
   navigation: Nav,
   screen: K,
   params?: AppStackParamList[K],
 ) {
-  navigation.reset({
-    index: 0,
-    routes: [params !== undefined ? { name: screen, params } : { name: screen }],
-  });
+  if (params !== undefined) {
+    navigation.navigate(screen, params);
+    return;
+  }
+  navigation.navigate(screen);
 }
 
 function homeRouteToScreenName(
@@ -45,10 +47,7 @@ function homeRouteToScreenName(
 }
 
 export function navigateToHome(navigation: Nav, route: HomeRoute) {
-  navigation.reset({
-    index: 0,
-    routes: [{ name: homeRouteToScreenName(route) }],
-  });
+  goToTab(navigation, homeRouteToScreenName(route));
 }
 
 export function handleTabPress(
@@ -64,57 +63,57 @@ export function handleTabPress(
 
   if (role === 'STAFF') {
     if (tabId === 'users') {
-      resetToTab(navigation, 'StaffUserSearch');
+      goToTab(navigation, 'StaffUserSearch');
       return;
     }
     if (tabId === 'moderation') {
-      resetToTab(navigation, 'AdminModeration');
+      goToTab(navigation, 'AdminModeration');
       return;
     }
     if (tabId === 'preview') {
-      resetToTab(navigation, 'AdminPreview');
+      goToTab(navigation, 'AdminPreview');
       return;
     }
     if (tabId === 'profile') {
-      resetToTab(navigation, 'Profile');
+      goToTab(navigation, 'Profile');
       return;
     }
   }
 
   if (tabId === 'explore' || tabId === 'search') {
-    resetToTab(navigation, 'ExploreHub');
+    goToTab(navigation, 'ExploreHub');
     return;
   }
 
   if (tabId === 'bookings') {
     if (role === 'HOST') {
-      resetToTab(navigation, 'HostBookingsTab');
+      goToTab(navigation, 'HostBookingsTab');
       return;
     }
     if (role === 'GUIDE') {
-      resetToTab(navigation, 'GuideBookingsTab');
+      goToTab(navigation, 'GuideBookingsTab');
       return;
     }
-    resetToTab(navigation, 'StudentBookings');
+    goToTab(navigation, 'StudentBookings');
     return;
   }
 
   if (tabId === 'requests') {
-    resetToTab(navigation, 'HostRequestsTab');
+    goToTab(navigation, 'HostRequestsTab');
     return;
   }
 
   if (tabId === 'earnings') {
-    resetToTab(navigation, 'GuideEarningsTab');
+    goToTab(navigation, 'GuideEarningsTab');
     return;
   }
 
   if (tabId === 'messages') {
-    resetToTab(navigation, 'MessagesTab');
+    goToTab(navigation, 'MessagesTab');
     return;
   }
 
   if (tabId === 'profile') {
-    resetToTab(navigation, 'Profile');
+    goToTab(navigation, 'Profile');
   }
 }

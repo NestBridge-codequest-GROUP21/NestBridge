@@ -56,7 +56,7 @@ export default function AppTabBar({
     return (
       <Pressable
         key={tab.id}
-        style={styles.tabItem}
+        style={({ pressed }) => [styles.tabItem, pressed && styles.tabPressed]}
         onPress={() => onTabPress?.(tab.id)}
         accessibilityRole="button"
         accessibilityState={{ selected: active }}
@@ -137,6 +137,9 @@ function createStyles({ colors, chrome }: AppTheme) {
     minHeight: 44,
     position: 'relative',
     paddingHorizontal: spacing.xs,
+  },
+  tabPressed: {
+    opacity: 0.7,
   },
   sosSlot: {
     flex: 1,

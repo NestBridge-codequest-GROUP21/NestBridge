@@ -80,6 +80,17 @@ export function NotificationsRoute({
       navigation.navigate('VerificationStatus');
       return;
     }
+    // Staff: identity review request → open that user for Accept / Decline.
+    if (isStaff && notification.type === 'KYC_PENDING') {
+      if (notification.relatedUserId) {
+        navigation.navigate('StaffUserDetail', {
+          userId: notification.relatedUserId,
+        });
+        return;
+      }
+      navigation.navigate('StaffPendingKyc');
+      return;
+    }
     if (notification.relatedUserId && isStaff) {
       navigation.navigate('StaffUserDetail', {
         userId: notification.relatedUserId,
@@ -125,14 +136,15 @@ export function NotificationsRoute({
       }}
       onNotificationPress={(notification) => {
         void (async () => {
+          // Navigate first so the tap feels instant; mark-read can finish after.
+          void navigateAfterNotification(notification);
           try {
             if (!notification.read) {
               await markNotificationRead(notification.id);
               await refreshNotificationState();
             }
-            await navigateAfterNotification(notification);
           } catch {
-            await navigateAfterNotification(notification);
+            // Ignore mark-read failures — destination already opened.
           }
         })();
       }}
