@@ -1,6 +1,7 @@
-import { Alert, Linking, Share } from 'react-native';
+import { Linking, Share } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { NESTBRIDGE_SUPPORT_EMAIL } from '../constants/support';
+import { appAlert } from './appAlert';
 
 /** Opens the device mail app, then Gmail-in-browser, then a share/copy fallback. */
 export async function openNestBridgeSupportEmail(
@@ -37,7 +38,7 @@ export async function openNestBridgeSupportEmail(
     // Fall through.
   }
 
-  Alert.alert(
+  appAlert(
     'Contact NestBridge support',
     `Email us at ${NESTBRIDGE_SUPPORT_EMAIL} and include a screenshot of this screen.`,
     [

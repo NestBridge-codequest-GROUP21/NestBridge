@@ -1,11 +1,6 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,6 +25,7 @@ import {
   iconSizes,
   avatarSizes,
 } from '../../constants/theme';
+import { appAlert } from '../../utils/appAlert';
 
 export interface SponsorApplicationForm {
   fullName: string;
@@ -71,7 +67,7 @@ export default function SponsorApplicationScreen({
 
   const handleSubmit = () => {
     if (!fullName || !email || !university || !studentId || !statement) {
-      Alert.alert('Missing fields', 'Please fill in all required fields.');
+      appAlert('Missing fields', 'Please fill in all required fields.');
       return;
     }
     onSubmit?.({ fullName, email, university, studentId, gpa, statement });

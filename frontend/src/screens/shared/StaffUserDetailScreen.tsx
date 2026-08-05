@@ -8,7 +8,6 @@ import {
   TextInput,
   Pressable,
   Platform,
-  Alert,
   KeyboardAvoidingView,
   Image,
   ActivityIndicator,
@@ -37,6 +36,7 @@ import {
   lineHeights,
   avatarSizes,
 } from '../../constants/theme';
+import { appAlert } from '../../utils/appAlert';
 
 export interface StaffUserDetailScreenProps {
   user: AdminUserDetail | null;
@@ -109,7 +109,7 @@ export default function StaffUserDetailScreen({
   const submitRejectReason = (raw: string) => {
     const reason = raw.trim();
     if (!reason) {
-      Alert.alert('Reason required', 'Please provide a non-empty rejection reason.');
+      appAlert('Reason required', 'Please provide a non-empty rejection reason.');
       return;
     }
     setRejectModalVisible(false);
@@ -118,24 +118,6 @@ export default function StaffUserDetailScreen({
   };
 
   const handleRejectKycPress = () => {
-    if (Platform.OS === 'ios' && typeof Alert.prompt === 'function') {
-      Alert.prompt(
-        'Reject KYC',
-        'Enter a reason the user will see.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Reject',
-            style: 'destructive',
-            onPress: (value?: string) => {
-              submitRejectReason(value ?? '');
-            },
-          },
-        ],
-        'plain-text',
-      );
-      return;
-    }
     setRejectReason('');
     setRejectModalVisible(true);
   };

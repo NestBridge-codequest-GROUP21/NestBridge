@@ -13,6 +13,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import { AccountProfileProvider } from './src/context/AccountProfileContext';
 import { StaffSessionProvider } from './src/context/StaffSessionContext';
 import { ThemeProvider } from './src/theme';
+import { AppAlertProvider } from './src/context/AppAlertContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import {
   recordBootError,
@@ -32,13 +33,15 @@ function AppProviders({ onReady }: { onReady: () => void }) {
 
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <AccountProfileProvider>
-          <StaffSessionProvider>
-            <RootNavigator />
-          </StaffSessionProvider>
-        </AccountProfileProvider>
-      </AuthProvider>
+      <AppAlertProvider>
+        <AuthProvider>
+          <AccountProfileProvider>
+            <StaffSessionProvider>
+              <RootNavigator />
+            </StaffSessionProvider>
+          </AccountProfileProvider>
+        </AuthProvider>
+      </AppAlertProvider>
     </ThemeProvider>
   );
 }

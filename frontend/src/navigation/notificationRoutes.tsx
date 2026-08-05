@@ -1,5 +1,4 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import NotificationsScreen from '../screens/shared/NotificationsScreen';
 import {
@@ -9,6 +8,7 @@ import {
 import type { AppNotification } from '../types/booking';
 import type { PrimaryIntent } from '../types/accountProfile';
 import type { AppStackParamList } from './types';
+import { appAlert } from '../utils/appAlert';
 
 type Nav = NativeStackNavigationProp<AppStackParamList>;
 
@@ -119,7 +119,7 @@ export function NotificationsRoute({
             await markAllNotificationsRead();
             await refreshNotificationState();
           } catch {
-            Alert.alert('Notifications', 'Could not mark all as read.');
+            appAlert('Notifications', 'Could not mark all as read.');
           }
         })();
       }}

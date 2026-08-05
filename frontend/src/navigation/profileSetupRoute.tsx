@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert } from 'react-native';
 import ProfileSetupScreen from '../screens/onboarding/ProfileSetupScreen';
 import { useAuth } from '../context/AuthContext';
 import { useAccountProfile } from '../context/AccountProfileContext';
@@ -17,6 +16,7 @@ import {
   MIN_ABOUT_LENGTH,
   MIN_BIO_LENGTH,
 } from '../utils/accountProfile';
+import { appAlert } from '../utils/appAlert';
 
 function initialsFromName(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -88,7 +88,7 @@ export function ProfileSetupRoute({
           });
           return true;
         } catch (error) {
-          Alert.alert('Could not save profile', getApiErrorMessage(error));
+          appAlert('Could not save profile', getApiErrorMessage(error));
           return false;
         } finally {
           setSubmitting(false);
@@ -117,7 +117,7 @@ export function ProfileSetupRoute({
           await completeStep(track, 'profile', stepData);
           return true;
         } catch (error) {
-          Alert.alert('Could not save profile', getApiErrorMessage(error));
+          appAlert('Could not save profile', getApiErrorMessage(error));
           return false;
         } finally {
           setSubmitting(false);
@@ -125,18 +125,18 @@ export function ProfileSetupRoute({
       }
 
       if (profileName.length < 2) {
-        Alert.alert('Display name needed', 'Enter a display name with at least 2 characters.');
+        appAlert('Display name needed', 'Enter a display name with at least 2 characters.');
         return false;
       }
       if (nextBio.length < MIN_BIO_LENGTH) {
-        Alert.alert(
+        appAlert(
           'Bio too short',
           `Write at least ${MIN_BIO_LENGTH} characters in your short bio.`,
         );
         return false;
       }
       if (nextAbout.length < MIN_ABOUT_LENGTH) {
-        Alert.alert(
+        appAlert(
           'About section too short',
           `Write at least ${MIN_ABOUT_LENGTH} characters in About you.`,
         );
@@ -163,7 +163,7 @@ export function ProfileSetupRoute({
         await completeStep(track, 'profile', stepData);
         return true;
       } catch (error) {
-        Alert.alert('Could not save profile', getApiErrorMessage(error));
+        appAlert('Could not save profile', getApiErrorMessage(error));
         return false;
       } finally {
         setSubmitting(false);

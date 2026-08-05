@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Constants from 'expo-constants';
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
@@ -30,6 +29,7 @@ import {
   normalizeLoginEmail,
 } from '../utils/normalizeLoginEmail';
 import type { AuthStackParamList } from './types';
+import { appAlert } from '../utils/appAlert';
 
 const APP_VERSION =
   Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '1.0.1';
@@ -96,7 +96,7 @@ export default function AuthNavigator({
         error instanceof Error
           ? error.message
           : `Could not sign in as ${account.name}. Make sure the backend is running.`;
-      Alert.alert('Quick sign-in failed', message);
+      appAlert('Quick sign-in failed', message);
     } finally {
       setDemoLoginBusy(false);
     }
@@ -326,7 +326,7 @@ export default function AuthNavigator({
                   setPassword(newPassword);
                   setResetStatus('Password updated. You can sign in with your new password.');
                   onResetTokenConsumed?.();
-                  Alert.alert(
+                  appAlert(
                     'Password updated',
                     'Sign in with your new password.',
                     [

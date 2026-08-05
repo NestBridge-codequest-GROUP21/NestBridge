@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import { appAlert } from '../utils/appAlert';
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const ALLOWED_CONTENT_TYPES = new Set(['image/jpeg', 'image/png']);
@@ -43,7 +43,7 @@ async function pickImage(options: PickImageOptions = {}): Promise<PickedImage | 
     ImagePicker = await import('expo-image-picker');
   } catch (error) {
     console.warn('[imagePicker] module unavailable', error);
-    Alert.alert(
+    appAlert(
       'Photos unavailable',
       'Photo picker is not available in this build. You can skip for now.',
     );
@@ -53,7 +53,7 @@ async function pickImage(options: PickImageOptions = {}): Promise<PickedImage | 
   try {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Photo access needed', permissionMessage);
+      appAlert('Photo access needed', permissionMessage);
       return null;
     }
 
@@ -78,13 +78,13 @@ async function pickImage(options: PickImageOptions = {}): Promise<PickedImage | 
 
     const mimeType = resolveMimeType(uri, asset.mimeType);
     if (mimeType && !ALLOWED_CONTENT_TYPES.has(mimeType)) {
-      Alert.alert('Unsupported photo', 'Please choose a JPEG or PNG image.');
+      appAlert('Unsupported photo', 'Please choose a JPEG or PNG image.');
       return null;
     }
 
     const fileSize = typeof asset.fileSize === 'number' ? asset.fileSize : undefined;
     if (fileSize != null && fileSize > MAX_PHOTO_BYTES) {
-      Alert.alert('Photo too large', 'Please choose a photo under 5 MB.');
+      appAlert('Photo too large', 'Please choose a photo under 5 MB.');
       return null;
     }
 
@@ -95,7 +95,7 @@ async function pickImage(options: PickImageOptions = {}): Promise<PickedImage | 
     };
   } catch (error) {
     console.warn('[imagePicker] pick failed', error);
-    Alert.alert(
+    appAlert(
       'Could not open photos',
       'Something went wrong opening the photo library. You can skip for now.',
     );

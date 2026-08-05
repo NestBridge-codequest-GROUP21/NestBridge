@@ -1,6 +1,6 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../../theme';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Switch, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import ScreenHeader from '../../components/ScreenHeader';
 import ScreenScroll from '../../components/ScreenScroll';
@@ -19,6 +19,7 @@ import {
   lineHeights,
   touchTarget,
 } from '../../constants/theme';
+import { appAlert } from '../../utils/appAlert';
 
 export interface TourTypesSetupScreenProps {
   greeting: string;
@@ -159,7 +160,7 @@ export default function TourTypesSetupScreen({
   const handleAdd = () => {
     const error = onAddTourType?.(newLabel, newDescription) ?? null;
     if (error) {
-      Alert.alert('Could not add tour type', error);
+      appAlert('Could not add tour type', error);
       return;
     }
     setNewLabel('');
@@ -179,14 +180,14 @@ export default function TourTypesSetupScreen({
     const error =
       onUpdateTourType?.(editingId, draftLabel, draftDescription) ?? null;
     if (error) {
-      Alert.alert('Could not update tour type', error);
+      appAlert('Could not update tour type', error);
       return;
     }
     setEditingId(null);
   };
 
   const confirmRemove = (tourType: TourTypeOption) => {
-    Alert.alert(
+    appAlert(
       'Remove tour type',
       `Remove “${tourType.label}” from your catalogue?`,
       [

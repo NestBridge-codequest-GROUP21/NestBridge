@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Linking } from 'react-native';
+import { Linking } from 'react-native';
 import KYCPromptScreen from '../screens/host/KYCPromptScreen';
 import VerificationStatusScreen, {
   type VerificationUiStatus,
@@ -12,6 +12,7 @@ import {
   getApiErrorMessage,
   getKycStatus,
 } from '../services/api';
+import { appAlert } from '../utils/appAlert';
 
 function normalizeVerificationStatus(raw: string | undefined | null): VerificationUiStatus {
   const value = (raw ?? 'none').toLowerCase();
@@ -39,14 +40,14 @@ export function KycPromptRoute({ track, onFinished }: KycPromptRouteProps) {
       try {
         const refreshed = await refreshSession();
         if (refreshed?.identityVerified) {
-          Alert.alert(
+          appAlert(
             "You're verified",
             'NestBridge staff already approved your identity. Core actions are unlocked.',
           );
           onFinished();
         }
       } catch (error) {
-        Alert.alert('Connection issue', getApiErrorMessage(error));
+        appAlert('Connection issue', getApiErrorMessage(error));
       }
     })();
   }, [onFinished, refreshSession]);
@@ -79,7 +80,7 @@ export function KycPromptRoute({ track, onFinished }: KycPromptRouteProps) {
         void (async () => {
           if (submitting) return;
           if (!selectedPhoto?.uri) {
-            Alert.alert(
+            appAlert(
               'Photo required',
               'Upload a clear photo of your face or ID so NestBridge staff can verify you.',
             );
@@ -94,7 +95,7 @@ export function KycPromptRoute({ track, onFinished }: KycPromptRouteProps) {
             if (session.verificationUrl) {
               await Linking.openURL(session.verificationUrl);
             } else {
-              Alert.alert(
+              appAlert(
                 session.enabled ? 'Verification' : 'Submitted for staff review',
                 session.message
                   ?? 'Your photo is with NestBridge staff. You can keep browsing until they approve you.',
@@ -102,7 +103,7 @@ export function KycPromptRoute({ track, onFinished }: KycPromptRouteProps) {
             }
             onFinished();
           } catch (error) {
-            Alert.alert('Could not submit verification', getApiErrorMessage(error));
+            appAlert('Could not submit verification', getApiErrorMessage(error));
           } finally {
             setSubmitting(false);
           }
@@ -110,7 +111,7 @@ export function KycPromptRoute({ track, onFinished }: KycPromptRouteProps) {
       }}
       onVerifyLater={() => {
         if (submitting) return;
-        Alert.alert(
+        appAlert(
           'Browse for now',
           'You can explore NestBridge, but booking, paying, messaging, and accepting requests stay locked until staff verifies you.',
         );
