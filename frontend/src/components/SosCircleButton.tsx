@@ -9,6 +9,7 @@ import {
   spacing,
   layout,
 } from '../constants/theme';
+import { feedbackUrgent } from '../services/appFeedback';
 
 export interface SosCircleButtonProps {
   onPress?: () => void;
@@ -29,7 +30,10 @@ export default function SosCircleButton({
   return (
     <Pressable
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-      onPress={onPress}
+      onPress={() => {
+        feedbackUrgent();
+        onPress();
+      }}
       accessibilityRole="button"
       accessibilityLabel="Emergency SOS"
     >

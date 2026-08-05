@@ -26,6 +26,8 @@ import {
   iconSizes,
   touchTarget,
 } from '../../constants/theme';
+import { useFeedbackPreferences } from '../../context/FeedbackPreferencesContext';
+import { feedbackSelection } from '../../services/appFeedback';
 
 export interface SettingsScreenProps {
   notificationsEnabled: boolean;
@@ -46,6 +48,11 @@ export default function SettingsScreen({
 }: SettingsScreenProps) {
   const { preference, setPreference, colors, scheme } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const {
+    preferences: feedbackPreferences,
+    setHapticsEnabled,
+    setSoundsEnabled,
+  } = useFeedbackPreferences();
 
   return (
     <View style={styles.root}>
@@ -53,7 +60,7 @@ export default function SettingsScreen({
 
       <ScreenHeader
         title="Settings"
-        subtitle="Appearance and notification preferences"
+        subtitle="Appearance, sounds, and notifications"
         compact
         onBack={onBack}
       />
@@ -118,6 +125,46 @@ export default function SettingsScreen({
               </Pressable>
             );
           })}
+        </Card>
+
+        <SectionHeader title="Sound & haptics" />
+        <Card padding="lg" style={styles.groupCard}>
+          <View style={styles.notifyRow}>
+            <View style={styles.notifyText}>
+              <Text style={styles.notifyLabel}>Haptics</Text>
+              <Text style={styles.notifySubtitle}>
+                Vibration for confirmations, errors, and SOS
+              </Text>
+            </View>
+            <Switch
+              value={feedbackPreferences.hapticsEnabled}
+              onValueChange={(value) => {
+                setHapticsEnabled(value);
+                if (value) feedbackSelection();
+              }}
+              trackColor={{ false: colors.border, true: colors.tealBright }}
+              thumbColor={colors.white}
+              accessibilityLabel="Enable haptics"
+            />
+          </View>
+          <View style={[styles.notifyRow, styles.notifyRowSpaced]}>
+            <View style={styles.notifyText}>
+              <Text style={styles.notifyLabel}>Sounds</Text>
+              <Text style={styles.notifySubtitle}>
+                Soft chimes for success and errors (not language speech)
+              </Text>
+            </View>
+            <Switch
+              value={feedbackPreferences.soundsEnabled}
+              onValueChange={(value) => {
+                setSoundsEnabled(value);
+                if (value) feedbackSelection();
+              }}
+              trackColor={{ false: colors.border, true: colors.tealBright }}
+              thumbColor={colors.white}
+              accessibilityLabel="Enable sounds"
+            />
+          </View>
         </Card>
 
         <SectionHeader title="Notifications" />
@@ -278,6 +325,12 @@ function createStyles({ colors }: AppTheme) {
       alignItems: 'center',
       gap: spacing.md,
       minHeight: touchTarget,
+    },
+    notifyRowSpaced: {
+      marginTop: spacing.lg,
+      paddingTop: spacing.lg,
+      borderTopWidth: borderWidths.hairline,
+      borderTopColor: colors.border,
     },
     notifyText: {
       flex: 1,

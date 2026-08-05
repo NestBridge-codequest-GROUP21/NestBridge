@@ -31,6 +31,7 @@ import {
   lineHeights,
   layout,
 } from '../../constants/theme';
+import { feedbackSelection } from '../../services/appFeedback';
 import type {
   ChatMessage,
   ConversationBookingContext,
@@ -154,6 +155,7 @@ export default function ChatScreen({
     };
     setMessages((prev) => [...prev, newMessage]);
     setDraft('');
+    feedbackSelection();
     void Promise.resolve(onSendMessage?.(trimmed)).catch(() => {
       // Route/hook surfaces send errors; never leave an unhandled rejection.
     });

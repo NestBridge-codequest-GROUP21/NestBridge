@@ -22,6 +22,7 @@ import {
   touchTarget,
 } from '../../constants/theme';
 import { emptyStates } from '../../data/appCopy';
+import { feedbackUrgent } from '../../services/appFeedback';
 
 export interface EmergencyContact {
   /** Organisation or agency name (e.g. Ghana Police Service). */
@@ -139,7 +140,10 @@ export default function SOSScreen({
             styles.emergencyButton,
             pressed && styles.pressed,
           ]}
-          onPress={onCallEmergencyServices}
+          onPress={() => {
+            feedbackUrgent();
+            onCallEmergencyServices?.();
+          }}
           accessibilityRole="button"
           accessibilityLabel="Call emergency services"
         >
@@ -261,7 +265,10 @@ export default function SOSScreen({
                           styles.callAction,
                           pressed && styles.callPressed,
                         ]}
-                        onPress={() => onContactCallPress?.(contact)}
+                        onPress={() => {
+                          feedbackUrgent();
+                          onContactCallPress?.(contact);
+                        }}
                         accessibilityRole="button"
                         accessibilityLabel={`Call ${heading}`}
                       >

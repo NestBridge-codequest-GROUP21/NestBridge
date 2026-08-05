@@ -1,5 +1,5 @@
 import { useTheme, useThemedStyles, type AppTheme } from '../theme';
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Modal,
   View,
@@ -22,6 +22,11 @@ import {
   iconSizes,
   touchTarget,
 } from '../constants/theme';
+import {
+  feedbackError,
+  feedbackSuccess,
+  feedbackWarning,
+} from '../services/appFeedback';
 
 export type AppAlertTone = 'info' | 'success' | 'warning' | 'danger';
 
@@ -122,6 +127,13 @@ export default function AppAlertModal({
       : [{ text: 'OK', style: 'default' as const }];
 
   const cancelable = options?.cancelable !== false;
+
+  useEffect(() => {
+    if (!visible) return;
+    if (tone === 'success') feedbackSuccess();
+    else if (tone === 'danger') feedbackError();
+    else if (tone === 'warning') feedbackWarning();
+  }, [visible, tone, title]);
 
   const handleDismiss = () => {
     if (!cancelable) return;

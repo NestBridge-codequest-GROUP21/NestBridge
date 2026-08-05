@@ -14,6 +14,7 @@ import { AccountProfileProvider } from './src/context/AccountProfileContext';
 import { StaffSessionProvider } from './src/context/StaffSessionContext';
 import { ThemeProvider } from './src/theme';
 import { AppAlertProvider } from './src/context/AppAlertContext';
+import { FeedbackPreferencesProvider } from './src/context/FeedbackPreferencesContext';
 import RootNavigator from './src/navigation/RootNavigator';
 import {
   recordBootError,
@@ -33,16 +34,18 @@ function AppProviders({ onReady }: { onReady: () => void }) {
 
   return (
     <ThemeProvider>
-      {/* Register before auth/profile so early appAlert() never hits a null host. */}
-      <AppAlertProvider>
-        <AuthProvider>
-          <AccountProfileProvider>
-            <StaffSessionProvider>
-              <RootNavigator />
-            </StaffSessionProvider>
-          </AccountProfileProvider>
-        </AuthProvider>
-      </AppAlertProvider>
+      <FeedbackPreferencesProvider>
+        {/* Register before auth/profile so early appAlert() never hits a null host. */}
+        <AppAlertProvider>
+          <AuthProvider>
+            <AccountProfileProvider>
+              <StaffSessionProvider>
+                <RootNavigator />
+              </StaffSessionProvider>
+            </AccountProfileProvider>
+          </AuthProvider>
+        </AppAlertProvider>
+      </FeedbackPreferencesProvider>
     </ThemeProvider>
   );
 }
